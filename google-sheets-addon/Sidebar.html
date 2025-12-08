@@ -427,6 +427,134 @@
   <div id="status">Loading...</div>
 
   <script>
+    // ============================================================
+    // DATA PROVIDER ABSTRACTION
+    // Allows the UI to run with mock data in a browser for fast iteration
+    // ============================================================
+
+    // Mock data provider for local browser testing
+    const mockProvider = {
+      _prefs: {},
+      _crops: [
+        { id: 'crop_1', name: 'Tomatoes', startDate: '2025-04-01', endDate: '2025-07-15', resource: 'Bed 1' },
+        { id: 'crop_2', name: 'Lettuce', startDate: '2025-03-15', endDate: '2025-05-01', resource: 'Bed 2' },
+        { id: 'crop_3', name: 'Carrots', startDate: '2025-04-15', endDate: '2025-08-01', resource: 'Bed 1' },
+        { id: 'crop_4', name: 'Peppers', startDate: '2025-05-01', endDate: '2025-09-30', resource: 'Bed 3' },
+        { id: 'crop_5', name: 'Spinach', startDate: '2025-03-01', endDate: '2025-04-15', resource: '' },
+        { id: 'crop_6', name: 'Kale', startDate: '2025-03-20', endDate: '2025-06-30', resource: 'Bed 2' },
+        { id: 'crop_7', name: 'Beans', startDate: '2025-05-15', endDate: '2025-08-15', resource: '' },
+        { id: 'crop_8', name: 'Cucumbers', startDate: '2025-05-20', endDate: '2025-08-30', resource: 'Bed 4' },
+        { id: 'crop_9', name: 'Squash', startDate: '2025-06-01', endDate: '2025-09-15', resource: 'Bed 3' },
+        { id: 'crop_10', name: 'Radishes', startDate: '2025-03-10', endDate: '2025-04-20', resource: 'Bed 4' }
+      ],
+      _resources: ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Unassigned'],
+
+      getPlannerData: function() {
+        return Promise.resolve({
+          resources: this._resources,
+          crops: JSON.parse(JSON.stringify(this._crops)) // Deep copy
+        });
+      },
+
+      getUserPreferences: function() {
+        return Promise.resolve(this._prefs);
+      },
+
+      saveUserPreferences: function(prefs) {
+        this._prefs = { ...this._prefs, ...prefs };
+        console.log('[Mock] Saved preferences:', this._prefs);
+        return Promise.resolve({ success: true });
+      },
+
+      updateCropResource: function(cropId, resource) {
+        const crop = this._crops.find(c => c.id === cropId);
+        if (crop) {
+          crop.resource = resource;
+          console.log('[Mock] Updated crop', cropId, 'to resource:', resource);
+          return Promise.resolve({ success: true });
+        }
+        return Promise.resolve({ success: false, error: 'Crop not found' });
+      },
+
+      showPlannerWithSize: function(width, height) {
+        console.log('[Mock] Resize requested:', width, 'x', height);
+        return Promise.resolve();
+      },
+
+      closeDialog: function() {
+        console.log('[Mock] Close dialog requested');
+        return Promise.resolve();
+      }
+    };
+
+    // Google Apps Script provider (wraps google.script.run)
+    const googleProvider = {
+      getPlannerData: function() {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .getPlannerData();
+        });
+      },
+
+      getUserPreferences: function() {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .getUserPreferences();
+        });
+      },
+
+      saveUserPreferences: function(prefs) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .saveUserPreferences(prefs);
+        });
+      },
+
+      updateCropResource: function(cropId, resource) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .updateCropResource(cropId, resource);
+        });
+      },
+
+      showPlannerWithSize: function(width, height) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .showPlannerWithSize(width, height);
+        });
+      },
+
+      closeDialog: function() {
+        return new Promise((resolve) => {
+          google.script.host.close();
+          resolve();
+        });
+      }
+    };
+
+    // Select provider based on environment
+    const isGoogleEnvironment = typeof google !== 'undefined' && google.script;
+    const api = isGoogleEnvironment ? googleProvider : mockProvider;
+
+    // Log which mode we're in
+    if (!isGoogleEnvironment) {
+      console.log('%c[MOCK MODE] Running with test data', 'color: orange; font-weight: bold');
+    }
+
+    // ============================================================
+    // APPLICATION STATE
+    // ============================================================
+
     let crops = [];
     let resources = [];
     let pendingUpdates = new Map();
@@ -468,7 +596,7 @@
       isPending: false,
       lastActivity: Date.now(),
       intervalId: null,
-      TICK_RATE: 100,
+      TICK_RATE: isGoogleEnvironment ? 100 : 5000, // Slower polling in mock mode
       IDLE_TIMEOUT: 60000,
 
       init: function() {
@@ -503,24 +631,23 @@
       executePoll: function() {
         this.isPending = true;
 
-        google.script.run
-          .withSuccessHandler((data) => {
+        api.getPlannerData()
+          .then((data) => {
             this.isPending = false;
             resources = data.resources;
             mergeData(data.crops);
             render();
-            setSyncStatus('synced', 'Live');
+            setSyncStatus('synced', isGoogleEnvironment ? 'Live' : 'Mock');
 
             const assignedCount = crops.filter(c => c.resource && c.resource.trim()).length;
             document.getElementById('status').textContent =
               `${crops.length} crops (${assignedCount} assigned) · ${resources.length - 1} beds`;
           })
-          .withFailureHandler((err) => {
+          .catch((err) => {
             this.isPending = false;
             setSyncStatus('error', 'Error');
             showError(err);
-          })
-          .getPlannerData();
+          });
       }
     };
 
@@ -530,8 +657,8 @@
       setSyncStatus('syncing', 'Connecting...');
 
       // Load user preferences first
-      google.script.run
-        .withSuccessHandler(function(prefs) {
+      api.getUserPreferences()
+        .then(function(prefs) {
           if (prefs.zoomIndex !== undefined) {
             zoomIndex = prefs.zoomIndex;
             updateZoomDisplay();
@@ -545,10 +672,9 @@
             savedScrollDate = new Date(prefs.scrollDate);
           }
         })
-        .withFailureHandler(function() {
+        .catch(function() {
           // Ignore errors loading preferences, use defaults
-        })
-        .getUserPreferences();
+        });
 
       poller.init();
       poller.executePoll();
@@ -571,7 +697,7 @@
         scrollSaveTimeout = setTimeout(() => {
           if (timelineStart) {
             const leftDate = getLeftEdgeDate();
-            google.script.run.saveUserPreferences({ scrollDate: leftDate.toISOString() });
+            api.saveUserPreferences({ scrollDate: leftDate.toISOString() });
           }
         }, 1000); // Save 1 second after scrolling stops
       });
@@ -633,11 +759,10 @@
       const width = window.screen.availWidth - 100;
       const height = window.screen.availHeight - 150;
 
-      google.script.run
-        .withSuccessHandler(function() {
-          google.script.host.close();
-        })
-        .showPlannerWithSize(width, height);
+      api.showPlannerWithSize(width, height)
+        .then(function() {
+          api.closeDialog();
+        });
     }
 
     function setViewMode(mode) {
@@ -646,7 +771,7 @@
       document.getElementById('btn-stacked').classList.toggle('active', mode === 'stacked');
       render();
       // Save preference
-      google.script.run.saveUserPreferences({ viewMode: mode });
+      api.saveUserPreferences({ viewMode: mode });
     }
 
     // Calculate stacking rows for crops in a lane
@@ -869,20 +994,19 @@
           render();
           document.getElementById('status').textContent = 'Saving...';
 
-          google.script.run
-            .withSuccessHandler(function() {
+          api.updateCropResource(cropId, resourceValue)
+            .then(function() {
               pendingUpdates.delete(cropId);
               document.getElementById('status').textContent = 'Saved to ' + newResource;
             })
-            .withFailureHandler(function(err) {
+            .catch(function(err) {
               pendingUpdates.delete(cropId);
               if (crop) {
                 crop.resource = oldResource;
               }
               render();
-              document.getElementById('status').textContent = 'Error: ' + err.message;
-            })
-            .updateCropResource(cropId, resourceValue);
+              document.getElementById('status').textContent = 'Error: ' + (err.message || err);
+            });
         });
 
         planner.appendChild(lane);
@@ -967,7 +1091,7 @@
       render();
       scrollToCenterDate(centerDate);
       // Save preference
-      google.script.run.saveUserPreferences({ zoomIndex: zoomIndex });
+      api.saveUserPreferences({ zoomIndex: zoomIndex });
     }
 
     // Zoom out (show more time, less detail)
@@ -980,7 +1104,7 @@
       render();
       scrollToCenterDate(centerDate);
       // Save preference
-      google.script.run.saveUserPreferences({ zoomIndex: zoomIndex });
+      api.saveUserPreferences({ zoomIndex: zoomIndex });
     }
 
     function createCropBox(crop, index, overlappingIds, stackRow) {
