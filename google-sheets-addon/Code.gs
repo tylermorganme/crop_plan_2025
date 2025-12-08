@@ -109,6 +109,7 @@ function onOpen() {
     .addSeparator()
     .addItem('Column Settings...', 'showColumnSettings')
     .addItem('Setup ID Column', 'setupIdColumn')
+    .addItem('Setup Resources Sheet', 'setupResourcesSheet')
     .addToUi();
 }
 
@@ -343,39 +344,110 @@ function saveUserPreferences(prefs) {
 }
 
 /**
- * Get list of available resources from the Resource column
- * Returns unique values found + 'Unassigned' at the end
- * Also checks for a 'Resources' sheet or named range for predefined options
+ * Get list of available resources, optionally with group information
+ * Returns an object with:
+ *   - resources: flat array of resource names (for backward compatibility)
+ *   - groups: array of { name, beds: [] } for grouped display
+ *
+ * Resources sheet format (if exists):
+ *   Column A: Group name
+ *   Column B: Bed/Resource name
+ *   Row 1: Headers (Group, Bed)
  */
 function getResources() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
   const cols = getColumnMap(sheet);
 
-  // First, try to get resources from a "Resources" sheet (if it exists)
+  // Try to get resources from a "Resources" sheet (if it exists)
   const resourceSheet = ss.getSheetByName('Resources');
   if (resourceSheet) {
     const lastRow = resourceSheet.getLastRow();
-    if (lastRow >= 1) {
+    const lastCol = resourceSheet.getLastColumn();
+
+    if (lastRow >= 2 && lastCol >= 2) {
+      // Has header row and at least 2 columns - use grouped format
+      const data = resourceSheet.getRange(2, 1, lastRow - 1, 2).getValues();
+      const groupMap = new Map(); // group name -> array of beds
+      const flatResources = [];
+
+      for (const row of data) {
+        const group = String(row[0] || '').trim();
+        const bed = String(row[1] || '').trim();
+
+        if (bed) {
+          flatResources.push(bed);
+
+          if (group) {
+            if (!groupMap.has(group)) {
+              groupMap.set(group, []);
+            }
+            groupMap.get(group).push(bed);
+          } else {
+            // Ungrouped beds go into a special group
+            if (!groupMap.has('_ungrouped')) {
+              groupMap.set('_ungrouped', []);
+            }
+            groupMap.get('_ungrouped').push(bed);
+          }
+        }
+      }
+
+      if (flatResources.length > 0) {
+        // Build groups array in order they appear
+        const groups = [];
+        const seenGroups = new Set();
+
+        for (const row of data) {
+          const group = String(row[0] || '').trim() || '_ungrouped';
+          if (!seenGroups.has(group) && groupMap.has(group)) {
+            seenGroups.add(group);
+            groups.push({
+              name: group === '_ungrouped' ? null : group,
+              beds: groupMap.get(group)
+            });
+          }
+        }
+
+        // Add Unassigned
+        flatResources.push('Unassigned');
+        groups.push({ name: null, beds: ['Unassigned'] });
+
+        return {
+          resources: flatResources,
+          groups: groups
+        };
+      }
+    } else if (lastRow >= 1 && lastCol === 1) {
+      // Single column - old format, no groups
       const values = resourceSheet.getRange(1, 1, lastRow, 1).getValues();
-      const resources = values.map(r => r[0]).filter(v => v && typeof v === 'string' && v.trim());
+      const resources = values.map(r => String(r[0] || '').trim()).filter(v => v);
       if (resources.length > 0) {
         if (!resources.includes('Unassigned')) {
           resources.push('Unassigned');
         }
-        return resources;
+        return {
+          resources: resources,
+          groups: null
+        };
       }
     }
   }
 
-  // If no Resource column in main sheet, return defaults
+  // Fall back to reading from main sheet's Resource column
   if (cols['Resource'] === undefined) {
-    return ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Bed 5', 'Unassigned'];
+    return {
+      resources: ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Bed 5', 'Unassigned'],
+      groups: null
+    };
   }
 
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) {
-    return ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Bed 5', 'Unassigned'];
+    return {
+      resources: ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Bed 5', 'Unassigned'],
+      groups: null
+    };
   }
 
   const resourceColNum = cols['Resource'] + 1;
@@ -385,7 +457,6 @@ function getResources() {
   const resourceSet = new Set();
   for (const row of values) {
     const val = row[0];
-    // Handle both strings and numbers
     if (val !== null && val !== undefined && val !== '') {
       const strVal = String(val).trim();
       if (strVal) {
@@ -394,14 +465,62 @@ function getResources() {
     }
   }
 
-  // If no resources found in data, return defaults
   if (resourceSet.size === 0) {
-    return ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Bed 5', 'Unassigned'];
+    return {
+      resources: ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Bed 5', 'Unassigned'],
+      groups: null
+    };
   }
 
-  // Convert to sorted array and add Unassigned at the end
   const resources = Array.from(resourceSet).sort();
   resources.push('Unassigned');
 
-  return resources;
+  return {
+    resources: resources,
+    groups: null
+  };
+}
+
+/**
+ * Create or reset the Resources sheet with Group and Bed columns
+ */
+function setupResourcesSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let resourceSheet = ss.getSheetByName('Resources');
+
+  if (!resourceSheet) {
+    resourceSheet = ss.insertSheet('Resources');
+  } else {
+    // Clear existing content
+    resourceSheet.clear();
+  }
+
+  // Set up headers
+  resourceSheet.getRange('A1:B1').setValues([['Group', 'Bed']]);
+  resourceSheet.getRange('A1:B1').setFontWeight('bold');
+  resourceSheet.getRange('A1:B1').setBackground('#f3f3f3');
+
+  // Add example data
+  const exampleData = [
+    ['North Field', 'Bed 1'],
+    ['North Field', 'Bed 2'],
+    ['North Field', 'Bed 3'],
+    ['South Field', 'Bed 4'],
+    ['South Field', 'Bed 5'],
+    ['Greenhouse', 'GH Bed 1'],
+    ['Greenhouse', 'GH Bed 2']
+  ];
+  resourceSheet.getRange(2, 1, exampleData.length, 2).setValues(exampleData);
+
+  // Auto-resize columns
+  resourceSheet.autoResizeColumn(1);
+  resourceSheet.autoResizeColumn(2);
+
+  SpreadsheetApp.getUi().alert(
+    'Resources sheet created!\n\n' +
+    'Edit the Group and Bed columns to define your beds.\n' +
+    'Beds in the same group can be collapsed together in the planner.'
+  );
+
+  return { success: true };
 }

@@ -103,14 +103,37 @@
     }
 
     .header-label {
-      width: 120px;
-      min-width: 120px;
+      width: 150px;
+      min-width: 150px;
       padding: 8px;
       font-weight: bold;
       font-size: 11px;
       color: #666;
       border-right: 1px solid #ddd;
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-group-controls {
+      display: flex;
+      gap: 2px;
+    }
+
+    .header-group-controls button {
+      padding: 2px 5px;
+      font-size: 10px;
+      background: #e8e8e8;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      cursor: pointer;
+      color: #555;
+    }
+
+    .header-group-controls button:hover {
+      background: #ddd;
+      color: #333;
     }
 
     .header-scroll-wrapper {
@@ -142,21 +165,18 @@
       overflow: hidden;
     }
 
-    /* Fixed lane labels column */
+    /* Fixed lane labels column - no independent scroll, synced with planner */
     #lane-labels {
-      width: 120px;
-      min-width: 120px;
+      width: 150px;
+      min-width: 150px;
       flex-shrink: 0;
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow: hidden;
       border-right: 1px solid #ddd;
       background: #fafafa;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE/Edge */
     }
 
-    #lane-labels::-webkit-scrollbar {
-      display: none;
+    #lane-labels-inner {
+      will-change: transform;
     }
 
     /* Spacer to account for horizontal scrollbar in planner-scroll */
@@ -180,6 +200,93 @@
 
     .lane-label:last-child {
       border-bottom: none;
+    }
+
+    /* Grouped lane label styles */
+    .lane-label .group-prefix {
+      font-size: 9px;
+      color: #666;
+      font-weight: normal;
+      margin-right: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .lane-label .group-prefix:hover {
+      color: #333;
+    }
+
+    .lane-label .collapse-icon {
+      font-size: 8px;
+      margin-right: 2px;
+      transition: transform 0.2s;
+    }
+
+    .lane-label .collapse-icon.collapsed {
+      transform: rotate(90deg);
+    }
+
+    .lane-label .bed-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Alternating group backgrounds */
+    .lane-label.group-even {
+      background: #f0f4f8;
+    }
+
+    .resource-lane.group-even {
+      background: #f8fafc;
+    }
+
+    .resource-lane.group-even.drag-over {
+      background: #e3f2fd;
+    }
+
+    /* Collapsed group placeholder */
+    .collapsed-group-label {
+      padding: 0 8px;
+      font-size: 11px;
+      color: #666;
+      font-style: italic;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      height: 28px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+      cursor: pointer;
+      background: #f5f5f5;
+    }
+
+    .collapsed-group-label:hover {
+      background: #eee;
+    }
+
+    .collapsed-group-label .collapse-icon {
+      font-size: 8px;
+      margin-right: 4px;
+      transform: rotate(90deg);
+    }
+
+    .collapsed-group-lane {
+      border-bottom: 1px solid #eee;
+      height: 28px;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      background: #f5f5f5;
+    }
+
+    .collapsed-group-label.group-even {
+      background: #e8eef4;
+    }
+
+    .collapsed-group-lane.group-even {
+      background: #f0f4f8;
     }
 
     /* Scrollable planner area */
@@ -406,13 +513,21 @@
 
   <div id="timeline-container">
     <div id="timeline-header">
-      <div class="header-label">Bed</div>
+      <div class="header-label">
+        <span>Bed</span>
+        <span id="group-controls" class="header-group-controls" style="display: none;">
+          <button onclick="expandAllGroups()" title="Expand all groups">▲</button>
+          <button onclick="collapseAllGroups()" title="Collapse all groups">▼</button>
+        </span>
+      </div>
       <div class="header-scroll-wrapper">
         <div class="header-timeline" id="header-months"></div>
       </div>
     </div>
     <div id="scroll-container">
-      <div id="lane-labels"></div>
+      <div id="lane-labels">
+        <div id="lane-labels-inner"></div>
+      </div>
       <div id="planner-scroll">
         <div id="planner">
           <div class="loading-placeholder">
@@ -439,19 +554,27 @@
         { id: 'crop_1', name: 'Tomatoes', startDate: '2025-04-01', endDate: '2025-07-15', resource: 'Bed 1', bgColor: '#e53935', textColor: '#ffffff' },
         { id: 'crop_2', name: 'Lettuce', startDate: '2025-03-15', endDate: '2025-05-01', resource: 'Bed 2', bgColor: '#43a047', textColor: '#ffffff' },
         { id: 'crop_3', name: 'Carrots', startDate: '2025-04-15', endDate: '2025-08-01', resource: 'Bed 1', bgColor: '#fb8c00', textColor: '#000000' },
-        { id: 'crop_4', name: 'Peppers', startDate: '2025-05-01', endDate: '2025-09-30', resource: 'Bed 3', bgColor: '#8e24aa', textColor: '#ffffff' },
+        { id: 'crop_4', name: 'Peppers', startDate: '2025-05-01', endDate: '2025-09-30', resource: 'GH Bed 1', bgColor: '#8e24aa', textColor: '#ffffff' },
         { id: 'crop_5', name: 'Spinach', startDate: '2025-03-01', endDate: '2025-04-15', resource: '', bgColor: '#2e7d32', textColor: '#ffffff' },
         { id: 'crop_6', name: 'Kale', startDate: '2025-03-20', endDate: '2025-06-30', resource: 'Bed 2', bgColor: '#558b2f', textColor: '#ffffff' },
         { id: 'crop_7', name: 'Beans', startDate: '2025-05-15', endDate: '2025-08-15', resource: '' },
-        { id: 'crop_8', name: 'Cucumbers', startDate: '2025-05-20', endDate: '2025-08-30', resource: 'Bed 4', bgColor: '#00897b', textColor: '#ffffff' },
-        { id: 'crop_9', name: 'Squash', startDate: '2025-06-01', endDate: '2025-09-15', resource: 'Bed 3', bgColor: '#fdd835', textColor: '#000000' },
-        { id: 'crop_10', name: 'Radishes', startDate: '2025-03-10', endDate: '2025-04-20', resource: 'Bed 4', bgColor: '#d81b60', textColor: '#ffffff' }
+        { id: 'crop_8', name: 'Cucumbers', startDate: '2025-05-20', endDate: '2025-08-30', resource: 'Bed 3', bgColor: '#00897b', textColor: '#ffffff' },
+        { id: 'crop_9', name: 'Squash', startDate: '2025-06-01', endDate: '2025-09-15', resource: 'GH Bed 1', bgColor: '#fdd835', textColor: '#000000' },
+        { id: 'crop_10', name: 'Radishes', startDate: '2025-03-10', endDate: '2025-04-20', resource: 'Bed 3', bgColor: '#d81b60', textColor: '#ffffff' }
       ],
-      _resources: ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Unassigned'],
+      _resources: ['Bed 1', 'Bed 2', 'Bed 3', 'GH Bed 1', 'GH Bed 2', 'Unassigned'],
+      _groups: [
+        { name: 'North Field', beds: ['Bed 1', 'Bed 2', 'Bed 3'] },
+        { name: 'Greenhouse', beds: ['GH Bed 1', 'GH Bed 2'] },
+        { name: null, beds: ['Unassigned'] }
+      ],
 
       getPlannerData: function() {
         return Promise.resolve({
-          resources: this._resources,
+          resources: {
+            resources: this._resources,
+            groups: this._groups
+          },
           crops: JSON.parse(JSON.stringify(this._crops)) // Deep copy
         });
       },
@@ -556,7 +679,9 @@
     // ============================================================
 
     let crops = [];
-    let resources = [];
+    let resources = [];       // Flat array of resource names
+    let resourceGroups = null; // Array of { name, beds: [] } or null if no groups
+    let collapsedGroups = new Set(); // Group names that are collapsed
     let pendingUpdates = new Map();
     let newItemIds = new Set();
     let changedItemIds = new Set();
@@ -634,7 +759,14 @@
         api.getPlannerData()
           .then((data) => {
             this.isPending = false;
-            resources = data.resources;
+            // Handle both old format (array) and new format ({ resources, groups })
+            if (Array.isArray(data.resources)) {
+              resources = data.resources;
+              resourceGroups = data.groups || null;
+            } else {
+              resources = data.resources.resources;
+              resourceGroups = data.resources.groups || null;
+            }
             mergeData(data.crops);
             render();
             setSyncStatus('synced', isGoogleEnvironment ? 'Live' : 'Mock');
@@ -671,6 +803,9 @@
           if (prefs.scrollDate) {
             savedScrollDate = new Date(prefs.scrollDate);
           }
+          if (prefs.collapsedGroups && Array.isArray(prefs.collapsedGroups)) {
+            collapsedGroups = new Set(prefs.collapsedGroups);
+          }
         })
         .catch(function() {
           // Ignore errors loading preferences, use defaults
@@ -688,9 +823,12 @@
       // Debounce timer for saving scroll position
       let scrollSaveTimeout = null;
 
+      const laneLabelsInner = document.getElementById('lane-labels-inner');
+
       plannerScroll.addEventListener('scroll', () => {
         headerWrapper.scrollLeft = plannerScroll.scrollLeft;
-        laneLabels.scrollTop = plannerScroll.scrollTop;
+        // Use transform for smooth sync without independent scrolling
+        laneLabelsInner.style.transform = 'translateY(-' + plannerScroll.scrollTop + 'px)';
 
         // Save scroll position (debounced to avoid too many saves)
         if (scrollSaveTimeout) clearTimeout(scrollSaveTimeout);
@@ -772,6 +910,38 @@
       render();
       // Save preference
       api.saveUserPreferences({ viewMode: mode });
+    }
+
+    // Toggle group collapse state
+    function toggleGroupCollapse(groupName) {
+      if (collapsedGroups.has(groupName)) {
+        collapsedGroups.delete(groupName);
+      } else {
+        collapsedGroups.add(groupName);
+      }
+      render();
+      // Save preference
+      api.saveUserPreferences({ collapsedGroups: Array.from(collapsedGroups) });
+    }
+
+    // Expand all groups
+    function expandAllGroups() {
+      collapsedGroups.clear();
+      render();
+      api.saveUserPreferences({ collapsedGroups: [] });
+    }
+
+    // Collapse all groups
+    function collapseAllGroups() {
+      if (resourceGroups) {
+        resourceGroups.forEach(function(group) {
+          if (group.name) {
+            collapsedGroups.add(group.name);
+          }
+        });
+        render();
+        api.saveUserPreferences({ collapsedGroups: Array.from(collapsedGroups) });
+      }
     }
 
     // Calculate stacking rows for crops in a lane
@@ -902,23 +1072,34 @@
       calculateTimelineRange();
       renderHeader();
 
+      // Show/hide group controls based on whether groups exist
+      const groupControls = document.getElementById('group-controls');
+      const hasGroups = resourceGroups && resourceGroups.some(g => g.name);
+      groupControls.style.display = hasGroups ? 'inline-flex' : 'none';
+
       const timelineWidth = getTimelineWidth();
 
       // Detect overlapping crops (only used in overlap mode)
       const overlappingIds = findOverlappingCrops();
 
       const planner = document.getElementById('planner');
-      const laneLabels = document.getElementById('lane-labels');
+      const laneLabels = document.getElementById('lane-labels-inner');
       planner.innerHTML = '';
       laneLabels.innerHTML = '';
 
       // Set planner width to match timeline
       planner.style.width = timelineWidth + 'px';
 
-      resources.forEach(function(resource) {
+      // Track group index for alternating colors
+      let currentGroupIndex = 0;
+
+      // Helper function to render a single resource lane
+      // groupName is optional - if provided, shows group prefix with collapse toggle
+      // groupIdx is used for alternating background colors
+      function renderResourceLane(resource, groupName, groupIdx) {
         // Create lane label (in fixed left column)
         const label = document.createElement('div');
-        label.className = 'lane-label';
+        label.className = 'lane-label' + (groupIdx % 2 === 1 ? ' group-even' : '');
         label.dataset.resource = resource;
 
         // Get crops for this lane to calculate height
@@ -933,12 +1114,31 @@
         }
 
         label.style.height = laneHeight + 'px';
-        label.textContent = resource;
+
+        // Build label content with optional group prefix
+        if (groupName) {
+          const isCollapsed = collapsedGroups.has(groupName);
+          const prefix = document.createElement('span');
+          prefix.className = 'group-prefix';
+          prefix.innerHTML = '<span class="collapse-icon' + (isCollapsed ? ' collapsed' : '') + '">▲</span>' + groupName + ':';
+          prefix.onclick = function(e) {
+            e.stopPropagation();
+            toggleGroupCollapse(groupName);
+          };
+          label.appendChild(prefix);
+
+          const bedName = document.createElement('span');
+          bedName.className = 'bed-name';
+          bedName.textContent = resource;
+          label.appendChild(bedName);
+        } else {
+          label.textContent = resource;
+        }
         laneLabels.appendChild(label);
 
         // Create lane timeline (in scrollable area)
         const lane = document.createElement('div');
-        lane.className = 'resource-lane';
+        lane.className = 'resource-lane' + (groupIdx % 2 === 1 ? ' group-even' : '');
         lane.dataset.resource = resource;
         lane.style.height = laneHeight + 'px';
 
@@ -1010,7 +1210,58 @@
         });
 
         planner.appendChild(lane);
-      });
+      }
+
+      // Helper function to render a collapsed group placeholder
+      function renderCollapsedGroupPlaceholder(groupName, bedCount, groupIdx) {
+        // Create collapsed placeholder in lane labels
+        const label = document.createElement('div');
+        label.className = 'collapsed-group-label' + (groupIdx % 2 === 1 ? ' group-even' : '');
+        label.innerHTML = '<span class="collapse-icon">▲</span>' + groupName + ' (' + bedCount + ' beds)';
+        label.onclick = function() { toggleGroupCollapse(groupName); };
+        laneLabels.appendChild(label);
+
+        // Create matching placeholder in planner area
+        const lane = document.createElement('div');
+        lane.className = 'collapsed-group-lane' + (groupIdx % 2 === 1 ? ' group-even' : '');
+        lane.style.width = timelineWidth + 'px';
+        planner.appendChild(lane);
+      }
+
+      // Render resources - with groups if available, otherwise flat list
+      if (resourceGroups && resourceGroups.length > 0) {
+        // Render grouped resources
+        let groupIdx = 0;
+        resourceGroups.forEach(function(group) {
+          if (group.name) {
+            // This is a named group
+            const isCollapsed = collapsedGroups.has(group.name);
+            const thisGroupIdx = groupIdx;
+            groupIdx++;
+
+            if (isCollapsed) {
+              // Show collapsed placeholder
+              renderCollapsedGroupPlaceholder(group.name, group.beds.length, thisGroupIdx);
+            } else {
+              // Render beds with group prefix
+              group.beds.forEach(function(bed) {
+                renderResourceLane(bed, group.name, thisGroupIdx);
+              });
+            }
+          } else {
+            // Ungrouped beds (including Unassigned) - render directly without group prefix
+            group.beds.forEach(function(bed) {
+              renderResourceLane(bed, null, groupIdx);
+            });
+            groupIdx++;
+          }
+        });
+      } else {
+        // No groups - render flat list
+        resources.forEach(function(resource) {
+          renderResourceLane(resource, null, 0);
+        });
+      }
 
       // Add spacer to lane labels to account for horizontal scrollbar
       const spacer = document.createElement('div');
