@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: #f5f5f5;
+    }
+
+    body {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #333;
+    }
+
+    #controls {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      padding: 8px 16px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    button:hover {
+      background: #3367d6;
+    }
+
+    button.toggle {
+      background: #f1f1f1;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+
+    button.toggle:hover {
+      background: #e1e1e1;
+    }
+
+    button.toggle.active {
+      background: #4285f4;
+      color: white;
+      border-color: #4285f4;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 0;
+    }
+
+    .toggle-group button {
+      border-radius: 0;
+    }
+
+    .toggle-group button:first-child {
+      border-radius: 4px 0 0 4px;
+    }
+
+    .toggle-group button:last-child {
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Timeline container */
+    #timeline-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+    }
+
+    /* Timeline header row */
+    #timeline-header {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      background: #fafafa;
+      flex-shrink: 0;
+    }
+
+    .header-label {
+      width: 120px;
+      min-width: 120px;
+      padding: 8px;
+      font-weight: bold;
+      font-size: 11px;
+      color: #666;
+      border-right: 1px solid #ddd;
+      flex-shrink: 0;
+    }
+
+    .header-scroll-wrapper {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .header-timeline {
+      display: flex;
+    }
+
+    .month-header {
+      flex-shrink: 0;
+      text-align: center;
+      font-size: 10px;
+      color: #666;
+      border-right: 1px solid #eee;
+      padding: 4px 0;
+    }
+
+    .month-header .month-name {
+      font-weight: bold;
+    }
+
+    /* Main scroll area */
+    #scroll-container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Fixed lane labels column */
+    #lane-labels {
+      width: 120px;
+      min-width: 120px;
+      flex-shrink: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      border-right: 1px solid #ddd;
+      background: #fafafa;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+
+    #lane-labels::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Spacer to account for horizontal scrollbar in planner-scroll */
+    .lane-labels-spacer {
+      height: 17px;
+      flex-shrink: 0;
+    }
+
+    .lane-label {
+      padding: 0 8px;
+      font-size: 11px;
+      color: #333;
+      font-weight: bold;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      height: 50px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .lane-label:last-child {
+      border-bottom: none;
+    }
+
+    /* Scrollable planner area */
+    #planner-scroll {
+      flex: 1;
+      overflow: auto;
+    }
+
+    #planner {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Resource lanes */
+    .resource-lane {
+      border-bottom: 1px solid #eee;
+      height: 50px;
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    .resource-lane:last-child {
+      border-bottom: none;
+    }
+
+    .resource-lane.drag-over {
+      background: #e3f2fd;
+    }
+
+    .lane-timeline {
+      position: relative;
+      height: 100%;
+    }
+
+    /* Grid lines for months */
+    .grid-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #eee;
+    }
+
+    /* Crop boxes positioned absolutely on timeline */
+    .crop-box {
+      position: absolute;
+      top: 8px;
+      height: 34px;
+      min-width: 30px;
+      padding: 4px 8px;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      border-radius: 4px;
+      cursor: grab;
+      font-size: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      user-select: none;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      z-index: 10;
+    }
+
+    .crop-box:hover {
+      z-index: 20;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .crop-box.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+
+    .crop-box .crop-name {
+      font-weight: bold;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .crop-box .crop-dates {
+      font-size: 9px;
+      opacity: 0.9;
+    }
+
+    /* Different colors for variety */
+    .crop-box[data-index="0"] { background: linear-gradient(135deg, #4CAF50, #45a049); --crop-color: #4CAF50; }
+    .crop-box[data-index="1"] { background: linear-gradient(135deg, #2196F3, #1976D2); --crop-color: #2196F3; }
+    .crop-box[data-index="2"] { background: linear-gradient(135deg, #FF9800, #F57C00); --crop-color: #FF9800; }
+    .crop-box[data-index="3"] { background: linear-gradient(135deg, #9C27B0, #7B1FA2); --crop-color: #9C27B0; }
+    .crop-box[data-index="4"] { background: linear-gradient(135deg, #F44336, #D32F2F); --crop-color: #F44336; }
+    .crop-box[data-index="5"] { background: linear-gradient(135deg, #00BCD4, #0097A7); --crop-color: #00BCD4; }
+    .crop-box[data-index="6"] { background: linear-gradient(135deg, #795548, #5D4037); --crop-color: #795548; }
+    .crop-box[data-index="7"] { background: linear-gradient(135deg, #607D8B, #455A64); --crop-color: #607D8B; }
+
+    /* Overlapping crops - outline only */
+    .crop-box.overlap {
+      background: transparent !important;
+      border: 2px solid var(--crop-color);
+      color: #333;
+      box-shadow: none;
+    }
+
+    .crop-box.overlap .crop-dates {
+      opacity: 0.7;
+    }
+
+    .crop-box.overlap:hover {
+      background: rgba(255,255,255,0.9) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    /* Sync indicator */
+    .sync-indicator {
+      display: inline-block;
+      font-size: 11px;
+      color: #666;
+      margin-left: 10px;
+    }
+
+    .sync-indicator::before {
+      content: '';
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+      background: #ccc;
+    }
+
+    .sync-indicator.syncing::before {
+      background: #FFC107;
+      animation: pulse 1s infinite;
+    }
+
+    .sync-indicator.synced::before {
+      background: #4CAF50;
+    }
+
+    .sync-indicator.error::before {
+      background: #F44336;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Highlight new/changed items */
+    .crop-box.new-item {
+      animation: highlight-new 2s ease-out;
+    }
+
+    .crop-box.changed-item {
+      animation: highlight-change 1s ease-out;
+    }
+
+    @keyframes highlight-new {
+      0% { box-shadow: 0 0 0 3px #4CAF50; }
+      100% { box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    }
+
+    @keyframes highlight-change {
+      0% { box-shadow: 0 0 0 3px #2196F3; }
+      100% { box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    }
+
+    /* Loading placeholder */
+    .loading-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      color: #666;
+      font-size: 13px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e0e0e0;
+      border-top-color: #4285f4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Today line */
+    .today-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #F44336;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button onclick="resizeToFit()">Fit to Window</button>
+    <div class="toggle-group">
+      <button id="btn-overlap" class="toggle active" onclick="setViewMode('overlap')">Overlap</button>
+      <button id="btn-stacked" class="toggle" onclick="setViewMode('stacked')">Stacked</button>
+    </div>
+    <div class="toggle-group">
+      <button class="toggle" onclick="zoomOut()" title="Show more time">−</button>
+      <button class="toggle" id="zoom-level" style="min-width: 70px; cursor: default;">6 Mon</button>
+      <button class="toggle" onclick="zoomIn()" title="Show less time">+</button>
+    </div>
+    <button onclick="goToToday()">Today</button>
+    <span id="sync-status" class="sync-indicator"></span>
+  </div>
+
+  <div id="timeline-container">
+    <div id="timeline-header">
+      <div class="header-label">Bed</div>
+      <div class="header-scroll-wrapper">
+        <div class="header-timeline" id="header-months"></div>
+      </div>
+    </div>
+    <div id="scroll-container">
+      <div id="lane-labels"></div>
+      <div id="planner-scroll">
+        <div id="planner">
+          <div class="loading-placeholder">
+            <div class="spinner"></div>
+            <div>Connecting to spreadsheet...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="status">Loading...</div>
+
+  <script>
+    let crops = [];
+    let resources = [];
+    let pendingUpdates = new Map();
+    let newItemIds = new Set();
+    let changedItemIds = new Set();
+
+    // View mode: 'overlap' or 'stacked'
+    let viewMode = 'overlap';
+
+    // Timeline state - now uses fixed range for infinite scroll
+    let timelineStart = null;
+    let timelineEnd = null;
+
+    // Timeline configuration - semantic zoom levels based on time visible in viewport
+    // Each level defines: label, and approximate days to show in viewport
+    const ZOOM_LEVELS = [
+      { label: '2 Yr', days: 730 },
+      { label: '1 Yr', days: 365 },
+      { label: '6 Mon', days: 180 },
+      { label: '3 Mon', days: 90 },
+      { label: '1 Mon', days: 30 }
+    ];
+    let zoomIndex = 2; // Start at 6 Mon
+    let pixelsPerDay = 8; // Will be calculated based on viewport width
+    const TIMELINE_PADDING_MONTHS = 12; // Months before earliest / after latest crop
+    const DEFAULT_SCROLL_OFFSET_DAYS = 30; // Scroll to today - this many days
+
+    // Constants for stacked view
+    const CROP_HEIGHT = 34;
+    const CROP_SPACING = 4;
+    const CROP_TOP_PADDING = 8;
+
+    // Track if initial scroll has been done
+    let initialScrollDone = false;
+    let savedScrollDate = null; // Date to scroll to from saved preferences
+
+    // Polling manager with guarded interval pattern
+    const poller = {
+      isPending: false,
+      lastActivity: Date.now(),
+      intervalId: null,
+      TICK_RATE: 100,
+      IDLE_TIMEOUT: 60000,
+
+      init: function() {
+        document.addEventListener('mousemove', () => this.lastActivity = Date.now());
+        document.addEventListener('keydown', () => this.lastActivity = Date.now());
+        document.addEventListener('mousedown', () => this.lastActivity = Date.now());
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden) this.lastActivity = Date.now();
+        });
+      },
+
+      start: function() {
+        if (this.intervalId) clearInterval(this.intervalId);
+        this.intervalId = setInterval(() => this.tick(), this.TICK_RATE);
+      },
+
+      stop: function() {
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
+      },
+
+      tick: function() {
+        if (document.hidden) return;
+        const isIdle = (Date.now() - this.lastActivity) > this.IDLE_TIMEOUT;
+        if (isIdle && Math.random() > 0.1) return;
+        if (this.isPending) return;
+        this.executePoll();
+      },
+
+      executePoll: function() {
+        this.isPending = true;
+
+        google.script.run
+          .withSuccessHandler((data) => {
+            this.isPending = false;
+            resources = data.resources;
+            mergeData(data.crops);
+            render();
+            setSyncStatus('synced', 'Live');
+
+            const assignedCount = crops.filter(c => c.resource && c.resource.trim()).length;
+            document.getElementById('status').textContent =
+              `${crops.length} crops (${assignedCount} assigned) · ${resources.length - 1} beds`;
+          })
+          .withFailureHandler((err) => {
+            this.isPending = false;
+            setSyncStatus('error', 'Error');
+            showError(err);
+          })
+          .getPlannerData();
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    function init() {
+      setSyncStatus('syncing', 'Connecting...');
+
+      // Load user preferences first
+      google.script.run
+        .withSuccessHandler(function(prefs) {
+          if (prefs.zoomIndex !== undefined) {
+            zoomIndex = prefs.zoomIndex;
+            updateZoomDisplay();
+          }
+          if (prefs.viewMode) {
+            viewMode = prefs.viewMode;
+            document.getElementById('btn-overlap').classList.toggle('active', viewMode === 'overlap');
+            document.getElementById('btn-stacked').classList.toggle('active', viewMode === 'stacked');
+          }
+          if (prefs.scrollDate) {
+            savedScrollDate = new Date(prefs.scrollDate);
+          }
+        })
+        .withFailureHandler(function() {
+          // Ignore errors loading preferences, use defaults
+        })
+        .getUserPreferences();
+
+      poller.init();
+      poller.executePoll();
+      poller.start();
+
+      // Sync horizontal scroll between header and planner
+      const plannerScroll = document.getElementById('planner-scroll');
+      const headerWrapper = document.querySelector('.header-scroll-wrapper');
+      const laneLabels = document.getElementById('lane-labels');
+
+      // Debounce timer for saving scroll position
+      let scrollSaveTimeout = null;
+
+      plannerScroll.addEventListener('scroll', () => {
+        headerWrapper.scrollLeft = plannerScroll.scrollLeft;
+        laneLabels.scrollTop = plannerScroll.scrollTop;
+
+        // Save scroll position (debounced to avoid too many saves)
+        if (scrollSaveTimeout) clearTimeout(scrollSaveTimeout);
+        scrollSaveTimeout = setTimeout(() => {
+          if (timelineStart) {
+            const leftDate = getLeftEdgeDate();
+            google.script.run.saveUserPreferences({ scrollDate: leftDate.toISOString() });
+          }
+        }, 1000); // Save 1 second after scrolling stops
+      });
+
+      // Recalculate on resize
+      window.addEventListener('resize', () => {
+        if (crops.length > 0) render();
+      });
+    }
+
+    function startPolling() { poller.start(); }
+    function stopPolling() { poller.stop(); }
+
+    function mergeData(newData) {
+      const oldMap = new Map(crops.map(c => [c.id, c]));
+
+      newItemIds.clear();
+      changedItemIds.clear();
+
+      for (const crop of newData) {
+        const old = oldMap.get(crop.id);
+        if (!old) {
+          newItemIds.add(crop.id);
+        } else if (hasChanged(old, crop)) {
+          if (!pendingUpdates.has(crop.id)) {
+            changedItemIds.add(crop.id);
+          }
+        }
+      }
+
+      crops = newData.map(crop => {
+        if (pendingUpdates.has(crop.id)) {
+          return { ...crop, resource: pendingUpdates.get(crop.id) };
+        }
+        return crop;
+      });
+    }
+
+    function hasChanged(oldCrop, newCrop) {
+      return oldCrop.name !== newCrop.name ||
+             oldCrop.resource !== newCrop.resource ||
+             oldCrop.startDate !== newCrop.startDate ||
+             oldCrop.endDate !== newCrop.endDate;
+    }
+
+    function setSyncStatus(state, text) {
+      const el = document.getElementById('sync-status');
+      el.className = 'sync-indicator ' + state;
+      el.textContent = text;
+    }
+
+    function showError(err) {
+      document.getElementById('status').textContent = 'Error: ' + (err.message || err);
+      setSyncStatus('error', 'Error');
+    }
+
+    function resizeToFit() {
+      stopPolling();
+      const width = window.screen.availWidth - 100;
+      const height = window.screen.availHeight - 150;
+
+      google.script.run
+        .withSuccessHandler(function() {
+          google.script.host.close();
+        })
+        .showPlannerWithSize(width, height);
+    }
+
+    function setViewMode(mode) {
+      viewMode = mode;
+      document.getElementById('btn-overlap').classList.toggle('active', mode === 'overlap');
+      document.getElementById('btn-stacked').classList.toggle('active', mode === 'stacked');
+      render();
+      // Save preference
+      google.script.run.saveUserPreferences({ viewMode: mode });
+    }
+
+    // Calculate stacking rows for crops in a lane
+    // Returns a map of cropId -> row index (0-based)
+    function calculateStackingRows(laneCrops) {
+      if (laneCrops.length === 0) return { rows: {}, maxRow: 0 };
+
+      // Sort by start date
+      const sorted = [...laneCrops].sort((a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+
+      const rows = {};
+      const rowEndTimes = []; // Track end time for each row
+
+      for (const crop of sorted) {
+        const startTime = new Date(crop.startDate).getTime();
+        const endTime = new Date(crop.endDate).getTime();
+
+        // Find the first row where this crop fits (no overlap)
+        let assignedRow = -1;
+        for (let r = 0; r < rowEndTimes.length; r++) {
+          if (startTime > rowEndTimes[r]) {
+            assignedRow = r;
+            break;
+          }
+        }
+
+        // If no existing row works, create a new one
+        if (assignedRow === -1) {
+          assignedRow = rowEndTimes.length;
+          rowEndTimes.push(endTime);
+        } else {
+          rowEndTimes[assignedRow] = endTime;
+        }
+
+        rows[crop.id] = assignedRow;
+      }
+
+      return { rows, maxRow: rowEndTimes.length };
+    }
+
+    // Calculate timeline range - extended for infinite scroll
+    function calculateTimelineRange() {
+      const now = new Date();
+
+      if (crops.length === 0) {
+        // Default: 1 year before and after today
+        timelineStart = new Date(now.getFullYear() - 1, 0, 1);
+        timelineEnd = new Date(now.getFullYear() + 1, 11, 31);
+        return;
+      }
+
+      let minDate = new Date(now); // Include today
+      let maxDate = new Date(now);
+
+      for (const crop of crops) {
+        const start = new Date(crop.startDate);
+        const end = new Date(crop.endDate);
+
+        if (start < minDate) minDate = start;
+        if (end > maxDate) maxDate = end;
+      }
+
+      // Add padding months before and after
+      timelineStart = new Date(minDate.getFullYear(), minDate.getMonth() - TIMELINE_PADDING_MONTHS, 1);
+      timelineEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + TIMELINE_PADDING_MONTHS + 1, 0);
+    }
+
+    // Get total timeline width in pixels
+    function getTimelineWidth() {
+      const days = Math.ceil((timelineEnd.getTime() - timelineStart.getTime()) / (1000 * 60 * 60 * 24));
+      return days * pixelsPerDay;
+    }
+
+    // Get position and width in pixels (not percentages)
+    // End date is treated as "through end of that day" (adds 1 day visually)
+    function getTimelinePosition(startDate, endDate) {
+      const startMs = new Date(startDate).getTime() - timelineStart.getTime();
+
+      // Add 1 day to end date so it extends through the full last day
+      const endDateObj = new Date(endDate);
+      endDateObj.setDate(endDateObj.getDate() + 1);
+      const endMs = endDateObj.getTime() - timelineStart.getTime();
+
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const left = (startMs / msPerDay) * pixelsPerDay;
+      const width = ((endMs - startMs) / msPerDay) * pixelsPerDay;
+
+      return { left: Math.max(0, left), width: Math.max(1, width) };
+    }
+
+    // Render month headers with pixel widths
+    function renderHeader() {
+      const headerEl = document.getElementById('header-months');
+      headerEl.innerHTML = '';
+
+      const timelineWidth = getTimelineWidth();
+      headerEl.style.width = timelineWidth + 'px';
+
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const current = new Date(timelineStart);
+
+      while (current <= timelineEnd) {
+        const monthStart = new Date(current);
+        const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+
+        const startMs = monthStart.getTime() - timelineStart.getTime();
+        const endMs = Math.min(monthEnd.getTime(), timelineEnd.getTime()) - timelineStart.getTime();
+        const days = (endMs - startMs) / msPerDay;
+        const widthPx = days * pixelsPerDay;
+
+        const monthEl = document.createElement('div');
+        monthEl.className = 'month-header';
+        monthEl.style.width = widthPx + 'px';
+
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        monthEl.innerHTML = `<div class="month-name">${monthNames[current.getMonth()]}</div><div>${current.getFullYear()}</div>`;
+
+        headerEl.appendChild(monthEl);
+
+        current.setMonth(current.getMonth() + 1);
+      }
+    }
+
+    function render() {
+      calculatePixelsPerDay();
+      calculateTimelineRange();
+      renderHeader();
+
+      const timelineWidth = getTimelineWidth();
+
+      // Detect overlapping crops (only used in overlap mode)
+      const overlappingIds = findOverlappingCrops();
+
+      const planner = document.getElementById('planner');
+      const laneLabels = document.getElementById('lane-labels');
+      planner.innerHTML = '';
+      laneLabels.innerHTML = '';
+
+      // Set planner width to match timeline
+      planner.style.width = timelineWidth + 'px';
+
+      resources.forEach(function(resource) {
+        // Create lane label (in fixed left column)
+        const label = document.createElement('div');
+        label.className = 'lane-label';
+        label.dataset.resource = resource;
+
+        // Get crops for this lane to calculate height
+        const laneCrops = crops.filter(c => (c.resource || 'Unassigned') === resource);
+
+        // Calculate stacking if in stacked mode
+        let stackInfo = { rows: {}, maxRow: 1 };
+        let laneHeight = 50;
+        if (viewMode === 'stacked' && laneCrops.length > 0) {
+          stackInfo = calculateStackingRows(laneCrops);
+          laneHeight = CROP_TOP_PADDING * 2 + stackInfo.maxRow * CROP_HEIGHT + (stackInfo.maxRow - 1) * CROP_SPACING;
+        }
+
+        label.style.height = laneHeight + 'px';
+        label.textContent = resource;
+        laneLabels.appendChild(label);
+
+        // Create lane timeline (in scrollable area)
+        const lane = document.createElement('div');
+        lane.className = 'resource-lane';
+        lane.dataset.resource = resource;
+        lane.style.height = laneHeight + 'px';
+
+        const timeline = document.createElement('div');
+        timeline.className = 'lane-timeline';
+        timeline.style.width = timelineWidth + 'px';
+
+        // Add today line
+        const today = new Date();
+        if (today >= timelineStart && today <= timelineEnd) {
+          const todayPos = getTimelinePosition(today, today);
+          const todayLine = document.createElement('div');
+          todayLine.className = 'today-line';
+          todayLine.style.left = todayPos.left + 'px';
+          timeline.appendChild(todayLine);
+        }
+
+        // Add crops
+        crops.forEach(function(crop, index) {
+          const cropResource = crop.resource || 'Unassigned';
+          if (cropResource === resource) {
+            const stackRow = stackInfo.rows[crop.id] || 0;
+            timeline.appendChild(createCropBox(crop, index, overlappingIds, stackRow));
+          }
+        });
+
+        lane.appendChild(timeline);
+
+        // Drop zone handlers
+        lane.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          lane.classList.add('drag-over');
+        });
+
+        lane.addEventListener('dragleave', function(e) {
+          lane.classList.remove('drag-over');
+        });
+
+        lane.addEventListener('drop', function(e) {
+          e.preventDefault();
+          lane.classList.remove('drag-over');
+
+          const cropId = e.dataTransfer.getData('text/plain');
+          const newResource = lane.dataset.resource;
+          const resourceValue = newResource === 'Unassigned' ? '' : newResource;
+
+          const crop = crops.find(c => c.id === cropId);
+          const oldResource = crop ? crop.resource : '';
+          if (crop) {
+            crop.resource = resourceValue;
+            pendingUpdates.set(cropId, resourceValue);
+          }
+          render();
+          document.getElementById('status').textContent = 'Saving...';
+
+          google.script.run
+            .withSuccessHandler(function() {
+              pendingUpdates.delete(cropId);
+              document.getElementById('status').textContent = 'Saved to ' + newResource;
+            })
+            .withFailureHandler(function(err) {
+              pendingUpdates.delete(cropId);
+              if (crop) {
+                crop.resource = oldResource;
+              }
+              render();
+              document.getElementById('status').textContent = 'Error: ' + err.message;
+            })
+            .updateCropResource(cropId, resourceValue);
+        });
+
+        planner.appendChild(lane);
+      });
+
+      // Add spacer to lane labels to account for horizontal scrollbar
+      const spacer = document.createElement('div');
+      spacer.className = 'lane-labels-spacer';
+      laneLabels.appendChild(spacer);
+
+      // Scroll to saved position or today - 30 days on initial load
+      if (!initialScrollDone) {
+        initialScrollDone = true;
+        if (savedScrollDate) {
+          scrollToDate(savedScrollDate);
+        } else {
+          scrollToDate(new Date(Date.now() - DEFAULT_SCROLL_OFFSET_DAYS * 24 * 60 * 60 * 1000));
+        }
+      }
+    }
+
+    // Scroll to a specific date
+    function scrollToDate(date) {
+      const plannerScroll = document.getElementById('planner-scroll');
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysFromStart = (date.getTime() - timelineStart.getTime()) / msPerDay;
+      const scrollX = daysFromStart * pixelsPerDay;
+      plannerScroll.scrollLeft = Math.max(0, scrollX);
+    }
+
+    // Scroll to today (with offset)
+    function goToToday() {
+      scrollToDate(new Date(Date.now() - DEFAULT_SCROLL_OFFSET_DAYS * 24 * 60 * 60 * 1000));
+    }
+
+    // Get the date at the left edge of the viewport
+    function getLeftEdgeDate() {
+      const plannerScroll = document.getElementById('planner-scroll');
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysFromStart = plannerScroll.scrollLeft / pixelsPerDay;
+      return new Date(timelineStart.getTime() + daysFromStart * msPerDay);
+    }
+
+    // Get the date at the center of the current viewport
+    function getCenterDate() {
+      const plannerScroll = document.getElementById('planner-scroll');
+      const centerX = plannerScroll.scrollLeft + plannerScroll.clientWidth / 2;
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysFromStart = centerX / pixelsPerDay;
+      return new Date(timelineStart.getTime() + daysFromStart * msPerDay);
+    }
+
+    // Scroll to center a specific date in the viewport
+    function scrollToCenterDate(date) {
+      const plannerScroll = document.getElementById('planner-scroll');
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysFromStart = (date.getTime() - timelineStart.getTime()) / msPerDay;
+      const targetX = daysFromStart * pixelsPerDay - plannerScroll.clientWidth / 2;
+      plannerScroll.scrollLeft = Math.max(0, targetX);
+    }
+
+    // Calculate pixels per day based on current zoom level and viewport width
+    function calculatePixelsPerDay() {
+      const plannerScroll = document.getElementById('planner-scroll');
+      const viewportWidth = plannerScroll ? plannerScroll.clientWidth : 800;
+      const targetDays = ZOOM_LEVELS[zoomIndex].days;
+      pixelsPerDay = Math.max(1, viewportWidth / targetDays);
+    }
+
+    // Update zoom level display
+    function updateZoomDisplay() {
+      document.getElementById('zoom-level').textContent = ZOOM_LEVELS[zoomIndex].label;
+    }
+
+    // Zoom in (show less time, more detail)
+    function zoomIn() {
+      if (zoomIndex >= ZOOM_LEVELS.length - 1) return;
+      const centerDate = getCenterDate();
+      zoomIndex++;
+      calculatePixelsPerDay();
+      updateZoomDisplay();
+      render();
+      scrollToCenterDate(centerDate);
+      // Save preference
+      google.script.run.saveUserPreferences({ zoomIndex: zoomIndex });
+    }
+
+    // Zoom out (show more time, less detail)
+    function zoomOut() {
+      if (zoomIndex <= 0) return;
+      const centerDate = getCenterDate();
+      zoomIndex--;
+      calculatePixelsPerDay();
+      updateZoomDisplay();
+      render();
+      scrollToCenterDate(centerDate);
+      // Save preference
+      google.script.run.saveUserPreferences({ zoomIndex: zoomIndex });
+    }
+
+    function createCropBox(crop, index, overlappingIds, stackRow) {
+      const pos = getTimelinePosition(crop.startDate, crop.endDate);
+
+      const box = document.createElement('div');
+      box.className = 'crop-box';
+      box.draggable = true;
+      box.dataset.id = crop.id;
+      box.dataset.index = index % 8;
+
+      box.style.left = pos.left + 'px';
+      box.style.width = pos.width + 'px';
+
+      // In stacked mode, position vertically based on row
+      if (viewMode === 'stacked') {
+        const topPos = CROP_TOP_PADDING + stackRow * (CROP_HEIGHT + CROP_SPACING);
+        box.style.top = topPos + 'px';
+      }
+
+      // Mark overlapping crops (only in overlap mode)
+      if (viewMode === 'overlap' && overlappingIds && overlappingIds.has(crop.id)) {
+        box.classList.add('overlap');
+      }
+
+      if (newItemIds.has(crop.id)) {
+        box.classList.add('new-item');
+      } else if (changedItemIds.has(crop.id)) {
+        box.classList.add('changed-item');
+      }
+
+      const name = document.createElement('div');
+      name.className = 'crop-name';
+      name.textContent = crop.name;
+      box.appendChild(name);
+
+      const dates = document.createElement('div');
+      dates.className = 'crop-dates';
+      dates.textContent = formatDate(crop.startDate) + ' - ' + formatDate(crop.endDate);
+      box.appendChild(dates);
+
+      // Tooltip on hover
+      box.title = `${crop.name}\n${formatDate(crop.startDate)} - ${formatDate(crop.endDate)}`;
+
+      box.addEventListener('dragstart', function(e) {
+        e.dataTransfer.setData('text/plain', crop.id);
+        box.classList.add('dragging');
+      });
+
+      box.addEventListener('dragend', function(e) {
+        box.classList.remove('dragging');
+      });
+
+      return box;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '?';
+      const d = new Date(dateStr);
+      return (d.getMonth() + 1) + '/' + d.getDate();
+    }
+
+    // Detect which crops overlap within each resource lane
+    function findOverlappingCrops() {
+      const overlapping = new Set();
+
+      // Group crops by resource
+      const byResource = {};
+      for (const crop of crops) {
+        const resource = crop.resource || 'Unassigned';
+        if (!byResource[resource]) byResource[resource] = [];
+        byResource[resource].push(crop);
+      }
+
+      // Check for overlaps within each resource
+      for (const resource in byResource) {
+        const laneCrops = byResource[resource];
+
+        for (let i = 0; i < laneCrops.length; i++) {
+          for (let j = i + 1; j < laneCrops.length; j++) {
+            const a = laneCrops[i];
+            const b = laneCrops[j];
+
+            const aStart = new Date(a.startDate).getTime();
+            const aEnd = new Date(a.endDate).getTime();
+            const bStart = new Date(b.startDate).getTime();
+            const bEnd = new Date(b.endDate).getTime();
+
+            // Check if date ranges overlap
+            if (aStart <= bEnd && bStart <= aEnd) {
+              overlapping.add(a.id);
+              overlapping.add(b.id);
+            }
+          }
+        }
+      }
+
+      return overlapping;
+    }
+  </script>
+</body>
+</html>
