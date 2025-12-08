@@ -2,7 +2,7 @@
  * Simple Crop Planner - Modeless Dialog Version
  * Uses currentonly scope for Marketplace compatibility
  *
- * Required columns (by header name): Name, Start Date, End Date, Resource, _id
+ * Required columns (by header name): Name, Start Date, End Date, Bed, _id
  */
 
 // Default column names (can be overridden via settings)
@@ -10,12 +10,12 @@ const DEFAULT_COLUMNS = {
   name: 'Name',
   start: 'Start Date',
   end: 'End Date',
-  resource: 'Resource',
+  resource: 'Bed',
   id: '_id'
 };
 
-// Alternative resource column names to check if exact match not found
-const RESOURCE_COLUMN_NAMES = ['Resource', 'Bed', 'Bed 1', 'Location', 'Assignment'];
+// Alternative resource/bed column names to check if exact match not found
+const RESOURCE_COLUMN_NAMES = ['Bed', 'Resource', 'Bed 1', 'Location', 'Assignment'];
 
 /**
  * Get saved column settings or defaults
