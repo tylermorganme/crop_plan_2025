@@ -436,16 +436,16 @@
     const mockProvider = {
       _prefs: {},
       _crops: [
-        { id: 'crop_1', name: 'Tomatoes', startDate: '2025-04-01', endDate: '2025-07-15', resource: 'Bed 1' },
-        { id: 'crop_2', name: 'Lettuce', startDate: '2025-03-15', endDate: '2025-05-01', resource: 'Bed 2' },
-        { id: 'crop_3', name: 'Carrots', startDate: '2025-04-15', endDate: '2025-08-01', resource: 'Bed 1' },
-        { id: 'crop_4', name: 'Peppers', startDate: '2025-05-01', endDate: '2025-09-30', resource: 'Bed 3' },
-        { id: 'crop_5', name: 'Spinach', startDate: '2025-03-01', endDate: '2025-04-15', resource: '' },
-        { id: 'crop_6', name: 'Kale', startDate: '2025-03-20', endDate: '2025-06-30', resource: 'Bed 2' },
+        { id: 'crop_1', name: 'Tomatoes', startDate: '2025-04-01', endDate: '2025-07-15', resource: 'Bed 1', bgColor: '#e53935', textColor: '#ffffff' },
+        { id: 'crop_2', name: 'Lettuce', startDate: '2025-03-15', endDate: '2025-05-01', resource: 'Bed 2', bgColor: '#43a047', textColor: '#ffffff' },
+        { id: 'crop_3', name: 'Carrots', startDate: '2025-04-15', endDate: '2025-08-01', resource: 'Bed 1', bgColor: '#fb8c00', textColor: '#000000' },
+        { id: 'crop_4', name: 'Peppers', startDate: '2025-05-01', endDate: '2025-09-30', resource: 'Bed 3', bgColor: '#8e24aa', textColor: '#ffffff' },
+        { id: 'crop_5', name: 'Spinach', startDate: '2025-03-01', endDate: '2025-04-15', resource: '', bgColor: '#2e7d32', textColor: '#ffffff' },
+        { id: 'crop_6', name: 'Kale', startDate: '2025-03-20', endDate: '2025-06-30', resource: 'Bed 2', bgColor: '#558b2f', textColor: '#ffffff' },
         { id: 'crop_7', name: 'Beans', startDate: '2025-05-15', endDate: '2025-08-15', resource: '' },
-        { id: 'crop_8', name: 'Cucumbers', startDate: '2025-05-20', endDate: '2025-08-30', resource: 'Bed 4' },
-        { id: 'crop_9', name: 'Squash', startDate: '2025-06-01', endDate: '2025-09-15', resource: 'Bed 3' },
-        { id: 'crop_10', name: 'Radishes', startDate: '2025-03-10', endDate: '2025-04-20', resource: 'Bed 4' }
+        { id: 'crop_8', name: 'Cucumbers', startDate: '2025-05-20', endDate: '2025-08-30', resource: 'Bed 4', bgColor: '#00897b', textColor: '#ffffff' },
+        { id: 'crop_9', name: 'Squash', startDate: '2025-06-01', endDate: '2025-09-15', resource: 'Bed 3', bgColor: '#fdd835', textColor: '#000000' },
+        { id: 'crop_10', name: 'Radishes', startDate: '2025-03-10', endDate: '2025-04-20', resource: 'Bed 4', bgColor: '#d81b60', textColor: '#ffffff' }
       ],
       _resources: ['Bed 1', 'Bed 2', 'Bed 3', 'Bed 4', 'Unassigned'],
 
@@ -1125,9 +1125,31 @@
         box.style.top = topPos + 'px';
       }
 
-      // Mark overlapping crops (only in overlap mode)
-      if (viewMode === 'overlap' && overlappingIds && overlappingIds.has(crop.id)) {
-        box.classList.add('overlap');
+      // Check if this crop is overlapping (only in overlap mode)
+      const isOverlapping = viewMode === 'overlap' && overlappingIds && overlappingIds.has(crop.id);
+
+      // Apply custom colors from spreadsheet
+      if (crop.bgColor) {
+        // Custom background color - override the default gradient
+        if (isOverlapping) {
+          // In overlap mode: transparent background with colored border, black text
+          box.style.background = 'transparent';
+          box.style.border = '2px solid ' + crop.bgColor;
+          box.style.color = '#333';
+          box.classList.add('overlap');
+          // Store color for hover state
+          box.dataset.customColor = crop.bgColor;
+        } else {
+          // Solid fill mode: use the custom background color
+          box.style.background = crop.bgColor;
+          // Use custom text color if provided, otherwise white for contrast
+          box.style.color = crop.textColor || '#ffffff';
+        }
+      } else {
+        // No custom color - use default behavior
+        if (isOverlapping) {
+          box.classList.add('overlap');
+        }
       }
 
       if (newItemIds.has(crop.id)) {

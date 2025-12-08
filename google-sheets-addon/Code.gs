@@ -233,6 +233,18 @@ function getCropData() {
     }
   }
 
+  // Get the Name column range for colors (data rows only, skip header)
+  const lastRow = sheet.getLastRow();
+  const nameColNum = cols['Name'] + 1; // 1-based
+  let nameBackgrounds = [];
+  let nameFontColors = [];
+
+  if (lastRow > 1) {
+    const nameRange = sheet.getRange(2, nameColNum, lastRow - 1, 1);
+    nameBackgrounds = nameRange.getBackgrounds();
+    nameFontColors = nameRange.getFontColors();
+  }
+
   // Skip header row
   const crops = [];
   for (let i = 1; i < data.length; i++) {
@@ -242,13 +254,19 @@ function getCropData() {
     const end = row[cols['End']];
 
     if (name && start && end) {
+      // Get colors for this row (i-1 because nameBackgrounds is 0-indexed from row 2)
+      const bgColor = nameBackgrounds[i - 1] ? nameBackgrounds[i - 1][0] : null;
+      const textColor = nameFontColors[i - 1] ? nameFontColors[i - 1][0] : null;
+
       crops.push({
         id: row[cols['ID']] || '',
         rowIndex: i + 1,
         name: name,
         startDate: start instanceof Date ? start.toISOString() : start,
         endDate: end instanceof Date ? end.toISOString() : end,
-        resource: cols['Resource'] !== undefined ? String(row[cols['Resource']] || '').trim() : ''
+        resource: cols['Resource'] !== undefined ? String(row[cols['Resource']] || '').trim() : '',
+        bgColor: bgColor && bgColor !== '#ffffff' ? bgColor : null,
+        textColor: textColor && textColor !== '#000000' ? textColor : null
       });
     }
   }
