@@ -266,7 +266,7 @@ function getCropData() {
         endDate: end instanceof Date ? end.toISOString() : end,
         resource: cols['Resource'] !== undefined ? String(row[cols['Resource']] || '').trim() : '',
         bgColor: bgColor && bgColor !== '#ffffff' ? bgColor : null,
-        textColor: textColor && textColor !== '#000000' ? textColor : null
+        textColor: textColor || null
       });
     }
   }

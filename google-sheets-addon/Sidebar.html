@@ -1140,10 +1140,12 @@
           // Store color for hover state
           box.dataset.customColor = crop.bgColor;
         } else {
-          // Solid fill mode: use the custom background color
+          // Solid fill mode: use the custom background and text colors from spreadsheet
           box.style.background = crop.bgColor;
-          // Use custom text color if provided, otherwise white for contrast
-          box.style.color = crop.textColor || '#ffffff';
+          if (crop.textColor) {
+            box.style.color = crop.textColor;
+          }
+          // If no textColor specified, keep the default white from CSS
         }
       } else {
         // No custom color - use default behavior
