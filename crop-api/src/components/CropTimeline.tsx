@@ -119,6 +119,8 @@ export default function CropTimeline({
   const [draggedCropId, setDraggedCropId] = useState<string | null>(null);
   const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null);
   const [dragOverResource, setDragOverResource] = useState<string | null>(null);
+  const [unassignedHeight, setUnassignedHeight] = useState(150); // User-adjustable height
+  const [isResizing, setIsResizing] = useState(false);
 
   // Refs
   const plannerScrollRef = useRef<HTMLDivElement>(null);
@@ -386,6 +388,29 @@ export default function CropTimeline({
     });
   };
 
+  // Resize handlers for Unassigned section
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startY = e.clientY;
+    const startHeight = unassignedHeight;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientY - startY;
+      const newHeight = Math.max(80, Math.min(500, startHeight + delta));
+      setUnassignedHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [unassignedHeight]);
+
   // Build resources list for rendering
   const resourcesForRendering = useMemo(() => {
     if (groups && groups.length > 0) {
@@ -599,34 +624,6 @@ export default function CropTimeline({
         </span>
       </div>
 
-      {/* Unassigned section */}
-      {unassignedCrops.length > 0 && (
-        <div className="border-b bg-amber-50">
-          <div className="flex items-center px-3 py-2 border-b border-amber-200 bg-amber-100">
-            <span className="text-xs font-medium text-amber-800">
-              Unassigned ({unassignedCrops.length})
-            </span>
-          </div>
-          <div
-            className="relative overflow-x-auto"
-            style={{ height: 60 }}
-            onDragOver={(e) => handleDragOver(e, 'Unassigned')}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, 'Unassigned')}
-          >
-            <div className="relative" style={{ width: timelineWidth, height: '100%' }}>
-              {todayPosition !== null && (
-                <div
-                  className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-5"
-                  style={{ left: todayPosition }}
-                />
-              )}
-              {unassignedCrops.map((crop, i) => renderCropBox(crop, 0))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main timeline area - single scrollable container */}
       <div className="flex-1 min-h-0 overflow-auto bg-white border rounded-b" ref={plannerScrollRef}>
         {/* Using HTML table for reliable dual-axis sticky positioning */}
@@ -669,6 +666,92 @@ export default function CropTimeline({
             </tr>
           </thead>
           <tbody>
+            {/* Unassigned row - sticky below header, always visible as drop target */}
+            {(() => {
+              const unassignedStacking = calculateStacking(unassignedCrops);
+              // Use user-set height, but ensure minimum based on content
+              const minContentHeight = unassignedCrops.length > 0
+                ? CROP_TOP_PADDING * 2 + unassignedStacking.maxRow * CROP_HEIGHT + (unassignedStacking.maxRow - 1) * CROP_SPACING
+                : 80;
+              const effectiveHeight = Math.max(unassignedHeight, minContentHeight);
+              const isDragOverUnassigned = dragOverResource === 'Unassigned';
+              const bgColor = unassignedCrops.length > 0 ? '#fffbeb' : '#f9fafb';
+              // Header row height (approx 42px for the month headers)
+              const headerHeight = 42;
+
+              return (
+                <tr key="Unassigned">
+                  {/* Sticky unassigned label - sticks below header */}
+                  <td
+                    className="px-2 text-xs font-medium border-r align-top"
+                    style={{
+                      position: 'sticky',
+                      top: headerHeight,
+                      left: 0,
+                      zIndex: 25, // Above regular sticky labels but below header
+                      backgroundColor: unassignedCrops.length > 0 ? '#fef3c7' : '#e5e7eb',
+                      height: effectiveHeight,
+                      borderBottom: 'none',
+                    }}
+                  >
+                    <div className="flex flex-col pt-2">
+                      <span className={`font-bold ${unassignedCrops.length > 0 ? 'text-amber-800' : 'text-gray-600'}`}>
+                        Unassigned
+                      </span>
+                      <span className={`text-[10px] ${unassignedCrops.length > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                        {unassignedCrops.length > 0 ? `${unassignedCrops.length} crops` : 'Drop here to unassign'}
+                      </span>
+                    </div>
+                  </td>
+                  {/* Unassigned timeline lane - also sticky */}
+                  <td
+                    colSpan={monthHeaders.length}
+                    className={`relative p-0 ${isDragOverUnassigned ? 'bg-amber-100' : ''}`}
+                    style={{
+                      position: 'sticky',
+                      top: headerHeight,
+                      zIndex: 24,
+                      height: effectiveHeight,
+                      backgroundColor: isDragOverUnassigned ? undefined : bgColor,
+                      borderBottom: 'none',
+                    }}
+                    onDragOver={(e) => handleDragOver(e, 'Unassigned')}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, 'Unassigned')}
+                  >
+                    {/* Today line */}
+                    {todayPosition !== null && (
+                      <div
+                        className="absolute top-0 bottom-0 w-0.5 bg-red-500"
+                        style={{ left: todayPosition, zIndex: 5 }}
+                      />
+                    )}
+                    {/* Unassigned crop boxes */}
+                    {unassignedCrops.map(crop => renderCropBox(crop, unassignedStacking.rows[crop.id] || 0))}
+                  </td>
+                </tr>
+              );
+            })()}
+            {/* Resize handle row for Unassigned section */}
+            <tr>
+              <td
+                colSpan={monthHeaders.length + 1}
+                className="p-0 select-none"
+                style={{
+                  position: 'sticky',
+                  top: 42 + unassignedHeight, // Header + unassigned height
+                  zIndex: 23,
+                  height: 8,
+                  backgroundColor: '#9ca3af',
+                  cursor: 'ns-resize',
+                }}
+                onMouseDown={handleResizeStart}
+              >
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-12 h-1 bg-gray-500 rounded" />
+                </div>
+              </td>
+            </tr>
             {resourcesForRendering.map(({ resource, groupName, groupIndex }) => {
               if (resource.startsWith('__collapsed__')) {
                 const collapsedGroupName = resource.replace('__collapsed__', '');

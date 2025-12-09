@@ -24,11 +24,44 @@ export default function TimelinePage() {
   }, []);
 
   const handleCropMove = (cropId: string, newResource: string, groupId?: string, bedsNeeded?: number) => {
-    // Always calculate span based on bedsNeeded and target row's bed size
-    // This handles both multi-bed crops AND single 50ft crops moved to 20ft rows
     const beds = bedsNeeded || 1;
 
-    // Calculate which beds the crop will span in the target row
+    // Moving to Unassigned - no capacity check needed, infinite capacity
+    if (newResource === '') {
+      setCrops(prev => {
+        // Find the crop(s) to move - either by groupId or single cropId
+        const cropsToRemove = groupId
+          ? prev.filter(c => c.groupId === groupId)
+          : prev.filter(c => c.id === cropId);
+
+        const template = cropsToRemove[0];
+        if (!template) return prev;
+
+        // Remove old entries
+        const otherCrops = groupId
+          ? prev.filter(c => c.groupId !== groupId)
+          : prev.filter(c => c.id !== cropId);
+
+        // Create single unassigned entry (collapse multi-bed back to one)
+        const unassignedCrop: TimelineCrop = {
+          ...template,
+          id: `${template.groupId}_unassigned`,
+          resource: '', // Unassigned
+          totalBeds: 1,
+          bedIndex: 1,
+          bedsNeeded: beds, // Preserve for when re-assigned
+          feetUsed: undefined,
+          bedCapacityFt: undefined,
+        };
+
+        return [...otherCrops, unassignedCrop].sort((a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
+      });
+      return;
+    }
+
+    // Moving to a real bed - calculate span based on bedsNeeded and target row's bed size
     const { bedSpanInfo, isComplete, bedsRequired } = calculateRowSpan(
       beds,
       newResource,
