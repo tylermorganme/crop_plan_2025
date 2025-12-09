@@ -23,6 +23,10 @@ export interface TimelineCrop {
   bedIndex: number;
   /** The base planting ID for grouping related bed entries */
   groupId: string;
+  /** Feet of this bed actually used by the crop */
+  feetUsed?: number;
+  /** Total feet capacity of this bed */
+  bedCapacityFt?: number;
 }
 
 export interface ResourceGroup {
@@ -95,24 +99,41 @@ function getBedSizeFt(bed: string): number {
   return SHORT_ROWS.includes(row) ? SHORT_BED_FT : STANDARD_BED_FT;
 }
 
+/** Info about each bed in a span, including how much is used */
+export interface BedSpanInfo {
+  bed: string;
+  feetUsed: number;
+  bedCapacityFt: number;
+}
+
 /**
  * Calculate how many bed rows a crop spans based on bedsNeeded (in 50ft units)
  * and the starting bed's row type.
  * Returns spanBeds (the actual beds), bedsRequired (how many were needed), and isComplete (if we got enough).
+ * Also returns bedSpanInfo with feet used per bed.
  */
 export function calculateRowSpan(bedsNeeded: number, startBed: string, bedGroups?: Record<string, string[]>): {
   rowSpan: number;
   spanBeds: string[];
+  bedSpanInfo: BedSpanInfo[];
   bedsRequired: number;
   isComplete: boolean;
+  totalFeetNeeded: number;
 } {
   const groups = bedGroups || (bedPlanData as BedPlanData).bedGroups;
-  if (bedsNeeded <= 0) {
-    return { rowSpan: 1, spanBeds: [startBed], bedsRequired: 1, isComplete: true };
-  }
-
   const row = getBedRow(startBed);
   const bedSizeFt = getBedSizeFt(startBed);
+
+  if (bedsNeeded <= 0) {
+    return {
+      rowSpan: 1,
+      spanBeds: [startBed],
+      bedSpanInfo: [{ bed: startBed, feetUsed: bedSizeFt, bedCapacityFt: bedSizeFt }],
+      bedsRequired: 1,
+      isComplete: true,
+      totalFeetNeeded: bedSizeFt
+    };
+  }
 
   // Convert bedsNeeded (in 50ft units) to feet, then to number of beds in this row
   const feetNeeded = bedsNeeded * STANDARD_BED_FT;
@@ -124,25 +145,53 @@ export function calculateRowSpan(bedsNeeded: number, startBed: string, bedGroups
   // Find beds starting from startBed
   const startIndex = rowBeds.findIndex(b => b === startBed);
   if (startIndex === -1) {
-    return { rowSpan: 1, spanBeds: [startBed], bedsRequired, isComplete: false };
+    return {
+      rowSpan: 1,
+      spanBeds: [startBed],
+      bedSpanInfo: [{ bed: startBed, feetUsed: Math.min(feetNeeded, bedSizeFt), bedCapacityFt: bedSizeFt }],
+      bedsRequired,
+      isComplete: false,
+      totalFeetNeeded: feetNeeded
+    };
   }
 
   // Collect consecutive beds from the starting position (only those that exist)
   const spanBeds: string[] = [];
+  const bedSpanInfo: BedSpanInfo[] = [];
+  let remainingFeet = feetNeeded;
+
   for (let i = 0; i < bedsRequired && startIndex + i < rowBeds.length; i++) {
-    spanBeds.push(rowBeds[startIndex + i]);
+    const bed = rowBeds[startIndex + i];
+    const thisBedCapacity = getBedSizeFt(bed);
+    const feetUsed = Math.min(remainingFeet, thisBedCapacity);
+
+    spanBeds.push(bed);
+    bedSpanInfo.push({
+      bed,
+      feetUsed,
+      bedCapacityFt: thisBedCapacity
+    });
+
+    remainingFeet -= feetUsed;
   }
 
   // If we couldn't get any beds, just use the start bed
   if (spanBeds.length === 0) {
     spanBeds.push(startBed);
+    bedSpanInfo.push({
+      bed: startBed,
+      feetUsed: Math.min(feetNeeded, bedSizeFt),
+      bedCapacityFt: bedSizeFt
+    });
   }
 
   return {
     rowSpan: spanBeds.length,
     spanBeds,
+    bedSpanInfo,
     bedsRequired,
-    isComplete: spanBeds.length >= bedsRequired
+    isComplete: spanBeds.length >= bedsRequired,
+    totalFeetNeeded: feetNeeded
   };
 }
 
@@ -208,23 +257,23 @@ export function getTimelineCrops(): TimelineCrop[] {
         seenIdentifiers.add(assignment.identifier);
 
         // Calculate which beds this crop spans
-        const { spanBeds } = calculateRowSpan(
+        const { bedSpanInfo } = calculateRowSpan(
           bedsNeeded,
           assignment.bed,
           bedPlan.bedGroups
         );
 
-        const totalBeds = spanBeds.length;
+        const totalBeds = bedSpanInfo.length;
         const displayName = bedAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
 
         // Create a separate entry for each bed the crop occupies
-        spanBeds.forEach((bed, index) => {
+        bedSpanInfo.forEach((info, index) => {
           timelineCrops.push({
             id: `${assignment.identifier}_bed${index}`, // Unique ID for each bed entry
             name: displayName,
             startDate: crop['Target Sewing Date']!,
             endDate: crop['Target End of Harvest']!,
-            resource: bed,
+            resource: info.bed,
             category: crop.Category || undefined,
             bedsNeeded,
             structure: crop['Growing Structure'] || 'Field',
@@ -232,6 +281,8 @@ export function getTimelineCrops(): TimelineCrop[] {
             totalBeds,
             bedIndex: index + 1, // 1-indexed for display
             groupId: assignment.identifier, // For grouping related entries
+            feetUsed: info.feetUsed,
+            bedCapacityFt: info.bedCapacityFt,
           });
         });
       }

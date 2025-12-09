@@ -23,6 +23,10 @@ interface TimelineCrop {
   bedIndex: number;
   /** The base planting ID for grouping related bed entries */
   groupId: string;
+  /** Feet of this bed actually used by the crop */
+  feetUsed?: number;
+  /** Total feet capacity of this bed */
+  bedCapacityFt?: number;
 }
 
 interface ResourceGroup {
@@ -425,6 +429,11 @@ export default function CropTimeline({
     const isGroupBeingDragged = draggedGroupId === crop.groupId && draggedGroupId !== null;
     const canDrag = !isMultiBed || isFirstBed; // Only first bed of multi-bed crops is draggable
 
+    // Check if this is a partial bed (doesn't use full capacity)
+    const isPartialBed = crop.feetUsed !== undefined &&
+                         crop.bedCapacityFt !== undefined &&
+                         crop.feetUsed < crop.bedCapacityFt;
+
     const colors = crop.bgColor
       ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
       : getColorForCategory(crop.category);
@@ -432,6 +441,15 @@ export default function CropTimeline({
     const topPos = viewMode === 'stacked'
       ? CROP_TOP_PADDING + stackRow * (CROP_HEIGHT + CROP_SPACING)
       : 8;
+
+    // Build tooltip
+    let tooltip = `${crop.name}\n${formatDate(crop.startDate)} - ${formatDate(crop.endDate)}`;
+    if (isMultiBed) {
+      tooltip += `\nBed ${crop.bedIndex} of ${crop.totalBeds}${isFirstBed ? ' (drag to move all)' : ' (drag first bed to move)'}`;
+    }
+    if (isPartialBed) {
+      tooltip += `\n${crop.feetUsed}' of ${crop.bedCapacityFt}' used`;
+    }
 
     return (
       <div
@@ -454,7 +472,7 @@ export default function CropTimeline({
           color: isOverlapping ? '#333' : colors.text,
           boxShadow: isOverlapping ? 'none' : '0 2px 4px rgba(0,0,0,0.2)',
         }}
-        title={`${crop.name}\n${formatDate(crop.startDate)} - ${formatDate(crop.endDate)}${isMultiBed ? `\nBed ${crop.bedIndex} of ${crop.totalBeds}${isFirstBed ? ' (drag to move all)' : ' (drag first bed to move)'}` : ''}`}
+        title={tooltip}
       >
         <div className="px-2 py-1 flex justify-between items-start">
           <div className="flex-1 min-w-0">
@@ -463,11 +481,18 @@ export default function CropTimeline({
               {formatDate(crop.startDate)} - {formatDate(crop.endDate)}
             </div>
           </div>
-          {isMultiBed && (
-            <div className="text-[9px] opacity-75 ml-1 flex-shrink-0 bg-black/20 px-1 rounded">
-              {crop.bedIndex}/{crop.totalBeds}
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-0.5 ml-1 flex-shrink-0">
+            {isMultiBed && (
+              <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
+                {crop.bedIndex}/{crop.totalBeds}
+              </div>
+            )}
+            {isPartialBed && (
+              <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
+                {crop.feetUsed}&apos; of {crop.bedCapacityFt}&apos;
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );

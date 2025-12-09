@@ -24,52 +24,54 @@ export default function TimelinePage() {
   }, []);
 
   const handleCropMove = (cropId: string, newResource: string, groupId?: string, bedsNeeded?: number) => {
-    // If this is a multi-bed crop (has groupId and bedsNeeded > 1), move all beds in the group
-    if (groupId && bedsNeeded && bedsNeeded > 1) {
-      // Calculate which beds the crop will now span
-      const { spanBeds, isComplete, bedsRequired } = calculateRowSpan(
-        bedsNeeded,
-        newResource,
-        (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups
-      );
+    // Always calculate span based on bedsNeeded and target row's bed size
+    // This handles both multi-bed crops AND single 50ft crops moved to 20ft rows
+    const beds = bedsNeeded || 1;
 
-      // Don't allow the move if there isn't enough room
-      if (!isComplete) {
-        alert(`Not enough room: this crop needs ${bedsRequired} beds but only ${spanBeds.length} available from ${newResource}`);
-        return;
-      }
+    // Calculate which beds the crop will span in the target row
+    const { bedSpanInfo, isComplete, bedsRequired } = calculateRowSpan(
+      beds,
+      newResource,
+      (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups
+    );
 
-      setCrops(prev => {
-        // Find all crops in this group
-        const groupCrops = prev.filter(c => c.groupId === groupId);
-        // Get template from first crop (for dates, name, etc.)
-        const template = groupCrops[0];
-        if (!template) return prev;
-
-        // Remove old group entries and add new ones
-        const otherCrops = prev.filter(c => c.groupId !== groupId);
-
-        // Create new entries for each bed in the span
-        const newGroupCrops: TimelineCrop[] = spanBeds.map((bed, index) => ({
-          ...template,
-          id: `${groupId}_bed${index}`,
-          resource: bed,
-          totalBeds: spanBeds.length,
-          bedIndex: index + 1,
-        }));
-
-        return [...otherCrops, ...newGroupCrops].sort((a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-        );
-      });
-    } else {
-      // Single bed crop - just update the resource
-      setCrops(prev =>
-        prev.map(c =>
-          c.id === cropId ? { ...c, resource: newResource } : c
-        )
-      );
+    // Don't allow the move if there isn't enough room
+    if (!isComplete) {
+      alert(`Not enough room: this crop needs ${bedsRequired} beds but only ${bedSpanInfo.length} available from ${newResource}`);
+      return;
     }
+
+    setCrops(prev => {
+      // Find the crop(s) to move - either by groupId or single cropId
+      const cropsToRemove = groupId
+        ? prev.filter(c => c.groupId === groupId)
+        : prev.filter(c => c.id === cropId);
+
+      // Get template from first crop (for dates, name, etc.)
+      const template = cropsToRemove[0];
+      if (!template) return prev;
+
+      // Remove old entries
+      const otherCrops = groupId
+        ? prev.filter(c => c.groupId !== groupId)
+        : prev.filter(c => c.id !== cropId);
+
+      // Create new entries for each bed in the span
+      const newGroupCrops: TimelineCrop[] = bedSpanInfo.map((info, index) => ({
+        ...template,
+        id: `${template.groupId}_bed${index}`,
+        resource: info.bed,
+        totalBeds: bedSpanInfo.length,
+        bedIndex: index + 1,
+        bedsNeeded: beds, // Preserve original bedsNeeded for future moves
+        feetUsed: info.feetUsed,
+        bedCapacityFt: info.bedCapacityFt,
+      }));
+
+      return [...otherCrops, ...newGroupCrops].sort((a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+    });
   };
 
   if (loading) {
