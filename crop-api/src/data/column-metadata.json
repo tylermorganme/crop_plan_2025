@@ -1,0 +1,1566 @@
+{
+  "sheetName": "Crop Chart",
+  "headerRow": 2,
+  "dataStartRow": 3,
+  "dataEndRow": 342,
+  "totalDataRows": 340,
+  "totalColumns": 155,
+  "summary": {
+    "calculated": 82,
+    "static": 45,
+    "mixed": 19,
+    "empty": 9
+  },
+  "columns": [
+    {
+      "column": "A",
+      "header": "Identifier",
+      "type": "mixed",
+      "datatype": "text",
+      "manualCount": 1,
+      "calculatedCount": 339,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "B",
+      "header": "Id",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "C",
+      "header": "Might Grow",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 213,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 127
+    },
+    {
+      "column": "D",
+      "header": "2024 Notes",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 30,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 310
+    },
+    {
+      "column": "E",
+      "header": "Deprecated",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 339,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 1
+    },
+    {
+      "column": "F",
+      "header": "Audited?",
+      "type": "mixed",
+      "datatype": "boolean",
+      "manualCount": 3,
+      "calculatedCount": 337,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "G",
+      "header": "In Plan",
+      "type": "calculated",
+      "datatype": "boolean",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "H",
+      "header": "Needs DTM Audit",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 84,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 256
+    },
+    {
+      "column": "I",
+      "header": "Crop",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 340,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 0
+    },
+    {
+      "column": "J",
+      "header": "Variety",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 340,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 0
+    },
+    {
+      "column": "K",
+      "header": "Product",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 340,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 0
+    },
+    {
+      "column": "L",
+      "header": "CACA",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "M",
+      "header": "Category",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 248,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 92
+    },
+    {
+      "column": "N",
+      "header": "Common Name",
+      "type": "mixed",
+      "datatype": "text",
+      "manualCount": 19,
+      "calculatedCount": 321,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "O",
+      "header": "Growing Structure",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 337,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 3
+    },
+    {
+      "column": "P",
+      "header": "Planting Method",
+      "type": "mixed",
+      "datatype": "text",
+      "manualCount": 1,
+      "calculatedCount": 339,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "Q",
+      "header": "Sp",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 88,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 252
+    },
+    {
+      "column": "R",
+      "header": "Su",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 90,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 250
+    },
+    {
+      "column": "S",
+      "header": "Fa",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 60,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 280
+    },
+    {
+      "column": "T",
+      "header": "Wi",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 25,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 315
+    },
+    {
+      "column": "U",
+      "header": "OW",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 49,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 291
+    },
+    {
+      "column": "V",
+      "header": "Seasons",
+      "type": "calculated",
+      "datatype": "text",
+      "manualCount": 0,
+      "calculatedCount": 339,
+      "patternCount": 1,
+      "emptyCount": 1
+    },
+    {
+      "column": "W",
+      "header": "Food",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 231,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 109
+    },
+    {
+      "column": "X",
+      "header": "Rows",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 335,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 5
+    },
+    {
+      "column": "Y",
+      "header": "Spacing",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 335,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 5
+    },
+    {
+      "column": "Z",
+      "header": "Irrigation",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 53,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 287
+    },
+    {
+      "column": "AA",
+      "header": "Row Cover",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 202,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 138
+    },
+    {
+      "column": "AB",
+      "header": "Frost Tolerant Starts",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 235,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 105
+    },
+    {
+      "column": "AC",
+      "header": "Height at Maturity",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 236,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 104
+    },
+    {
+      "column": "AD",
+      "header": "Plantings Per Bed",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "AE",
+      "header": "Seeds Per Planting",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 331,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 9
+    },
+    {
+      "column": "AF",
+      "header": "Custom Safety Factor",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 13,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 327
+    },
+    {
+      "column": "AG",
+      "header": "Safety Factor",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 61,
+      "calculatedCount": 273,
+      "patternCount": 1,
+      "emptyCount": 6
+    },
+    {
+      "column": "AH",
+      "header": "Seeding Factor",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 45,
+      "calculatedCount": 289,
+      "patternCount": 1,
+      "emptyCount": 6
+    },
+    {
+      "column": "AI",
+      "header": "Seeds Per Bed",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "AJ",
+      "header": "DTG Lower",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 119,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 221
+    },
+    {
+      "column": "AK",
+      "header": "DTG Upper",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 119,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 221
+    },
+    {
+      "column": "AL",
+      "header": "Days to Germination",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "AM",
+      "header": "Days in Cells",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 2,
+      "emptyCount": 0
+    },
+    {
+      "column": "AN",
+      "header": "Days in Cells Old",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 198,
+      "calculatedCount": 16,
+      "patternCount": 4,
+      "emptyCount": 126
+    },
+    {
+      "column": "AO",
+      "header": "DTM Lower",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 101,
+      "calculatedCount": 10,
+      "patternCount": 8,
+      "emptyCount": 229
+    },
+    {
+      "column": "AP",
+      "header": "DTM Upper",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 305,
+      "calculatedCount": 31,
+      "patternCount": 19,
+      "emptyCount": 4
+    },
+    {
+      "column": "AQ",
+      "header": "DTM",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 4,
+      "calculatedCount": 336,
+      "patternCount": 2,
+      "emptyCount": 0
+    },
+    {
+      "column": "AR",
+      "header": "STH",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 340,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 0
+    },
+    {
+      "column": "AS",
+      "header": "Normal Method",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 340,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 0
+    },
+    {
+      "column": "AT",
+      "header": "Harvest window",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 7,
+      "calculatedCount": 333,
+      "patternCount": 2,
+      "emptyCount": 0
+    },
+    {
+      "column": "AU",
+      "header": "Days In Field",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 5,
+      "calculatedCount": 335,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "AV",
+      "header": "Start In",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 4,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 336
+    },
+    {
+      "column": "AW",
+      "header": "Tray Size",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 93,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 247
+    },
+    {
+      "column": "AX",
+      "header": "Tray 1 Size",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 198,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 142
+    },
+    {
+      "column": "AY",
+      "header": "Tray 1 Days",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 184,
+      "calculatedCount": 11,
+      "patternCount": 8,
+      "emptyCount": 145
+    },
+    {
+      "column": "AZ",
+      "header": "Tray 1 Count",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 332,
+      "patternCount": 1,
+      "emptyCount": 8
+    },
+    {
+      "column": "BA",
+      "header": "Tray 2 Size",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 42,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 298
+    },
+    {
+      "column": "BB",
+      "header": "Tray 2 Days",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 42,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 298
+    },
+    {
+      "column": "BC",
+      "header": "Tray 2 Count",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 338,
+      "patternCount": 1,
+      "emptyCount": 2
+    },
+    {
+      "column": "BD",
+      "header": "Tray 3 Size",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 16,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 324
+    },
+    {
+      "column": "BE",
+      "header": "Tray 3 Days",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 16,
+      "calculatedCount": 321,
+      "patternCount": 1,
+      "emptyCount": 3
+    },
+    {
+      "column": "BF",
+      "header": "Tray 3 Count",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BG",
+      "header": "Units Per Harvest",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 1,
+      "calculatedCount": 306,
+      "patternCount": 93,
+      "emptyCount": 33
+    },
+    {
+      "column": "BH",
+      "header": "Harvests",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 290,
+      "calculatedCount": 17,
+      "patternCount": 10,
+      "emptyCount": 33
+    },
+    {
+      "column": "BI",
+      "header": "Days Between Harvest",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 306,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 34
+    },
+    {
+      "column": "BJ",
+      "header": "Holding Window",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BK",
+      "header": "Delay Before Sale",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 8,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 332
+    },
+    {
+      "column": "BL",
+      "header": "Custom Yield Per Bed",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BM",
+      "header": "Direct Price",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 307,
+      "calculatedCount": 25,
+      "patternCount": 14,
+      "emptyCount": 8
+    },
+    {
+      "column": "BN",
+      "header": "Rough Wholesale Price",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 81,
+      "calculatedCount": 259,
+      "patternCount": 9,
+      "emptyCount": 0
+    },
+    {
+      "column": "BO",
+      "header": "True Wholesale Price",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "BP",
+      "header": "Unit",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 337,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 3
+    },
+    {
+      "column": "BQ",
+      "header": "Direct Revenue Per Bed",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BR",
+      "header": "Wholesale List",
+      "type": "static",
+      "datatype": "boolean",
+      "manualCount": 257,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 83
+    },
+    {
+      "column": "BS",
+      "header": "Extended Harvest",
+      "type": "calculated",
+      "datatype": "boolean",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BT",
+      "header": "Direct Revenue Per Bed Day",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BU",
+      "header": "Direct Revenue Per Acre Year",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BV",
+      "header": "Target Sewing Date",
+      "type": "calculated",
+      "datatype": "date",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BW",
+      "header": "Target Field Date",
+      "type": "calculated",
+      "datatype": "date",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BX",
+      "header": "Target Harvest Data",
+      "type": "calculated",
+      "datatype": "date",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BY",
+      "header": "Target End of Harvest",
+      "type": "calculated",
+      "datatype": "date",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "BZ",
+      "header": "Sewing Rel Last Frost",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 281,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 59
+    },
+    {
+      "column": "CA",
+      "header": "Inspiration",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 146,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 194
+    },
+    {
+      "column": "CB",
+      "header": "Direct Seeding Difficulty",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CC",
+      "header": "Bed Prep",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CD",
+      "header": "Seeding Trays",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CE",
+      "header": "Potting Up",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CF",
+      "header": "Start Irrigation",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CG",
+      "header": "Start Transport",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CH",
+      "header": "Transplanting",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CI",
+      "header": "Trellis Type",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 3,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 337
+    },
+    {
+      "column": "CJ",
+      "header": "Trellising",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CK",
+      "header": "Direct Seeding",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CL",
+      "header": "Install Irrigation",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 340,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 0
+    },
+    {
+      "column": "CM",
+      "header": "Install Row Cover",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CN",
+      "header": "Weeding",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CO",
+      "header": "Pruning",
+      "type": "mixed",
+      "datatype": "number",
+      "manualCount": 8,
+      "calculatedCount": 42,
+      "patternCount": 11,
+      "emptyCount": 290
+    },
+    {
+      "column": "CP",
+      "header": "Manage Pests",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "CQ",
+      "header": "Market & Sell",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CR",
+      "header": "Harvest",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CS",
+      "header": "Bunch",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CT",
+      "header": "Haul",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CU",
+      "header": "Wash",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CV",
+      "header": "Condition",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CW",
+      "header": "Trim",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CX",
+      "header": "Pack",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CY",
+      "header": "Clean",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "CZ",
+      "header": "Rehandle",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DA",
+      "header": "Market Transport",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DB",
+      "header": "Remove Crop Residue",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 1,
+      "patternCount": 1,
+      "emptyCount": 339
+    },
+    {
+      "column": "DC",
+      "header": "Revenue - Copy",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DD",
+      "header": "Direct Time",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DE",
+      "header": "Wholesale Time",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DF",
+      "header": "Revenue Per Hour",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DG",
+      "header": "Packaging Costs",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DH",
+      "header": "Seed Cost",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "DI",
+      "header": "Water Cost",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "DJ",
+      "header": "Row Cover Cost",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "DK",
+      "header": "Mulch Cost",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "DL",
+      "header": "Irrigation Cost",
+      "type": "empty",
+      "datatype": "unknown",
+      "manualCount": 0,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 340
+    },
+    {
+      "column": "DM",
+      "header": "Direct Revenue Per Bed2",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 339,
+      "patternCount": 2,
+      "emptyCount": 1
+    },
+    {
+      "column": "DN",
+      "header": "Direct Labor Cost",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DO",
+      "header": "Direct Non-Labor Cost",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DP",
+      "header": "Direct Total Cost",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DQ",
+      "header": "Direct Profit",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DR",
+      "header": "Direct Profit Per Acre",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DS",
+      "header": "Direct Profit Per Acre Year",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DT",
+      "header": "Direct Profit Per Bed Day",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DU",
+      "header": "Direct Labor Per Acre",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DV",
+      "header": "Direct Profit Per Owner Labor Hour",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DW",
+      "header": "Wholesale Revenue Per Bed",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DX",
+      "header": "Wholesale Labor Cost",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DY",
+      "header": "Wholesale Non-Labor Cost",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "DZ",
+      "header": "Wholesale Total Cost",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EA",
+      "header": "Wholesale Profit",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EB",
+      "header": "Wholesale Profit Per Acre",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EC",
+      "header": "Wholesale Profit Per Acre Year",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "ED",
+      "header": "Wholesale Labor Per Acre",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EE",
+      "header": "Wholesale Profit Per Bed Day",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EF",
+      "header": "Wholesale Profit Per Owner Labor Hour",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EG",
+      "header": "Packaging Percent",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EH",
+      "header": "ProductIndex",
+      "type": "calculated",
+      "datatype": "text",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EI",
+      "header": "ProductTarget",
+      "type": "calculated",
+      "datatype": "boolean",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EJ",
+      "header": "Bed Yield",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EK",
+      "header": "Units Per Weekly Harvest",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EL",
+      "header": "CSA Portions",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EM",
+      "header": "CSA Portions Per Week",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EN",
+      "header": "CSA %",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EO",
+      "header": "Beds",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 66,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 274
+    },
+    {
+      "column": "EP",
+      "header": "Times",
+      "type": "static",
+      "datatype": "number",
+      "manualCount": 66,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 274
+    },
+    {
+      "column": "EQ",
+      "header": "CSA Notes",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 10,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 330
+    },
+    {
+      "column": "ER",
+      "header": "Propduction Weeks",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "ES",
+      "header": "CSA Need",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "ET",
+      "header": "CSA Times",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EU",
+      "header": "CSA Harvests",
+      "type": "calculated",
+      "datatype": "text",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EV",
+      "header": "CSA Beds",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EW",
+      "header": "CSA Bed Days",
+      "type": "calculated",
+      "datatype": "number",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EX",
+      "header": "Planned CSA Bed Days",
+      "type": "calculated",
+      "datatype": "text",
+      "manualCount": 0,
+      "calculatedCount": 340,
+      "patternCount": 1,
+      "emptyCount": 0
+    },
+    {
+      "column": "EY",
+      "header": "Notes",
+      "type": "static",
+      "datatype": "text",
+      "manualCount": 311,
+      "calculatedCount": 0,
+      "patternCount": 0,
+      "emptyCount": 29
+    }
+  ]
+}

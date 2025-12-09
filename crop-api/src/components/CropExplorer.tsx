@@ -3,6 +3,35 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Crop } from '@/lib/crops';
+import columnAnalysis from '@/data/column-analysis.json';
+
+// Build a map of column header -> source type
+const columnSourceTypes: Record<string, 'static' | 'calculated' | 'mixed' | 'empty'> = {};
+columnAnalysis.columns.forEach((col: { header: string; type: string }) => {
+  columnSourceTypes[col.header] = col.type as 'static' | 'calculated' | 'mixed' | 'empty';
+});
+
+// Get background color class based on column source type
+function getColumnBgClass(col: string, isHeader: boolean = false): string {
+  const type = columnSourceTypes[col];
+  if (isHeader) {
+    switch (type) {
+      case 'static': return 'bg-blue-100';
+      case 'calculated': return 'bg-green-100';
+      case 'mixed': return 'bg-amber-100';
+      case 'empty': return 'bg-gray-200';
+      default: return 'bg-gray-50';
+    }
+  }
+  // Lighter colors for cells
+  switch (type) {
+    case 'static': return 'bg-blue-50/50';
+    case 'calculated': return 'bg-green-50/50';
+    case 'mixed': return 'bg-amber-50/50';
+    case 'empty': return 'bg-gray-100/50';
+    default: return '';
+  }
+}
 
 interface CropExplorerProps {
   crops: Crop[];
@@ -654,7 +683,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                     onDragEnd={handleDragEnd}
                     style={{ width: getColumnWidth(col), minWidth: getColumnWidth(col) }}
                     className={`relative px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
-                      dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : 'hover:bg-gray-100'
+                      dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : getColumnBgClass(col, true)
                     } ${draggedColumn === col ? 'opacity-50' : ''}`}
                     onClick={() => handleSort(col)}
                   >
@@ -714,7 +743,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                         <div
                           key={col}
                           style={{ width: getColumnWidth(col), minWidth: getColumnWidth(col) }}
-                          className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center"
+                          className={`px-3 py-2 text-sm text-gray-900 whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center ${getColumnBgClass(col)}`}
                           title={String(crop[col as keyof Crop] ?? '')}
                         >
                           {formatValue(crop[col as keyof Crop])}

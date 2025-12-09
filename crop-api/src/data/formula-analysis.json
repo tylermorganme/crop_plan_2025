@@ -1,0 +1,990 @@
+{
+  "totalCalculatedColumns": 80,
+  "noColumnDependencies": 4,
+  "withColumnDependencies": 76,
+  "columns": [
+    {
+      "column": "AL",
+      "header": "Days to Germination",
+      "formula": "=_xlfn.FLOOR.MATH(IFERROR(AVERAGE(Crops[[#This Row],[DTG Lower]:[DTG Upper]]),0))",
+      "dependsOnColumns": [],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CB",
+      "header": "Direct Seeding Difficulty",
+      "formula": "=1",
+      "dependsOnColumns": [],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DD",
+      "header": "Direct Time",
+      "formula": "=_xlfn.AGGREGATE(9,6,Crops[[#This Row],[Bed Prep]:[Remove Crop Residue]])",
+      "dependsOnColumns": [],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DY",
+      "header": "Wholesale Non-Labor Cost",
+      "formula": "=SUM(Crops[[#This Row],[Packaging Costs]:[Irrigation Cost]])",
+      "dependsOnColumns": [],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "G",
+      "header": "In Plan",
+      "formula": "=IFERROR(IF(ISNUMBER(MATCH(Crops[[#This Row],[Identifier]],BedPlan[Crop], 0)), TRUE, FALSE), FALSE)",
+      "dependsOnColumns": [
+        "Identifier"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BJ",
+      "header": "Holding Window",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[Holding Period])",
+      "dependsOnColumns": [
+        "ProductIndex"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "BS",
+      "header": "Extended Harvest",
+      "formula": "=Crops[[#This Row],[Harvests]]>1",
+      "dependsOnColumns": [
+        "Harvests"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BU",
+      "header": "Direct Revenue Per Acre Year",
+      "formula": "=IFERROR(Crops[[#This Row],[Direct Revenue Per Bed Day]]*GrowingDays*BedsPerAcre,\"\")",
+      "dependsOnColumns": [
+        "Direct Revenue Per Bed Day"
+      ],
+      "dependsOnConstants": [
+        "BedsPerAcre",
+        "GrowingDays"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BV",
+      "header": "Target Sewing Date",
+      "formula": "=LastFrostDate-5*Crops[[#This Row],[Sewing Rel Last Frost]]",
+      "dependsOnColumns": [
+        "Sewing Rel Last Frost"
+      ],
+      "dependsOnConstants": [
+        "LastFrostDate"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CC",
+      "header": "Bed Prep",
+      "formula": "=IF(Crops[[#This Row],[Transplanting]]>0, 2, 3)*BedLength/StandardBedLength",
+      "dependsOnColumns": [
+        "Transplanting"
+      ],
+      "dependsOnConstants": [
+        "BedLength",
+        "StandardBedLength"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CJ",
+      "header": "Trellising",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Trellis Type]],TrellisMethods[Trellis Type],TrellisMethods[Hours],0,0)",
+      "dependsOnColumns": [
+        "Trellis Type"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "TrellisMethods"
+      ]
+    },
+    {
+      "column": "CM",
+      "header": "Install Row Cover",
+      "formula": "=IF(OR(ISBLANK(Crops[[#This Row],[Row Cover]]),Crops[[#This Row],[Row Cover]]=\"None\"),0,1)*BedLength/50",
+      "dependsOnColumns": [
+        "Row Cover"
+      ],
+      "dependsOnConstants": [
+        "BedLength"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DC",
+      "header": "Revenue - Copy",
+      "formula": "=Crops[[#This Row],[Direct Revenue Per Bed2]]",
+      "dependsOnColumns": [
+        "Direct Revenue Per Bed2"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DE",
+      "header": "Wholesale Time",
+      "formula": "=_xlfn.AGGREGATE(9,6,Crops[[#This Row],[Bed Prep]:[Remove Crop Residue]])-0.75*Crops[[#This Row],[Market & Sell]]",
+      "dependsOnColumns": [
+        "Market & Sell"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DN",
+      "header": "Direct Labor Cost",
+      "formula": "=Crops[[#This Row],[Direct Time]]*LaborRate",
+      "dependsOnColumns": [
+        "Direct Time"
+      ],
+      "dependsOnConstants": [
+        "LaborRate"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DO",
+      "header": "Direct Non-Labor Cost",
+      "formula": "=SUM(Crops[[#This Row],[Irrigation Cost]])",
+      "dependsOnColumns": [
+        "Irrigation Cost"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DR",
+      "header": "Direct Profit Per Acre",
+      "formula": "=Crops[[#This Row],[Direct Profit]]*BedsPerAcre",
+      "dependsOnColumns": [
+        "Direct Profit"
+      ],
+      "dependsOnConstants": [
+        "BedsPerAcre"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DU",
+      "header": "Direct Labor Per Acre",
+      "formula": "=Crops[[#This Row],[Direct Time]] * BedsPerAcre",
+      "dependsOnColumns": [
+        "Direct Time"
+      ],
+      "dependsOnConstants": [
+        "BedsPerAcre"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DX",
+      "header": "Wholesale Labor Cost",
+      "formula": "=Crops[[#This Row],[Wholesale Time]]*LaborRate",
+      "dependsOnColumns": [
+        "Wholesale Time"
+      ],
+      "dependsOnConstants": [
+        "LaborRate"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EB",
+      "header": "Wholesale Profit Per Acre",
+      "formula": "=Crops[[#This Row],[Wholesale Profit]]*BedsPerAcre",
+      "dependsOnColumns": [
+        "Wholesale Profit"
+      ],
+      "dependsOnConstants": [
+        "BedsPerAcre"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "ED",
+      "header": "Wholesale Labor Per Acre",
+      "formula": "=Crops[[#This Row],[Wholesale Time]] * BedsPerAcre",
+      "dependsOnColumns": [
+        "Wholesale Time"
+      ],
+      "dependsOnConstants": [
+        "BedsPerAcre"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EI",
+      "header": "ProductTarget",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[Target])",
+      "dependsOnColumns": [
+        "ProductIndex"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "EJ",
+      "header": "Bed Yield",
+      "formula": "=Crops[[#This Row],[Custom Yield Per Bed]]",
+      "dependsOnColumns": [
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EN",
+      "header": "CSA %",
+      "formula": "=Crops[[#This Row],[CSA Portions Per Week]]/CSAMembers",
+      "dependsOnColumns": [
+        "CSA Portions Per Week"
+      ],
+      "dependsOnConstants": [
+        "CSAMembers"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "ES",
+      "header": "CSA Need",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[CSA Need])",
+      "dependsOnColumns": [
+        "ProductIndex"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "ET",
+      "header": "CSA Times",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[CSA Times])",
+      "dependsOnColumns": [
+        "ProductIndex"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "EX",
+      "header": "Planned CSA Bed Days",
+      "formula": "=Crops[[#This Row],[CSA Bed Days]]*#REF!",
+      "dependsOnColumns": [
+        "CSA Bed Days"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "AD",
+      "header": "Plantings Per Bed",
+      "formula": "=IFERROR(12/Crops[[#This Row],[Spacing]]*Crops[[#This Row],[Rows]]*BedLength,\"\")",
+      "dependsOnColumns": [
+        "Rows",
+        "Spacing"
+      ],
+      "dependsOnConstants": [
+        "BedLength"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BL",
+      "header": "Custom Yield Per Bed",
+      "formula": "=Crops[[#This Row],[Units Per Harvest]]*Crops[[#This Row],[Harvests]]",
+      "dependsOnColumns": [
+        "Harvests",
+        "Units Per Harvest"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BQ",
+      "header": "Direct Revenue Per Bed",
+      "formula": "=Crops[[#This Row],[Custom Yield Per Bed]]*Crops[[#This Row],[Direct Price]]",
+      "dependsOnColumns": [
+        "Direct Price",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BT",
+      "header": "Direct Revenue Per Bed Day",
+      "formula": "=IFERROR(Crops[[#This Row],[Direct Revenue Per Bed]]/Crops[[#This Row],[Days In Field]],-1)",
+      "dependsOnColumns": [
+        "Days In Field",
+        "Direct Revenue Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BW",
+      "header": "Target Field Date",
+      "formula": "=Crops[[#This Row],[Target Sewing Date]]+Crops[[#This Row],[Days in Cells]]",
+      "dependsOnColumns": [
+        "Days in Cells",
+        "Target Sewing Date"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BX",
+      "header": "Target Harvest Data",
+      "formula": "=Crops[[#This Row],[Target Sewing Date]]+Crops[[#This Row],[STH]]",
+      "dependsOnColumns": [
+        "STH",
+        "Target Sewing Date"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BY",
+      "header": "Target End of Harvest",
+      "formula": "=Crops[[#This Row],[Target Harvest Data]]+Crops[[#This Row],[Harvest window]]",
+      "dependsOnColumns": [
+        "Harvest window",
+        "Target Harvest Data"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CF",
+      "header": "Start Irrigation",
+      "formula": "=IFERROR(Crops[[#This Row],[Tray 1 Count]]/HomeStartFlatIrrigationPerHour,0)*Crops[[#This Row],[Days in Cells]]/DaysBetweenStartIrrigation",
+      "dependsOnColumns": [
+        "Days in Cells",
+        "Tray 1 Count"
+      ],
+      "dependsOnConstants": [
+        "HomeStartFlatIrrigationPerHour"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CK",
+      "header": "Direct Seeding",
+      "formula": "=IF(Crops[[#This Row],[Days in Cells]]<=0,Crops[[#This Row],[Rows]]*1/10,0)*BedLength/50",
+      "dependsOnColumns": [
+        "Days in Cells",
+        "Rows"
+      ],
+      "dependsOnConstants": [
+        "BedLength"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CN",
+      "header": "Weeding",
+      "formula": "=HoursPerWeedingPass*Crops[[#This Row],[Days In Field]]/14*Crops[[#This Row],[Rows]]+1*BedLength/50",
+      "dependsOnColumns": [
+        "Days In Field",
+        "Rows"
+      ],
+      "dependsOnConstants": [
+        "BedLength",
+        "HoursPerWeedingPass"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DF",
+      "header": "Revenue Per Hour",
+      "formula": "=Crops[[#This Row],[Direct Revenue Per Bed2]]/Crops[[#This Row],[Direct Time]]",
+      "dependsOnColumns": [
+        "Direct Revenue Per Bed2",
+        "Direct Time"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DG",
+      "header": "Packaging Costs",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[Packaging Cost])*(Crops[[#This Row],[Custom Yield Per Bed]]/_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[Units Per Pack]))",
+      "dependsOnColumns": [
+        "ProductIndex",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "DP",
+      "header": "Direct Total Cost",
+      "formula": "=Crops[[#This Row],[Direct Labor Cost]]+Crops[[#This Row],[Direct Non-Labor Cost]]",
+      "dependsOnColumns": [
+        "Direct Labor Cost",
+        "Direct Non-Labor Cost"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DQ",
+      "header": "Direct Profit",
+      "formula": "=Crops[[#This Row],[Direct Revenue Per Bed2]]-Crops[[#This Row],[Direct Total Cost]]",
+      "dependsOnColumns": [
+        "Direct Total Cost",
+        "Direct Revenue Per Bed2"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DS",
+      "header": "Direct Profit Per Acre Year",
+      "formula": "=Crops[[#This Row],[Direct Profit]]*BedsPerAcre*GrowingDays/Crops[[#This Row],[Days In Field]]",
+      "dependsOnColumns": [
+        "Days In Field",
+        "Direct Profit"
+      ],
+      "dependsOnConstants": [
+        "BedsPerAcre",
+        "GrowingDays"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DT",
+      "header": "Direct Profit Per Bed Day",
+      "formula": "=Crops[[#This Row],[Direct Profit]]/MIN(Crops[[#This Row],[Days In Field]],GrowingDays)",
+      "dependsOnColumns": [
+        "Days In Field",
+        "Direct Profit"
+      ],
+      "dependsOnConstants": [
+        "GrowingDays"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DW",
+      "header": "Wholesale Revenue Per Bed",
+      "formula": "=IFERROR(Crops[[#This Row],[Custom Yield Per Bed]]*Crops[[#This Row],[Rough Wholesale Price]],\"\")",
+      "dependsOnColumns": [
+        "Rough Wholesale Price",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DZ",
+      "header": "Wholesale Total Cost",
+      "formula": "=Crops[[#This Row],[Wholesale Labor Cost]]+Crops[[#This Row],[Wholesale Non-Labor Cost]]",
+      "dependsOnColumns": [
+        "Wholesale Non-Labor Cost",
+        "Wholesale Labor Cost"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EA",
+      "header": "Wholesale Profit",
+      "formula": "=Crops[[#This Row],[Wholesale Revenue Per Bed]]-Crops[[#This Row],[Wholesale Total Cost]]",
+      "dependsOnColumns": [
+        "Wholesale Revenue Per Bed",
+        "Wholesale Total Cost"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EC",
+      "header": "Wholesale Profit Per Acre Year",
+      "formula": "=Crops[[#This Row],[Wholesale Profit]]*BedsPerAcre*GrowingDays/Crops[[#This Row],[Days In Field]]",
+      "dependsOnColumns": [
+        "Days In Field",
+        "Wholesale Profit"
+      ],
+      "dependsOnConstants": [
+        "BedsPerAcre",
+        "GrowingDays"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EE",
+      "header": "Wholesale Profit Per Bed Day",
+      "formula": "=Crops[[#This Row],[Wholesale Profit]]/MIN(Crops[[#This Row],[Days In Field]],GrowingDays)",
+      "dependsOnColumns": [
+        "Days In Field",
+        "Wholesale Profit"
+      ],
+      "dependsOnConstants": [
+        "GrowingDays"
+      ],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EG",
+      "header": "Packaging Percent",
+      "formula": "=Crops[[#This Row],[Packaging Costs]]/Crops[[#This Row],[Wholesale Revenue Per Bed]]",
+      "dependsOnColumns": [
+        "Packaging Costs",
+        "Wholesale Revenue Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EK",
+      "header": "Units Per Weekly Harvest",
+      "formula": "=Crops[[#This Row],[Units Per Harvest]]/Crops[[#This Row],[Days Between Harvest]]*7",
+      "dependsOnColumns": [
+        "Days Between Harvest",
+        "Units Per Harvest"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EL",
+      "header": "CSA Portions",
+      "formula": "=Crops[[#This Row],[Custom Yield Per Bed]]/_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[CSA Portion])",
+      "dependsOnColumns": [
+        "ProductIndex",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "ER",
+      "header": "Propduction Weeks",
+      "formula": "=Crops[[#This Row],[Harvests]]*Crops[[#This Row],[Days Between Harvest]]/7",
+      "dependsOnColumns": [
+        "Harvests",
+        "Days Between Harvest"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EW",
+      "header": "CSA Bed Days",
+      "formula": "=IFERROR(Crops[[#This Row],[Days In Field]]*Crops[[#This Row],[CSA Beds]],\"\")",
+      "dependsOnColumns": [
+        "CSA Beds",
+        "Days In Field"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CD",
+      "header": "Seeding Trays",
+      "formula": "=IF(Crops[[#This Row],[Days in Cells]]<=0,0,Crops[[#This Row],[Plantings Per Bed]]/StartsPerHourSeeding+Crops[[#This Row],[Tray 1 Count]]*5/60)",
+      "dependsOnColumns": [
+        "Days in Cells",
+        "Plantings Per Bed",
+        "Tray 1 Count"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CE",
+      "header": "Potting Up",
+      "formula": "=IF(ISBLANK(Crops[[#This Row],[Tray 2 Days]]),0,Crops[[#This Row],[Plantings Per Bed]]/UpPottingPerHour)+IF(Crops[[#This Row],[Tray 3 Days]]=\"\",0,Crops[[#This Row],[Plantings Per Bed]]/UpPottingPerHour)",
+      "dependsOnColumns": [
+        "Plantings Per Bed",
+        "Tray 2 Days",
+        "Tray 3 Days"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CG",
+      "header": "Start Transport",
+      "formula": "=0.5/16*MAX(Crops[[#This Row],[Tray 1 Count]],Crops[[#This Row],[Tray 2 Count]],Crops[[#This Row],[Tray 3 Count]])",
+      "dependsOnColumns": [
+        "Tray 2 Count",
+        "Tray 3 Count",
+        "Tray 1 Count"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "DV",
+      "header": "Direct Profit Per Owner Labor Hour",
+      "formula": "=(Crops[[#This Row],[Direct Revenue Per Bed2]]-Crops[[#This Row],[Direct Non-Labor Cost]])/Crops[[#This Row],[Direct Time]]",
+      "dependsOnColumns": [
+        "Direct Non-Labor Cost",
+        "Direct Revenue Per Bed2",
+        "Direct Time"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EF",
+      "header": "Wholesale Profit Per Owner Labor Hour",
+      "formula": "=(Crops[[#This Row],[Wholesale Revenue Per Bed]]-Crops[[#This Row],[Wholesale Non-Labor Cost]])/Crops[[#This Row],[Direct Time]]",
+      "dependsOnColumns": [
+        "Wholesale Revenue Per Bed",
+        "Wholesale Non-Labor Cost",
+        "Direct Time"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EH",
+      "header": "ProductIndex",
+      "formula": "=Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]]",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "EM",
+      "header": "CSA Portions Per Week",
+      "formula": "=Crops[[#This Row],[Units Per Harvest]]/Crops[[#This Row],[Days Between Harvest]]*7/_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[CSA Portion])",
+      "dependsOnColumns": [
+        "ProductIndex",
+        "Days Between Harvest",
+        "Units Per Harvest"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "EU",
+      "header": "CSA Harvests",
+      "formula": "=Crops[[#This Row],[Custom Yield Per Bed]]/(Crops[[#This Row],[CSA Need]]*(_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[CSA Portion])*CSAMembers))",
+      "dependsOnColumns": [
+        "ProductIndex",
+        "CSA Need",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [
+        "CSAMembers"
+      ],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "EV",
+      "header": "CSA Beds",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[ProductIndex]],Products[ID],Products[CSA Portion])*CSAMembers*Crops[[#This Row],[CSA Need]]/Crops[[#This Row],[Custom Yield Per Bed]]",
+      "dependsOnColumns": [
+        "Custom Yield Per Bed",
+        "ProductIndex",
+        "CSA Need"
+      ],
+      "dependsOnConstants": [
+        "CSAMembers"
+      ],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "AI",
+      "header": "Seeds Per Bed",
+      "formula": "=IFERROR(Crops[[#This Row],[Plantings Per Bed]]*Crops[[#This Row],[Seeds Per Planting]]*Crops[[#This Row],[Safety Factor]]*Crops[[#This Row],[Seeding Factor]],\"\")",
+      "dependsOnColumns": [
+        "Safety Factor",
+        "Seeding Factor",
+        "Plantings Per Bed",
+        "Seeds Per Planting"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "AZ",
+      "header": "Tray 1 Count",
+      "formula": "=IFERROR(IF(Crops[[#This Row],[Tray 1 Days]]=0,\"\",Crops[[#This Row],[Plantings Per Bed]]/Crops[[#This Row],[Tray 1 Size]]*Crops[[#This Row],[Safety Factor]]),\"\")",
+      "dependsOnColumns": [
+        "Tray 1 Days",
+        "Plantings Per Bed",
+        "Safety Factor",
+        "Tray 1 Size"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BC",
+      "header": "Tray 2 Count",
+      "formula": "=IFERROR(IF(Crops[[#This Row],[Tray 2 Days]]=0,\"\",Crops[[#This Row],[Plantings Per Bed]]/Crops[[#This Row],[Tray 2 Size]]*Crops[[#This Row],[Safety Factor]]),\"\")",
+      "dependsOnColumns": [
+        "Plantings Per Bed",
+        "Tray 2 Days",
+        "Safety Factor",
+        "Tray 2 Size"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "BF",
+      "header": "Tray 3 Count",
+      "formula": "=IFERROR(IF(Crops[[#This Row],[Tray 3 Days]]=0,\"\",Crops[[#This Row],[Plantings Per Bed]]/Crops[[#This Row],[Tray 3 Size]]*Crops[[#This Row],[Safety Factor]]),\"\")",
+      "dependsOnColumns": [
+        "Plantings Per Bed",
+        "Tray 3 Days",
+        "Safety Factor",
+        "Tray 3 Size"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CQ",
+      "header": "Market & Sell",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Marketing (hr)])*Crops[[#This Row],[Direct Revenue Per Bed]]/2000",
+      "dependsOnColumns": [
+        "Unit",
+        "Direct Revenue Per Bed",
+        "Product",
+        "Crop"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CR",
+      "header": "Harvest",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Harvest (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CS",
+      "header": "Bunch",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Bunch (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CT",
+      "header": "Haul",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Haul (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CU",
+      "header": "Wash",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Wash (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CV",
+      "header": "Condition",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Condition (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CW",
+      "header": "Trim",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Trim (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CX",
+      "header": "Pack",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Pack (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CY",
+      "header": "Clean",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Clean (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "CZ",
+      "header": "Rehandle",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Rehandle (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "DA",
+      "header": "Market Transport",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Market Transport (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "DB",
+      "header": "Remove Crop Residue",
+      "formula": "=_xlfn.XLOOKUP(Crops[[#This Row],[Crop]]&Crops[[#This Row],[Product]]&Crops[[#This Row],[Unit]],Products[ID],Products[Market Transport (s)])*Crops[[#This Row],[Custom Yield Per Bed]]/3600",
+      "dependsOnColumns": [
+        "Unit",
+        "Product",
+        "Crop",
+        "Custom Yield Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": [
+        "Products"
+      ]
+    },
+    {
+      "column": "V",
+      "header": "Seasons",
+      "formula": "= IF(Crops[[#This Row],[Sp]], \"Sp\", \"\") & IF(Crops[[#This Row],[Su]], \"Su\", \"\") & IF(Crops[[#This Row],[Fa]], \"Fa\", \"\") & IF(Crops[[#This Row],[Wi]], \"Wi\", \"\") & IF(Crops[[#This Row],[OW]], \"Ow\",\"\")",
+      "dependsOnColumns": [
+        "Sp",
+        "Fa",
+        "OW",
+        "Su",
+        "Wi"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    },
+    {
+      "column": "CH",
+      "header": "Transplanting",
+      "formula": "=IF(Crops[[#This Row],[Days in Cells]]>0,IF(IF(Crops[[#This Row],[Tray 3 Size]]>0,Crops[[#This Row],[Tray 3 Size]],IF(Crops[[#This Row],[Tray 2 Size]]>0,Crops[[#This Row],[Tray 2 Size]],Crops[[#This Row],[Tray 1 Size]]))<=18,LargeTransplantTime,SmallTransplantTime)*Crops[[#This Row],[Plantings Per Bed]],0)",
+      "dependsOnColumns": [
+        "Tray 2 Size",
+        "Tray 3 Size",
+        "Tray 1 Size",
+        "Days in Cells",
+        "Plantings Per Bed"
+      ],
+      "dependsOnConstants": [],
+      "dependsOnTables": []
+    }
+  ]
+}
