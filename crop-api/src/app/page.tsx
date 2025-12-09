@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getAllCrops, getMetadata, getUniqueValues, getHeaders } from '@/lib/crops';
 import CropExplorer from '@/components/CropExplorer';
 
@@ -24,8 +25,16 @@ export default function Home() {
               {metadata.totalCrops} planting configurations · {metadata.headerCount} fields
             </p>
           </div>
-          <div className="text-xs text-gray-400">
-            Data extracted: {new Date(metadata.extractedAt).toLocaleDateString()}
+          <div className="flex items-center gap-4">
+            <Link
+              href="/timeline"
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+            >
+              Open Timeline →
+            </Link>
+            <span className="text-xs text-gray-400">
+              Data extracted: {new Date(metadata.extractedAt).toLocaleDateString()}
+            </span>
           </div>
         </div>
       </header>

@@ -1,0 +1,107 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import CropTimeline from '@/components/CropTimeline';
+import { getTimelineCrops, getResources, calculateRowSpan, type TimelineCrop } from '@/lib/timeline-data';
+import bedPlanData from '@/data/bed-plan.json';
+
+export default function TimelinePage() {
+  const [crops, setCrops] = useState<TimelineCrop[]>([]);
+  const [resources, setResources] = useState<string[]>([]);
+  const [groups, setGroups] = useState<{ name: string | null; beds: string[] }[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Load data
+    const timelineCrops = getTimelineCrops();
+    const { resources: res, groups: grps } = getResources();
+
+    setCrops(timelineCrops);
+    setResources(res);
+    setGroups(grps);
+    setLoading(false);
+  }, []);
+
+  const handleCropMove = (cropId: string, newResource: string, groupId?: string, bedsNeeded?: number) => {
+    // If this is a multi-bed crop (has groupId and bedsNeeded > 1), move all beds in the group
+    if (groupId && bedsNeeded && bedsNeeded > 1) {
+      // Calculate which beds the crop will now span
+      const { spanBeds, isComplete, bedsRequired } = calculateRowSpan(
+        bedsNeeded,
+        newResource,
+        (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups
+      );
+
+      // Don't allow the move if there isn't enough room
+      if (!isComplete) {
+        alert(`Not enough room: this crop needs ${bedsRequired} beds but only ${spanBeds.length} available from ${newResource}`);
+        return;
+      }
+
+      setCrops(prev => {
+        // Find all crops in this group
+        const groupCrops = prev.filter(c => c.groupId === groupId);
+        // Get template from first crop (for dates, name, etc.)
+        const template = groupCrops[0];
+        if (!template) return prev;
+
+        // Remove old group entries and add new ones
+        const otherCrops = prev.filter(c => c.groupId !== groupId);
+
+        // Create new entries for each bed in the span
+        const newGroupCrops: TimelineCrop[] = spanBeds.map((bed, index) => ({
+          ...template,
+          id: `${groupId}_bed${index}`,
+          resource: bed,
+          totalBeds: spanBeds.length,
+          bedIndex: index + 1,
+        }));
+
+        return [...otherCrops, ...newGroupCrops].sort((a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
+      });
+    } else {
+      // Single bed crop - just update the resource
+      setCrops(prev =>
+        prev.map(c =>
+          c.id === cropId ? { ...c, resource: newResource } : c
+        )
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-gray-500">Loading timeline...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen flex flex-col">
+      {/* Header */}
+      <div className="bg-white border-b px-4 py-2 flex items-center gap-4">
+        <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm">
+          ← Back to Explorer
+        </Link>
+        <h1 className="text-lg font-semibold">Crop Plan Timeline</h1>
+        <span className="text-sm text-gray-500">
+          {crops.length} crops in plan
+        </span>
+      </div>
+
+      {/* Timeline */}
+      <div className="flex-1 min-h-0">
+        <CropTimeline
+          crops={crops}
+          resources={resources}
+          groups={groups}
+          onCropMove={handleCropMove}
+        />
+      </div>
+    </div>
+  );
+}

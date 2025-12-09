@@ -1,0 +1,854 @@
+{
+  "assignments": [
+    {
+      "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
+      "identifier": "ARU002",
+      "bed": "X2"
+    },
+    {
+      "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
+      "identifier": "ARU003",
+      "bed": "H8"
+    },
+    {
+      "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
+      "identifier": "ARU001",
+      "bed": "A5"
+    },
+    {
+      "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
+      "identifier": "ARU004",
+      "bed": "D5"
+    },
+    {
+      "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
+      "identifier": "ARU005",
+      "bed": "D5"
+    },
+    {
+      "crop": "Asian Greens - Mature Head 1X | Field TP ",
+      "identifier": "BOK001",
+      "bed": "E3"
+    },
+    {
+      "crop": "Asian Greens - Mature Head 1X | Field TP ",
+      "identifier": "ASI002",
+      "bed": "A2"
+    },
+    {
+      "crop": "Asian Greens - Young Leaf 1X | Field DS ",
+      "identifier": "ASI001",
+      "bed": "X2"
+    },
+    {
+      "crop": "Basil (Interplant) - Mature Leaf 1X | Tunnel TP SpSuOw",
+      "identifier": "BAS001",
+      "bed": "A4"
+    },
+    {
+      "crop": "Basil (Italian) - Mature Leaf 1X | Tunnel TP SpSuOw",
+      "identifier": "BAS002",
+      "bed": "A6"
+    },
+    {
+      "crop": "Basil (Tulsi) - Mature Leaf 1X | Field TP ",
+      "identifier": "BAS003",
+      "bed": "J1"
+    },
+    {
+      "crop": "Bean (Pole) - Young Pod 3X | Field TP SuFa",
+      "identifier": "BEA001",
+      "bed": "G6"
+    },
+    {
+      "crop": "Bean (Pole) - Young Pod 3X | Field TP SuFa",
+      "identifier": "BEA002",
+      "bed": "I3"
+    },
+    {
+      "crop": "Beet - Mature Root 3X | Field TP Sp",
+      "identifier": "BEE001",
+      "bed": "C7"
+    },
+    {
+      "crop": "Beet - Mature Root 3X | Field TP SuFa",
+      "identifier": "BEE002",
+      "bed": "I7"
+    },
+    {
+      "crop": "Beet - Mature Root 3X | Field TP SuFa",
+      "identifier": "BEE003",
+      "bed": "A8"
+    },
+    {
+      "crop": "Broccoli (Sprouting) - Loose Florets 1X | Field TP SuFa",
+      "identifier": "BRO001",
+      "bed": "I2"
+    },
+    {
+      "crop": "Cabbage - Large Head 1X | Field TP Fa",
+      "identifier": "CAB001",
+      "bed": "F4"
+    },
+    {
+      "crop": "Cabbage (Chinese) - Large Head 1X | Field TP Wi",
+      "identifier": "CAB002",
+      "bed": "I5"
+    },
+    {
+      "crop": "Cabbage (Chinese) - Small Head 1X | Field TP Fa",
+      "identifier": "CAB010",
+      "bed": "I6"
+    },
+    {
+      "crop": "Cabbage (Fast Early 9\") - Large Head 1X | Field TP Sp",
+      "identifier": "CAB003",
+      "bed": "E7"
+    },
+    {
+      "crop": "Cabbage (Fast Mid 9\") - Large Head 1X | Field TP Sp",
+      "identifier": "CAB004",
+      "bed": "D1"
+    },
+    {
+      "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
+      "identifier": "CAR001",
+      "bed": "A1"
+    },
+    {
+      "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
+      "identifier": "CAR002",
+      "bed": "D3"
+    },
+    {
+      "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
+      "identifier": "CAR004",
+      "bed": "D3"
+    },
+    {
+      "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
+      "identifier": "CAR005",
+      "bed": "D4"
+    },
+    {
+      "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
+      "identifier": "CAR006",
+      "bed": "D4"
+    },
+    {
+      "crop": "Carrot (Early) - Mature Root 1X | Field DS Su",
+      "identifier": "CAR008",
+      "bed": "B1"
+    },
+    {
+      "crop": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi",
+      "identifier": "CAR003",
+      "bed": "D6"
+    },
+    {
+      "crop": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi",
+      "identifier": "CAR007",
+      "bed": "D2"
+    },
+    {
+      "crop": "Cauliflower - Mature Head 1X | Field TP Fa",
+      "identifier": "CAU001",
+      "bed": "F3"
+    },
+    {
+      "crop": "Cauliflower (Green-Stem) - Mature Head 1X | Field TP Su",
+      "identifier": "CAU002",
+      "bed": "I1"
+    },
+    {
+      "crop": "Celery - Loose Rib 1X | Field TP SpSu",
+      "identifier": "CEL001",
+      "bed": "G1"
+    },
+    {
+      "crop": "Choi Sum - Mature Head 1X | Field TP ",
+      "identifier": "CHO001",
+      "bed": "A3"
+    },
+    {
+      "crop": "Choi Sum - Mature Head 1X | Field TP ",
+      "identifier": "CHO002",
+      "bed": "C8"
+    },
+    {
+      "crop": "Chrysanthemum Greens - Mature Leaf 1X | Field DS Ow",
+      "identifier": "CHR001",
+      "bed": "A5"
+    },
+    {
+      "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
+      "identifier": "CIL002",
+      "bed": "A4"
+    },
+    {
+      "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
+      "identifier": "CIL003",
+      "bed": "B2"
+    },
+    {
+      "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
+      "identifier": "CIL004",
+      "bed": "B2"
+    },
+    {
+      "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
+      "identifier": "CIL005",
+      "bed": "B2"
+    },
+    {
+      "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
+      "identifier": "CIL006",
+      "bed": "B2"
+    },
+    {
+      "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
+      "identifier": "CIL007",
+      "bed": "B2"
+    },
+    {
+      "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
+      "identifier": "CIL012",
+      "bed": "D5"
+    },
+    {
+      "crop": "Corn  (Sweet Early) - Mature Cob 2X | Field DS ",
+      "identifier": "COR001",
+      "bed": "C1"
+    },
+    {
+      "crop": "Cucumber (Asian Long) - Large Fruit 1X | Greenhouse TP ",
+      "identifier": "CUC001",
+      "bed": "A5"
+    },
+    {
+      "crop": "Cucumber (Asian Long) - Ripe Fruit 1X | Field TP ",
+      "identifier": "CUC003",
+      "bed": "F0"
+    },
+    {
+      "crop": "Cucumber (Lebanese) - Small Fruit 1X | Greenhouse TP ",
+      "identifier": "CUC002",
+      "bed": "A4"
+    },
+    {
+      "crop": "Cucumber (Slicer) - Ripe Fruit 1X | Field TP ",
+      "identifier": "CUC004",
+      "bed": "F1"
+    },
+    {
+      "crop": "Dahlia - Cut Flower 1X | Field DS ",
+      "identifier": "DAH001",
+      "bed": "U"
+    },
+    {
+      "crop": "Dill - Mature Leaf 4X | Field TP Sp",
+      "identifier": "DIL004",
+      "bed": "B2"
+    },
+    {
+      "crop": "Dill - Mature Leaf 4X | Field TP Su",
+      "identifier": "DIL001",
+      "bed": "A4"
+    },
+    {
+      "crop": "Dill - Mature Leaf 4X | Field TP Su",
+      "identifier": "DIL002",
+      "bed": "B2"
+    },
+    {
+      "crop": "Dill - Mature Leaf 4X | Field TP Su",
+      "identifier": "DIL005",
+      "bed": "B2"
+    },
+    {
+      "crop": "Dill - Mature Leaf 4X | Field TP Su",
+      "identifier": "DIL006",
+      "bed": "D5"
+    },
+    {
+      "crop": "Fava Bean - Mature Pod 1X | Field DS Sp",
+      "identifier": "FAV001",
+      "bed": "B1"
+    },
+    {
+      "crop": "Fennel - Mini Bulb 1X | Field TP Sp",
+      "identifier": "FEN003",
+      "bed": "D2"
+    },
+    {
+      "crop": "Garlic (Green) - Young Bulb 1X | Field DS Ow",
+      "identifier": "GAR535",
+      "bed": "I8"
+    },
+    {
+      "crop": "Garlic (Hardneck) - Storage Bulb 1X | Field DS Ow",
+      "identifier": "GAR533",
+      "bed": "I5"
+    },
+    {
+      "crop": "Garlic (Softneck) - Storage Bulb 1X | Field DS Ow",
+      "identifier": "GAR534",
+      "bed": "I7"
+    },
+    {
+      "crop": "Gooseberry (Cape) - Mature Berry 1X | Field TP ",
+      "identifier": "GOO001",
+      "bed": "A6"
+    },
+    {
+      "crop": "Kale - Mature Leaf 2X | Field TP Sp",
+      "identifier": "KAL003",
+      "bed": "B3"
+    },
+    {
+      "crop": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Fa",
+      "identifier": "KOH002",
+      "bed": "A1"
+    },
+    {
+      "crop": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Sp",
+      "identifier": "KOH003",
+      "bed": "A2"
+    },
+    {
+      "crop": "Leek - Mature Stalk 5X | Field TP Su",
+      "identifier": "LEE001",
+      "bed": "G2"
+    },
+    {
+      "crop": "Lemongrass - Mature Stalks 1X | Field TP SpSu",
+      "identifier": "LEM001",
+      "bed": "H5"
+    },
+    {
+      "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
+      "identifier": "LET014",
+      "bed": "E2"
+    },
+    {
+      "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
+      "identifier": "LET015",
+      "bed": "E1"
+    },
+    {
+      "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
+      "identifier": "LET016",
+      "bed": "E6"
+    },
+    {
+      "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
+      "identifier": "LET030",
+      "bed": "H7"
+    },
+    {
+      "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
+      "identifier": "LET017",
+      "bed": "E8"
+    },
+    {
+      "crop": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa",
+      "identifier": "LET024",
+      "bed": "E7"
+    },
+    {
+      "crop": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa",
+      "identifier": "LET026",
+      "bed": "E8"
+    },
+    {
+      "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP Sp",
+      "identifier": "LET012",
+      "bed": "F5"
+    },
+    {
+      "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
+      "identifier": "LET018",
+      "bed": "G4"
+    },
+    {
+      "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
+      "identifier": "LET019",
+      "bed": "G5"
+    },
+    {
+      "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
+      "identifier": "LET021",
+      "bed": "G5"
+    },
+    {
+      "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
+      "identifier": "LET023",
+      "bed": "G4"
+    },
+    {
+      "crop": "Lettuce (Salanova) - Loose Leaf 1X | Tunnel TP Sp",
+      "identifier": "LET013",
+      "bed": "A6"
+    },
+    {
+      "crop": "Lovage (Perennial) - Mature Leaf 1X | Field DS ",
+      "identifier": "LOV366",
+      "bed": "J8"
+    },
+    {
+      "crop": "Magenta Spreen - Young Stem 1X |  DS Sp",
+      "identifier": "MAG001",
+      "bed": "A4"
+    },
+    {
+      "crop": "Melon - Ripe Fruit 1X | Field TP ",
+      "identifier": "MEL001",
+      "bed": "B7"
+    },
+    {
+      "crop": "Onion - Mature Bulb 6X | Field TP SpSu",
+      "identifier": "ONI003",
+      "bed": "F2"
+    },
+    {
+      "crop": "Onion (Salad Early) - Young Bulb 10X | Field TP Sp",
+      "identifier": "ONI004",
+      "bed": "A8"
+    },
+    {
+      "crop": "Onion (Salad Late) - Young Bulb 10X | Field TP Sp",
+      "identifier": "ONI005",
+      "bed": "C4"
+    },
+    {
+      "crop": "Parsley - Mature Leaf 3X | Field TP Sp",
+      "identifier": "PAR001",
+      "bed": "G0"
+    },
+    {
+      "crop": "Peas (Snap) - Young Pod 3X | Field TP SpSu",
+      "identifier": "PEA001",
+      "bed": "I1"
+    },
+    {
+      "crop": "Pepper (Bell) - Ripe Fruit Large 1X | Field TP ",
+      "identifier": "PEP001",
+      "bed": "H8"
+    },
+    {
+      "crop": "Pepper (Bell) - Ripe Fruit Large 1X | Greenhouse TP ",
+      "identifier": "PEP002",
+      "bed": "A3"
+    },
+    {
+      "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP ",
+      "identifier": "PEP003",
+      "bed": "H8"
+    },
+    {
+      "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP ",
+      "identifier": "PEP005",
+      "bed": "J3"
+    },
+    {
+      "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Greenhouse TP ",
+      "identifier": "PEP004",
+      "bed": "A3"
+    },
+    {
+      "crop": "Potato (Early) - Mature Root 1X | Field DS ",
+      "identifier": "POT001",
+      "bed": "F3"
+    },
+    {
+      "crop": "Potato (Main Crop) - Storage Root 1X | Field DS ",
+      "identifier": "POT002",
+      "bed": "C5"
+    },
+    {
+      "crop": "Radicchio (90 Day) - Forced Head 1X | Field TP Su",
+      "identifier": "RAD002",
+      "bed": "C7"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Sp",
+      "identifier": "RAD003",
+      "bed": "A5"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Sp",
+      "identifier": "RAD449",
+      "bed": "B6"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
+      "identifier": "RAD455",
+      "bed": "X1"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
+      "identifier": "RAD451",
+      "bed": "D7"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
+      "identifier": "RAD452",
+      "bed": "D8"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
+      "identifier": "RAD453",
+      "bed": "D7"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
+      "identifier": "RAD456",
+      "bed": "D3"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
+      "identifier": "RAD457",
+      "bed": "D1"
+    },
+    {
+      "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
+      "identifier": "RAD454",
+      "bed": "D8"
+    },
+    {
+      "crop": "Radish (Daikon) - Storage Root 1X | Field TP FaWi",
+      "identifier": "RAD005",
+      "bed": "B6"
+    },
+    {
+      "crop": "Radish (Munchen Bier) - Storage Root 1X | Field DS ",
+      "identifier": "RAD006",
+      "bed": "B5"
+    },
+    {
+      "crop": "Rutabaga - Mature Root 2X | Field TP Fa",
+      "identifier": "RUT001",
+      "bed": "F5"
+    },
+    {
+      "crop": "Scallion - Mature Stalk 6X | Field DS Fa",
+      "identifier": "SCA638",
+      "bed": "C3"
+    },
+    {
+      "crop": "Scallion - Mature Stalk 6X | Field DS Fa",
+      "identifier": "SCA636",
+      "bed": "C3"
+    },
+    {
+      "crop": "Scallion - Mature Stalk 6X | Field TP Sp",
+      "identifier": "SCA633",
+      "bed": "A4"
+    },
+    {
+      "crop": "Scallion - Mature Stalk 6X | Field TP Sp",
+      "identifier": "SCA634",
+      "bed": "J5"
+    },
+    {
+      "crop": "Scallion - Mature Stalk 6X | Field TP Sp",
+      "identifier": "SCA635",
+      "bed": "C3"
+    },
+    {
+      "crop": "Sorrel - Mature Leaf 3X | Field TP ",
+      "identifier": "SOR485",
+      "bed": "J2"
+    },
+    {
+      "crop": "Squash (Delicata) - Storage 1X | Field TP ",
+      "identifier": "SQU002",
+      "bed": "U"
+    },
+    {
+      "crop": "Squash (Kuri) - Storage 1X | Field TP ",
+      "identifier": "SQU004",
+      "bed": "U"
+    },
+    {
+      "crop": "Summer Squash (Long Season) - Ripe Fruit 1X | Field TP Su",
+      "identifier": "SUM001",
+      "bed": "G8"
+    },
+    {
+      "crop": "Summer Squash (Short Season) - Ripe Fruit 1X | Field TP Su",
+      "identifier": "SUM002",
+      "bed": "F7"
+    },
+    {
+      "crop": "Swiss Chard - Mature Leaf 1X | Field TP SpSuFa",
+      "identifier": "SWI002",
+      "bed": "I4"
+    },
+    {
+      "crop": "Tomatillo - Ripe Fruit 1X | Field TP ",
+      "identifier": "TOM001",
+      "bed": "A7"
+    },
+    {
+      "crop": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su",
+      "identifier": "TOM006",
+      "bed": "U"
+    },
+    {
+      "crop": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su",
+      "identifier": "TOM010",
+      "bed": "X2"
+    },
+    {
+      "crop": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Field TP Su",
+      "identifier": "TOM002",
+      "bed": "H1"
+    },
+    {
+      "crop": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Greenhouse TP Su",
+      "identifier": "TOM003",
+      "bed": "A5"
+    },
+    {
+      "crop": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su",
+      "identifier": "TOM007",
+      "bed": "U"
+    },
+    {
+      "crop": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su",
+      "identifier": "TOM011",
+      "bed": "X4"
+    },
+    {
+      "crop": "Tomato (Cherry) - Ripe Fruit Small 1X | Greenhouse TP Su",
+      "identifier": "TOM004",
+      "bed": "A4"
+    },
+    {
+      "crop": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su",
+      "identifier": "TOM008",
+      "bed": "U"
+    },
+    {
+      "crop": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su",
+      "identifier": "TOM012",
+      "bed": "X1"
+    },
+    {
+      "crop": "Tomato (Medium) - Ripe Fruit Medium 1X | Field TP Su",
+      "identifier": "TOM005",
+      "bed": "H3"
+    },
+    {
+      "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp",
+      "identifier": "TUR001",
+      "bed": "B6"
+    },
+    {
+      "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp",
+      "identifier": "TUR003",
+      "bed": "A5"
+    },
+    {
+      "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
+      "identifier": "TUR002",
+      "bed": "D7"
+    },
+    {
+      "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
+      "identifier": "TUR528",
+      "bed": "D8"
+    },
+    {
+      "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
+      "identifier": "TUR531",
+      "bed": "D3"
+    },
+    {
+      "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
+      "identifier": "TUR529",
+      "bed": "D7"
+    },
+    {
+      "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
+      "identifier": "TUR532",
+      "bed": "F6"
+    },
+    {
+      "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
+      "identifier": "TUR530",
+      "bed": "D8"
+    }
+  ],
+  "beds": [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "A8",
+    "B1",
+    "B2",
+    "B3",
+    "B5",
+    "B6",
+    "B7",
+    "C1",
+    "C3",
+    "C4",
+    "C5",
+    "C7",
+    "C8",
+    "D1",
+    "D2",
+    "D3",
+    "D4",
+    "D5",
+    "D6",
+    "D7",
+    "D8",
+    "E1",
+    "E2",
+    "E3",
+    "E6",
+    "E7",
+    "E8",
+    "F0",
+    "F1",
+    "F2",
+    "F3",
+    "F4",
+    "F5",
+    "F6",
+    "F7",
+    "G0",
+    "G1",
+    "G2",
+    "G4",
+    "G5",
+    "G6",
+    "G8",
+    "H1",
+    "H3",
+    "H5",
+    "H7",
+    "H8",
+    "I1",
+    "I2",
+    "I3",
+    "I4",
+    "I5",
+    "I6",
+    "I7",
+    "I8",
+    "J1",
+    "J2",
+    "J3",
+    "J5",
+    "J8",
+    "U",
+    "X1",
+    "X2",
+    "X4"
+  ],
+  "bedGroups": {
+    "A": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "A5",
+      "A6",
+      "A7",
+      "A8"
+    ],
+    "B": [
+      "B1",
+      "B2",
+      "B3",
+      "B5",
+      "B6",
+      "B7"
+    ],
+    "C": [
+      "C1",
+      "C3",
+      "C4",
+      "C5",
+      "C7",
+      "C8"
+    ],
+    "D": [
+      "D1",
+      "D2",
+      "D3",
+      "D4",
+      "D5",
+      "D6",
+      "D7",
+      "D8"
+    ],
+    "E": [
+      "E1",
+      "E2",
+      "E3",
+      "E6",
+      "E7",
+      "E8"
+    ],
+    "F": [
+      "F0",
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6",
+      "F7"
+    ],
+    "G": [
+      "G0",
+      "G1",
+      "G2",
+      "G4",
+      "G5",
+      "G6",
+      "G8"
+    ],
+    "H": [
+      "H1",
+      "H3",
+      "H5",
+      "H7",
+      "H8"
+    ],
+    "I": [
+      "I1",
+      "I2",
+      "I3",
+      "I4",
+      "I5",
+      "I6",
+      "I7",
+      "I8"
+    ],
+    "J": [
+      "J1",
+      "J2",
+      "J3",
+      "J5",
+      "J8"
+    ],
+    "U": [
+      "U"
+    ],
+    "X": [
+      "X1",
+      "X2",
+      "X4"
+    ]
+  }
+}
