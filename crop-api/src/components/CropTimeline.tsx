@@ -102,6 +102,28 @@ function parseDate(dateStr: string): Date {
   return new Date(dateStr);
 }
 
+/** Bed size in feet - F and J rows are 20ft, all others are 50ft */
+const SHORT_ROWS = ['F', 'J'];
+const STANDARD_BED_FT = 50;
+const SHORT_BED_FT = 20;
+
+function getBedRow(bed: string): string {
+  let row = '';
+  for (const char of bed) {
+    if (char.match(/[A-Za-z]/)) {
+      row += char;
+    } else {
+      break;
+    }
+  }
+  return row;
+}
+
+function getBedSizeFt(bed: string): number {
+  const row = getBedRow(bed);
+  return SHORT_ROWS.includes(row) ? SHORT_BED_FT : STANDARD_BED_FT;
+}
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -499,14 +521,9 @@ export default function CropTimeline({
         }}
         title={tooltip}
       >
-        <div className="px-2 py-1 flex justify-between items-start">
-          <div className="flex-1 min-w-0">
-            <div className="font-bold text-xs truncate">{crop.name}</div>
-            <div className="text-[9px] opacity-90">
-              {formatDate(crop.startDate)} - {formatDate(crop.endDate)}
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-0.5 ml-1 flex-shrink-0">
+        <div className="px-1 py-1 flex items-start gap-1">
+          {/* Fixed-width left badge area */}
+          <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 24 }}>
             {isMultiBed && (
               <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
                 {crop.bedIndex}/{crop.totalBeds}
@@ -514,9 +531,16 @@ export default function CropTimeline({
             )}
             {isPartialBed && (
               <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
-                {crop.feetUsed}&apos; of {crop.bedCapacityFt}&apos;
+                {crop.feetUsed}&apos;
               </div>
             )}
+          </div>
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-xs truncate">{crop.name}</div>
+            <div className="text-[9px] opacity-90">
+              {formatDate(crop.startDate)} - {formatDate(crop.endDate)}
+            </div>
           </div>
         </div>
       </div>
@@ -818,6 +842,7 @@ export default function CropTimeline({
                         </span>
                       )}
                       <span className="truncate">{resource}</span>
+                      <span className="text-[9px] text-gray-400 ml-1">({getBedSizeFt(resource)}&apos;)</span>
                     </div>
                   </td>
                   {/* Timeline lane - spans all month columns */}

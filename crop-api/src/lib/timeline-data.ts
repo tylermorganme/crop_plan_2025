@@ -5,34 +5,9 @@
 import cropsData from '@/data/crops.json';
 import bedPlanData from '@/data/bed-plan.json';
 
-export interface TimelineCrop {
-  id: string;
-  name: string;
-  startDate: string;
-  endDate: string;
-  resource: string;
-  category?: string;
-  bgColor?: string;
-  textColor?: string;
-  bedsNeeded?: number;
-  structure?: string;
-  plantingId?: string;
-  /** Total number of beds this crop occupies */
-  totalBeds: number;
-  /** Which bed number this is (1-indexed) in the sequence */
-  bedIndex: number;
-  /** The base planting ID for grouping related bed entries */
-  groupId: string;
-  /** Feet of this bed actually used by the crop */
-  feetUsed?: number;
-  /** Total feet capacity of this bed */
-  bedCapacityFt?: number;
-}
-
-export interface ResourceGroup {
-  name: string | null;
-  beds: string[];
-}
+// Re-export types from plan-types for backwards compatibility
+export type { TimelineCrop, ResourceGroup } from './plan-types';
+import type { TimelineCrop, ResourceGroup } from './plan-types';
 
 interface RawCrop {
   id: string;
