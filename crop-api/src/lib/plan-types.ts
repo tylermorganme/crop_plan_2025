@@ -28,6 +28,8 @@ export interface TimelineCrop {
   feetUsed?: number;
   /** Total feet capacity of this bed */
   bedCapacityFt?: number;
+  /** Harvest start date (ISO date) - when harvest window begins */
+  harvestStartDate?: string;
 }
 
 /** A group of beds (e.g., row "A" contains beds A1-A8) */

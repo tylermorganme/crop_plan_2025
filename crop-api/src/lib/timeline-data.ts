@@ -248,6 +248,7 @@ export function getTimelineCrops(): TimelineCrop[] {
             name: displayName,
             startDate: crop['Target Sewing Date']!,
             endDate: crop['Target End of Harvest']!,
+            harvestStartDate: crop['Target Harvest Data'] || undefined,
             resource: info.bed,
             category: crop.Category || undefined,
             bedsNeeded,
@@ -268,6 +269,7 @@ export function getTimelineCrops(): TimelineCrop[] {
         name,
         startDate: crop['Target Sewing Date']!,
         endDate: crop['Target End of Harvest']!,
+        harvestStartDate: crop['Target Harvest Data'] || undefined,
         resource: '', // Unassigned
         category: crop.Category || undefined,
         bedsNeeded,

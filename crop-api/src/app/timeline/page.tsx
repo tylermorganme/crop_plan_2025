@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
@@ -8,8 +8,26 @@ import { usePlanStore, useUndoRedo } from '@/lib/plan-store';
 import type { TimelineCrop } from '@/lib/plan-types';
 import bedPlanData from '@/data/bed-plan.json';
 
+// Toast notification component
+function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600';
+
+  return (
+    <div className={`fixed bottom-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-up`}>
+      <span>{message}</span>
+      <button onClick={onClose} className="text-white/80 hover:text-white text-lg leading-none">&times;</button>
+    </div>
+  );
+}
+
 export default function TimelinePage() {
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
@@ -78,7 +96,10 @@ export default function TimelinePage() {
 
     // Don't allow the move if there isn't enough room
     if (!isComplete) {
-      alert(`Not enough room: this crop needs ${bedsRequired} beds but only ${bedSpanInfo.length} available from ${newResource}`);
+      setToast({
+        message: `Not enough room: need ${bedsRequired} beds, only ${bedSpanInfo.length} available from ${newResource}`,
+        type: 'error'
+      });
       return;
     }
 
@@ -182,6 +203,15 @@ export default function TimelinePage() {
           onCropDateChange={handleDateChange}
         />
       </div>
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
