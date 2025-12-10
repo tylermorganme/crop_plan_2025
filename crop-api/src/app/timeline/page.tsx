@@ -77,8 +77,8 @@ export default function TimelinePage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [canUndo, canRedo, undo, redo]);
 
-  const handleCropMove = useCallback((cropId: string, newResource: string, groupId?: string, bedsNeeded?: number) => {
-    const beds = bedsNeeded || 1;
+  const handleCropMove = useCallback((cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => {
+    const feet = feetNeeded || 50;
     const targetGroupId = groupId || cropId;
 
     // Moving to Unassigned - no capacity check needed
@@ -87,9 +87,9 @@ export default function TimelinePage() {
       return;
     }
 
-    // Moving to a real bed - calculate span based on bedsNeeded and target row's bed size
-    const { bedSpanInfo, isComplete, bedsRequired } = calculateRowSpan(
-      beds,
+    // Moving to a real bed - calculate span based on feetNeeded and target row's bed size
+    const { bedSpanInfo, isComplete, feetNeeded: neededFeet, feetAvailable } = calculateRowSpan(
+      feet,
       newResource,
       (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups
     );
@@ -97,15 +97,15 @@ export default function TimelinePage() {
     // Don't allow the move if there isn't enough room
     if (!isComplete) {
       setToast({
-        message: `Not enough room: need ${bedsRequired} beds, only ${bedSpanInfo.length} available from ${newResource}`,
+        message: `Not enough room: need ${neededFeet}' but only ${feetAvailable}' available from ${newResource}`,
         type: 'error'
       });
       return;
     }
 
     // Use the plan store's moveCrop which handles undo
-    const newBeds = bedSpanInfo.map(info => info.bed);
-    moveCrop(targetGroupId, newResource, newBeds);
+    // Pass full bedSpanInfo so feetUsed/bedCapacityFt are preserved
+    moveCrop(targetGroupId, newResource, bedSpanInfo);
   }, [moveCrop]);
 
   const handleDateChange = useCallback((groupId: string, startDate: string, endDate: string) => {

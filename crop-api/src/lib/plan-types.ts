@@ -14,8 +14,8 @@ export interface TimelineCrop {
   category?: string;
   bgColor?: string;
   textColor?: string;
-  /** Beds needed in 50ft units */
-  bedsNeeded?: number;
+  /** Total feet needed for this planting */
+  feetNeeded?: number;
   structure?: string;
   plantingId?: string;
   /** Total number of beds this crop occupies */
@@ -36,6 +36,13 @@ export interface TimelineCrop {
 export interface ResourceGroup {
   name: string | null;
   beds: string[];
+}
+
+/** Info about each bed in a span, including how much is used */
+export interface BedSpanInfo {
+  bed: string;
+  feetUsed: number;
+  bedCapacityFt: number;
 }
 
 /** Metadata about a saved plan */
@@ -97,7 +104,7 @@ export interface PlanActions {
   resetPlan: () => void;
 
   // Crop mutations (all create undo points)
-  moveCrop: (groupId: string, newResource: string, newBeds?: string[]) => void;
+  moveCrop: (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => void;
   updateCropDates: (groupId: string, startDate: string, endDate: string) => void;
   deleteCrop: (groupId: string) => void;
 

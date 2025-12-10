@@ -17,6 +17,7 @@ import type {
   TimelineCrop,
   ResourceGroup,
   PlanChange,
+  BedSpanInfo,
 } from './plan-types';
 
 const MAX_HISTORY_SIZE = 50;
@@ -101,7 +102,7 @@ export const usePlanStore = create<PlanStore>()(
       },
 
       // Crop mutations - all push to undo stack
-      moveCrop: (groupId: string, newResource: string, newBeds?: string[]) => {
+      moveCrop: (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => {
         set((state) => {
           if (!state.currentPlan) return;
 
@@ -120,9 +121,9 @@ export const usePlanStore = create<PlanStore>()(
           if (groupCrops.length === 0) return;
 
           const template = groupCrops[0];
-          const bedsNeeded = template.bedsNeeded || 1;
+          const feetNeeded = template.feetNeeded || 50;
 
-          if (newResource === '' || !newBeds || newBeds.length === 0) {
+          if (newResource === '' || !bedSpanInfo || bedSpanInfo.length === 0) {
             // Moving to Unassigned - collapse to single entry
             const unassignedCrop: TimelineCrop = {
               ...template,
@@ -130,23 +131,22 @@ export const usePlanStore = create<PlanStore>()(
               resource: '',
               totalBeds: 1,
               bedIndex: 1,
-              bedsNeeded: bedsNeeded,
+              feetNeeded: feetNeeded,
               feetUsed: undefined,
               bedCapacityFt: undefined,
             };
             state.currentPlan.crops = [...otherCrops, unassignedCrop];
           } else {
-            // Moving to specific beds - expand to multiple entries
-            const newGroupCrops: TimelineCrop[] = newBeds.map((bed, index) => ({
+            // Moving to specific beds - expand to multiple entries with proper feetUsed
+            const newGroupCrops: TimelineCrop[] = bedSpanInfo.map((info, index) => ({
               ...template,
               id: `${template.groupId}_bed${index}`,
-              resource: bed,
-              totalBeds: newBeds.length,
+              resource: info.bed,
+              totalBeds: bedSpanInfo.length,
               bedIndex: index + 1,
-              bedsNeeded: bedsNeeded,
-              // Note: feetUsed and bedCapacityFt should be calculated by the caller
-              // and passed in, but we don't have that info here. The UI will need
-              // to recalculate on render if needed.
+              feetNeeded: feetNeeded,
+              feetUsed: info.feetUsed,
+              bedCapacityFt: info.bedCapacityFt,
             }));
             state.currentPlan.crops = [...otherCrops, ...newGroupCrops];
           }

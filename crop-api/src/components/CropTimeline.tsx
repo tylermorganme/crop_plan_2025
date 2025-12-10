@@ -15,8 +15,8 @@ interface TimelineCrop {
   category?: string;
   bgColor?: string;
   textColor?: string;
-  /** Beds needed in 50ft units */
-  bedsNeeded?: number;
+  /** Total feet needed for this planting */
+  feetNeeded?: number;
   /** Total number of beds this crop occupies */
   totalBeds: number;
   /** Which bed number this is (1-indexed) in the sequence */
@@ -44,7 +44,7 @@ interface CropTimelineProps {
   crops: TimelineCrop[];
   resources: string[];
   groups?: ResourceGroup[] | null;
-  onCropMove?: (cropId: string, newResource: string, groupId?: string, bedsNeeded?: number) => void;
+  onCropMove?: (cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => void;
   onCropDateChange?: (groupId: string, startDate: string, endDate: string) => void;
 }
 
@@ -167,29 +167,57 @@ function getBedNumber(bed: string): number {
   return match ? parseInt(match[0], 10) : 0;
 }
 
+/** Info about each bed in a span, including how much is used */
+interface BedSpanInfoLocal {
+  bed: string;
+  feetUsed: number;
+  bedCapacityFt: number;
+}
+
 /**
  * Calculate which beds a crop would span if placed at startBed
+ * Works with actual feet to handle rows with different bed sizes
+ *
+ * @param feetNeeded - Total feet needed for the planting
+ * @param startBed - The starting bed (e.g., "J2")
+ * @param groups - Resource groups containing bed lists
  */
 function calculateBedSpan(
-  bedsNeeded: number,
+  feetNeeded: number,
   startBed: string,
   groups: ResourceGroup[] | null | undefined
-): { spanBeds: string[]; isComplete: boolean; bedsRequired: number } {
-  if (!groups || bedsNeeded <= 0) {
-    return { spanBeds: [startBed], isComplete: true, bedsRequired: 1 };
+): {
+  spanBeds: string[];
+  bedSpanInfo: BedSpanInfoLocal[];
+  isComplete: boolean;
+  feetNeeded: number;
+  feetAvailable: number;
+} {
+  const bedSize = getBedSizeFt(startBed);
+
+  // Default to one bed if no feet specified
+  if (!groups || !feetNeeded || feetNeeded <= 0) {
+    return {
+      spanBeds: [startBed],
+      bedSpanInfo: [{ bed: startBed, feetUsed: bedSize, bedCapacityFt: bedSize }],
+      isComplete: true,
+      feetNeeded: bedSize,
+      feetAvailable: bedSize,
+    };
   }
 
   const row = getBedRow(startBed);
-  const bedSizeFt = getBedSizeFt(startBed);
-
-  // Convert bedsNeeded (in 50ft units) to feet, then to number of beds in this row
-  const feetNeeded = bedsNeeded * STANDARD_BED_FT;
-  const bedsRequired = Math.ceil(feetNeeded / bedSizeFt);
 
   // Find the group containing this bed
   const group = groups.find(g => g.beds.includes(startBed));
   if (!group) {
-    return { spanBeds: [startBed], isComplete: false, bedsRequired };
+    return {
+      spanBeds: [startBed],
+      bedSpanInfo: [{ bed: startBed, feetUsed: Math.min(feetNeeded, bedSize), bedCapacityFt: bedSize }],
+      isComplete: feetNeeded <= bedSize,
+      feetNeeded,
+      feetAvailable: bedSize,
+    };
   }
 
   // Get beds in this row, sorted numerically
@@ -200,23 +228,53 @@ function calculateBedSpan(
   // Find beds starting from startBed
   const startIndex = rowBeds.findIndex(b => b === startBed);
   if (startIndex === -1) {
-    return { spanBeds: [startBed], isComplete: false, bedsRequired };
+    return {
+      spanBeds: [startBed],
+      bedSpanInfo: [{ bed: startBed, feetUsed: Math.min(feetNeeded, bedSize), bedCapacityFt: bedSize }],
+      isComplete: feetNeeded <= bedSize,
+      feetNeeded,
+      feetAvailable: bedSize,
+    };
   }
 
-  // Collect consecutive beds
+  // Collect consecutive beds until we have enough footage
   const spanBeds: string[] = [];
-  for (let i = 0; i < bedsRequired && startIndex + i < rowBeds.length; i++) {
-    spanBeds.push(rowBeds[startIndex + i]);
+  const bedSpanInfo: BedSpanInfoLocal[] = [];
+  let feetAvailable = 0;
+  let remainingFeet = feetNeeded;
+
+  for (let i = startIndex; i < rowBeds.length && remainingFeet > 0; i++) {
+    const bed = rowBeds[i];
+    const thisBedCapacity = getBedSizeFt(bed);
+    const feetUsed = Math.min(remainingFeet, thisBedCapacity);
+
+    spanBeds.push(bed);
+    bedSpanInfo.push({
+      bed,
+      feetUsed,
+      bedCapacityFt: thisBedCapacity,
+    });
+
+    feetAvailable += thisBedCapacity;
+    remainingFeet -= feetUsed;
   }
 
   if (spanBeds.length === 0) {
     spanBeds.push(startBed);
+    bedSpanInfo.push({
+      bed: startBed,
+      feetUsed: Math.min(feetNeeded, bedSize),
+      bedCapacityFt: bedSize,
+    });
+    feetAvailable = bedSize;
   }
 
   return {
     spanBeds,
-    isComplete: spanBeds.length >= bedsRequired,
-    bedsRequired,
+    bedSpanInfo,
+    isComplete: feetAvailable >= feetNeeded,
+    feetNeeded,
+    feetAvailable,
   };
 }
 
@@ -273,7 +331,7 @@ export default function CropTimeline({
     originalWidth: number;
     originalResource: string;
     cropName: string;
-    bedsNeeded: number;
+    feetNeeded: number;
     // Crop styling info
     category?: string;
     bgColor?: string;
@@ -282,8 +340,10 @@ export default function CropTimeline({
     endDate: string;
     // Calculated span info for target resource
     targetSpanBeds?: string[];
+    targetBedSpanInfo?: BedSpanInfoLocal[];
     targetIsComplete?: boolean;
-    targetBedsRequired?: number;
+    targetFeetNeeded?: number;
+    targetFeetAvailable?: number;
     // Y position within the lane for ghost placement
     laneOffsetY?: number;
   } | null>(null);
@@ -556,7 +616,7 @@ export default function CropTimeline({
     const dragData = JSON.stringify({
       cropId: crop.id,
       groupId: crop.groupId,
-      bedsNeeded: crop.bedsNeeded || 1,
+      feetNeeded: crop.feetNeeded || 50,
       startDate: crop.startDate,
       endDate: crop.endDate,
     });
@@ -585,7 +645,7 @@ export default function CropTimeline({
       originalWidth: originalPos.width,
       originalResource: crop.resource,
       cropName: crop.name,
-      bedsNeeded: crop.bedsNeeded || 1,
+      feetNeeded: crop.feetNeeded || 50,
       category: crop.category,
       bgColor: crop.bgColor,
       textColor: crop.textColor,
@@ -617,22 +677,28 @@ export default function CropTimeline({
     if (dragPreview && draggedGroupId) {
       // Calculate bed span for the target resource
       let targetSpanBeds: string[] | undefined;
+      let targetBedSpanInfo: BedSpanInfoLocal[] | undefined;
       let targetIsComplete: boolean | undefined;
-      let targetBedsRequired: number | undefined;
+      let targetFeetNeeded: number | undefined;
+      let targetFeetAvailable: number | undefined;
 
       if (resource !== 'Unassigned' && resource !== '') {
-        const spanInfo = calculateBedSpan(dragPreview.bedsNeeded, resource, groups);
+        const spanInfo = calculateBedSpan(dragPreview.feetNeeded, resource, groups);
         targetSpanBeds = spanInfo.spanBeds;
+        targetBedSpanInfo = spanInfo.bedSpanInfo;
         targetIsComplete = spanInfo.isComplete;
-        targetBedsRequired = spanInfo.bedsRequired;
+        targetFeetNeeded = spanInfo.feetNeeded;
+        targetFeetAvailable = spanInfo.feetAvailable;
       }
 
       setDragPreview(prev => prev ? {
         ...prev,
         targetResource: resource,
         targetSpanBeds,
+        targetBedSpanInfo,
         targetIsComplete,
-        targetBedsRequired,
+        targetFeetNeeded,
+        targetFeetAvailable,
         laneOffsetY,
       } : null);
     }
@@ -678,7 +744,7 @@ export default function CropTimeline({
           data.cropId,
           resource === 'Unassigned' ? '' : resource,
           data.groupId,
-          data.bedsNeeded
+          data.feetNeeded
         );
       }
     } catch {
@@ -886,6 +952,24 @@ export default function CropTimeline({
           }}
           title={tooltip}
         >
+          {/* Partial bed indicator - shows unused portion of bed with diagonal stripes */}
+          {isPartialBed && crop.feetUsed && crop.bedCapacityFt && (
+            <div
+              className="absolute inset-y-0 pointer-events-none"
+              style={{
+                left: `${(crop.feetUsed / crop.bedCapacityFt) * 100}%`,
+                right: 0,
+                backgroundImage: `repeating-linear-gradient(
+                  -45deg,
+                  transparent,
+                  transparent 3px,
+                  rgba(0,0,0,0.15) 3px,
+                  rgba(0,0,0,0.15) 6px
+                )`,
+                borderLeft: `2px dashed ${colors.text}40`,
+              }}
+            />
+          )}
           {/* Harvest window indicator - dashed line at bottom */}
           {crop.harvestStartDate && (() => {
             const totalMs = parseDate(crop.endDate).getTime() - parseDate(crop.startDate).getTime();
@@ -1392,7 +1476,8 @@ export default function CropTimeline({
                     {isDragOver && dragPreview && dragPreview.targetResource !== dragPreview.originalResource && (() => {
                       const isComplete = dragPreview.targetIsComplete !== false;
                       const spanBeds = dragPreview.targetSpanBeds || [resource];
-                      const bedsRequired = dragPreview.targetBedsRequired || 1;
+                      const feetNeeded = dragPreview.targetFeetNeeded || 50;
+                      const feetAvailable = dragPreview.targetFeetAvailable || 50;
 
                       // Get crop colors (same logic as renderCropBox)
                       const colors = dragPreview.bgColor
@@ -1428,10 +1513,10 @@ export default function CropTimeline({
                         }
                       }
 
-                      // Build the label: single bed, range, or error
+                      // Build the label: single bed, range, or error with footage info
                       let bedLabel: string;
                       if (!isComplete) {
-                        bedLabel = `Not enough room (need ${bedsRequired} beds)`;
+                        bedLabel = `Need ${feetNeeded}' but only ${feetAvailable}' available`;
                       } else if (spanBeds.length === 1) {
                         bedLabel = `→ ${spanBeds[0]}`;
                       } else {
@@ -1443,9 +1528,17 @@ export default function CropTimeline({
                         ? ` (${dragPreview.deltaDays > 0 ? '+' : ''}${dragPreview.deltaDays} days)`
                         : '';
 
+                      // Check if the last bed is partial (uses less than full capacity)
+                      const bedSpanInfoArr = dragPreview.targetBedSpanInfo || [];
+                      const lastBed = bedSpanInfoArr[bedSpanInfoArr.length - 1];
+                      const isPartialBed = lastBed && lastBed.feetUsed < lastBed.bedCapacityFt;
+                      const partialPercent = isPartialBed && feetAvailable > 0
+                        ? ((feetAvailable - (lastBed.bedCapacityFt - lastBed.feetUsed)) / feetAvailable) * 100
+                        : 100;
+
                       return (
                         <div
-                          className="absolute rounded border-2 border-dashed pointer-events-none"
+                          className="absolute rounded border-2 border-dashed pointer-events-none overflow-hidden"
                           style={{
                             left: adjustedPos.left,
                             width: adjustedPos.width,
@@ -1456,6 +1549,24 @@ export default function CropTimeline({
                             zIndex: 50,
                           }}
                         >
+                          {/* Partial bed indicator - diagonal stripes for unused portion */}
+                          {isPartialBed && isComplete && (
+                            <div
+                              className="absolute inset-y-0 pointer-events-none"
+                              style={{
+                                left: `${partialPercent}%`,
+                                right: 0,
+                                backgroundImage: `repeating-linear-gradient(
+                                  -45deg,
+                                  transparent,
+                                  transparent 3px,
+                                  rgba(0,0,0,0.2) 3px,
+                                  rgba(0,0,0,0.2) 6px
+                                )`,
+                                borderLeft: `2px dashed ${colors.bg}80`,
+                              }}
+                            />
+                          )}
                           {/* Badge showing destination */}
                           <div
                             className="absolute -top-6 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap text-white"
@@ -1464,6 +1575,7 @@ export default function CropTimeline({
                             }}
                           >
                             {bedLabel}{timeLabel}
+                            {isPartialBed && ` (${lastBed.feetUsed}' of ${lastBed.bedCapacityFt}')`}
                           </div>
                           {/* Crop name and dates (matching timing preview style) */}
                           <div className="px-2 py-1 text-xs" style={{ color: isComplete ? colors.bg : '#ef4444' }}>
@@ -1513,7 +1625,6 @@ export default function CropTimeline({
                 ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
                 : getColorForCategory(crop.category);
               const duration = getDuration(crop.startDate, crop.endDate);
-              const totalFeet = selectedCrops.reduce((sum, c) => sum + (c.feetUsed || c.bedCapacityFt || 50), 0);
 
               return (
                 <div className="space-y-4">
@@ -1569,16 +1680,10 @@ export default function CropTimeline({
                     )}
                   </div>
 
-                  {/* Beds Needed */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">Beds Needed</div>
-                      <div className="text-sm">{crop.bedsNeeded || 1} (50&apos; units)</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">Total Feet</div>
-                      <div className="text-sm">{totalFeet}&apos;</div>
-                    </div>
+                  {/* Feet Needed */}
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Feet Needed</div>
+                    <div className="text-sm">{crop.feetNeeded || 50}&apos;</div>
                   </div>
 
                   {/* Multi-bed info */}
