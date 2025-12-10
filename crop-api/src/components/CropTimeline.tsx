@@ -933,13 +933,13 @@ export default function CropTimeline({
           onDragStart={canDrag ? (e) => handleDragStart(e, crop) : undefined}
           onDragEnd={canDrag ? handleDragEnd : undefined}
           onClick={(e) => handleCropClick(e, crop)}
-          className={`absolute rounded select-none overflow-hidden hover:z-10 cursor-pointer ${
-            canDrag ? 'cursor-grab' : ''
+          className={`absolute rounded select-none overflow-hidden hover:z-10 ${
+            canDrag ? 'cursor-grab' : (isMultiBed ? 'cursor-default' : 'cursor-pointer')
           } ${isDragging ? 'opacity-50 cursor-grabbing' : ''} ${
             isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
           } ${isSelected ? 'ring-2 ring-yellow-400 ring-offset-1 z-20' : ''} ${
             isOverlapping ? 'bg-transparent border-2' : ''
-          }`}
+          } ${isMultiBed && !isFirstBed ? 'opacity-80' : ''}`}
           style={{
             left: pos.left,
             width: pos.width,
@@ -949,6 +949,10 @@ export default function CropTimeline({
             borderColor: colors.bg,
             color: isOverlapping ? '#333' : colors.text,
             boxShadow: isOverlapping ? 'none' : '0 2px 4px rgba(0,0,0,0.2)',
+            // Add left border accent for secondary beds to show they're linked
+            borderLeftWidth: isMultiBed && !isFirstBed ? 3 : undefined,
+            borderLeftColor: isMultiBed && !isFirstBed ? `${colors.text}60` : undefined,
+            borderLeftStyle: isMultiBed && !isFirstBed ? 'dashed' : undefined,
           }}
           title={tooltip}
         >
@@ -1018,9 +1022,9 @@ export default function CropTimeline({
                 }}
               >
                 {/* Fixed-width left badge area */}
-                <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 24 }}>
+                <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 28 }}>
                   {isMultiBed && (
-                    <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
+                    <div className="text-[9px] px-1 rounded opacity-70">
                       {crop.bedIndex}/{crop.totalBeds}
                     </div>
                   )}
