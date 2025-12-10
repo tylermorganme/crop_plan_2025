@@ -66,6 +66,7 @@ const CROP_TOP_PADDING = 8;
 const TIMELINE_PADDING_MONTHS = 3;
 const DEFAULT_SCROLL_OFFSET_DAYS = 30;
 const LANE_LABEL_WIDTH = 180;
+const HEADER_HEIGHT = 38;
 const UI_STATE_KEY = 'crop-timeline-ui-state';
 
 interface UIState {
@@ -255,6 +256,7 @@ export default function CropTimeline({
     savedState.current.unassignedHeight ?? 150
   );
   const [isResizing, setIsResizing] = useState(false);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   // For timing mode: track drag start position and original dates
   const dragStartX = useRef<number | null>(null);
@@ -497,9 +499,15 @@ export default function CropTimeline({
 
     let scrollTimeout: ReturnType<typeof setTimeout>;
     const handleScroll = () => {
+      // Update scroll position for sticky text positioning
+      setScrollLeft(scrollEl.scrollLeft);
+      // Debounce saving state
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(saveState, 200);
     };
+
+    // Initialize scroll position
+    setScrollLeft(scrollEl.scrollLeft);
 
     scrollEl.addEventListener('scroll', handleScroll);
     return () => {
@@ -545,13 +553,16 @@ export default function CropTimeline({
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, crop: TimelineCrop) => {
     // Encode crop info for the drop handler
-    e.dataTransfer.setData('application/json', JSON.stringify({
+    const dragData = JSON.stringify({
       cropId: crop.id,
       groupId: crop.groupId,
       bedsNeeded: crop.bedsNeeded || 1,
       startDate: crop.startDate,
       endDate: crop.endDate,
-    }));
+    });
+    e.dataTransfer.setData('application/json', dragData);
+    e.dataTransfer.setData('text/plain', crop.id); // Fallback for compatibility
+    e.dataTransfer.effectAllowed = 'move';
     setDraggedCropId(crop.id);
     setDraggedGroupId(crop.groupId);
 
@@ -594,6 +605,7 @@ export default function CropTimeline({
 
   const handleDragOver = (e: React.DragEvent, resource: string) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
 
     // Calculate Y offset within the lane element
     const laneElement = e.currentTarget as HTMLElement;
@@ -754,7 +766,7 @@ export default function CropTimeline({
   }, [resources, groups, collapsedGroups]);
 
   // Render a crop box
-  const renderCropBox = (crop: TimelineCrop, stackRow: number = 0) => {
+  const renderCropBox = (crop: TimelineCrop, stackRow: number = 0, laneHeight: number = 50) => {
     const pos = getTimelinePosition(crop.startDate, crop.endDate);
     const isOverlapping = viewMode === 'overlap' && overlappingIds.has(crop.id);
     const isMultiBed = crop.totalBeds > 1;
@@ -800,6 +812,22 @@ export default function CropTimeline({
     } : null;
     const previewPos = previewDates ? getTimelinePosition(previewDates.start, previewDates.end) : null;
 
+    // Calculate cursor-aware vertical position for timing preview (same logic as cross-row ghost)
+    let previewTopPos = topPos;
+    if (hasTimingPreview && dragPreview?.laneOffsetY !== undefined) {
+      if (viewMode === 'stacked') {
+        // Snap to nearest row slot
+        const rowHeight = CROP_HEIGHT + CROP_SPACING;
+        const row = Math.max(0, Math.floor((dragPreview.laneOffsetY - CROP_TOP_PADDING) / rowHeight));
+        previewTopPos = CROP_TOP_PADDING + row * rowHeight;
+        // Clamp to lane bounds
+        previewTopPos = Math.max(CROP_TOP_PADDING, Math.min(previewTopPos, laneHeight - CROP_HEIGHT - CROP_TOP_PADDING));
+      } else {
+        // In overlap mode, center on cursor with some constraints
+        previewTopPos = Math.max(CROP_TOP_PADDING, Math.min(dragPreview.laneOffsetY - CROP_HEIGHT / 2, laneHeight - CROP_HEIGHT - CROP_TOP_PADDING));
+      }
+    }
+
     return (
       <React.Fragment key={crop.id}>
         {/* Ghost preview for timing mode - shows where crop will move to */}
@@ -809,7 +837,7 @@ export default function CropTimeline({
             style={{
               left: previewPos.left,
               width: previewPos.width,
-              top: topPos,
+              top: previewTopPos,
               height: CROP_HEIGHT,
               borderColor: colors.bg,
               backgroundColor: `${colors.bg}33`, // 20% opacity
@@ -878,28 +906,56 @@ export default function CropTimeline({
             }
             return null;
           })()}
-          <div className="px-1 py-1 flex items-start gap-1">
-            {/* Fixed-width left badge area */}
-            <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 24 }}>
-              {isMultiBed && (
-                <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
-                  {crop.bedIndex}/{crop.totalBeds}
+          {/* Sticky text content - shifts right as crop scrolls off left edge */}
+          {(() => {
+            // Calculate how much to offset the text to keep it visible
+            // scrollLeft is the scroll position of the timeline container
+            // pos.left is the crop's left edge position
+            const minTextWidth = 60; // Minimum space needed for text
+
+            // Only apply sticky behavior if crop extends past the left edge of viewport
+            let stickyOffset = 0;
+            if (scrollLeft > pos.left) {
+              // Shift text right by how much the crop is scrolled off
+              stickyOffset = scrollLeft - pos.left;
+              // But clamp so text doesn't go past the right edge (leave room for text)
+              const maxOffset = pos.width - minTextWidth;
+              if (stickyOffset > maxOffset) {
+                stickyOffset = Math.max(0, maxOffset);
+              }
+            }
+
+            return (
+              <div
+                className="px-1 py-1 flex items-start gap-1 absolute inset-y-0 pointer-events-none"
+                style={{
+                  left: stickyOffset,
+                  right: 0,
+                }}
+              >
+                {/* Fixed-width left badge area */}
+                <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 24 }}>
+                  {isMultiBed && (
+                    <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
+                      {crop.bedIndex}/{crop.totalBeds}
+                    </div>
+                  )}
+                  {isPartialBed && (
+                    <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
+                      {crop.feetUsed}&apos;
+                    </div>
+                  )}
                 </div>
-              )}
-              {isPartialBed && (
-                <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
-                  {crop.feetUsed}&apos;
+                {/* Main content */}
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-xs truncate">{crop.name}</div>
+                  <div className="text-[9px] opacity-90">
+                    {formatDate(crop.startDate)} - {formatDate(crop.endDate)}
+                  </div>
                 </div>
-              )}
-            </div>
-            {/* Main content */}
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-xs truncate">{crop.name}</div>
-              <div className="text-[9px] opacity-90">
-                {formatDate(crop.startDate)} - {formatDate(crop.endDate)}
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </React.Fragment>
     );
@@ -960,7 +1016,7 @@ export default function CropTimeline({
           )}
 
           {/* Crop boxes */}
-          {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0))}
+          {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0, laneHeight))}
         </div>
       </div>
     );
@@ -1060,7 +1116,7 @@ export default function CropTimeline({
             <tr>
               {/* Corner cell - sticky both directions */}
               <th
-                className="px-3 py-2 text-xs font-medium text-gray-600 border-r border-b text-left"
+                className="px-3 text-xs font-medium text-gray-600 border-r border-b text-left"
                 style={{
                   position: 'sticky',
                   top: 0,
@@ -1069,6 +1125,7 @@ export default function CropTimeline({
                   backgroundColor: '#f9fafb',
                   width: LANE_LABEL_WIDTH,
                   minWidth: LANE_LABEL_WIDTH,
+                  height: HEADER_HEIGHT,
                 }}
               >
                 Resource
@@ -1077,7 +1134,7 @@ export default function CropTimeline({
               {monthHeaders.map((h, i) => (
                 <th
                   key={i}
-                  className="text-center text-[10px] text-gray-600 border-r border-b border-gray-200 py-1 font-normal"
+                  className="text-center text-[10px] text-gray-600 border-r border-b border-gray-200 font-normal"
                   style={{
                     position: 'sticky',
                     top: 0,
@@ -1085,6 +1142,7 @@ export default function CropTimeline({
                     backgroundColor: '#f9fafb',
                     width: h.width,
                     minWidth: h.width,
+                    height: HEADER_HEIGHT,
                   }}
                 >
                   <div className="font-bold">{h.month}</div>
@@ -1104,8 +1162,7 @@ export default function CropTimeline({
               const effectiveHeight = Math.max(unassignedHeight, minContentHeight);
               const isDragOverUnassigned = dragOverResource === 'Unassigned';
               const bgColor = unassignedCrops.length > 0 ? '#fffbeb' : '#f9fafb';
-              // Header row height (approx 42px for the month headers)
-              const headerHeight = 42;
+              // Use the constant header height for consistent positioning
 
               return (
                 <tr key="Unassigned">
@@ -1114,7 +1171,7 @@ export default function CropTimeline({
                     className="px-2 text-xs font-medium border-r align-top"
                     style={{
                       position: 'sticky',
-                      top: headerHeight,
+                      top: HEADER_HEIGHT,
                       left: 0,
                       zIndex: 25, // Above regular sticky labels but below header
                       backgroundColor: unassignedCrops.length > 0 ? '#fef3c7' : '#e5e7eb',
@@ -1137,7 +1194,7 @@ export default function CropTimeline({
                     className={`relative p-0 transition-all duration-150`}
                     style={{
                       position: 'sticky',
-                      top: headerHeight,
+                      top: HEADER_HEIGHT,
                       zIndex: 24,
                       height: effectiveHeight,
                       backgroundColor: isDragOverUnassigned ? '#fef3c7' : bgColor,
@@ -1224,7 +1281,7 @@ export default function CropTimeline({
                       />
                     )}
                     {/* Unassigned crop boxes */}
-                    {unassignedCrops.map(crop => renderCropBox(crop, unassignedStacking.rows[crop.id] || 0))}
+                    {unassignedCrops.map(crop => renderCropBox(crop, unassignedStacking.rows[crop.id] || 0, effectiveHeight))}
                   </td>
                 </tr>
               );
@@ -1236,7 +1293,7 @@ export default function CropTimeline({
                 className="p-0 select-none"
                 style={{
                   position: 'sticky',
-                  top: 42 + unassignedHeight, // Header + unassigned height
+                  top: HEADER_HEIGHT + unassignedHeight, // Header + unassigned height
                   zIndex: 23,
                   height: 8,
                   backgroundColor: '#9ca3af',
@@ -1424,7 +1481,7 @@ export default function CropTimeline({
                       />
                     )}
                     {/* Crop boxes */}
-                    {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0))}
+                    {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0, laneHeight))}
                   </td>
                 </tr>
               );
