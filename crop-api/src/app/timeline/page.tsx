@@ -16,6 +16,7 @@ export default function TimelinePage() {
   const isDirty = usePlanStore((state) => state.isDirty);
   const createNewPlan = usePlanStore((state) => state.createNewPlan);
   const moveCrop = usePlanStore((state) => state.moveCrop);
+  const updateCropDates = usePlanStore((state) => state.updateCropDates);
   const markSaved = usePlanStore((state) => state.markSaved);
 
   // Undo/redo
@@ -85,6 +86,10 @@ export default function TimelinePage() {
     const newBeds = bedSpanInfo.map(info => info.bed);
     moveCrop(targetGroupId, newResource, newBeds);
   }, [moveCrop]);
+
+  const handleDateChange = useCallback((groupId: string, startDate: string, endDate: string) => {
+    updateCropDates(groupId, startDate, endDate);
+  }, [updateCropDates]);
 
   const handleSave = useCallback(() => {
     // For now, just mark as saved (localStorage already persists automatically)
@@ -174,6 +179,7 @@ export default function TimelinePage() {
           resources={currentPlan.resources}
           groups={currentPlan.groups}
           onCropMove={handleCropMove}
+          onCropDateChange={handleDateChange}
         />
       </div>
     </div>
