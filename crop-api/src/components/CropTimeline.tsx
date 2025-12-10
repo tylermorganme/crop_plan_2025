@@ -612,45 +612,55 @@ export default function CropTimeline({
 
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, crop: TimelineCrop) => {
-    // Encode crop info for the drop handler
+    // If this is a secondary bed of a multi-bed crop, find and use the first bed instead
+    // This allows dragging from any bed while treating it as if the first bed was grabbed
+    let effectiveCrop = crop;
+    if (crop.totalBeds > 1 && crop.bedIndex !== 1) {
+      const firstBed = crops.find(c => c.groupId === crop.groupId && c.bedIndex === 1);
+      if (firstBed) {
+        effectiveCrop = firstBed;
+      }
+    }
+
+    // Encode crop info for the drop handler (always use the first bed's info)
     const dragData = JSON.stringify({
-      cropId: crop.id,
-      groupId: crop.groupId,
-      feetNeeded: crop.feetNeeded || 50,
-      startDate: crop.startDate,
-      endDate: crop.endDate,
+      cropId: effectiveCrop.id,
+      groupId: effectiveCrop.groupId,
+      feetNeeded: effectiveCrop.feetNeeded || 50,
+      startDate: effectiveCrop.startDate,
+      endDate: effectiveCrop.endDate,
     });
     e.dataTransfer.setData('application/json', dragData);
-    e.dataTransfer.setData('text/plain', crop.id); // Fallback for compatibility
+    e.dataTransfer.setData('text/plain', effectiveCrop.id); // Fallback for compatibility
     e.dataTransfer.effectAllowed = 'move';
-    setDraggedCropId(crop.id);
-    setDraggedGroupId(crop.groupId);
+    setDraggedCropId(effectiveCrop.id);
+    setDraggedGroupId(effectiveCrop.groupId);
 
     // For timing editing, track start position
     if (timingEditEnabled) {
       dragStartX.current = e.clientX;
-      dragOriginalDates.current = { start: crop.startDate, end: crop.endDate };
+      dragOriginalDates.current = { start: effectiveCrop.startDate, end: effectiveCrop.endDate };
     }
 
-    // Get original crop position for preview
-    const originalPos = getTimelinePosition(crop.startDate, crop.endDate);
+    // Get original crop position for preview (use first bed's resource)
+    const originalPos = getTimelinePosition(effectiveCrop.startDate, effectiveCrop.endDate);
 
     // Initialize drag preview with original position
     setDragPreview({
-      groupId: crop.groupId,
+      groupId: effectiveCrop.groupId,
       deltaX: 0,
       deltaDays: 0,
-      targetResource: crop.resource,
+      targetResource: effectiveCrop.resource,
       originalLeft: originalPos.left,
       originalWidth: originalPos.width,
-      originalResource: crop.resource,
-      cropName: crop.name,
-      feetNeeded: crop.feetNeeded || 50,
-      category: crop.category,
-      bgColor: crop.bgColor,
-      textColor: crop.textColor,
-      startDate: crop.startDate,
-      endDate: crop.endDate,
+      originalResource: effectiveCrop.resource,
+      cropName: effectiveCrop.name,
+      feetNeeded: effectiveCrop.feetNeeded || 50,
+      category: effectiveCrop.category,
+      bgColor: effectiveCrop.bgColor,
+      textColor: effectiveCrop.textColor,
+      startDate: effectiveCrop.startDate,
+      endDate: effectiveCrop.endDate,
     });
   };
 
@@ -841,7 +851,7 @@ export default function CropTimeline({
     // Highlight all beds in the group being dragged
     const isGroupBeingDragged = draggedGroupId === crop.groupId && draggedGroupId !== null;
     const isSelected = selectedGroupId === crop.groupId;
-    const canDrag = !isMultiBed || isFirstBed; // Only first bed of multi-bed crops is draggable
+    // All beds are draggable - dragging a secondary bed acts like dragging the first bed
 
     // Check if this crop group has an active timing preview (only show on same row)
     const hasTimingPreview = timingEditEnabled &&
@@ -865,7 +875,7 @@ export default function CropTimeline({
     // Build tooltip
     let tooltip = `${crop.name}\n${formatDate(crop.startDate)} - ${formatDate(crop.endDate)}`;
     if (isMultiBed) {
-      tooltip += `\nBed ${crop.bedIndex} of ${crop.totalBeds}${isFirstBed ? ' (drag to move all)' : ' (drag first bed to move)'}`;
+      tooltip += `\nBed ${crop.bedIndex} of ${crop.totalBeds}`;
     }
     if (isPartialBed) {
       tooltip += `\n${crop.feetUsed}' of ${crop.bedCapacityFt}' used`;
@@ -929,14 +939,13 @@ export default function CropTimeline({
 
         {/* Actual crop box */}
         <div
-          draggable={canDrag}
-          onDragStart={canDrag ? (e) => handleDragStart(e, crop) : undefined}
-          onDragEnd={canDrag ? handleDragEnd : undefined}
+          draggable
+          onDragStart={(e) => handleDragStart(e, crop)}
+          onDragEnd={handleDragEnd}
           onClick={(e) => handleCropClick(e, crop)}
-          className={`absolute rounded select-none overflow-hidden hover:z-10 ${
-            canDrag ? 'cursor-grab' : (isMultiBed ? 'cursor-default' : 'cursor-pointer')
-          } ${isDragging ? 'opacity-50 cursor-grabbing' : ''} ${
-            isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
+          className={`absolute rounded select-none overflow-hidden hover:z-10 cursor-grab ${
+            isDragging ? 'opacity-50 cursor-grabbing' : ''
+          } ${isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
           } ${isSelected ? 'ring-2 ring-yellow-400 ring-offset-1 z-20' : ''} ${
             isOverlapping ? 'bg-transparent border-2' : ''
           } ${isMultiBed && !isFirstBed ? 'opacity-80' : ''}`}
