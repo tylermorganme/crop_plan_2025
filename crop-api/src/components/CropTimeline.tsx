@@ -948,7 +948,7 @@ export default function CropTimeline({
           } ${isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
           } ${isSelected ? 'ring-2 ring-yellow-400 ring-offset-1 z-20' : ''} ${
             isOverlapping ? 'bg-transparent border-2' : ''
-          } ${isMultiBed && !isFirstBed ? 'opacity-80' : ''}`}
+          }`}
           style={{
             left: pos.left,
             width: pos.width,
@@ -1033,7 +1033,11 @@ export default function CropTimeline({
                 {/* Fixed-width left badge area */}
                 <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 28 }}>
                   {isMultiBed && (
-                    <div className="text-[9px] px-1 rounded opacity-70">
+                    <div className={`text-[9px] px-1 rounded ${
+                      isFirstBed
+                        ? 'bg-black/80 text-white'
+                        : 'bg-white/80 text-black'
+                    }`}>
                       {crop.bedIndex}/{crop.totalBeds}
                     </div>
                   )}
