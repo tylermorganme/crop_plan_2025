@@ -1,0 +1,924 @@
+olevba 0.60.2 on Python 3.13.9 - http://decalage.info/python/oletools
+===============================================================================
+FILE: Crop Plan 2025 V20.xlsm
+Type: OpenXML
+WARNING  For now, VBA stomping cannot be detected for files in memory
+-------------------------------------------------------------------------------
+VBA MACRO ThisWorkbook.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/ThisWorkbook'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet1.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet2.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet2'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet3.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet3'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO CropBoxes.bas 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/CropBoxes'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Function IsInArray(stringToBeFound As String, arr As Variant) As Boolean
+    IsInArray = Not IsError(Application.Match(stringToBeFound, arr, 0))
+End Function
+
+Function firstDayOfYear(year As Integer) As Date
+    firstDayOfYear = DateSerial(year, 1, 1)
+End Function
+
+Private Sub SetDimensions()
+    Dim height As Integer
+    Dim width As Integer
+    
+    width = Sheets("Crop Map").Range("B1")
+    height = Sheets("Crop Map").Range("B2")
+    Sheets("Crop Map").Range("D:XFD").ColumnWidth = width
+    Sheets("Crop Map").Range("4:1048576").RowHeight = height
+End Sub
+
+Private Sub DeleteAllShapes()
+    'Remove All Shape Objects From The Crop Map Sheet
+    
+    Dim shp As shape
+    
+    For Each shp In Sheets("Crop Map").Shapes
+        If Not (shp.Type = msoOLEControlObject Or shp.Type = msoFormControl) Then shp.Delete
+    Next shp
+
+End Sub
+
+Public Sub DeleteAllShapesWithModal()
+    modal = MsgBox("Are you sure you want to delete all crop boxes? This is permanent!", vbYesNo + vbDefaultButton2)
+    If modal = vbYes Then
+        DeleteAllShapes
+    Else
+        Exit Sub
+    End If
+End Sub
+
+
+Private Sub MakeCropBox(startDate As Date, endDate As Date, color As Long, beds As Single, _
+    dateFormat As String, gridStartDate As Date, topOffset As Single, variety As String, _
+    seedingStyle As String, textColor As Long, displayWidth As Single, cropName As String, numRows As Integer, inRowSpacing As Integer, _
+    followCrop As String, revenue As Single, notes As String, irrigation As String, cropHeight As Single, coverNeeds As String, protocolVariant As String, _
+    beginningOfHarvest As Date, endOfHarvest As Date, identifier As String, growingStructure As String)
+    
+    Dim height As Single
+    Dim width As Single
+    Dim monthLength As Integer
+    Dim boxHeight As Single
+    Dim boxWidth As Single
+    Dim box As shape
+    Dim name As String
+    Dim top As Single
+    
+    monthLength = 30
+    top = Sheets("Crop Map").Range("D6:D29").height / 365 * (DateDiff("d", gridStartDate, startDate) + 1) + topOffset
+    
+    width = Sheets("Crop Map").Range("D6").width
+    height = Sheets("Crop Map").Range("D6").height
+
+    boxHeight = (DateDiff("d", startDate, endDate) + 1) / monthLength * 2 * height
+    boxWidth = displayWidth * width
+    name = identifier
+    
+    ' Check to see if the shape already exists
+    On Error Resume Next
+    Set box = Sheets("Crop Map").Shapes(name)
+    On Error GoTo 0
+    
+    ' If it does not, then create it
+    If box Is Nothing Then
+        Set box = Sheets("Crop Map").Shapes.AddShape(msoShapeRectangle, 45, top, boxWidth, boxHeight)
+    End If
+    
+    Dim harvestStartRatio As Single
+    harvestStartRatio = (beginningOfHarvest - startDate) / (endDate - startDate)
+    ' Debug.Print "harvestStartRatio: " & harvestStartRatio & " | beginningOfHarvest: " & beginningOfHarvest & " | startDate: " & startDate & " | endDate: " & endDate & " | (beginningOfHarvest - startDate): " & (beginningOfHarvest - startDate) & " | (endDate - startDate): " & (endDate - startDate)
+    
+    
+    Dim lightener As Integer
+    Dim directSeedBandHeight As Integer
+    
+    lightener = 100
+    directSeedBandHeight = 0.1
+    
+    With box.Fill
+        .Visible = msoTrue
+        .ForeColor.RGB = color
+        .TwoColorGradient msoGradientHorizontal, 1
+'        If seedingStyle = "DS" Then
+'            .GradientStops(1).color = RGB(150, 150, 150)
+''            .GradientStops(1).color.TintAndShade = -0.6
+'            .GradientStops(1).Position = 0.1
+'            .GradientStops(2).color = color
+'            .GradientStops(2).Position = 0.1
+'            .GradientStops.Insert color, directSeedBandHeight
+'            .GradientStops(3).Position = harvestStartRatio
+'            .GradientStops.Insert color, harvestStartRatio
+'            .GradientStops(4).color.TintAndShade = -0.6
+'            .Transparency = 0.25
+'        Else
+'            .GradientStops(1).color = color
+'            .GradientStops(2).color = color
+'            .GradientStops(2).Position = harvestStartRatio
+'            .GradientStops.Insert color, harvestStartRatio
+'            .GradientStops(3).color.TintAndShade = -0.6
+'            .Transparency = 0.25
+'        End If
+            .GradientStops(1).color = color
+            .GradientStops(2).color = color
+            .GradientStops(2).Position = harvestStartRatio
+            .GradientStops.Insert color, harvestStartRatio
+            .GradientStops(3).color.TintAndShade = -0.6
+            .Transparency = 0.25
+    End With
+    
+    With box.Line
+        .ForeColor.RGB = RGB(255, 255, 255)
+        .DashStyle = msoLineSolid
+        .Weight = 1
+        .Visible = msoTrue
+        If seedingStyle = "DS" Then
+            .ForeColor.RGB = RGB(0, 0, 0)
+            .DashStyle = msoLineSysDash
+            .Weight = 2
+            .Visible = msoTrue
+        End If
+    End With
+        
+    With box
+        .name = name
+        .TextFrame.Characters.Text = cropName _
+            & vbNewLine & protocolVariant _
+            & vbNewLine & growingStructure _
+            & vbNewLine & identifier _
+            & IIf(notes = "", "", vbNewLine & "(!) " & notes) _
+            & vbNewLine & FormatCurrency(revenue, 0) _
+            & vbNewLine & variety & vbNewLine _
+            & vbNewLine & beds & " beds" _
+            & vbNewLine & numRows & " R @ " & inRowSpacing & Chr(34) _
+            & vbNewLine & IIf(followCrop = "", "", "<- " & followCrop) _
+            & vbNewLine & "Harvest" & vbNewLine & Format(beginningOfHarvest, dateFormat) & " - " & Format(endOfHarvest, dateFormat) _
+            & vbNewLine & IIf(True, irrigation & " " & cropHeight & "'" & vbNewLine & coverNeeds, "") _
+            '& vbNewLine & Format(startDate, dateFormat) & " - " & Format(endDate, dateFormat)
+
+        .TextFrame2.TextRange.Characters.Font.Fill.ForeColor.RGB = textColor
+        .TextFrame2.TextRange.Font.Size = WorksheetFunction.Max(WorksheetFunction.Min(displayWidth * 12, 12), 8)
+        .width = boxWidth
+        .height = boxHeight
+        .top = top
+
+    End With
+End Sub
+
+Public Sub MakeCropBoxes()
+    Dim tbl As ListObject
+    Dim lrow As Range
+    Dim cropsRange As Range
+    Dim bedsRange As Range
+    Dim startDateRange As Range
+    Dim endDateRange As Range
+    Dim varietyRange As Range
+    Dim DSTPRange As Range
+    Dim displayWidthRange As Range
+    Dim nameRange As Range
+    Dim rowNumberRange As Range
+    Dim inRowSpacingRange As Range
+    Dim beginningOfHarvest As Range
+    Dim endOfHarvest As Range
+    Dim identifierRange As Range
+    Dim growingStructureRange As Range
+    
+    
+    Dim color As Long
+    Dim dateFormat As String
+    Dim names() As String
+    Dim rowCount As Integer
+    Dim gridStartDate As Date
+    Dim topOffset As Single
+    Dim followCropRange As Range
+    Dim revenueRange As Range
+    Dim noteRange As Range
+    Dim irrigationRange As Range
+    Dim heightRange As Range
+    Dim coverRange As Range
+    Dim variantRange As Range
+    
+    Application.ScreenUpdating = True
+    
+    SetDimensions
+    
+    gridStartDate = firstDayOfYear(Sheets("Crop Map").Range("B4").value)
+    topOffset = Sheets("Crop Map").Range("D1:D5").height
+    dateFormat = Sheets("Crop Map").Range("B3").value
+    
+    Set tbl = Sheets("Bed Plan").ListObjects("BedPlan")
+    rowCount = tbl.DataBodyRange.Rows.Count
+    ReDim names(1 To rowCount)
+    
+    GenerateUniqueIdentifiers
+    
+    Set cropsRange = tbl.ListColumns("Crop").DataBodyRange
+    Set bedsRange = tbl.ListColumns("# of Beds").DataBodyRange
+    Set startDateRange = tbl.ListColumns("TP or DS Date").DataBodyRange
+    Set endDateRange = tbl.ListColumns("End of Harvest").DataBodyRange
+    Set varietyRange = tbl.ListColumns("Variety").DataBodyRange
+    Set DSTPRange = tbl.ListColumns("DS/TP").DataBodyRange
+    Set displayWidthRange = tbl.ListColumns("Display Width").DataBodyRange
+    Set nameRange = tbl.ListColumns("Name").DataBodyRange
+    Set rowNumberRange = tbl.ListColumns("Rows").DataBodyRange
+    Set inRowSpacingRange = tbl.ListColumns("Spacing").DataBodyRange
+    Set followCropRange = tbl.ListColumns("Follows Crop").DataBodyRange
+    Set revenueRange = tbl.ListColumns("Revenue").DataBodyRange
+    Set noteRange = tbl.ListColumns("Notes").DataBodyRange
+    Set irrigationRange = tbl.ListColumns("Irrigation").DataBodyRange
+    Set heightRange = tbl.ListColumns("Height").DataBodyRange
+    Set coverRange = tbl.ListColumns("Cover").DataBodyRange
+    Set variantRange = tbl.ListColumns("Variant").DataBodyRange
+    Set beginningOfHarvest = tbl.ListColumns("Beginning of Harvest").DataBodyRange
+    Set endOfHarvest = tbl.ListColumns("End of Harvest").DataBodyRange
+    Set identifierRange = tbl.ListColumns("Identifier").DataBodyRange
+    Set growingStructureRange = tbl.ListColumns("Growing Structure").DataBodyRange
+    
+    For i = 1 To rowCount
+        names(i) = identifierRange(i)
+    Next i
+    
+    For Each shp In Sheets("Crop Map").Shapes
+        If Not (IsInArray(shp.name, names) Or shp.Type = msoOLEControlObject Or shp.Type = msoFormControl) Then shp.Delete
+    Next shp
+    
+    color = cropsRange(2).Interior.color
+    
+    For i = rowCount To 1 Step -1
+        ' Debug.Print "Row " & i & " Identifier: " & identifierRange(i).value
+        'On Error Resume Next
+            MakeCropBox startDateRange(i).value2, endDateRange(i).value2, cropsRange(i).Interior.color, _
+            bedsRange(i), dateFormat, gridStartDate, topOffset, varietyRange(i), _
+            DSTPRange(i), cropsRange(i).Font.color, displayWidthRange(i), nameRange(i), rowNumberRange(i), inRowSpacingRange(i), _
+            followCropRange(i), revenueRange(i), noteRange(i), irrigationRange(i), heightRange(i), coverRange(i), variantRange(i), _
+            beginningOfHarvest(i).value2, endOfHarvest(i).value2, identifierRange(i), growingStructureRange(i)
+        'On Error GoTo 0
+    Next i
+    Application.ScreenUpdating = False
+End Sub
+
+Public Sub UpdateBedPlanStyles()
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    
+    Dim tbl As ListObject
+    Dim bedPlanCrops As Range
+    Dim cropChartCrops As Range
+    Dim cropChartCell As Range
+
+    Set tbl = Sheets("Bed Plan").ListObjects("BedPlan")
+
+    If Not Application.Selection Is Nothing Then
+        Set bedPlanCrops = Application.Selection
+    Else
+        Set bedPlanCrops = tbl.ListColumns("Crop").DataBodyRange
+    End If
+    
+    Set cropChartCrops = Sheets("Crop Chart").ListObjects("Crops") _
+        .ListColumns("Identifier").DataBodyRange
+
+    For Each c In bedPlanCrops.Cells
+        Set cropChartCell = Nothing
+        With cropChartCrops
+            Set cropChartCell = .Find(c.value2, LookIn:=xlValues)
+            If Not cropChartCell Is Nothing Then
+                cropChartCell.Copy
+                'Copy the format from the Crop Chart entry to the bed plan entry
+                c.PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+                    SkipBlanks:=False, Transpose:=False
+                Application.CutCopyMode = False
+            End If
+        End With
+    Next
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+End Sub
+
+Public Sub SpreadShapesEvenly()
+    Dim shp As shape
+    Dim i As Long
+    Dim totalWidth As Double
+    Dim gap As Double
+    Dim totalShapeWidth As Double
+    
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+    
+    ' Column B's width in points
+    totalWidth = Sheets("Crop Map").Columns("B").width
+    
+    ' Store shapes and their top position in a dictionary
+    ' and calculate total shape width
+    For Each shp In Sheets("Crop Map").Shapes
+        If shp.TopLeftCell.Column < 3 Then ' Column A or B
+            If Not (shp.Type = msoOLEControlObject Or shp.Type = msoFormControl) Then
+                ' Concatenate top position and shape's name to make the key unique
+                dict.Add shp.top & "_" & shp.name, shp
+                totalShapeWidth = totalShapeWidth + shp.width
+            End If
+        End If
+    Next shp
+    
+    ' Sort the dictionary by key (shape's top position)
+    Dim arrKeys() As Variant
+    arrKeys = dict.keys
+    Call BubbleSort(arrKeys)
+    
+    ' Distribute shapes evenly
+    Dim runningWidth As Double
+    Dim leftPosition As Double
+    Dim rightPosition As Double
+    
+    leftPosition = Sheets("Crop Map").Columns("B").Left + 1
+    rightPosition = leftPosition + Sheets("Crop Map").Columns("B").width - 1
+    runningWidth = leftPosition
+    
+    For i = LBound(arrKeys) To UBound(arrKeys)
+        Set shp = dict(arrKeys(i))
+        If runningWidth + shp.width > rightPosition Then
+            runningWidth = leftPosition
+        End If
+        ' Adjust the left position so the shape's left edge aligns with the calculated position
+        shp.Left = runningWidth
+        runningWidth = runningWidth + shp.width
+    Next i
+    
+End Sub
+
+Public Sub AdjustZOrder()
+    Dim shp As shape
+    Dim arrKeys() As Variant
+    Dim dict As Object
+    Dim i As Long
+
+    ' Create a new dictionary
+    Set dict = CreateObject("Scripting.Dictionary")
+
+    ' Store shapes and their top position in a dictionary
+    For Each shp In Sheets("Crop Map").Shapes
+        dict.Add shp.top & "_" & shp.name, shp
+    Next shp
+    
+    ' Sort the dictionary by key (shape's top position)
+    arrKeys = dict.keys
+    Call BubbleSort(arrKeys)
+
+    ' Adjust Z-Order from highest to lowest (back to front)
+    For i = LBound(arrKeys) To UBound(arrKeys)
+        Set shp = dict(arrKeys(i))
+        shp.ZOrder msoBringToFront
+    Next i
+End Sub
+
+' Bubble sort algorithm to sort an array in ascending order
+Private Sub BubbleSort(arr() As Variant)
+    Dim i As Long, j As Long
+    Dim temp As Variant
+    
+    For i = LBound(arr) To UBound(arr) - 1
+        For j = i + 1 To UBound(arr)
+            If arr(i) > arr(j) Then
+                temp = arr(i)
+                arr(i) = arr(j)
+                arr(j) = temp
+            End If
+        Next j
+    Next i
+End Sub
+
+Function GetColumnLetter(colNum As Integer) As String
+    If colNum < 1 Then Exit Function
+    If colNum <= 26 Then
+        GetColumnLetter = Chr(colNum + 64)
+    Else
+        GetColumnLetter = Chr(Int((colNum - 1) / 26) + 64) & Chr(((colNum - 1) Mod 26) + 65)
+    End If
+End Function
+
+Function GetRowInTable(identifier As String) As Range
+    ' Find the row with the given identifier in the table
+    Dim wsBedPlan As Worksheet
+    Set wsBedPlan = ThisWorkbook.Worksheets("Bed Plan")
+    Set GetRowInTable = wsBedPlan.ListObjects("BedPlan").ListColumns("Identifier") _
+        .Range.Find(identifier, LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False)
+End Function
+
+Function UpdateCellValue(rowNumber As Range, columnName As String, value As Variant) As Boolean
+    Dim wsBedPlan As Worksheet
+    Set wsBedPlan = ThisWorkbook.Worksheets("Bed Plan")
+    ' If the row number is not found, return False
+    If rowNumber Is Nothing Then
+        UpdateCellValue = False
+    Else
+        ' Update the specified column of the specified row to the given value
+        wsBedPlan.ListObjects("BedPlan").ListColumns(columnName).DataBodyRange(rowNumber.Row - wsBedPlan.ListObjects("BedPlan").HeaderRowRange.Row).value = value
+        UpdateCellValue = True
+    End If
+End Function
+
+Function UpdateBedPlanTable(identifier As String, bedName As String) As Boolean
+    Dim rowNumber As Range
+    Dim wsBedPlan As Worksheet
+    Set wsBedPlan = ThisWorkbook.Worksheets("Bed Plan")
+
+    ' Get the row with the given identifier
+    Set rowNumber = GetRowInTable(identifier)
+
+    ' Update the Bed column of the row to the bed name
+    UpdateBedPlanTable = UpdateCellValue(rowNumber, "Bed", bedName)
+End Function
+
+Function GetBedName(box As shape) As Variant
+    ' Get the Crop Map worksheet
+    Dim wsCropMap As Worksheet
+    Set wsCropMap = ThisWorkbook.Worksheets("Crop Map")
+
+    ' Find the reference point of the shape (center or half a column width from the left)
+    Dim refPoint As Single
+    If box.width > wsCropMap.Range("D1").width Then
+        refPoint = box.Left + wsCropMap.Range("D1").width / 2
+    Else
+        refPoint = box.Left + box.width / 2
+    End If
+
+    ' Calculate the column index based on the reference point
+    Dim columnIndex As Integer
+    If refPoint <= wsCropMap.Range("A1").width Then
+        columnIndex = 1
+    ElseIf refPoint <= wsCropMap.Range("A1:B1").width Then
+        columnIndex = 2
+    ElseIf refPoint <= wsCropMap.Range("A1:C1").width Then
+        columnIndex = 3
+    Else
+        columnIndex = Application.WorksheetFunction.RoundUp((refPoint - wsCropMap.Range("A1:C1").width) / wsCropMap.Range("D1").width + 3, 0)
+    End If
+
+    Dim columnLetter As String
+    columnLetter = GetColumnLetter(columnIndex)
+
+    ' Return empty if the column index is to the left of the Crop Map calendar (i.e., less than column D)
+    If columnIndex < 4 Then
+        GetBedName = ""
+    Else
+        ' Return the bed name from the cell above the column
+        GetBedName = wsCropMap.Range(columnLetter & "5").value
+    End If
+End Function
+
+Sub ShowSelectedBoxBedName()
+    ' Get the currently selected shape
+    Dim selectedShape As shape
+    Set selectedShape = ActiveSheet.Shapes(Application.Selection.name)
+
+    ' Get the bed name using the GetBedName function
+    Dim bedName As Variant
+    bedName = GetBedName(selectedShape)
+
+    ' Display a message box with the bed name
+    MsgBox "The bed name of the selected shape is: " & bedName
+End Sub
+
+Sub UpdateBedPlan()
+    On Error GoTo ErrorHandler ' Define where to jump if an error occurs
+
+    Dim wsCropMap As Worksheet
+    Dim wsBedPlan As Worksheet
+    Dim box As shape
+    Dim identifier As String
+    Dim bedName As String
+    Dim tblBedPlan As ListObject
+    Dim identifierRange As Range
+    Dim identifierColumn As Range
+    
+    Set wsCropMap = ThisWorkbook.Worksheets("Crop Map")
+    Set wsBedPlan = ThisWorkbook.Worksheets("Bed Plan")
+    Set tblBedPlan = wsBedPlan.ListObjects("BedPlan")
+    Set identifierColumn = tblBedPlan.ListColumns("Identifier").DataBodyRange
+
+    Dim foundIdentifier As Range
+    Set foundIdentifier = Nothing
+
+    ' Turn off screen updating and automatic calculations
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+
+    ' Iterate over all shapes in the Crop Map sheet
+    For Each box In wsCropMap.Shapes
+        ' Extract the identifier from the shape's name
+        identifier = Trim(Replace(box.name, "-", ""))
+        
+        ' Check if the identifier is valid (i.e., it corresponds to a row in the BedPlan table)
+        Set identifierRange = tblBedPlan.ListColumns("Identifier").DataBodyRange.Find(CStr(identifier), LookIn:=xlValues, LookAt:=xlWhole, MatchCase:=False) ' Explicitly convert to string
+        If identifierRange Is Nothing Then
+            ' If it's not valid, skip to the next shape
+            GoTo NextShape
+        End If
+        
+        ' Get the bed name associated with this shape
+        bedName = GetBedName(box)
+        
+        ' Update the Bed column of the BedPlan table
+        Call UpdateBedPlanTable(identifier, bedName)
+        
+NextShape:
+    Next box
+
+    ' If the code reaches this point, no error occurred so we can skip the error handler
+    GoTo ExitProcedure
+
+ErrorHandler:
+    ' Turn screen updating and automatic calculations back on
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+
+ExitProcedure:
+    ' Turn screen updating and automatic calculations back on
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+End Sub
+
+Function RemoveRowByIdentifier(identifier As String) As Boolean
+    Dim rowToRemove As Range
+    Set rowToRemove = GetRowInTable(identifier)
+
+    If Not rowToRemove Is Nothing Then
+        rowToRemove.EntireRow.Delete
+        RemoveRowByIdentifier = True
+    Else
+        RemoveRowByIdentifier = False
+    End If
+End Function
+
+Sub RemoveSelectedCrops()
+    Dim wsCropMap As Worksheet
+    Dim selectedShapes As ShapeRange
+    Dim shape As shape
+    Dim identifier As String
+    Dim rowRemoved As Boolean
+
+    Set wsCropMap = ThisWorkbook.Worksheets("Crop Map")
+
+    ' Check if any shape is selected
+    On Error Resume Next
+    Set selectedShapes = ActiveWindow.Selection.ShapeRange
+    If Err.Number <> 0 Then
+        MsgBox "Error in selecting shapes: " & Err.Description
+        GoTo CleanExit
+    End If
+    On Error GoTo ErrorHandler
+
+    If selectedShapes Is Nothing Then
+        MsgBox "No shapes are selected."
+        Exit Sub
+    End If
+    
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    
+    ' Iterate over all selected shapes in Crop Map
+    For Each shape In selectedShapes
+        ' Create the identifier from the shape's name
+        identifier = Trim(Replace(shape.name, "-", ""))
+
+        ' Remove the corresponding row in the BedPlan table
+        rowRemoved = RemoveRowByIdentifier(identifier)
+
+        ' Delete the shape
+        shape.Delete
+    Next shape
+    
+CleanExit:
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "An error occurred: " & Err.Description
+    Resume CleanExit
+End Sub
+
+Sub PromptAndRemoveRow()
+    Dim identifier As String
+    Dim rowRemoved As Boolean
+
+    ' Prompt the user to enter an identifier
+    identifier = InputBox("Enter the identifier for the row to remove:", "Remove Row")
+
+    ' Check if the user entered something
+    If identifier <> "" Then
+        ' Call the RemoveRowByIdentifier function
+        rowRemoved = RemoveRowByIdentifier(identifier)
+
+        ' Inform the user of the result
+        If rowRemoved Then
+            MsgBox "Row with identifier '" & identifier & "' has been removed.", vbInformation
+        Else
+            MsgBox "No row found with identifier '" & identifier & "'.", vbExclamation
+        End If
+    Else
+        MsgBox "No identifier entered.", vbExclamation
+    End If
+End Sub
+
+Function DarkenColor(color As Long, darkenBy As Integer) As Long
+    Dim red As Integer
+    Dim green As Integer
+    Dim blue As Integer
+
+    red = color Mod 256
+    green = (color \ 256) Mod 256
+    blue = (color \ (256 * 256)) Mod 256
+
+    ' Reduce each color component to darken the color
+    red = Max(red - darkenBy, 0)
+    green = Max(green - darkenBy, 0)
+    blue = Max(blue - darkenBy, 0)
+
+    DarkenColor = RGB(red, green, blue)
+End Function
+
+Function Max(value1 As Integer, value2 As Integer) As Integer
+    If value1 > value2 Then
+        Max = value1
+    Else
+        Max = value2
+    End If
+End Function
+
+Sub GenerateUniqueIdentifiers()
+    Dim ws As Worksheet
+    Dim tbl As ListObject
+    Dim i As Long
+    Dim nameCol As ListColumn, idCol As ListColumn
+    Dim cellName As Range, cellID As Range
+    Dim nameValue As String, prefix As String, newID As String
+    Dim prefixCounts As Collection
+    Dim currentCount As Long
+    Dim idValue As String
+    Dim numericPart As Long
+    
+    ' Reference the "Bed Plan" worksheet and its BedPlan table.
+    Set ws = ThisWorkbook.Worksheets("Bed Plan")
+    Set tbl = ws.ListObjects("BedPlan")
+    
+    ' Get references to the "Name" and "Identifier" columns.
+    Set nameCol = tbl.ListColumns("Name")
+    Set idCol = tbl.ListColumns("Identifier")
+    
+    ' Create a new Collection to hold the highest numeric value for each prefix.
+    Set prefixCounts = New Collection
+    
+    ' *******************************
+    ' First Pass: Scan existing IDs
+    ' *******************************
+    For i = 1 To tbl.DataBodyRange.Rows.Count
+        Set cellID = idCol.DataBodyRange.Cells(i)
+        idValue = Trim(cellID.value)
+        If idValue <> "" Then
+            ' Assume the ID is in the format: prefix (first 3 characters) + three-digit number.
+            If Len(idValue) >= 3 Then
+                prefix = Left(idValue, 3)
+                ' If there's a numeric part, convert it to a number.
+                If Len(idValue) > 3 Then
+                    On Error Resume Next
+                    numericPart = CLng(Mid(idValue, 4))
+                    On Error GoTo 0
+                Else
+                    numericPart = 0
+                End If
+                
+                ' Update our collection: if the prefix exists, keep the higher number.
+                On Error Resume Next
+                currentCount = prefixCounts(prefix)
+                If Err.Number <> 0 Then
+                    Err.Clear
+                    ' Key doesn't exist; add it.
+                    prefixCounts.Add numericPart, prefix
+                Else
+                    ' Key exists; update if this number is higher.
+                    If numericPart > currentCount Then
+                        prefixCounts.Remove prefix
+                        prefixCounts.Add numericPart, prefix
+                    End If
+                End If
+                On Error GoTo 0
+            End If
+        End If
+    Next i
+    
+    ' ***************************************
+    ' Second Pass: Generate IDs for blank cells
+    ' ***************************************
+    For i = 1 To tbl.DataBodyRange.Rows.Count
+        Set cellID = idCol.DataBodyRange.Cells(i)
+        If Trim(cellID.value) = "" Then
+            Set cellName = nameCol.DataBodyRange.Cells(i)
+            nameValue = CStr(cellName.value)
+            
+            ' Use the first three characters of the Name (or the full name if shorter) as the prefix.
+            If Len(nameValue) >= 3 Then
+                prefix = UCase(Left(nameValue, 3))
+            Else
+                prefix = UCase(nameValue)
+            End If
+            
+            ' Retrieve the current max number for this prefix.
+            On Error Resume Next
+            currentCount = prefixCounts(prefix)
+            If Err.Number <> 0 Then
+                Err.Clear
+                currentCount = 0
+            End If
+            On Error GoTo 0
+            
+            ' Increment the count for a new ID.
+            currentCount = currentCount + 1
+            newID = prefix & Format(currentCount, "000")
+            cellID.value = newID
+            
+            ' Update the collection with the new maximum.
+            On Error Resume Next
+            If currentCount > prefixCounts(prefix) Then
+                prefixCounts.Remove prefix
+                prefixCounts.Add currentCount, prefix
+            End If
+            On Error GoTo 0
+        End If
+    Next i
+    
+End Sub
+-------------------------------------------------------------------------------
+VBA MACRO Sheet4.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet4'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet14.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet14'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet11.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet11'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet9.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet9'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet5.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet5'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet6.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet6'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet7.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet7'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO SeedStarting.bas 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/SeedStarting'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Sub FixSeedStartingLayout()
+Attribute FixSeedStartingLayout.VB_ProcData.VB_Invoke_Func = " \n14"
+    Columns("E:E").ColumnWidth = 13.86
+    Columns("G:O").Select
+    Selection.ColumnWidth = 9.86
+    Selection.ColumnWidth = 6.57
+    Selection.ColumnWidth = 6.14
+    Rows("2:2").Select
+    Selection.RowHeight = 45
+    Columns("P:P").ColumnWidth = 10.43
+    Columns("P:P").ColumnWidth = 9.43
+    Columns("Q:Q").ColumnWidth = 5.14
+    Columns("R:R").ColumnWidth = 6.29
+    Columns("R:R").ColumnWidth = 5.71
+    Columns("S:S").ColumnWidth = 5.86
+    Range("Start_Seedlings_Detailed[#Headers]").Select
+    Range("Start_Seedlings_Detailed[[#Headers],[Safety Factor]]").Activate
+    With Selection
+        .WrapText = True
+        .Orientation = 0
+        .AddIndent = False
+        .IndentLevel = 0
+        .ShrinkToFit = False
+        .ReadingOrder = xlContext
+        .MergeCells = False
+    End With
+    With Selection
+        .VerticalAlignment = xlTop
+        .WrapText = True
+        .Orientation = 0
+        .AddIndent = False
+        .IndentLevel = 0
+        .ShrinkToFit = False
+        .ReadingOrder = xlContext
+        .MergeCells = False
+    End With
+    Columns("D:D").ColumnWidth = 19.14
+    Columns("E:E").ColumnWidth = 19.14
+    Columns("F:F").ColumnWidth = 14.86
+    Columns("A:A").ColumnWidth = 8
+    Columns("T:T").ColumnWidth = 5
+    Columns("U:U").ColumnWidth = 5
+    Columns("V:V").ColumnWidth = 7
+End Sub
+-------------------------------------------------------------------------------
+VBA MACRO UserForm1.frm 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/UserForm1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet8.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet8'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet12.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet12'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet10.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet10'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet13.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet13'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet15.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet15'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet16.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet16'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet17.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet17'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Module1.bas 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Module1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet18.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet18'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet19.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet19'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet20.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet20'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet21.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet21'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet22.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet22'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Sheet23.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Sheet23'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+
