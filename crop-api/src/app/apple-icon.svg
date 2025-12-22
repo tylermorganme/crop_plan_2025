@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <!-- Background -->
+  <rect width="180" height="180" rx="36" fill="#166534"/>
+
+  <!-- Plant stem -->
+  <path d="M90 155 L90 80" stroke="#dcfce7" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Left leaf -->
+  <path d="M90 100 Q55 90 40 55 Q75 65 90 100" fill="#dcfce7"/>
+
+  <!-- Right leaf -->
+  <path d="M90 80 Q125 65 140 30 Q105 45 90 80" fill="#dcfce7"/>
+
+  <!-- Small sprout leaves at top -->
+  <path d="M90 80 Q88 60 75 45" stroke="#dcfce7" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <path d="M90 80 Q92 60 105 45" stroke="#dcfce7" stroke-width="7" stroke-linecap="round" fill="none"/>
+
+  <!-- Timeline bars at bottom (like a Gantt chart) -->
+  <rect x="25" y="140" width="35" height="10" rx="5" fill="#fef3c7"/>
+  <rect x="70" y="140" width="45" height="10" rx="5" fill="#dcfce7"/>
+  <rect x="125" y="140" width="30" height="10" rx="5" fill="#fef3c7"/>
+</svg>

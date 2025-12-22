@@ -30,6 +30,8 @@ export interface TimelineCrop {
   bedCapacityFt?: number;
   /** Harvest start date (ISO date) - when harvest window begins */
   harvestStartDate?: string;
+  /** Planting method: DS (Direct Seed), TP (Transplant), PE (Perennial) */
+  plantingMethod?: 'DS' | 'TP' | 'PE';
 }
 
 /** A group of beds (e.g., row "A" contains beds A1-A8) */

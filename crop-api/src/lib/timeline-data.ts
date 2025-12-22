@@ -22,6 +22,7 @@ interface RawCrop {
   'Target Field Date': string | null;
   'Target Harvest Data': string | null;
   'Target End of Harvest': string | null;
+  'Planting Method': 'DS' | 'TP' | 'PE' | null;
   Beds?: number;
   [key: string]: unknown;
 }
@@ -260,6 +261,7 @@ export function getTimelineCrops(): TimelineCrop[] {
             groupId: assignment.identifier, // For grouping related entries
             feetUsed: info.feetUsed,
             bedCapacityFt: info.bedCapacityFt,
+            plantingMethod: crop['Planting Method'] || undefined,
           });
         });
       }
@@ -278,6 +280,7 @@ export function getTimelineCrops(): TimelineCrop[] {
         totalBeds: 1,
         bedIndex: 1,
         groupId: `unassigned_${unassignedCounter}`,
+        plantingMethod: crop['Planting Method'] || undefined,
       });
     }
   }

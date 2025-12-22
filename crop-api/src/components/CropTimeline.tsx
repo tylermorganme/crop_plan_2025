@@ -31,6 +31,8 @@ interface TimelineCrop {
   plantingId?: string;
   /** Harvest start date (ISO date) - when harvest window begins */
   harvestStartDate?: string;
+  /** Planting method: DS (Direct Seed), TP (Transplant), PE (Perennial) */
+  plantingMethod?: 'DS' | 'TP' | 'PE';
 }
 
 interface ResourceGroup {
@@ -124,6 +126,36 @@ const DEFAULT_COLOR = { bg: '#78909c', text: '#fff' };
 // =============================================================================
 // Utility Functions
 // =============================================================================
+
+/**
+ * Lighten or darken a hex color by a percentage
+ * @param hex - Hex color string (e.g., '#ff7043')
+ * @param percent - Positive to lighten, negative to darken (-100 to 100)
+ */
+function adjustColor(hex: string, percent: number): string {
+  // Remove # if present
+  const h = hex.replace('#', '');
+  const num = parseInt(h, 16);
+
+  const r = Math.min(255, Math.max(0, (num >> 16) + Math.round(2.55 * percent)));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + Math.round(2.55 * percent)));
+  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + Math.round(2.55 * percent)));
+
+  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+/**
+ * Get contrasting text color (black or white) based on background luminance
+ */
+function getContrastingText(hex: string): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substr(0, 2), 16);
+  const g = parseInt(h.substr(2, 2), 16);
+  const b = parseInt(h.substr(4, 2), 16);
+  // Calculate relative luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? '#000' : '#fff';
+}
 
 function getColorForCategory(category?: string): { bg: string; text: string } {
   if (!category) return DEFAULT_COLOR;
@@ -880,6 +912,10 @@ export default function CropTimeline({
     if (isPartialBed) {
       tooltip += `\n${crop.feetUsed}' of ${crop.bedCapacityFt}' used`;
     }
+    if (crop.plantingMethod) {
+      const methodNames = { DS: 'Direct Seed', TP: 'Transplant', PE: 'Perennial' };
+      tooltip += `\n${methodNames[crop.plantingMethod] || crop.plantingMethod}`;
+    }
 
     // Calculate preview dates if in timing mode
     const previewDates = hasTimingPreview ? {
@@ -965,25 +1001,7 @@ export default function CropTimeline({
           }}
           title={tooltip}
         >
-          {/* Partial bed indicator - shows unused portion of bed with diagonal stripes */}
-          {isPartialBed && crop.feetUsed && crop.bedCapacityFt && (
-            <div
-              className="absolute inset-y-0 pointer-events-none"
-              style={{
-                left: `${(crop.feetUsed / crop.bedCapacityFt) * 100}%`,
-                right: 0,
-                backgroundImage: `repeating-linear-gradient(
-                  -45deg,
-                  transparent,
-                  transparent 3px,
-                  rgba(0,0,0,0.15) 3px,
-                  rgba(0,0,0,0.15) 6px
-                )`,
-                borderLeft: `2px dashed ${colors.text}40`,
-              }}
-            />
-          )}
-          {/* Harvest window indicator - dashed line at bottom */}
+          {/* Harvest window indicator - diagonal stripes overlay on harvest period */}
           {crop.harvestStartDate && (() => {
             const totalMs = parseDate(crop.endDate).getTime() - parseDate(crop.startDate).getTime();
             const harvestStartMs = parseDate(crop.harvestStartDate).getTime() - parseDate(crop.startDate).getTime();
@@ -991,12 +1009,18 @@ export default function CropTimeline({
               const harvestStartPercent = (harvestStartMs / totalMs) * 100;
               return (
                 <div
-                  className="absolute bottom-0 h-1 pointer-events-none"
+                  className="absolute inset-y-0 pointer-events-none"
                   style={{
                     left: `${harvestStartPercent}%`,
                     right: 0,
-                    backgroundImage: 'repeating-linear-gradient(90deg, white 0px, white 4px, black 4px, black 8px)',
-                    opacity: 0.6,
+                    backgroundImage: `repeating-linear-gradient(
+                      -45deg,
+                      transparent,
+                      transparent 3px,
+                      rgba(255,255,255,0.3) 3px,
+                      rgba(255,255,255,0.3) 6px
+                    )`,
+                    borderLeft: `2px solid ${colors.text}40`,
                   }}
                 />
               );
@@ -1022,36 +1046,78 @@ export default function CropTimeline({
               }
             }
 
+            // Planting method colors - defined outside JSX for cleaner code
+            const methodStyles: Record<string, { bg: string; text: string; label: string }> = {
+              DS: { bg: '#854d0e', text: '#fef3c7', label: 'DS' }, // Warm brown - seeds go in soil
+              TP: { bg: '#166534', text: '#dcfce7', label: 'TP' }, // Green - transplants
+              PE: { bg: '#7e22ce', text: '#f3e8ff', label: 'PE' }, // Purple - perennials
+            };
+            const methodStyle = crop.plantingMethod ? methodStyles[crop.plantingMethod] : null;
+
             return (
               <div
-                className="px-1 py-1 flex items-start gap-1 absolute inset-y-0 pointer-events-none"
+                className="flex items-stretch absolute inset-y-0 pointer-events-none"
                 style={{
                   left: stickyOffset,
                   right: 0,
                 }}
               >
-                {/* Fixed-width left badge area */}
-                <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 28 }}>
-                  {isMultiBed && (
-                    <div className={`text-[9px] px-1 rounded ${
-                      isFirstBed
-                        ? 'bg-black/80 text-white'
-                        : 'bg-white/80 text-black'
-                    }`}>
-                      {crop.bedIndex}/{crop.totalBeds}
+                {/* Planting method indicator - thin vertical strip on far left */}
+                {methodStyle && (
+                  <div
+                    className="flex-shrink-0 flex items-center justify-center text-[8px] font-bold"
+                    style={{
+                      width: 14,
+                      backgroundColor: methodStyle.bg,
+                      color: methodStyle.text,
+                      writingMode: 'vertical-rl',
+                      textOrientation: 'mixed',
+                      transform: 'rotate(180deg)',
+                    }}
+                    title={crop.plantingMethod === 'DS' ? 'Direct Seed' : crop.plantingMethod === 'TP' ? 'Transplant' : 'Perennial'}
+                  >
+                    {methodStyle.label}
+                  </div>
+                )}
+                {/* Main content area with badges */}
+                <div className="flex-1 px-1 py-1 flex items-start gap-1 min-w-0">
+                  {/* Fixed-width badge area for bed/feet info */}
+                  <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 24 }}>
+                    {isMultiBed && (() => {
+                      // Create lighter/darker variants of the crop color for badges
+                      const badgeBg = isFirstBed
+                        ? adjustColor(colors.bg, -25) // Darker for first bed
+                        : adjustColor(colors.bg, 35);  // Lighter for secondary beds
+                      const badgeText = getContrastingText(badgeBg);
+                      return (
+                        <div
+                          className="text-[9px] px-1 rounded font-medium"
+                          style={{ backgroundColor: badgeBg, color: badgeText }}
+                        >
+                          {crop.bedIndex}/{crop.totalBeds}
+                        </div>
+                      );
+                    })()}
+                    {isPartialBed && (() => {
+                      // Use a lighter shade of the crop color for feet badge
+                      const feetBadgeBg = adjustColor(colors.bg, 45);
+                      const feetBadgeText = getContrastingText(feetBadgeBg);
+                      return (
+                        <div
+                          className="text-[9px] px-1 rounded font-medium"
+                          style={{ backgroundColor: feetBadgeBg, color: feetBadgeText }}
+                        >
+                          {crop.feetUsed}&apos;
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  {/* Main content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-xs truncate">{crop.name}</div>
+                    <div className="text-[9px] opacity-90">
+                      {formatDate(crop.startDate)} - {formatDate(crop.endDate)}
                     </div>
-                  )}
-                  {isPartialBed && (
-                    <div className="text-[9px] opacity-75 bg-black/20 px-1 rounded">
-                      {crop.feetUsed}&apos;
-                    </div>
-                  )}
-                </div>
-                {/* Main content */}
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-xs truncate">{crop.name}</div>
-                  <div className="text-[9px] opacity-90">
-                    {formatDate(crop.startDate)} - {formatDate(crop.endDate)}
                   </div>
                 </div>
               </div>
@@ -1549,9 +1615,6 @@ export default function CropTimeline({
                       const bedSpanInfoArr = dragPreview.targetBedSpanInfo || [];
                       const lastBed = bedSpanInfoArr[bedSpanInfoArr.length - 1];
                       const isPartialBed = lastBed && lastBed.feetUsed < lastBed.bedCapacityFt;
-                      const partialPercent = isPartialBed && feetAvailable > 0
-                        ? ((feetAvailable - (lastBed.bedCapacityFt - lastBed.feetUsed)) / feetAvailable) * 100
-                        : 100;
 
                       return (
                         <div
@@ -1566,24 +1629,6 @@ export default function CropTimeline({
                             zIndex: 50,
                           }}
                         >
-                          {/* Partial bed indicator - diagonal stripes for unused portion */}
-                          {isPartialBed && isComplete && (
-                            <div
-                              className="absolute inset-y-0 pointer-events-none"
-                              style={{
-                                left: `${partialPercent}%`,
-                                right: 0,
-                                backgroundImage: `repeating-linear-gradient(
-                                  -45deg,
-                                  transparent,
-                                  transparent 3px,
-                                  rgba(0,0,0,0.2) 3px,
-                                  rgba(0,0,0,0.2) 6px
-                                )`,
-                                borderLeft: `2px dashed ${colors.bg}80`,
-                              }}
-                            />
-                          )}
                           {/* Badge showing destination */}
                           <div
                             className="absolute -top-6 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap text-white"
