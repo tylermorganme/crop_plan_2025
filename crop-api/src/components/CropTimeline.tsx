@@ -1322,11 +1322,8 @@ export default function CropTimeline({
             {/* Unassigned row - sticky below header, always visible as drop target */}
             {(() => {
               const unassignedStacking = calculateStacking(unassignedCrops);
-              // Use user-set height, but ensure minimum based on content
-              const minContentHeight = unassignedCrops.length > 0
-                ? CROP_TOP_PADDING * 2 + unassignedStacking.maxRow * CROP_HEIGHT + (unassignedStacking.maxRow - 1) * CROP_SPACING
-                : 80;
-              const effectiveHeight = Math.max(unassignedHeight, minContentHeight);
+              // Use user-set height with a minimum, allowing overflow scroll when content exceeds
+              const effectiveHeight = Math.max(unassignedHeight, 80);
               const isDragOverUnassigned = dragOverResource === 'Unassigned';
               const bgColor = unassignedCrops.length > 0 ? '#fffbeb' : '#f9fafb';
               // Use the constant header height for consistent positioning
@@ -1364,6 +1361,7 @@ export default function CropTimeline({
                       top: HEADER_HEIGHT,
                       zIndex: 24,
                       height: effectiveHeight,
+                      overflowY: 'auto',
                       backgroundColor: isDragOverUnassigned ? '#fef3c7' : bgColor,
                       boxShadow: isDragOverUnassigned ? 'inset 0 0 0 3px #f59e0b' : undefined,
                       borderBottom: 'none',
