@@ -21,9 +21,60 @@ import type {
 } from './plan-types';
 
 const MAX_HISTORY_SIZE = 50;
+const MAX_SNAPSHOTS = 32;
+const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+const SNAPSHOTS_STORAGE_KEY = 'crop-plan-snapshots';
+
+interface PlanSnapshot {
+  id: string;
+  timestamp: number;
+  plan: Plan;
+}
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Snapshot management functions
+function getSnapshots(): PlanSnapshot[] {
+  try {
+    const data = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveSnapshot(plan: Plan): void {
+  const snapshots = getSnapshots();
+  const newSnapshot: PlanSnapshot = {
+    id: generateId(),
+    timestamp: Date.now(),
+    plan: JSON.parse(JSON.stringify(plan)), // Deep clone
+  };
+
+  snapshots.push(newSnapshot);
+
+  // Keep only the last MAX_SNAPSHOTS
+  while (snapshots.length > MAX_SNAPSHOTS) {
+    snapshots.shift();
+  }
+
+  try {
+    localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(snapshots));
+  } catch (e) {
+    console.warn('Failed to save snapshot:', e);
+  }
+}
+
+export function getAutoSaveSnapshots(): PlanSnapshot[] {
+  return getSnapshots();
+}
+
+export function restoreFromSnapshot(snapshotId: string): Plan | null {
+  const snapshots = getSnapshots();
+  const snapshot = snapshots.find(s => s.id === snapshotId);
+  return snapshot?.plan ?? null;
 }
 
 function createChangeEntry(
@@ -269,8 +320,10 @@ export const usePlanStore = create<PlanStore>()(
       name: 'crop-plan-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        // Only persist the current plan, not undo/redo stacks
+        // Persist plan and undo/redo history
         currentPlan: state.currentPlan,
+        past: state.past,
+        future: state.future,
         lastSaved: state.lastSaved,
       }),
     }
@@ -303,4 +356,35 @@ export function useUndoRedo() {
   const redoCount = usePlanStore((state) => state.future.length);
 
   return { canUndo, canRedo, undo, redo, undoCount, redoCount };
+}
+
+/**
+ * Start auto-save timer (call once on app initialization)
+ * Saves a snapshot every 15 minutes if there's a plan
+ */
+let autoSaveInterval: ReturnType<typeof setInterval> | null = null;
+
+export function startAutoSave(): void {
+  if (autoSaveInterval) return; // Already running
+
+  autoSaveInterval = setInterval(() => {
+    const state = usePlanStore.getState();
+    if (state.currentPlan) {
+      saveSnapshot(state.currentPlan);
+      console.log('[AutoSave] Snapshot saved at', new Date().toLocaleTimeString());
+    }
+  }, SNAPSHOT_INTERVAL_MS);
+
+  // Save initial snapshot when starting
+  const state = usePlanStore.getState();
+  if (state.currentPlan) {
+    saveSnapshot(state.currentPlan);
+  }
+}
+
+export function stopAutoSave(): void {
+  if (autoSaveInterval) {
+    clearInterval(autoSaveInterval);
+    autoSaveInterval = null;
+  }
 }

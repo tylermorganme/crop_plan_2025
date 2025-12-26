@@ -1224,51 +1224,68 @@ export default function CropTimeline({
       <div className="flex-1 flex flex-col min-w-0">
       {/* Controls */}
       <div className="flex items-center gap-3 p-2 bg-white border-b">
-        <div className="flex border rounded">
+        {/* View mode toggle */}
+        <div className="flex rounded overflow-hidden border border-gray-300">
           <button
             onClick={() => setViewMode('overlap')}
-            className={`px-3 py-1.5 text-xs ${viewMode === 'overlap' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+            className={`px-3 py-1 text-sm font-medium ${
+              viewMode === 'overlap'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
             Overlap
           </button>
           <button
             onClick={() => setViewMode('stacked')}
-            className={`px-3 py-1.5 text-xs ${viewMode === 'stacked' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+            className={`px-3 py-1 text-sm font-medium border-l border-gray-300 ${
+              viewMode === 'stacked'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
             Stacked
           </button>
         </div>
 
-        <div className="flex border rounded">
-          <button onClick={zoomOut} className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200">−</button>
-          <span className="px-3 py-1.5 text-xs min-w-[60px] text-center border-x">{ZOOM_LEVELS[zoomIndex].label}</span>
-          <button onClick={zoomIn} className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200">+</button>
+        {/* Zoom controls */}
+        <div className="flex items-center rounded overflow-hidden border border-gray-300">
+          <button
+            onClick={zoomOut}
+            className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+          >
+            −
+          </button>
+          <span className="px-3 py-1 text-sm font-medium min-w-[70px] text-center bg-white text-gray-700 border-x border-gray-300">
+            {ZOOM_LEVELS[zoomIndex].label}
+          </span>
+          <button
+            onClick={zoomIn}
+            className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+          >
+            +
+          </button>
         </div>
 
         <button
           onClick={goToToday}
-          className="px-3 py-1.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-3 py-1 text-sm font-medium bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Today
         </button>
 
         {/* Timing edit toggle */}
-        <div className="flex items-center gap-2 ml-2">
-          <button
-            onClick={() => setTimingEditEnabled(!timingEditEnabled)}
-            className={`px-3 py-1.5 text-xs rounded ${
-              timingEditEnabled
-                ? 'bg-orange-500 text-white hover:bg-orange-600'
-                : 'bg-gray-100 hover:bg-gray-200'
-            }`}
-            title="When enabled, horizontal dragging changes crop dates"
-          >
-            {timingEditEnabled ? 'Disable Timing Edit' : 'Enable Timing Edit'}
-          </button>
-          <span className={`text-xs font-medium ${timingEditEnabled ? 'text-orange-600' : 'text-gray-400'}`}>
-            Timing Edit {timingEditEnabled ? 'ON' : 'OFF'}
-          </span>
-        </div>
+        <button
+          onClick={() => setTimingEditEnabled(!timingEditEnabled)}
+          className={`px-3 py-1 text-sm font-medium rounded border ${
+            timingEditEnabled
+              ? 'bg-orange-500 text-white border-orange-500 hover:bg-orange-600'
+              : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+          }`}
+          title="When enabled, horizontal dragging changes crop dates"
+        >
+          Timing Edit: {timingEditEnabled ? 'ON' : 'OFF'}
+        </button>
 
         <span className="text-xs text-gray-500 ml-auto">
           {crops.length} crops · {resources.length - 1} resources

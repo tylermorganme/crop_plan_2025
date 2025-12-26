@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
-import { usePlanStore, useUndoRedo } from '@/lib/plan-store';
+import { usePlanStore, useUndoRedo, startAutoSave, stopAutoSave } from '@/lib/plan-store';
 import type { TimelineCrop } from '@/lib/plan-types';
 import bedPlanData from '@/data/bed-plan.json';
 
@@ -40,21 +40,47 @@ export default function TimelinePage() {
   // Undo/redo
   const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
 
-  // Initialize plan from data if not already loaded
+  // Initialize plan from data if not already loaded (runs once on mount)
   useEffect(() => {
-    // Check if we already have a plan loaded from localStorage
-    if (currentPlan) {
-      setLoading(false);
+    // If already hydrated, check immediately
+    if (usePlanStore.persist.hasHydrated()) {
+      const state = usePlanStore.getState();
+      if (state.currentPlan) {
+        setLoading(false);
+      } else {
+        const timelineCrops = getTimelineCrops();
+        const { resources, groups } = getResources();
+        createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
+        setLoading(false);
+      }
       return;
     }
 
-    // Load initial data and create a new plan
-    const timelineCrops = getTimelineCrops();
-    const { resources, groups } = getResources();
+    // Wait for zustand to finish hydrating from localStorage
+    const unsubscribe = usePlanStore.persist.onFinishHydration(() => {
+      const state = usePlanStore.getState();
+      if (state.currentPlan) {
+        setLoading(false);
+        return;
+      }
 
-    createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
-    setLoading(false);
-  }, [currentPlan, createNewPlan]);
+      // No persisted plan - load initial data and create a new plan
+      const timelineCrops = getTimelineCrops();
+      const { resources, groups } = getResources();
+
+      createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Start auto-save timer (saves snapshot every 15 minutes)
+  useEffect(() => {
+    startAutoSave();
+    return () => stopAutoSave();
+  }, []);
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -137,11 +163,11 @@ export default function TimelinePage() {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-4">
-        <Link href="/" className="text-blue-600 hover:text-blue-800 text-sm">
-          &larr; Back to Explorer
+        <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+          ← Back
         </Link>
-        <h1 className="text-lg font-semibold">{currentPlan.metadata.name}</h1>
-        <span className="text-sm text-gray-500">
+        <h1 className="text-lg font-bold text-gray-900">{currentPlan.metadata.name}</h1>
+        <span className="text-sm font-medium text-gray-600">
           {currentPlan.crops.length} crops
         </span>
 
@@ -160,18 +186,18 @@ export default function TimelinePage() {
           <button
             onClick={undo}
             disabled={!canUndo}
-            className="px-2 py-1 text-sm rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:border-gray-200 disabled:cursor-not-allowed"
             title={`Undo (${undoCount} available) - Ctrl+Z`}
           >
-            &#x21B6; Undo
+            ↶ Undo
           </button>
           <button
             onClick={redo}
             disabled={!canRedo}
-            className="px-2 py-1 text-sm rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:border-gray-200 disabled:cursor-not-allowed"
             title={`Redo (${redoCount} available) - Ctrl+Shift+Z`}
           >
-            Redo &#x21B7;
+            Redo ↷
           </button>
         </div>
 
@@ -186,7 +212,7 @@ export default function TimelinePage() {
           </button>
           <button
             onClick={handleReset}
-            className="px-3 py-1 text-sm border rounded hover:bg-gray-50"
+            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
           >
             Reset
           </button>
