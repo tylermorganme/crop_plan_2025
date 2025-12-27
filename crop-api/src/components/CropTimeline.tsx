@@ -1065,7 +1065,7 @@ export default function CropTimeline({
                 {/* Planting method indicator - thin vertical strip on far left */}
                 {methodStyle && (
                   <div
-                    className="flex-shrink-0 flex items-center justify-center text-[8px] font-bold"
+                    className="shrink-0 flex items-center justify-center text-[8px] font-bold"
                     style={{
                       width: 14,
                       backgroundColor: methodStyle.bg,
@@ -1082,7 +1082,7 @@ export default function CropTimeline({
                 {/* Main content area with badges */}
                 <div className="flex-1 px-1 py-1 flex items-start gap-1 min-w-0">
                   {/* Fixed-width badge area for bed/feet info */}
-                  <div className="flex flex-col items-start gap-0.5 flex-shrink-0" style={{ width: 24 }}>
+                  <div className="flex flex-col items-start gap-0.5 shrink-0" style={{ width: 24 }}>
                     {isMultiBed && (() => {
                       // Create lighter/darker variants of the crop color for badges
                       const badgeBg = isFirstBed
@@ -1147,7 +1147,7 @@ export default function CropTimeline({
       <div key={resource} className="flex">
         {/* Lane label */}
         <div
-          className={`flex-shrink-0 border-r border-b border-gray-200 px-2 flex items-center text-xs font-medium ${
+          className={`shrink-0 border-r border-b border-gray-200 px-2 flex items-center text-xs font-medium ${
             isEvenGroup ? 'bg-blue-50' : 'bg-gray-50'
           }`}
           style={{ width: LANE_LABEL_WIDTH, minWidth: LANE_LABEL_WIDTH, height: laneHeight }}
@@ -1287,7 +1287,7 @@ export default function CropTimeline({
           Timing Edit: {timingEditEnabled ? 'ON' : 'OFF'}
         </button>
 
-        <span className="text-xs text-gray-500 ml-auto">
+        <span className="text-sm text-gray-600 ml-auto">
           {crops.length} crops · {resources.length - 1} resources
         </span>
       </div>
@@ -1349,7 +1349,7 @@ export default function CropTimeline({
                 <tr key="Unassigned">
                   {/* Sticky unassigned label - sticks below header */}
                   <td
-                    className="px-2 text-xs font-medium border-r align-top"
+                    className="px-2 text-sm font-medium border-r align-top"
                     style={{
                       position: 'sticky',
                       top: HEADER_HEIGHT,
@@ -1361,10 +1361,10 @@ export default function CropTimeline({
                     }}
                   >
                     <div className="flex flex-col pt-2">
-                      <span className={`font-bold ${unassignedCrops.length > 0 ? 'text-amber-800' : 'text-gray-600'}`}>
+                      <span className={`font-bold ${unassignedCrops.length > 0 ? 'text-amber-800' : 'text-gray-700'}`}>
                         Unassigned
                       </span>
-                      <span className={`text-[10px] ${unassignedCrops.length > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                      <span className={`text-xs ${unassignedCrops.length > 0 ? 'text-amber-600' : 'text-gray-500'}`}>
                         {unassignedCrops.length > 0 ? `${unassignedCrops.length} crops` : 'Drop here to unassign'}
                       </span>
                     </div>
@@ -1534,7 +1534,7 @@ export default function CropTimeline({
                 <tr key={resource}>
                   {/* Sticky lane label */}
                   <td
-                    className="px-2 text-xs font-medium border-b border-r align-middle"
+                    className="px-2 text-sm font-medium border-b border-r align-middle"
                     style={{
                       position: 'sticky',
                       left: 0,
@@ -1546,15 +1546,15 @@ export default function CropTimeline({
                     <div className="flex items-center">
                       {groupName && (
                         <span
-                          className="text-[9px] text-gray-500 mr-1 cursor-pointer hover:text-gray-700 flex-shrink-0"
+                          className="text-xs text-gray-600 mr-1 cursor-pointer hover:text-gray-800 shrink-0"
                           onClick={() => toggleGroup(groupName)}
                         >
                           <span className="mr-1">▲</span>
                           {groupName}:
                         </span>
                       )}
-                      <span className="truncate">{resource}</span>
-                      <span className="text-[9px] text-gray-400 ml-1">({getBedSizeFt(resource)}&apos;)</span>
+                      <span className="truncate text-gray-900">{resource}</span>
+                      <span className="text-xs text-gray-600 ml-1">({getBedSizeFt(resource)}&apos;)</span>
                     </div>
                   </td>
                   {/* Timeline lane - spans all month columns */}
@@ -1682,7 +1682,7 @@ export default function CropTimeline({
 
       {/* Inspector Panel */}
       {selectedCrops && selectedCrops.length > 0 && (
-        <div className="w-80 bg-white border-l flex flex-col flex-shrink-0">
+        <div className="w-80 bg-white border-l flex flex-col shrink-0">
           {/* Inspector Header */}
           <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
             <h3 className="font-semibold text-sm">Crop Details</h3>

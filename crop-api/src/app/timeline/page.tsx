@@ -155,9 +155,9 @@ export default function TimelinePage() {
   const handleExport = useCallback(() => {
     try {
       exportPlanToFile();
-      setToast({ message: 'Plan exported successfully', type: 'success' });
+      setToast({ message: 'Plan saved to file', type: 'success' });
     } catch (e) {
-      setToast({ message: `Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
+      setToast({ message: `Save failed: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
     }
   }, []);
 
@@ -171,9 +171,9 @@ export default function TimelinePage() {
 
     try {
       const plan = await importPlanFromFile(file);
-      setToast({ message: `Imported "${plan.metadata.name}" successfully`, type: 'success' });
+      setToast({ message: `Loaded "${plan.metadata.name}"`, type: 'success' });
     } catch (err) {
-      setToast({ message: `Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
+      setToast({ message: `Load failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
     }
 
     // Reset file input so same file can be selected again
@@ -197,8 +197,8 @@ export default function TimelinePage() {
         <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
           ← Back
         </Link>
-        <h1 className="text-lg font-bold text-gray-900">{currentPlan.metadata.name}</h1>
-        <span className="text-sm font-medium text-gray-600">
+        <h1 className="text-xl font-bold text-gray-900">{currentPlan.metadata.name}</h1>
+        <span className="text-sm font-medium text-gray-700">
           {currentPlan.crops.length} crops
         </span>
 
@@ -249,21 +249,21 @@ export default function TimelinePage() {
           </button>
         </div>
 
-        {/* Export/Import buttons */}
+        {/* Save/Load to file buttons */}
         <div className="flex items-center gap-2 border-l pl-4 ml-2">
           <button
             onClick={handleExport}
             className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-            title="Export plan to file"
+            title="Save plan to file"
           >
-            Export
+            Save to File
           </button>
           <button
             onClick={handleImportClick}
             className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-            title="Import plan from file"
+            title="Load plan from file"
           >
-            Import
+            Load
           </button>
           <input
             ref={fileInputRef}
