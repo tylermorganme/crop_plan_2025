@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
+import HistoryPanel from '@/components/HistoryPanel';
 import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
 import {
   usePlanStore,
@@ -47,6 +48,7 @@ export default function TimelinePlanPage() {
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -373,6 +375,17 @@ export default function TimelinePlanPage() {
             className="hidden"
           />
         </div>
+
+        {/* History button */}
+        <div className="border-l pl-4 ml-2">
+          <button
+            onClick={() => setHistoryPanelOpen(true)}
+            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+            title="View history and checkpoints"
+          >
+            History
+          </button>
+        </div>
       </div>
 
       {/* Timeline */}
@@ -394,6 +407,15 @@ export default function TimelinePlanPage() {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* History panel */}
+      <HistoryPanel
+        planId={planId}
+        isOpen={historyPanelOpen}
+        onClose={() => setHistoryPanelOpen(false)}
+        onRestore={(message) => setToast({ message, type: 'success' })}
+        onError={(message) => setToast({ message, type: 'error' })}
+      />
     </div>
   );
 }

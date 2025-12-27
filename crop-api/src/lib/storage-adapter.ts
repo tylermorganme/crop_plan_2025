@@ -9,6 +9,7 @@ import type {
   Plan,
   TimelineCrop,
   StashEntry,
+  Checkpoint,
 } from './plan-types';
 
 // ============================================
@@ -58,6 +59,11 @@ export interface StorageAdapter {
   saveToStash(entry: StashEntry): Promise<void>;
   clearStash(): Promise<void>;
 
+  // Checkpoints (user-created save points)
+  getCheckpoints(planId: string): Promise<Checkpoint[]>;
+  saveCheckpoint(checkpoint: Checkpoint): Promise<void>;
+  deleteCheckpoint(checkpointId: string, planId: string): Promise<void>;
+
   // Flags (migration markers, settings, etc.)
   getFlag(key: string): Promise<string | null>;
   setFlag(key: string, value: string): Promise<void>;
@@ -71,8 +77,10 @@ const PLAN_LIBRARY_PREFIX = 'crop-plan-lib-';
 const PLAN_REGISTRY_KEY = 'crop-plan-registry';
 const SNAPSHOTS_STORAGE_KEY = 'crop-plan-snapshots';
 const STASH_STORAGE_KEY = 'crop-plan-stash';
+const CHECKPOINTS_PREFIX = 'crop-plan-checkpoints-';
 const MAX_SNAPSHOTS = 32;
 const MAX_STASH_ENTRIES = 10;
+const MAX_CHECKPOINTS_PER_PLAN = 20;
 
 export class LocalStorageAdapter implements StorageAdapter {
   // ----------------------------------------
@@ -224,6 +232,52 @@ export class LocalStorageAdapter implements StorageAdapter {
       localStorage.removeItem(STASH_STORAGE_KEY);
     } catch (e) {
       console.warn('Failed to clear stash:', e);
+    }
+  }
+
+  // ----------------------------------------
+  // Checkpoints (user-created save points)
+  // ----------------------------------------
+
+  async getCheckpoints(planId: string): Promise<Checkpoint[]> {
+    const key = CHECKPOINTS_PREFIX + planId;
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async saveCheckpoint(checkpoint: Checkpoint): Promise<void> {
+    const key = CHECKPOINTS_PREFIX + checkpoint.planId;
+    const checkpoints = await this.getCheckpoints(checkpoint.planId);
+
+    // Add new checkpoint at the beginning (most recent first)
+    checkpoints.unshift(checkpoint);
+
+    // Keep only the last MAX_CHECKPOINTS_PER_PLAN
+    while (checkpoints.length > MAX_CHECKPOINTS_PER_PLAN) {
+      checkpoints.pop();
+    }
+
+    try {
+      localStorage.setItem(key, JSON.stringify(checkpoints));
+    } catch (e) {
+      console.error('Failed to save checkpoint:', e);
+      throw new Error('Failed to save checkpoint - storage may be full');
+    }
+  }
+
+  async deleteCheckpoint(checkpointId: string, planId: string): Promise<void> {
+    const key = CHECKPOINTS_PREFIX + planId;
+    const checkpoints = await this.getCheckpoints(planId);
+    const filtered = checkpoints.filter(c => c.id !== checkpointId);
+
+    try {
+      localStorage.setItem(key, JSON.stringify(filtered));
+    } catch (e) {
+      console.warn('Failed to delete checkpoint:', e);
     }
   }
 

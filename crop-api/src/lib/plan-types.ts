@@ -159,3 +159,31 @@ export interface StashEntry {
   reason: string;
   plan: Plan;
 }
+
+// ============================================
+// Checkpoint Types (Named Saves)
+// ============================================
+
+/** User-created named checkpoint */
+export interface Checkpoint {
+  id: string;
+  /** Which plan this checkpoint belongs to */
+  planId: string;
+  /** User-provided name */
+  name: string;
+  /** Optional description */
+  description?: string;
+  timestamp: number;
+  /** Full plan state at checkpoint time */
+  plan: Plan;
+}
+
+/** Unified history entry for display (combines checkpoints, auto-saves, stash) */
+export interface HistoryEntry {
+  id: string;
+  type: 'checkpoint' | 'auto-save' | 'stash';
+  /** Checkpoint name, or "Auto-save" / stash reason */
+  name: string;
+  timestamp: number;
+  plan: Plan;
+}

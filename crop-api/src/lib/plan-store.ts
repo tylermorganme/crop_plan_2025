@@ -21,6 +21,8 @@ import type {
   BedSpanInfo,
   CropPlanFile,
   StashEntry,
+  Checkpoint,
+  HistoryEntry,
 } from './plan-types';
 import { CURRENT_SCHEMA_VERSION } from './plan-types';
 import { storage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
@@ -188,6 +190,125 @@ export async function restoreFromStash(stashId: string): Promise<Plan | null> {
 
 export async function clearStash(): Promise<void> {
   return storage.clearStash();
+}
+
+// ============================================
+// Checkpoint Functions (async, use adapter)
+// ============================================
+
+/**
+ * Create a named checkpoint for the current plan
+ */
+export async function createCheckpoint(name: string, description?: string): Promise<Checkpoint> {
+  const state = usePlanStore.getState();
+  if (!state.currentPlan) {
+    throw new Error('No plan loaded');
+  }
+
+  const checkpoint: Checkpoint = {
+    id: generateId(),
+    planId: state.currentPlan.id,
+    name,
+    description,
+    timestamp: Date.now(),
+    plan: JSON.parse(JSON.stringify(state.currentPlan)), // Deep clone
+  };
+
+  await storage.saveCheckpoint(checkpoint);
+  return checkpoint;
+}
+
+/**
+ * Get all checkpoints for a plan
+ */
+export async function getCheckpoints(planId?: string): Promise<Checkpoint[]> {
+  const id = planId ?? usePlanStore.getState().currentPlan?.id;
+  if (!id) return [];
+  return storage.getCheckpoints(id);
+}
+
+/**
+ * Delete a checkpoint
+ */
+export async function deleteCheckpoint(checkpointId: string, planId?: string): Promise<void> {
+  const id = planId ?? usePlanStore.getState().currentPlan?.id;
+  if (!id) return;
+  return storage.deleteCheckpoint(checkpointId, id);
+}
+
+/**
+ * Get unified history combining checkpoints, auto-saves, and stash entries
+ * Sorted by timestamp descending (most recent first)
+ */
+export async function getHistory(planId?: string): Promise<HistoryEntry[]> {
+  const id = planId ?? usePlanStore.getState().currentPlan?.id;
+  if (!id) return [];
+
+  const [checkpoints, snapshots, stash] = await Promise.all([
+    storage.getCheckpoints(id),
+    storage.getSnapshots(),
+    storage.getStash(),
+  ]);
+
+  const entries: HistoryEntry[] = [];
+
+  // Add checkpoints
+  for (const cp of checkpoints) {
+    entries.push({
+      id: cp.id,
+      type: 'checkpoint',
+      name: cp.name,
+      timestamp: cp.timestamp,
+      plan: cp.plan,
+    });
+  }
+
+  // Add auto-saves (only for current plan)
+  for (const snap of snapshots) {
+    if (snap.plan.id === id) {
+      entries.push({
+        id: snap.id,
+        type: 'auto-save',
+        name: 'Auto-save',
+        timestamp: snap.timestamp,
+        plan: snap.plan,
+      });
+    }
+  }
+
+  // Add stash entries (only for current plan)
+  for (const s of stash) {
+    if (s.plan.id === id) {
+      entries.push({
+        id: s.id,
+        type: 'stash',
+        name: s.reason,
+        timestamp: s.timestamp,
+        plan: s.plan,
+      });
+    }
+  }
+
+  // Sort by timestamp descending (most recent first)
+  entries.sort((a, b) => b.timestamp - a.timestamp);
+
+  return entries;
+}
+
+/**
+ * Restore from any history entry
+ * Stashes current state first for safety (only if there are unsaved changes)
+ */
+export async function restoreFromHistory(entry: HistoryEntry): Promise<void> {
+  const state = usePlanStore.getState();
+
+  // Only stash if there are unsaved changes - no point stashing an unchanged restore
+  if (state.currentPlan && state.isDirty) {
+    await saveToStashInternal(state.currentPlan, `Before restoring "${entry.name}"`);
+  }
+
+  // Load the plan from the history entry
+  state.loadPlan(entry.plan);
 }
 
 // ============================================
