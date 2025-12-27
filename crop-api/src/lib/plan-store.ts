@@ -3,11 +3,11 @@
  *
  * Zustand store for managing editable crop plans with undo/redo.
  * Uses immer for immutable state updates.
+ * Uses storage adapter for persistence (localStorage by default).
  */
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import pako from 'pako';
 import type {
   Plan,
@@ -23,149 +23,78 @@ import type {
   StashEntry,
 } from './plan-types';
 import { CURRENT_SCHEMA_VERSION } from './plan-types';
+import { storage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
+
+// Re-export types for consumers
+export type { PlanSummary, PlanSnapshot, PlanData };
 
 const MAX_HISTORY_SIZE = 50;
-const MAX_SNAPSHOTS = 32;
-const MAX_STASH_ENTRIES = 10;
 const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
-const SNAPSHOTS_STORAGE_KEY = 'crop-plan-snapshots';
-const STASH_STORAGE_KEY = 'crop-plan-stash';
-const PLAN_LIBRARY_PREFIX = 'crop-plan-lib-';
-const PLAN_REGISTRY_KEY = 'crop-plan-registry';
 
 // ============================================
-// Plan Library - Multi-plan storage
+// Plan Library Functions (async, use adapter)
 // ============================================
-
-export interface PlanSummary {
-  id: string;
-  name: string;
-  version?: number;
-  lastModified: number;
-  cropCount: number;
-}
 
 /**
  * Get list of all saved plans (summaries only)
  */
-export function getPlanList(): PlanSummary[] {
-  try {
-    const data = localStorage.getItem(PLAN_REGISTRY_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
+export async function getPlanList(): Promise<PlanSummary[]> {
+  return storage.getPlanList();
 }
 
 /**
- * Save plan to library and update registry
+ * Save plan to library
  */
-export function savePlanToLibrary(plan: Plan): void {
-  const key = PLAN_LIBRARY_PREFIX + plan.id;
-
-  // Save the full plan
-  const planData = {
+export async function savePlanToLibrary(plan: Plan): Promise<void> {
+  const data: PlanData = {
     plan,
-    past: [] as TimelineCrop[][],  // Don't persist undo history per-plan
-    future: [] as TimelineCrop[][],
+    past: [],  // Don't persist undo history per-plan
+    future: [],
   };
-
-  try {
-    localStorage.setItem(key, JSON.stringify(planData));
-  } catch (e) {
-    console.error('Failed to save plan to library:', e);
-    throw new Error('Failed to save plan - storage may be full');
-  }
-
-  // Update registry
-  const registry = getPlanList();
-  const summary: PlanSummary = {
-    id: plan.id,
-    name: plan.metadata.name,
-    version: plan.metadata.version,
-    lastModified: plan.metadata.lastModified,
-    cropCount: plan.crops.length,
-  };
-
-  const existingIndex = registry.findIndex(p => p.id === plan.id);
-  if (existingIndex >= 0) {
-    registry[existingIndex] = summary;
-  } else {
-    registry.push(summary);
-  }
-
-  // Sort by lastModified descending
-  registry.sort((a, b) => b.lastModified - a.lastModified);
-
-  try {
-    localStorage.setItem(PLAN_REGISTRY_KEY, JSON.stringify(registry));
-  } catch (e) {
-    console.error('Failed to update plan registry:', e);
-  }
+  return storage.savePlan(plan.id, data);
 }
 
 /**
  * Load a plan from library by ID
  */
-export function loadPlanFromLibrary(planId: string): { plan: Plan; past: TimelineCrop[][]; future: TimelineCrop[][] } | null {
-  const key = PLAN_LIBRARY_PREFIX + planId;
-
-  try {
-    const data = localStorage.getItem(key);
-    if (!data) return null;
-    return JSON.parse(data);
-  } catch (e) {
-    console.error('Failed to load plan from library:', e);
-    return null;
-  }
+export async function loadPlanFromLibrary(planId: string): Promise<PlanData | null> {
+  return storage.getPlan(planId);
 }
 
 /**
  * Delete a plan from library
  */
-export function deletePlanFromLibrary(planId: string): void {
-  const key = PLAN_LIBRARY_PREFIX + planId;
-
-  try {
-    localStorage.removeItem(key);
-  } catch (e) {
-    console.error('Failed to delete plan:', e);
-  }
-
-  // Update registry
-  const registry = getPlanList().filter(p => p.id !== planId);
-  try {
-    localStorage.setItem(PLAN_REGISTRY_KEY, JSON.stringify(registry));
-  } catch (e) {
-    console.error('Failed to update plan registry:', e);
-  }
+export async function deletePlanFromLibrary(planId: string): Promise<void> {
+  return storage.deletePlan(planId);
 }
 
 /**
  * Check if a plan exists in the library
  */
-export function planExistsInLibrary(planId: string): boolean {
-  const key = PLAN_LIBRARY_PREFIX + planId;
-  return localStorage.getItem(key) !== null;
+export async function planExistsInLibrary(planId: string): Promise<boolean> {
+  const data = await storage.getPlan(planId);
+  return data !== null;
 }
 
 /**
  * Migrate plans from old storage format to new library format.
  * Call this once on app initialization.
  */
-export function migrateOldStorageFormat(): void {
+export async function migrateOldStorageFormat(): Promise<void> {
   const OLD_STORAGE_KEY = 'crop-plan-storage';
   const MIGRATION_FLAG_KEY = 'crop-plan-migrated';
 
   // Check if already migrated
-  if (localStorage.getItem(MIGRATION_FLAG_KEY)) {
+  const migrated = await storage.getFlag(MIGRATION_FLAG_KEY);
+  if (migrated) {
     return;
   }
 
   try {
+    // Read old data directly from localStorage (one-time migration)
     const oldData = localStorage.getItem(OLD_STORAGE_KEY);
     if (!oldData) {
-      localStorage.setItem(MIGRATION_FLAG_KEY, 'true');
+      await storage.setFlag(MIGRATION_FLAG_KEY, 'true');
       return;
     }
 
@@ -174,69 +103,25 @@ export function migrateOldStorageFormat(): void {
 
     if (oldPlan && oldPlan.id && oldPlan.metadata) {
       // Migrate the old plan to the new library
-      savePlanToLibrary(oldPlan);
+      await savePlanToLibrary(oldPlan);
       console.log('[Migration] Migrated plan from old storage:', oldPlan.metadata.name);
     }
 
     // Mark as migrated (but keep old data as backup)
-    localStorage.setItem(MIGRATION_FLAG_KEY, 'true');
+    await storage.setFlag(MIGRATION_FLAG_KEY, 'true');
   } catch (e) {
     console.error('[Migration] Failed to migrate old storage:', e);
     // Still mark as migrated to avoid repeated failures
-    localStorage.setItem(MIGRATION_FLAG_KEY, 'true');
+    await storage.setFlag(MIGRATION_FLAG_KEY, 'true');
   }
 }
 
-interface PlanSnapshot {
-  id: string;
-  timestamp: number;
-  plan: Plan;
-}
+// ============================================
+// Helper Functions
+// ============================================
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-// Snapshot management functions
-function getSnapshots(): PlanSnapshot[] {
-  try {
-    const data = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveSnapshot(plan: Plan): void {
-  const snapshots = getSnapshots();
-  const newSnapshot: PlanSnapshot = {
-    id: generateId(),
-    timestamp: Date.now(),
-    plan: JSON.parse(JSON.stringify(plan)), // Deep clone
-  };
-
-  snapshots.push(newSnapshot);
-
-  // Keep only the last MAX_SNAPSHOTS
-  while (snapshots.length > MAX_SNAPSHOTS) {
-    snapshots.shift();
-  }
-
-  try {
-    localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(snapshots));
-  } catch (e) {
-    console.warn('Failed to save snapshot:', e);
-  }
-}
-
-export function getAutoSaveSnapshots(): PlanSnapshot[] {
-  return getSnapshots();
-}
-
-export function restoreFromSnapshot(snapshotId: string): Plan | null {
-  const snapshots = getSnapshots();
-  const snapshot = snapshots.find(s => s.id === snapshotId);
-  return snapshot?.plan ?? null;
 }
 
 function createChangeEntry(
@@ -253,306 +138,487 @@ function createChangeEntry(
   };
 }
 
-export const usePlanStore = create<PlanStore>()(
-  persist(
-    immer((set, get) => ({
-      // Initial state
-      currentPlan: null,
-      past: [],
-      future: [],
-      isDirty: false,
-      isLoading: false,
-      lastSaved: null,
+// ============================================
+// Snapshot Functions (async, use adapter)
+// ============================================
 
-      // Plan lifecycle
-      loadPlan: (plan: Plan) => {
+async function saveSnapshot(plan: Plan): Promise<void> {
+  const snapshot: PlanSnapshot = {
+    id: generateId(),
+    timestamp: Date.now(),
+    plan: JSON.parse(JSON.stringify(plan)), // Deep clone
+  };
+  await storage.saveSnapshot(snapshot);
+}
+
+export async function getAutoSaveSnapshots(): Promise<PlanSnapshot[]> {
+  return storage.getSnapshots();
+}
+
+export async function restoreFromSnapshot(snapshotId: string): Promise<Plan | null> {
+  const snapshots = await storage.getSnapshots();
+  const snapshot = snapshots.find(s => s.id === snapshotId);
+  return snapshot?.plan ?? null;
+}
+
+// ============================================
+// Stash Functions (async, use adapter)
+// ============================================
+
+async function saveToStashInternal(plan: Plan, reason: string): Promise<StashEntry> {
+  const entry: StashEntry = {
+    id: generateId(),
+    timestamp: Date.now(),
+    reason,
+    plan: JSON.parse(JSON.stringify(plan)), // Deep clone
+  };
+  await storage.saveToStash(entry);
+  return entry;
+}
+
+export async function getStash(): Promise<StashEntry[]> {
+  return storage.getStash();
+}
+
+export async function restoreFromStash(stashId: string): Promise<Plan | null> {
+  const entries = await storage.getStash();
+  const entry = entries.find(e => e.id === stashId);
+  return entry?.plan ?? null;
+}
+
+export async function clearStash(): Promise<void> {
+  return storage.clearStash();
+}
+
+// ============================================
+// Extended State and Actions with isSaving
+// ============================================
+
+interface ExtendedPlanState extends PlanState {
+  isSaving: boolean;
+  saveError: string | null;
+}
+
+interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'renamePlan' | 'createNewPlan' | 'moveCrop' | 'updateCropDates' | 'deleteCrop' | 'undo' | 'redo'> {
+  // Async versions of actions that persist
+  loadPlanById: (planId: string) => Promise<void>;
+  renamePlan: (newName: string) => Promise<void>;
+  createNewPlan: (name: string, crops: TimelineCrop[], resources: string[], groups: ResourceGroup[]) => Promise<void>;
+  moveCrop: (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => Promise<void>;
+  updateCropDates: (groupId: string, startDate: string, endDate: string) => Promise<void>;
+  deleteCrop: (groupId: string) => Promise<void>;
+  undo: () => Promise<void>;
+  redo: () => Promise<void>;
+  clearSaveError: () => void;
+}
+
+type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
+
+// ============================================
+// Zustand Store (no persist middleware)
+// ============================================
+
+export const usePlanStore = create<ExtendedPlanStore>()(
+  immer((set, get) => ({
+    // Initial state
+    currentPlan: null,
+    past: [],
+    future: [],
+    isDirty: false,
+    isLoading: false,
+    isSaving: false,
+    saveError: null,
+    lastSaved: null,
+
+    // Plan lifecycle
+    loadPlan: (plan: Plan) => {
+      set((state) => {
+        state.currentPlan = plan;
+        state.past = [];
+        state.future = [];
+        state.isDirty = false;
+        state.isLoading = false;
+      });
+      // Fire-and-forget save to library (loadPlan is sync for compatibility)
+      savePlanToLibrary(plan).catch(e => {
+        console.error('Failed to save loaded plan:', e);
+      });
+    },
+
+    loadPlanById: async (planId: string) => {
+      set((state) => {
+        state.isLoading = true;
+      });
+
+      const data = await loadPlanFromLibrary(planId);
+      if (!data) {
         set((state) => {
-          state.currentPlan = plan;
-          state.past = [];
-          state.future = [];
-          state.isDirty = false;
           state.isLoading = false;
         });
-        // Also save to library
-        savePlanToLibrary(plan);
-      },
+        throw new Error(`Plan not found: ${planId}`);
+      }
 
-      loadPlanById: (planId: string) => {
-        const data = loadPlanFromLibrary(planId);
-        if (!data) {
-          throw new Error(`Plan not found: ${planId}`);
+      set((state) => {
+        state.currentPlan = data.plan;
+        state.past = data.past || [];
+        state.future = data.future || [];
+        state.isDirty = false;
+        state.isLoading = false;
+      });
+    },
+
+    renamePlan: async (newName: string) => {
+      set((state) => {
+        if (!state.currentPlan) return;
+        state.currentPlan.metadata.name = newName;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => {
+            state.isSaving = false;
+          });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+          throw e;
         }
-        set((state) => {
-          state.currentPlan = data.plan;
-          state.past = data.past || [];
-          state.future = data.future || [];
-          state.isDirty = false;
-          state.isLoading = false;
-        });
-      },
+      }
+    },
 
-      renamePlan: (newName: string) => {
-        set((state) => {
-          if (!state.currentPlan) return;
-          state.currentPlan.metadata.name = newName;
-          state.currentPlan.metadata.lastModified = Date.now();
-        });
-        // Save to library
-        const currentState = get();
-        if (currentState.currentPlan) {
-          savePlanToLibrary(currentState.currentPlan);
-        }
-      },
-
-      createNewPlan: (
-        name: string,
-        crops: TimelineCrop[],
-        resources: string[],
-        groups: ResourceGroup[]
-      ) => {
-        const now = Date.now();
-        const id = generateId();
-        const plan: Plan = {
+    createNewPlan: async (
+      name: string,
+      crops: TimelineCrop[],
+      resources: string[],
+      groups: ResourceGroup[]
+    ) => {
+      const now = Date.now();
+      const id = generateId();
+      const plan: Plan = {
+        id,
+        metadata: {
           id,
-          metadata: {
-            id,
-            name,
-            createdAt: now,
+          name,
+          createdAt: now,
+          lastModified: now,
+        },
+        crops,
+        resources,
+        groups,
+        changeLog: [],
+      };
+
+      set((state) => {
+        state.currentPlan = plan;
+        state.past = [];
+        state.future = [];
+        state.isDirty = false;
+        state.isLoading = false;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      try {
+        await savePlanToLibrary(plan);
+        set((state) => {
+          state.isSaving = false;
+        });
+      } catch (e) {
+        set((state) => {
+          state.isSaving = false;
+          state.saveError = e instanceof Error ? e.message : 'Failed to save';
+        });
+        throw e;
+      }
+    },
+
+    resetPlan: () => {
+      set((state) => {
+        state.currentPlan = null;
+        state.past = [];
+        state.future = [];
+        state.isDirty = false;
+      });
+    },
+
+    // Crop mutations - all push to undo stack and save
+    moveCrop: async (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => {
+      set((state) => {
+        if (!state.currentPlan) return;
+
+        // Save current state to undo stack (deep copy)
+        state.past.push(state.currentPlan.crops.map(c => ({ ...c })));
+        if (state.past.length > MAX_HISTORY_SIZE) {
+          state.past.shift();
+        }
+        // Clear redo stack on new change
+        state.future = [];
+
+        // Find all crops with this groupId
+        const groupCrops = state.currentPlan.crops.filter((c) => c.groupId === groupId);
+        const otherCrops = state.currentPlan.crops.filter((c) => c.groupId !== groupId);
+
+        if (groupCrops.length === 0) return;
+
+        const template = groupCrops[0];
+        const feetNeeded = template.feetNeeded || 50;
+
+        const now = Date.now();
+
+        if (newResource === '' || !bedSpanInfo || bedSpanInfo.length === 0) {
+          // Moving to Unassigned - collapse to single entry
+          const unassignedCrop: TimelineCrop = {
+            ...template,
+            id: `${template.groupId}_unassigned`,
+            resource: '',
+            totalBeds: 1,
+            bedIndex: 1,
+            feetNeeded: feetNeeded,
+            feetUsed: undefined,
+            bedCapacityFt: undefined,
             lastModified: now,
-          },
-          crops,
-          resources,
-          groups,
-          changeLog: [],
-        };
-        set((state) => {
-          state.currentPlan = plan;
-          state.past = [];
-          state.future = [];
-          state.isDirty = false;  // Saved to library immediately
-          state.isLoading = false;
-        });
-        // Save to library
-        savePlanToLibrary(plan);
-      },
-
-      resetPlan: () => {
-        set((state) => {
-          state.currentPlan = null;
-          state.past = [];
-          state.future = [];
-          state.isDirty = false;
-        });
-      },
-
-      // Crop mutations - all push to undo stack
-      moveCrop: (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => {
-        set((state) => {
-          if (!state.currentPlan) return;
-
-          // Save current state to undo stack (deep copy)
-          state.past.push(state.currentPlan.crops.map(c => ({ ...c })));
-          if (state.past.length > MAX_HISTORY_SIZE) {
-            state.past.shift();
-          }
-          // Clear redo stack on new change
-          state.future = [];
-
-          // Find all crops with this groupId
-          const groupCrops = state.currentPlan.crops.filter((c) => c.groupId === groupId);
-          const otherCrops = state.currentPlan.crops.filter((c) => c.groupId !== groupId);
-
-          if (groupCrops.length === 0) return;
-
-          const template = groupCrops[0];
-          const feetNeeded = template.feetNeeded || 50;
-
-          const now = Date.now();
-
-          if (newResource === '' || !bedSpanInfo || bedSpanInfo.length === 0) {
-            // Moving to Unassigned - collapse to single entry
-            const unassignedCrop: TimelineCrop = {
-              ...template,
-              id: `${template.groupId}_unassigned`,
-              resource: '',
-              totalBeds: 1,
-              bedIndex: 1,
-              feetNeeded: feetNeeded,
-              feetUsed: undefined,
-              bedCapacityFt: undefined,
-              lastModified: now,
-            };
-            state.currentPlan.crops = [...otherCrops, unassignedCrop];
-          } else {
-            // Moving to specific beds - expand to multiple entries with proper feetUsed
-            const newGroupCrops: TimelineCrop[] = bedSpanInfo.map((info, index) => ({
-              ...template,
-              id: `${template.groupId}_bed${index}`,
-              resource: info.bed,
-              totalBeds: bedSpanInfo.length,
-              bedIndex: index + 1,
-              feetNeeded: feetNeeded,
-              feetUsed: info.feetUsed,
-              bedCapacityFt: info.bedCapacityFt,
-              lastModified: now,
-            }));
-            state.currentPlan.crops = [...otherCrops, ...newGroupCrops];
-          }
-
-          // Sort by start date
-          state.currentPlan.crops.sort((a, b) =>
-            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-          );
-
-          // Update metadata
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.currentPlan.changeLog.push(
-            createChangeEntry('move', `Moved ${groupId} to ${newResource || 'unassigned'}`, [groupId])
-          );
-          state.isDirty = true;
-        });
-        // Auto-save to library
-        const currentState = get();
-        if (currentState.currentPlan) {
-          savePlanToLibrary(currentState.currentPlan);
+          };
+          state.currentPlan.crops = [...otherCrops, unassignedCrop];
+        } else {
+          // Moving to specific beds - expand to multiple entries with proper feetUsed
+          const newGroupCrops: TimelineCrop[] = bedSpanInfo.map((info, index) => ({
+            ...template,
+            id: `${template.groupId}_bed${index}`,
+            resource: info.bed,
+            totalBeds: bedSpanInfo.length,
+            bedIndex: index + 1,
+            feetNeeded: feetNeeded,
+            feetUsed: info.feetUsed,
+            bedCapacityFt: info.bedCapacityFt,
+            lastModified: now,
+          }));
+          state.currentPlan.crops = [...otherCrops, ...newGroupCrops];
         }
-      },
 
-      updateCropDates: (groupId: string, startDate: string, endDate: string) => {
-        set((state) => {
-          if (!state.currentPlan) return;
+        // Sort by start date
+        state.currentPlan.crops.sort((a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
 
-          // Save current state to undo stack
-          state.past.push([...state.currentPlan.crops]);
-          if (state.past.length > MAX_HISTORY_SIZE) {
-            state.past.shift();
-          }
-          state.future = [];
+        // Update metadata
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('move', `Moved ${groupId} to ${newResource || 'unassigned'}`, [groupId])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
 
-          // Update all crops with this groupId
-          const now = Date.now();
-          state.currentPlan.crops
-            .filter((c) => c.groupId === groupId)
-            .forEach((crop) => {
-              crop.startDate = startDate;
-              crop.endDate = endDate;
-              crop.lastModified = now;
-            });
-
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.currentPlan.changeLog.push(
-            createChangeEntry('date_change', `Updated dates for ${groupId}`, [groupId])
-          );
-          state.isDirty = true;
-        });
-        // Auto-save to library
-        const currentState = get();
-        if (currentState.currentPlan) {
-          savePlanToLibrary(currentState.currentPlan);
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => {
+            state.isSaving = false;
+          });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
         }
-      },
+      }
+    },
 
-      deleteCrop: (groupId: string) => {
-        set((state) => {
-          if (!state.currentPlan) return;
+    updateCropDates: async (groupId: string, startDate: string, endDate: string) => {
+      set((state) => {
+        if (!state.currentPlan) return;
 
-          // Save current state to undo stack
-          state.past.push([...state.currentPlan.crops]);
-          if (state.past.length > MAX_HISTORY_SIZE) {
-            state.past.shift();
-          }
-          state.future = [];
-
-          // Remove all crops with this groupId
-          state.currentPlan.crops = state.currentPlan.crops.filter(
-            (c) => c.groupId !== groupId
-          );
-
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.currentPlan.changeLog.push(
-            createChangeEntry('delete', `Deleted ${groupId}`, [groupId])
-          );
-          state.isDirty = true;
-        });
-        // Auto-save to library
-        const currentState = get();
-        if (currentState.currentPlan) {
-          savePlanToLibrary(currentState.currentPlan);
+        // Save current state to undo stack
+        state.past.push([...state.currentPlan.crops]);
+        if (state.past.length > MAX_HISTORY_SIZE) {
+          state.past.shift();
         }
-      },
+        state.future = [];
 
-      // History
-      undo: () => {
-        set((state) => {
-          if (!state.currentPlan || state.past.length === 0) return;
+        // Update all crops with this groupId
+        const now = Date.now();
+        state.currentPlan.crops
+          .filter((c) => c.groupId === groupId)
+          .forEach((crop) => {
+            crop.startDate = startDate;
+            crop.endDate = endDate;
+            crop.lastModified = now;
+          });
 
-          const previous = state.past.pop()!;
-          state.future.push(state.currentPlan.crops.map(c => ({ ...c })));
-          state.currentPlan.crops = previous;
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.isDirty = true;
-        });
-        // Auto-save to library
-        const currentState = get();
-        if (currentState.currentPlan) {
-          savePlanToLibrary(currentState.currentPlan);
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('date_change', `Updated dates for ${groupId}`, [groupId])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => {
+            state.isSaving = false;
+          });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
         }
-      },
+      }
+    },
 
-      redo: () => {
-        set((state) => {
-          if (!state.currentPlan || state.future.length === 0) return;
+    deleteCrop: async (groupId: string) => {
+      set((state) => {
+        if (!state.currentPlan) return;
 
-          const next = state.future.pop()!;
-          state.past.push(state.currentPlan.crops.map(c => ({ ...c })));
-          state.currentPlan.crops = next;
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.isDirty = true;
-        });
-        // Auto-save to library
-        const currentState = get();
-        if (currentState.currentPlan) {
-          savePlanToLibrary(currentState.currentPlan);
+        // Save current state to undo stack
+        state.past.push([...state.currentPlan.crops]);
+        if (state.past.length > MAX_HISTORY_SIZE) {
+          state.past.shift();
         }
-      },
+        state.future = [];
 
-      canUndo: () => {
-        const state = get();
-        return state.past.length > 0;
-      },
+        // Remove all crops with this groupId
+        state.currentPlan.crops = state.currentPlan.crops.filter(
+          (c) => c.groupId !== groupId
+        );
 
-      canRedo: () => {
-        const state = get();
-        return state.future.length > 0;
-      },
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('delete', `Deleted ${groupId}`, [groupId])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
 
-      // Persistence helpers
-      markSaved: () => {
-        set((state) => {
-          state.isDirty = false;
-          state.lastSaved = Date.now();
-        });
-      },
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => {
+            state.isSaving = false;
+          });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
 
-      markDirty: () => {
-        set((state) => {
-          state.isDirty = true;
-        });
-      },
-    })),
-    {
-      name: 'crop-plan-storage',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        // Persist plan and undo/redo history
-        currentPlan: state.currentPlan,
-        past: state.past,
-        future: state.future,
-        lastSaved: state.lastSaved,
-      }),
-    }
-  )
+    // History
+    undo: async () => {
+      set((state) => {
+        if (!state.currentPlan || state.past.length === 0) return;
+
+        const previous = state.past.pop()!;
+        state.future.push(state.currentPlan.crops.map(c => ({ ...c })));
+        state.currentPlan.crops = previous;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => {
+            state.isSaving = false;
+          });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    redo: async () => {
+      set((state) => {
+        if (!state.currentPlan || state.future.length === 0) return;
+
+        const next = state.future.pop()!;
+        state.past.push(state.currentPlan.crops.map(c => ({ ...c })));
+        state.currentPlan.crops = next;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => {
+            state.isSaving = false;
+          });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    canUndo: () => {
+      const state = get();
+      return state.past.length > 0;
+    },
+
+    canRedo: () => {
+      const state = get();
+      return state.future.length > 0;
+    },
+
+    // Persistence helpers
+    markSaved: () => {
+      set((state) => {
+        state.isDirty = false;
+        state.lastSaved = Date.now();
+      });
+    },
+
+    markDirty: () => {
+      set((state) => {
+        state.isDirty = true;
+      });
+    },
+
+    clearSaveError: () => {
+      set((state) => {
+        state.saveError = null;
+      });
+    },
+  }))
 );
+
+// ============================================
+// Helper Hooks
+// ============================================
 
 /**
  * Helper hook to get just the crops array
@@ -583,18 +649,28 @@ export function useUndoRedo() {
 }
 
 /**
- * Start auto-save timer (call once on app initialization)
- * Saves a snapshot every 15 minutes if there's a plan
+ * Helper hook for save state
  */
+export function useSaveState() {
+  const isSaving = usePlanStore((state) => state.isSaving);
+  const saveError = usePlanStore((state) => state.saveError);
+  const clearSaveError = usePlanStore((state) => state.clearSaveError);
+  return { isSaving, saveError, clearSaveError };
+}
+
+// ============================================
+// Auto-Save Timer
+// ============================================
+
 let autoSaveInterval: ReturnType<typeof setInterval> | null = null;
 
 export function startAutoSave(): void {
   if (autoSaveInterval) return; // Already running
 
-  autoSaveInterval = setInterval(() => {
+  autoSaveInterval = setInterval(async () => {
     const state = usePlanStore.getState();
     if (state.currentPlan) {
-      saveSnapshot(state.currentPlan);
+      await saveSnapshot(state.currentPlan);
       console.log('[AutoSave] Snapshot saved at', new Date().toLocaleTimeString());
     }
   }, SNAPSHOT_INTERVAL_MS);
@@ -602,7 +678,9 @@ export function startAutoSave(): void {
   // Save initial snapshot when starting
   const state = usePlanStore.getState();
   if (state.currentPlan) {
-    saveSnapshot(state.currentPlan);
+    saveSnapshot(state.currentPlan).catch(e => {
+      console.warn('[AutoSave] Failed to save initial snapshot:', e);
+    });
   }
 }
 
@@ -610,62 +688,6 @@ export function stopAutoSave(): void {
   if (autoSaveInterval) {
     clearInterval(autoSaveInterval);
     autoSaveInterval = null;
-  }
-}
-
-// ============================================
-// Stash Functions (safety saves before import)
-// ============================================
-
-function getStashEntries(): StashEntry[] {
-  try {
-    const data = localStorage.getItem(STASH_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveToStash(plan: Plan, reason: string): StashEntry {
-  const entries = getStashEntries();
-  const entry: StashEntry = {
-    id: generateId(),
-    timestamp: Date.now(),
-    reason,
-    plan: JSON.parse(JSON.stringify(plan)), // Deep clone
-  };
-
-  entries.push(entry);
-
-  // Keep only the last MAX_STASH_ENTRIES
-  while (entries.length > MAX_STASH_ENTRIES) {
-    entries.shift();
-  }
-
-  try {
-    localStorage.setItem(STASH_STORAGE_KEY, JSON.stringify(entries));
-  } catch (e) {
-    console.warn('Failed to save stash entry:', e);
-  }
-
-  return entry;
-}
-
-export function getStash(): StashEntry[] {
-  return getStashEntries();
-}
-
-export function restoreFromStash(stashId: string): Plan | null {
-  const entries = getStashEntries();
-  const entry = entries.find(e => e.id === stashId);
-  return entry?.plan ?? null;
-}
-
-export function clearStash(): void {
-  try {
-    localStorage.removeItem(STASH_STORAGE_KEY);
-  } catch (e) {
-    console.warn('Failed to clear stash:', e);
   }
 }
 
@@ -736,7 +758,7 @@ export async function importPlanFromFile(file: File): Promise<Plan> {
 
   // Stash current plan if one exists
   if (state.currentPlan) {
-    saveToStash(state.currentPlan, `Before importing ${file.name}`);
+    await saveToStashInternal(state.currentPlan, `Before importing ${file.name}`);
   }
 
   // Read file
@@ -748,7 +770,7 @@ export async function importPlanFromFile(file: File): Promise<Plan> {
   try {
     const decompressed = pako.ungzip(compressed);
     jsonString = new TextDecoder().decode(decompressed);
-  } catch (e) {
+  } catch {
     throw new Error('Failed to decompress file. Is this a valid .crop-plan.gz file?');
   }
 
@@ -756,7 +778,7 @@ export async function importPlanFromFile(file: File): Promise<Plan> {
   let fileData: CropPlanFile;
   try {
     fileData = JSON.parse(jsonString);
-  } catch (e) {
+  } catch {
     throw new Error('Failed to parse file. Invalid JSON format.');
   }
 
@@ -791,14 +813,14 @@ export async function previewPlanFile(file: File): Promise<CropPlanFile> {
   try {
     const decompressed = pako.ungzip(compressed);
     jsonString = new TextDecoder().decode(decompressed);
-  } catch (e) {
+  } catch {
     throw new Error('Failed to decompress file. Is this a valid .crop-plan.gz file?');
   }
 
   let fileData: CropPlanFile;
   try {
     fileData = JSON.parse(jsonString);
-  } catch (e) {
+  } catch {
     throw new Error('Failed to parse file. Invalid JSON format.');
   }
 

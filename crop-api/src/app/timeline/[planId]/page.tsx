@@ -8,6 +8,7 @@ import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline
 import {
   usePlanStore,
   useUndoRedo,
+  useSaveState,
   startAutoSave,
   stopAutoSave,
   exportPlanToFile,
@@ -61,6 +62,9 @@ export default function TimelinePlanPage() {
   // Undo/redo
   const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
 
+  // Save state (for saving indicator and error handling)
+  const { isSaving, saveError, clearSaveError } = useSaveState();
+
   // Load the specific plan by ID
   useEffect(() => {
     if (!planId) {
@@ -70,19 +74,22 @@ export default function TimelinePlanPage() {
     }
 
     // Try to load the plan from library
-    const planData = loadPlanFromLibrary(planId);
-    if (planData) {
+    async function loadPlan() {
       try {
-        loadPlanById(planId);
-        setLoading(false);
+        const planData = await loadPlanFromLibrary(planId);
+        if (planData) {
+          await loadPlanById(planId);
+          setLoading(false);
+        } else {
+          setError(`Plan not found: ${planId}`);
+          setLoading(false);
+        }
       } catch (e) {
         setError(`Failed to load plan: ${e instanceof Error ? e.message : 'Unknown error'}`);
         setLoading(false);
       }
-    } else {
-      setError(`Plan not found: ${planId}`);
-      setLoading(false);
     }
+    loadPlan();
   }, [planId, loadPlanById]);
 
   // Start auto-save timer (saves snapshot every 15 minutes)
@@ -90,6 +97,14 @@ export default function TimelinePlanPage() {
     startAutoSave();
     return () => stopAutoSave();
   }, []);
+
+  // Show save errors as toasts
+  useEffect(() => {
+    if (saveError) {
+      setToast({ message: `Save failed: ${saveError}`, type: 'error' });
+      clearSaveError();
+    }
+  }, [saveError, clearSaveError]);
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -147,10 +162,10 @@ export default function TimelinePlanPage() {
     updateCropDates(groupId, startDate, endDate);
   }, [updateCropDates]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     // Save to library is automatic now, but mark as saved
     if (currentPlan) {
-      savePlanToLibrary(currentPlan);
+      await savePlanToLibrary(currentPlan);
     }
     markSaved();
   }, [currentPlan, markSaved]);
@@ -196,10 +211,10 @@ export default function TimelinePlanPage() {
     }
   }, [currentPlan]);
 
-  const saveEditedName = useCallback(() => {
+  const saveEditedName = useCallback(async () => {
     const trimmedName = editedName.trim();
     if (trimmedName && trimmedName !== currentPlan?.metadata.name) {
-      renamePlan(trimmedName);
+      await renamePlan(trimmedName);
       setToast({ message: 'Plan renamed', type: 'success' });
     }
     setIsEditingName(false);
@@ -285,12 +300,20 @@ export default function TimelinePlanPage() {
           {currentPlan.crops.length} crops
         </span>
 
-        {/* Dirty indicator */}
-        {isDirty && (
+        {/* Save status indicator */}
+        {isSaving ? (
+          <span className="text-sm text-blue-600 font-medium flex items-center gap-1">
+            <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Saving...
+          </span>
+        ) : isDirty ? (
           <span className="text-sm text-amber-600 font-medium">
             &bull; Unsaved changes
           </span>
-        )}
+        ) : null}
 
         {/* Spacer */}
         <div className="flex-1" />

@@ -52,16 +52,19 @@ export default function TimelineListPage() {
 
   // Migrate old storage format and load plan list
   useEffect(() => {
-    migrateOldStorageFormat();
-    const planList = getPlanList();
-    setPlans(planList);
-    setLoading(false);
+    async function init() {
+      await migrateOldStorageFormat();
+      const planList = await getPlanList();
+      setPlans(planList);
+      setLoading(false);
+    }
+    init();
   }, []);
 
-  const handleCreateNew = useCallback(() => {
+  const handleCreateNew = useCallback(async () => {
     const timelineCrops = getTimelineCrops();
     const { resources, groups } = getResources();
-    createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
+    await createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
 
     // Get the newly created plan ID
     const newPlan = usePlanStore.getState().currentPlan;
@@ -93,11 +96,12 @@ export default function TimelineListPage() {
     }
   }, [router]);
 
-  const handleDelete = useCallback((planId: string, planName: string) => {
+  const handleDelete = useCallback(async (planId: string, planName: string) => {
     if (!confirm(`Delete "${planName}"? This cannot be undone.`)) return;
 
-    deletePlanFromLibrary(planId);
-    setPlans(getPlanList());
+    await deletePlanFromLibrary(planId);
+    const planList = await getPlanList();
+    setPlans(planList);
     setToast({ message: `Deleted "${planName}"`, type: 'info' });
   }, []);
 
