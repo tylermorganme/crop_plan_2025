@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
-import { usePlanStore, useUndoRedo, startAutoSave, stopAutoSave } from '@/lib/plan-store';
+import { usePlanStore, useUndoRedo, startAutoSave, stopAutoSave, exportPlanToFile, importPlanFromFile } from '@/lib/plan-store';
 import type { TimelineCrop } from '@/lib/plan-types';
 import bedPlanData from '@/data/bed-plan.json';
 
@@ -28,6 +28,7 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
 export default function TimelinePage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
@@ -151,6 +152,36 @@ export default function TimelinePage() {
     createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
   }, [createNewPlan]);
 
+  const handleExport = useCallback(() => {
+    try {
+      exportPlanToFile();
+      setToast({ message: 'Plan exported successfully', type: 'success' });
+    } catch (e) {
+      setToast({ message: `Export failed: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
+    }
+  }, []);
+
+  const handleImportClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const plan = await importPlanFromFile(file);
+      setToast({ message: `Imported "${plan.metadata.name}" successfully`, type: 'success' });
+    } catch (err) {
+      setToast({ message: `Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
+    }
+
+    // Reset file input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
+
   if (loading || !currentPlan) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -216,6 +247,31 @@ export default function TimelinePage() {
           >
             Reset
           </button>
+        </div>
+
+        {/* Export/Import buttons */}
+        <div className="flex items-center gap-2 border-l pl-4 ml-2">
+          <button
+            onClick={handleExport}
+            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+            title="Export plan to file"
+          >
+            Export
+          </button>
+          <button
+            onClick={handleImportClick}
+            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+            title="Import plan from file"
+          >
+            Import
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".crop-plan.gz,.gz"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
         </div>
       </div>
 

@@ -8,6 +8,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import pako from 'pako';
 import type {
   Plan,
   PlanMetadata,
@@ -18,12 +19,17 @@ import type {
   ResourceGroup,
   PlanChange,
   BedSpanInfo,
+  CropPlanFile,
+  StashEntry,
 } from './plan-types';
+import { CURRENT_SCHEMA_VERSION } from './plan-types';
 
 const MAX_HISTORY_SIZE = 50;
 const MAX_SNAPSHOTS = 32;
+const MAX_STASH_ENTRIES = 10;
 const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 const SNAPSHOTS_STORAGE_KEY = 'crop-plan-snapshots';
+const STASH_STORAGE_KEY = 'crop-plan-stash';
 
 interface PlanSnapshot {
   id: string;
@@ -174,6 +180,8 @@ export const usePlanStore = create<PlanStore>()(
           const template = groupCrops[0];
           const feetNeeded = template.feetNeeded || 50;
 
+          const now = Date.now();
+
           if (newResource === '' || !bedSpanInfo || bedSpanInfo.length === 0) {
             // Moving to Unassigned - collapse to single entry
             const unassignedCrop: TimelineCrop = {
@@ -185,6 +193,7 @@ export const usePlanStore = create<PlanStore>()(
               feetNeeded: feetNeeded,
               feetUsed: undefined,
               bedCapacityFt: undefined,
+              lastModified: now,
             };
             state.currentPlan.crops = [...otherCrops, unassignedCrop];
           } else {
@@ -198,6 +207,7 @@ export const usePlanStore = create<PlanStore>()(
               feetNeeded: feetNeeded,
               feetUsed: info.feetUsed,
               bedCapacityFt: info.bedCapacityFt,
+              lastModified: now,
             }));
             state.currentPlan.crops = [...otherCrops, ...newGroupCrops];
           }
@@ -228,11 +238,13 @@ export const usePlanStore = create<PlanStore>()(
           state.future = [];
 
           // Update all crops with this groupId
+          const now = Date.now();
           state.currentPlan.crops
             .filter((c) => c.groupId === groupId)
             .forEach((crop) => {
               crop.startDate = startDate;
               crop.endDate = endDate;
+              crop.lastModified = now;
             });
 
           state.currentPlan.metadata.lastModified = Date.now();
@@ -387,4 +399,200 @@ export function stopAutoSave(): void {
     clearInterval(autoSaveInterval);
     autoSaveInterval = null;
   }
+}
+
+// ============================================
+// Stash Functions (safety saves before import)
+// ============================================
+
+function getStashEntries(): StashEntry[] {
+  try {
+    const data = localStorage.getItem(STASH_STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToStash(plan: Plan, reason: string): StashEntry {
+  const entries = getStashEntries();
+  const entry: StashEntry = {
+    id: generateId(),
+    timestamp: Date.now(),
+    reason,
+    plan: JSON.parse(JSON.stringify(plan)), // Deep clone
+  };
+
+  entries.push(entry);
+
+  // Keep only the last MAX_STASH_ENTRIES
+  while (entries.length > MAX_STASH_ENTRIES) {
+    entries.shift();
+  }
+
+  try {
+    localStorage.setItem(STASH_STORAGE_KEY, JSON.stringify(entries));
+  } catch (e) {
+    console.warn('Failed to save stash entry:', e);
+  }
+
+  return entry;
+}
+
+export function getStash(): StashEntry[] {
+  return getStashEntries();
+}
+
+export function restoreFromStash(stashId: string): Plan | null {
+  const entries = getStashEntries();
+  const entry = entries.find(e => e.id === stashId);
+  return entry?.plan ?? null;
+}
+
+export function clearStash(): void {
+  try {
+    localStorage.removeItem(STASH_STORAGE_KEY);
+  } catch (e) {
+    console.warn('Failed to clear stash:', e);
+  }
+}
+
+// ============================================
+// Export/Import Functions
+// ============================================
+
+/**
+ * Export the current plan to a gzip-compressed JSON file.
+ * Downloads a .crop-plan.gz file to the user's computer.
+ */
+export function exportPlanToFile(): void {
+  const state = usePlanStore.getState();
+  if (!state.currentPlan) {
+    throw new Error('No plan to export');
+  }
+
+  // Increment version on export
+  const plan: Plan = {
+    ...state.currentPlan,
+    metadata: {
+      ...state.currentPlan.metadata,
+      version: (state.currentPlan.metadata.version ?? 0) + 1,
+      lastModified: Date.now(),
+    },
+  };
+
+  const fileData: CropPlanFile = {
+    formatVersion: 1,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    exportedAt: Date.now(),
+    plan,
+  };
+
+  // Convert to JSON and compress
+  const jsonString = JSON.stringify(fileData, null, 2);
+  const compressed = pako.gzip(jsonString);
+
+  // Create blob and download
+  const blob = new Blob([compressed], { type: 'application/gzip' });
+  const url = URL.createObjectURL(blob);
+
+  const fileName = `${plan.metadata.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-v${plan.metadata.version}.crop-plan.gz`;
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Update the store with the new version
+  usePlanStore.setState((state) => {
+    if (state.currentPlan) {
+      state.currentPlan.metadata.version = plan.metadata.version;
+    }
+  });
+}
+
+/**
+ * Import a plan from a gzip-compressed JSON file.
+ * Stashes the current plan before importing.
+ * Returns the imported plan or throws on error.
+ */
+export async function importPlanFromFile(file: File): Promise<Plan> {
+  const state = usePlanStore.getState();
+
+  // Stash current plan if one exists
+  if (state.currentPlan) {
+    saveToStash(state.currentPlan, `Before importing ${file.name}`);
+  }
+
+  // Read file
+  const arrayBuffer = await file.arrayBuffer();
+  const compressed = new Uint8Array(arrayBuffer);
+
+  // Decompress
+  let jsonString: string;
+  try {
+    const decompressed = pako.ungzip(compressed);
+    jsonString = new TextDecoder().decode(decompressed);
+  } catch (e) {
+    throw new Error('Failed to decompress file. Is this a valid .crop-plan.gz file?');
+  }
+
+  // Parse JSON
+  let fileData: CropPlanFile;
+  try {
+    fileData = JSON.parse(jsonString);
+  } catch (e) {
+    throw new Error('Failed to parse file. Invalid JSON format.');
+  }
+
+  // Validate format version
+  if (fileData.formatVersion !== 1) {
+    throw new Error(`Unsupported file format version: ${fileData.formatVersion}`);
+  }
+
+  // Validate required fields
+  if (!fileData.plan || !fileData.plan.id || !fileData.plan.metadata) {
+    throw new Error('Invalid file: missing plan data');
+  }
+
+  // TODO: Add schema migration logic here when schemaVersion > 1
+
+  // Load the imported plan
+  const { loadPlan } = usePlanStore.getState();
+  loadPlan(fileData.plan);
+
+  return fileData.plan;
+}
+
+/**
+ * Read a .crop-plan.gz file and return the parsed data without importing.
+ * Useful for previewing before import.
+ */
+export async function previewPlanFile(file: File): Promise<CropPlanFile> {
+  const arrayBuffer = await file.arrayBuffer();
+  const compressed = new Uint8Array(arrayBuffer);
+
+  let jsonString: string;
+  try {
+    const decompressed = pako.ungzip(compressed);
+    jsonString = new TextDecoder().decode(decompressed);
+  } catch (e) {
+    throw new Error('Failed to decompress file. Is this a valid .crop-plan.gz file?');
+  }
+
+  let fileData: CropPlanFile;
+  try {
+    fileData = JSON.parse(jsonString);
+  } catch (e) {
+    throw new Error('Failed to parse file. Invalid JSON format.');
+  }
+
+  if (fileData.formatVersion !== 1) {
+    throw new Error(`Unsupported file format version: ${fileData.formatVersion}`);
+  }
+
+  return fileData;
 }

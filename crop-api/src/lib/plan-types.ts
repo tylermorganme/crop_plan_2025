@@ -32,6 +32,8 @@ export interface TimelineCrop {
   harvestStartDate?: string;
   /** Planting method: DS (Direct Seed), TP (Transplant), PE (Perennial) */
   plantingMethod?: 'DS' | 'TP' | 'PE';
+  /** Timestamp of last modification to this crop (for future sync) */
+  lastModified?: number;
 }
 
 /** A group of beds (e.g., row "A" contains beds A1-A8) */
@@ -54,6 +56,12 @@ export interface PlanMetadata {
   createdAt: number;
   lastModified: number;
   description?: string;
+  /** Version number, incremented on export */
+  version?: number;
+  /** ID of plan this was copied/forked from */
+  parentPlanId?: string;
+  /** Version of parent plan when copied */
+  parentVersion?: number;
 }
 
 /** A single change entry for undo history */
@@ -122,3 +130,30 @@ export interface PlanActions {
 }
 
 export type PlanStore = PlanState & PlanActions;
+
+// ============================================
+// Export/Import File Format Types
+// ============================================
+
+/** Current schema version for data migrations */
+export const CURRENT_SCHEMA_VERSION = 1;
+
+/** Exported crop plan file format */
+export interface CropPlanFile {
+  /** File format version */
+  formatVersion: 1;
+  /** Data schema version for migrations */
+  schemaVersion: number;
+  /** When the file was exported */
+  exportedAt: number;
+  /** The plan data */
+  plan: Plan;
+}
+
+/** Stash entry for safety saves before destructive operations */
+export interface StashEntry {
+  id: string;
+  timestamp: number;
+  reason: string;
+  plan: Plan;
+}
