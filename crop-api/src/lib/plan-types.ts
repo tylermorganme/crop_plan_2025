@@ -110,7 +110,9 @@ export interface PlanState {
 export interface PlanActions {
   // Plan lifecycle
   loadPlan: (plan: Plan) => void;
+  loadPlanById: (planId: string) => void;
   createNewPlan: (name: string, crops: TimelineCrop[], resources: string[], groups: ResourceGroup[]) => void;
+  renamePlan: (newName: string) => void;
   resetPlan: () => void;
 
   // Crop mutations (all create undo points)

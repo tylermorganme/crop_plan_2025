@@ -30,6 +30,162 @@ const MAX_STASH_ENTRIES = 10;
 const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 const SNAPSHOTS_STORAGE_KEY = 'crop-plan-snapshots';
 const STASH_STORAGE_KEY = 'crop-plan-stash';
+const PLAN_LIBRARY_PREFIX = 'crop-plan-lib-';
+const PLAN_REGISTRY_KEY = 'crop-plan-registry';
+
+// ============================================
+// Plan Library - Multi-plan storage
+// ============================================
+
+export interface PlanSummary {
+  id: string;
+  name: string;
+  version?: number;
+  lastModified: number;
+  cropCount: number;
+}
+
+/**
+ * Get list of all saved plans (summaries only)
+ */
+export function getPlanList(): PlanSummary[] {
+  try {
+    const data = localStorage.getItem(PLAN_REGISTRY_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Save plan to library and update registry
+ */
+export function savePlanToLibrary(plan: Plan): void {
+  const key = PLAN_LIBRARY_PREFIX + plan.id;
+
+  // Save the full plan
+  const planData = {
+    plan,
+    past: [] as TimelineCrop[][],  // Don't persist undo history per-plan
+    future: [] as TimelineCrop[][],
+  };
+
+  try {
+    localStorage.setItem(key, JSON.stringify(planData));
+  } catch (e) {
+    console.error('Failed to save plan to library:', e);
+    throw new Error('Failed to save plan - storage may be full');
+  }
+
+  // Update registry
+  const registry = getPlanList();
+  const summary: PlanSummary = {
+    id: plan.id,
+    name: plan.metadata.name,
+    version: plan.metadata.version,
+    lastModified: plan.metadata.lastModified,
+    cropCount: plan.crops.length,
+  };
+
+  const existingIndex = registry.findIndex(p => p.id === plan.id);
+  if (existingIndex >= 0) {
+    registry[existingIndex] = summary;
+  } else {
+    registry.push(summary);
+  }
+
+  // Sort by lastModified descending
+  registry.sort((a, b) => b.lastModified - a.lastModified);
+
+  try {
+    localStorage.setItem(PLAN_REGISTRY_KEY, JSON.stringify(registry));
+  } catch (e) {
+    console.error('Failed to update plan registry:', e);
+  }
+}
+
+/**
+ * Load a plan from library by ID
+ */
+export function loadPlanFromLibrary(planId: string): { plan: Plan; past: TimelineCrop[][]; future: TimelineCrop[][] } | null {
+  const key = PLAN_LIBRARY_PREFIX + planId;
+
+  try {
+    const data = localStorage.getItem(key);
+    if (!data) return null;
+    return JSON.parse(data);
+  } catch (e) {
+    console.error('Failed to load plan from library:', e);
+    return null;
+  }
+}
+
+/**
+ * Delete a plan from library
+ */
+export function deletePlanFromLibrary(planId: string): void {
+  const key = PLAN_LIBRARY_PREFIX + planId;
+
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {
+    console.error('Failed to delete plan:', e);
+  }
+
+  // Update registry
+  const registry = getPlanList().filter(p => p.id !== planId);
+  try {
+    localStorage.setItem(PLAN_REGISTRY_KEY, JSON.stringify(registry));
+  } catch (e) {
+    console.error('Failed to update plan registry:', e);
+  }
+}
+
+/**
+ * Check if a plan exists in the library
+ */
+export function planExistsInLibrary(planId: string): boolean {
+  const key = PLAN_LIBRARY_PREFIX + planId;
+  return localStorage.getItem(key) !== null;
+}
+
+/**
+ * Migrate plans from old storage format to new library format.
+ * Call this once on app initialization.
+ */
+export function migrateOldStorageFormat(): void {
+  const OLD_STORAGE_KEY = 'crop-plan-storage';
+  const MIGRATION_FLAG_KEY = 'crop-plan-migrated';
+
+  // Check if already migrated
+  if (localStorage.getItem(MIGRATION_FLAG_KEY)) {
+    return;
+  }
+
+  try {
+    const oldData = localStorage.getItem(OLD_STORAGE_KEY);
+    if (!oldData) {
+      localStorage.setItem(MIGRATION_FLAG_KEY, 'true');
+      return;
+    }
+
+    const parsed = JSON.parse(oldData);
+    const oldPlan = parsed?.state?.currentPlan;
+
+    if (oldPlan && oldPlan.id && oldPlan.metadata) {
+      // Migrate the old plan to the new library
+      savePlanToLibrary(oldPlan);
+      console.log('[Migration] Migrated plan from old storage:', oldPlan.metadata.name);
+    }
+
+    // Mark as migrated (but keep old data as backup)
+    localStorage.setItem(MIGRATION_FLAG_KEY, 'true');
+  } catch (e) {
+    console.error('[Migration] Failed to migrate old storage:', e);
+    // Still mark as migrated to avoid repeated failures
+    localStorage.setItem(MIGRATION_FLAG_KEY, 'true');
+  }
+}
 
 interface PlanSnapshot {
   id: string;
@@ -117,6 +273,35 @@ export const usePlanStore = create<PlanStore>()(
           state.isDirty = false;
           state.isLoading = false;
         });
+        // Also save to library
+        savePlanToLibrary(plan);
+      },
+
+      loadPlanById: (planId: string) => {
+        const data = loadPlanFromLibrary(planId);
+        if (!data) {
+          throw new Error(`Plan not found: ${planId}`);
+        }
+        set((state) => {
+          state.currentPlan = data.plan;
+          state.past = data.past || [];
+          state.future = data.future || [];
+          state.isDirty = false;
+          state.isLoading = false;
+        });
+      },
+
+      renamePlan: (newName: string) => {
+        set((state) => {
+          if (!state.currentPlan) return;
+          state.currentPlan.metadata.name = newName;
+          state.currentPlan.metadata.lastModified = Date.now();
+        });
+        // Save to library
+        const currentState = get();
+        if (currentState.currentPlan) {
+          savePlanToLibrary(currentState.currentPlan);
+        }
       },
 
       createNewPlan: (
@@ -144,9 +329,11 @@ export const usePlanStore = create<PlanStore>()(
           state.currentPlan = plan;
           state.past = [];
           state.future = [];
-          state.isDirty = true;
+          state.isDirty = false;  // Saved to library immediately
           state.isLoading = false;
         });
+        // Save to library
+        savePlanToLibrary(plan);
       },
 
       resetPlan: () => {
@@ -224,6 +411,11 @@ export const usePlanStore = create<PlanStore>()(
           );
           state.isDirty = true;
         });
+        // Auto-save to library
+        const currentState = get();
+        if (currentState.currentPlan) {
+          savePlanToLibrary(currentState.currentPlan);
+        }
       },
 
       updateCropDates: (groupId: string, startDate: string, endDate: string) => {
@@ -253,6 +445,11 @@ export const usePlanStore = create<PlanStore>()(
           );
           state.isDirty = true;
         });
+        // Auto-save to library
+        const currentState = get();
+        if (currentState.currentPlan) {
+          savePlanToLibrary(currentState.currentPlan);
+        }
       },
 
       deleteCrop: (groupId: string) => {
@@ -277,6 +474,11 @@ export const usePlanStore = create<PlanStore>()(
           );
           state.isDirty = true;
         });
+        // Auto-save to library
+        const currentState = get();
+        if (currentState.currentPlan) {
+          savePlanToLibrary(currentState.currentPlan);
+        }
       },
 
       // History
@@ -290,6 +492,11 @@ export const usePlanStore = create<PlanStore>()(
           state.currentPlan.metadata.lastModified = Date.now();
           state.isDirty = true;
         });
+        // Auto-save to library
+        const currentState = get();
+        if (currentState.currentPlan) {
+          savePlanToLibrary(currentState.currentPlan);
+        }
       },
 
       redo: () => {
@@ -302,6 +509,11 @@ export const usePlanStore = create<PlanStore>()(
           state.currentPlan.metadata.lastModified = Date.now();
           state.isDirty = true;
         });
+        // Auto-save to library
+        const currentState = get();
+        if (currentState.currentPlan) {
+          savePlanToLibrary(currentState.currentPlan);
+        }
       },
 
       canUndo: () => {

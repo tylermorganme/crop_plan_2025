@@ -1,12 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import CropTimeline from '@/components/CropTimeline';
-import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
-import { usePlanStore, useUndoRedo, startAutoSave, stopAutoSave, exportPlanToFile, importPlanFromFile } from '@/lib/plan-store';
-import type { TimelineCrop } from '@/lib/plan-types';
-import bedPlanData from '@/data/bed-plan.json';
+import {
+  usePlanStore,
+  getPlanList,
+  importPlanFromFile,
+  deletePlanFromLibrary,
+  migrateOldStorageFormat,
+  type PlanSummary,
+} from '@/lib/plan-store';
+import { getTimelineCrops, getResources } from '@/lib/timeline-data';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -25,141 +30,45 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
   );
 }
 
-export default function TimelinePage() {
+function formatDate(timestamp: number): string {
+  return new Date(timestamp).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+export default function TimelineListPage() {
+  const router = useRouter();
+  const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Plan store state
-  const currentPlan = usePlanStore((state) => state.currentPlan);
-  const isDirty = usePlanStore((state) => state.isDirty);
   const createNewPlan = usePlanStore((state) => state.createNewPlan);
-  const moveCrop = usePlanStore((state) => state.moveCrop);
-  const updateCropDates = usePlanStore((state) => state.updateCropDates);
-  const markSaved = usePlanStore((state) => state.markSaved);
+  const currentPlan = usePlanStore((state) => state.currentPlan);
 
-  // Undo/redo
-  const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
-
-  // Initialize plan from data if not already loaded (runs once on mount)
+  // Migrate old storage format and load plan list
   useEffect(() => {
-    // If already hydrated, check immediately
-    if (usePlanStore.persist.hasHydrated()) {
-      const state = usePlanStore.getState();
-      if (state.currentPlan) {
-        setLoading(false);
-      } else {
-        const timelineCrops = getTimelineCrops();
-        const { resources, groups } = getResources();
-        createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
-        setLoading(false);
-      }
-      return;
-    }
-
-    // Wait for zustand to finish hydrating from localStorage
-    const unsubscribe = usePlanStore.persist.onFinishHydration(() => {
-      const state = usePlanStore.getState();
-      if (state.currentPlan) {
-        setLoading(false);
-        return;
-      }
-
-      // No persisted plan - load initial data and create a new plan
-      const timelineCrops = getTimelineCrops();
-      const { resources, groups } = getResources();
-
-      createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
-      setLoading(false);
-    });
-
-    return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    migrateOldStorageFormat();
+    const planList = getPlanList();
+    setPlans(planList);
+    setLoading(false);
   }, []);
 
-  // Start auto-save timer (saves snapshot every 15 minutes)
-  useEffect(() => {
-    startAutoSave();
-    return () => stopAutoSave();
-  }, []);
-
-  // Keyboard shortcuts for undo/redo
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
-        e.preventDefault();
-        if (e.shiftKey) {
-          if (canRedo) redo();
-        } else {
-          if (canUndo) undo();
-        }
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
-        e.preventDefault();
-        if (canRedo) redo();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, canRedo, undo, redo]);
-
-  const handleCropMove = useCallback((cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => {
-    const feet = feetNeeded || 50;
-    const targetGroupId = groupId || cropId;
-
-    // Moving to Unassigned - no capacity check needed
-    if (newResource === '') {
-      moveCrop(targetGroupId, '');
-      return;
-    }
-
-    // Moving to a real bed - calculate span based on feetNeeded and target row's bed size
-    const { bedSpanInfo, isComplete, feetNeeded: neededFeet, feetAvailable } = calculateRowSpan(
-      feet,
-      newResource,
-      (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups
-    );
-
-    // Don't allow the move if there isn't enough room
-    if (!isComplete) {
-      setToast({
-        message: `Not enough room: need ${neededFeet}' but only ${feetAvailable}' available from ${newResource}`,
-        type: 'error'
-      });
-      return;
-    }
-
-    // Use the plan store's moveCrop which handles undo
-    // Pass full bedSpanInfo so feetUsed/bedCapacityFt are preserved
-    moveCrop(targetGroupId, newResource, bedSpanInfo);
-  }, [moveCrop]);
-
-  const handleDateChange = useCallback((groupId: string, startDate: string, endDate: string) => {
-    updateCropDates(groupId, startDate, endDate);
-  }, [updateCropDates]);
-
-  const handleSave = useCallback(() => {
-    // For now, just mark as saved (localStorage already persists automatically)
-    markSaved();
-  }, [markSaved]);
-
-  const handleReset = useCallback(() => {
-    if (!confirm('Reset to original data? This will discard all changes.')) return;
-
+  const handleCreateNew = useCallback(() => {
     const timelineCrops = getTimelineCrops();
     const { resources, groups } = getResources();
     createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
-  }, [createNewPlan]);
 
-  const handleExport = useCallback(() => {
-    try {
-      exportPlanToFile();
-      setToast({ message: 'Plan saved to file', type: 'success' });
-    } catch (e) {
-      setToast({ message: `Save failed: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
+    // Get the newly created plan ID
+    const newPlan = usePlanStore.getState().currentPlan;
+    if (newPlan) {
+      router.push(`/timeline/${newPlan.id}`);
     }
-  }, []);
+  }, [createNewPlan, router]);
 
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -172,118 +81,143 @@ export default function TimelinePage() {
     try {
       const plan = await importPlanFromFile(file);
       setToast({ message: `Loaded "${plan.metadata.name}"`, type: 'success' });
+      // Navigate to the new plan
+      router.push(`/timeline/${plan.id}`);
     } catch (err) {
       setToast({ message: `Load failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
     }
 
-    // Reset file input so same file can be selected again
+    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  }, [router]);
+
+  const handleDelete = useCallback((planId: string, planName: string) => {
+    if (!confirm(`Delete "${planName}"? This cannot be undone.`)) return;
+
+    deletePlanFromLibrary(planId);
+    setPlans(getPlanList());
+    setToast({ message: `Deleted "${planName}"`, type: 'info' });
   }, []);
 
-  if (loading || !currentPlan) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-500">Loading timeline...</div>
+        <div className="text-gray-500">Loading plans...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-2 flex items-center gap-4">
-        <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
-          ← Back
-        </Link>
-        <h1 className="text-xl font-bold text-gray-900">{currentPlan.metadata.name}</h1>
-        <span className="text-sm font-medium text-gray-700">
-          {currentPlan.crops.length} crops
-        </span>
-
-        {/* Dirty indicator */}
-        {isDirty && (
-          <span className="text-sm text-amber-600 font-medium">
-            &bull; Unsaved changes
-          </span>
-        )}
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Undo/Redo buttons */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:border-gray-200 disabled:cursor-not-allowed"
-            title={`Undo (${undoCount} available) - Ctrl+Z`}
-          >
-            ↶ Undo
-          </button>
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:border-gray-200 disabled:cursor-not-allowed"
-            title={`Redo (${redoCount} available) - Ctrl+Shift+Z`}
-          >
-            Redo ↷
-          </button>
-        </div>
-
-        {/* Save/Reset buttons */}
-        <div className="flex items-center gap-2 border-l pl-4 ml-2">
-          <button
-            onClick={handleSave}
-            disabled={!isDirty}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Save
-          </button>
-          <button
-            onClick={handleReset}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-          >
-            Reset
-          </button>
-        </div>
-
-        {/* Save/Load to file buttons */}
-        <div className="flex items-center gap-2 border-l pl-4 ml-2">
-          <button
-            onClick={handleExport}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-            title="Save plan to file"
-          >
-            Save to File
-          </button>
-          <button
-            onClick={handleImportClick}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-            title="Load plan from file"
-          >
-            Load
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".crop-plan.gz,.gz"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
+      <div className="bg-white border-b px-6 py-4">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+              ← Back
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-900">Crop Plans</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleImportClick}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Load from File
+            </button>
+            <button
+              onClick={handleCreateNew}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+            >
+              + New Plan
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".crop-plan.gz,.gz"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Timeline */}
-      <div className="flex-1 min-h-0">
-        <CropTimeline
-          crops={currentPlan.crops}
-          resources={currentPlan.resources}
-          groups={currentPlan.groups}
-          onCropMove={handleCropMove}
-          onCropDateChange={handleDateChange}
-        />
+      {/* Plan List */}
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {plans.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="text-gray-400 text-6xl mb-4">📋</div>
+            <h2 className="text-xl font-medium text-gray-700 mb-2">No plans yet</h2>
+            <p className="text-gray-500 mb-6">Create a new plan or load one from a file.</p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={handleImportClick}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Load from File
+              </button>
+              <button
+                onClick={handleCreateNew}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+              >
+                + New Plan
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {plans.map((plan) => (
+              <div
+                key={plan.id}
+                className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
+              >
+                <div className="flex items-center justify-between p-4">
+                  <Link
+                    href={`/timeline/${plan.id}`}
+                    className="flex-1 min-w-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">
+                        {plan.name}
+                        {plan.version && (
+                          <span className="text-sm font-normal text-gray-500 ml-2">
+                            v{plan.version}
+                          </span>
+                        )}
+                      </h3>
+                      {currentPlan?.id === plan.id && (
+                        <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                      <span>{plan.cropCount} crops</span>
+                      <span>Modified {formatDate(plan.lastModified)}</span>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-2 ml-4">
+                    <Link
+                      href={`/timeline/${plan.id}`}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                    >
+                      Open
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(plan.id, plan.name)}
+                      className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
+                      title="Delete plan"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Toast notification */}
