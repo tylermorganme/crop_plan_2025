@@ -6,6 +6,7 @@ import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import HistoryPanel from '@/components/HistoryPanel';
 import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal';
+import { useCrossTabSync } from '@/hooks/useCrossTabSync';
 import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
 import {
   usePlanStore,
@@ -70,6 +71,9 @@ export default function TimelinePlanPage() {
 
   // Save state (for saving indicator and error handling)
   const { isSaving, saveError, clearSaveError } = useSaveState();
+
+  // Sync plan state across browser tabs/windows
+  useCrossTabSync(planId);
 
   // Load the specific plan by ID
   useEffect(() => {

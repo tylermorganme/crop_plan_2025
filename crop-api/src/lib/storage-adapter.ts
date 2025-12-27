@@ -308,3 +308,12 @@ export class LocalStorageAdapter implements StorageAdapter {
 
 /** Default storage adapter instance */
 export const storage = new LocalStorageAdapter();
+
+// ============================================
+// Helpers
+// ============================================
+
+/** Get the localStorage key for a plan (used by cross-tab sync) */
+export function getPlanStorageKey(planId: string): string {
+  return PLAN_LIBRARY_PREFIX + planId;
+}
