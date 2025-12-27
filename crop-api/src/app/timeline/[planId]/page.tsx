@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import HistoryPanel from '@/components/HistoryPanel';
+import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal';
 import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
 import {
   usePlanStore,
@@ -17,6 +18,7 @@ import {
   loadPlanFromLibrary,
   savePlanToLibrary,
   getPlanList,
+  copyPlan,
 } from '@/lib/plan-store';
 import type { TimelineCrop } from '@/lib/plan-types';
 import bedPlanData from '@/data/bed-plan.json';
@@ -49,6 +51,8 @@ export default function TimelinePlanPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
+  const [copyModalOpen, setCopyModalOpen] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -227,6 +231,23 @@ export default function TimelinePlanPage() {
     setEditedName('');
   }, []);
 
+  const handleCopyPlan = useCallback(async (options: CopyPlanOptions) => {
+    setIsCopying(true);
+    try {
+      const newPlanId = await copyPlan(options);
+      setCopyModalOpen(false);
+      setToast({ message: `Created "${options.newName}"`, type: 'success' });
+      // Navigate to the new plan
+      router.push(`/timeline/${newPlanId}`);
+    } catch (e) {
+      setToast({
+        message: `Failed to copy plan: ${e instanceof Error ? e.message : 'Unknown error'}`,
+        type: 'error',
+      });
+    }
+    setIsCopying(false);
+  }, [router]);
+
   const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -376,6 +397,18 @@ export default function TimelinePlanPage() {
           />
         </div>
 
+        {/* Copy Plan button */}
+        <div className="border-l pl-4 ml-2">
+          <button
+            onClick={() => setCopyModalOpen(true)}
+            disabled={isCopying}
+            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Copy plan for next year"
+          >
+            {isCopying ? 'Copying...' : 'Copy Plan'}
+          </button>
+        </div>
+
         {/* History button */}
         <div className="border-l pl-4 ml-2">
           <button
@@ -415,6 +448,14 @@ export default function TimelinePlanPage() {
         onClose={() => setHistoryPanelOpen(false)}
         onRestore={(message) => setToast({ message, type: 'success' })}
         onError={(message) => setToast({ message, type: 'error' })}
+      />
+
+      {/* Copy plan modal */}
+      <CopyPlanModal
+        isOpen={copyModalOpen}
+        currentPlanName={currentPlan?.metadata.name || ''}
+        onClose={() => setCopyModalOpen(false)}
+        onCopy={handleCopyPlan}
       />
     </div>
   );

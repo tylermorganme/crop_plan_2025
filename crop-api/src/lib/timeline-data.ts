@@ -2,6 +2,7 @@
  * Transform crop data for the timeline view
  */
 
+import { parseISO } from 'date-fns';
 import cropsData from '@/data/crops.json';
 import bedPlanData from '@/data/bed-plan.json';
 
@@ -337,7 +338,7 @@ export function getTimelineStats() {
   const { resources } = getResources();
 
   // Date range
-  const dates = crops.map(c => [new Date(c.startDate), new Date(c.endDate)]).flat();
+  const dates = crops.map(c => [parseISO(c.startDate), parseISO(c.endDate)]).flat();
   const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
   const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
 

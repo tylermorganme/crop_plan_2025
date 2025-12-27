@@ -13,6 +13,8 @@
  *             → End of Harvest (or Actual override)
  */
 
+import { addDays, subDays, differenceInDays, parseISO } from 'date-fns';
+
 export interface CropTimingInputs {
   // Core timing config (from crop database / normalized data)
   dtm: number;                    // Days to Maturity
@@ -58,29 +60,6 @@ export interface CropTimingOutput {
   isTransplant: boolean;
 }
 
-/**
- * Add days to a date
- */
-function addDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
-
-/**
- * Subtract days from a date
- */
-function subtractDays(date: Date, days: number): Date {
-  return addDays(date, -days);
-}
-
-/**
- * Days between two dates
- */
-function daysBetween(start: Date, end: Date): number {
-  const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.round((end.getTime() - start.getTime()) / msPerDay);
-}
 
 /**
  * Calculate all timing dates for a crop.
@@ -136,7 +115,7 @@ export function calculateCropTiming(inputs: CropTimingInputs): CropTimingOutput 
   // [17] Planned Greenhouse Start Date
   // = Field Date - Days in Cells (for transplants only)
   const plannedGreenhouseStartDate = isTransplant
-    ? subtractDays(baseFieldDate, daysInCells)
+    ? subDays(baseFieldDate, daysInCells)
     : null;
 
   // [19] Greenhouse Start Date
@@ -156,7 +135,7 @@ export function calculateCropTiming(inputs: CropTimingInputs): CropTimingOutput 
   // [25] In Ground Days Late
   // = Actual TP/DS - Planned TP/DS (deviation tracking)
   const inGroundDaysLate = actualTpOrDsDate
-    ? daysBetween(plannedTpOrDsDate, actualTpOrDsDate)
+    ? differenceInDays(actualTpOrDsDate, plannedTpOrDsDate)
     : 0;
 
   // [28] Expected Beginning of Harvest
@@ -241,7 +220,7 @@ export interface BedPlanAssignment {
  */
 function parseDate(dateStr?: string | null): Date | undefined {
   if (!dateStr) return undefined;
-  const d = new Date(dateStr);
+  const d = parseISO(dateStr);
   return isNaN(d.getTime()) ? undefined : d;
 }
 

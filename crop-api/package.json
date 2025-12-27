@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.13.13",
+    "date-fns": "^4.1.0",
     "immer": "^11.0.1",
     "next": "16.0.8",
     "pako": "^2.1.0",

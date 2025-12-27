@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 
 // =============================================================================
 // Types
@@ -392,8 +393,8 @@ export default function CropTimeline({
 
     if (crops.length === 0) {
       return {
-        timelineStart: new Date(now.getFullYear(), 0, 1),
-        timelineEnd: new Date(now.getFullYear(), 11, 31),
+        timelineStart: startOfYear(now),
+        timelineEnd: endOfYear(now),
       };
     }
 
@@ -408,8 +409,8 @@ export default function CropTimeline({
     }
 
     return {
-      timelineStart: new Date(minDate.getFullYear(), minDate.getMonth() - TIMELINE_PADDING_MONTHS, 1),
-      timelineEnd: new Date(maxDate.getFullYear(), maxDate.getMonth() + TIMELINE_PADDING_MONTHS + 1, 0),
+      timelineStart: startOfMonth(subMonths(minDate, TIMELINE_PADDING_MONTHS)),
+      timelineEnd: endOfMonth(addMonths(maxDate, TIMELINE_PADDING_MONTHS)),
     };
   }, [crops]);
 

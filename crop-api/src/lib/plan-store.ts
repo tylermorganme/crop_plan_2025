@@ -9,6 +9,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import pako from 'pako';
+import { addYears, addMonths, format, parseISO, isValid } from 'date-fns';
 import type {
   Plan,
   PlanMetadata,
@@ -76,6 +77,124 @@ export async function deletePlanFromLibrary(planId: string): Promise<void> {
 export async function planExistsInLibrary(planId: string): Promise<boolean> {
   const data = await storage.getPlan(planId);
   return data !== null;
+}
+
+/**
+ * Options for copying a plan
+ */
+export interface CopyPlanOptions {
+  newName: string;
+  shiftDates: boolean;
+  shiftAmount: number;
+  shiftUnit: 'years' | 'months';
+  unassignAll: boolean;
+}
+
+/**
+ * Copy the current plan with optional date shifting and crop unassignment.
+ * Returns the new plan ID.
+ */
+export async function copyPlan(options: CopyPlanOptions): Promise<string> {
+  const state = usePlanStore.getState();
+  if (!state.currentPlan) {
+    throw new Error('No plan loaded to copy');
+  }
+
+  const now = Date.now();
+  const newId = generateId();
+
+  /**
+   * Shift a date string by the specified amount.
+   * Handles ISO date strings (e.g., 2025-01-26T00:00:00).
+   */
+  function shiftDate(dateStr: string): string {
+    if (!options.shiftDates || options.shiftAmount === 0) {
+      return dateStr;
+    }
+
+    // Parse the ISO date string
+    const date = parseISO(dateStr);
+
+    if (!isValid(date)) {
+      console.warn('[shiftDate] Invalid date:', dateStr);
+      return dateStr;
+    }
+
+    // Apply the shift
+    const shifted = options.shiftUnit === 'years'
+      ? addYears(date, options.shiftAmount)
+      : addMonths(date, options.shiftAmount);
+
+    // Return in same format as input (with time component if present)
+    if (dateStr.includes('T')) {
+      return format(shifted, "yyyy-MM-dd'T'HH:mm:ss");
+    }
+    return format(shifted, 'yyyy-MM-dd');
+  }
+
+  // Deep clone and transform crops
+  const newCrops: TimelineCrop[] = state.currentPlan.crops.map((crop) => {
+    const newCrop: TimelineCrop = {
+      ...crop,
+      id: `${crop.groupId}_${newId.slice(-6)}`, // New unique ID
+      startDate: shiftDate(crop.startDate),
+      endDate: shiftDate(crop.endDate),
+      harvestStartDate: crop.harvestStartDate ? shiftDate(crop.harvestStartDate) : undefined,
+      lastModified: now,
+    };
+
+    // Unassign all crops if requested
+    if (options.unassignAll) {
+      newCrop.resource = '';
+      newCrop.totalBeds = 1;
+      newCrop.bedIndex = 1;
+      newCrop.feetUsed = undefined;
+      newCrop.bedCapacityFt = undefined;
+    }
+
+    return newCrop;
+  });
+
+  // If unassigning, collapse each group to a single entry
+  let finalCrops = newCrops;
+  if (options.unassignAll) {
+    const groupMap = new Map<string, TimelineCrop>();
+    for (const crop of newCrops) {
+      if (!groupMap.has(crop.groupId)) {
+        groupMap.set(crop.groupId, {
+          ...crop,
+          id: `${crop.groupId}_unassigned`,
+        });
+      }
+    }
+    finalCrops = Array.from(groupMap.values());
+  }
+
+  // Create new plan with lineage tracking
+  const newPlan: Plan = {
+    id: newId,
+    metadata: {
+      id: newId,
+      name: options.newName,
+      createdAt: now,
+      lastModified: now,
+      version: 1,
+      parentPlanId: state.currentPlan.id,
+      parentVersion: state.currentPlan.metadata.version,
+    },
+    crops: finalCrops,
+    resources: [...state.currentPlan.resources],
+    groups: state.currentPlan.groups.map((g) => ({
+      name: g.name,
+      beds: [...g.beds],
+    })),
+    changeLog: [],
+  };
+
+  // Save to library
+  await savePlanToLibrary(newPlan);
+
+  return newId;
 }
 
 /**
