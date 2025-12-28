@@ -187,7 +187,7 @@ export default function HistoryPanel({
           </div>
 
           {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading history...</div>
+            <div className="p-8 text-center text-gray-600">Loading history...</div>
           ) : (
             <>
               {/* Checkpoints Section */}
@@ -202,7 +202,7 @@ export default function HistoryPanel({
                 {expandedSections.checkpoints && (
                   <div className="divide-y">
                     {checkpoints.length === 0 ? (
-                      <div className="px-4 py-3 text-sm text-gray-500 italic">
+                      <div className="px-4 py-3 text-sm text-gray-600 italic">
                         No checkpoints yet
                       </div>
                     ) : (
@@ -236,7 +236,7 @@ export default function HistoryPanel({
                 {expandedSections.autoSaves && (
                   <div className="divide-y">
                     {autoSaves.length === 0 ? (
-                      <div className="px-4 py-3 text-sm text-gray-500 italic">
+                      <div className="px-4 py-3 text-sm text-gray-600 italic">
                         No auto-saves yet
                       </div>
                     ) : (
@@ -268,7 +268,7 @@ export default function HistoryPanel({
                 {expandedSections.recovery && (
                   <div className="divide-y">
                     {recovery.length === 0 ? (
-                      <div className="px-4 py-3 text-sm text-gray-500 italic">
+                      <div className="px-4 py-3 text-sm text-gray-600 italic">
                         No recovery points
                       </div>
                     ) : (
@@ -324,7 +324,7 @@ function HistoryItem({
         <span className={`text-lg ${iconColor}`}>{icon}</span>
         <div className="flex-1 min-w-0">
           <div className="font-medium text-gray-900 truncate">{entry.name}</div>
-          <div className="text-xs text-gray-500 flex items-center gap-2">
+          <div className="text-xs text-gray-600 flex items-center gap-2">
             <span>{formatRelativeTime(entry.timestamp)}</span>
             <span className="text-gray-300">·</span>
             <span>{formatDateTime(entry.timestamp)}</span>

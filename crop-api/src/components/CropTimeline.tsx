@@ -1159,7 +1159,7 @@ export default function CropTimeline({
         >
           {groupName && (
             <span
-              className="text-[9px] text-gray-500 mr-1 cursor-pointer hover:text-gray-700"
+              className="text-[9px] text-gray-600 mr-1 cursor-pointer hover:text-gray-700"
               onClick={() => toggleGroup(groupName)}
             >
               <span className="mr-1">▲</span>
@@ -1313,9 +1313,6 @@ export default function CropTimeline({
           Timing Edit: {timingEditEnabled ? 'ON' : 'OFF'}
         </button>
 
-        <span className="text-sm text-gray-600 ml-auto">
-          {crops.length} crops · {resources.length - 1} resources
-        </span>
       </div>
 
       {/* Main timeline area - single scrollable container */}
@@ -1390,7 +1387,7 @@ export default function CropTimeline({
                       <span className={`font-bold ${unassignedCrops.length > 0 ? 'text-amber-800' : 'text-gray-700'}`}>
                         Unassigned
                       </span>
-                      <span className={`text-xs ${unassignedCrops.length > 0 ? 'text-amber-600' : 'text-gray-500'}`}>
+                      <span className={`text-xs ${unassignedCrops.length > 0 ? 'text-amber-600' : 'text-gray-600'}`}>
                         {unassignedCrops.length > 0 ? `${unassignedCrops.length} crops` : 'Drop here to unassign'}
                       </span>
                     </div>
@@ -1522,7 +1519,7 @@ export default function CropTimeline({
                   <tr key={resource}>
                     {/* Sticky collapsed label */}
                     <td
-                      className="px-2 py-1 text-xs text-gray-500 italic border-b border-r cursor-pointer hover:bg-gray-200"
+                      className="px-2 py-1 text-xs text-gray-600 italic border-b border-r cursor-pointer hover:bg-gray-200"
                       style={{
                         position: 'sticky',
                         left: 0,
@@ -1779,7 +1776,7 @@ export default function CropTimeline({
 
                     {/* Bulk Actions */}
                     <div className="pt-3 border-t space-y-2">
-                      <div className="text-xs text-gray-500 mb-2">
+                      <div className="text-xs text-gray-600 mb-2">
                         Tip: {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Click to add/remove from selection
                       </div>
                       {onDeleteCrop && (
@@ -1822,7 +1819,7 @@ export default function CropTimeline({
                   {/* Category */}
                   {crop.category && (
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Category</div>
+                      <div className="text-xs text-gray-600 mb-1">Category</div>
                       <div className="text-sm text-gray-900">{crop.category}</div>
                     </div>
                   )}
@@ -1830,24 +1827,24 @@ export default function CropTimeline({
                   {/* Dates */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Start Date</div>
+                      <div className="text-xs text-gray-600 mb-1">Start Date</div>
                       <div className="text-sm text-gray-900">{new Date(crop.startDate).toLocaleDateString()}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">End Date</div>
+                      <div className="text-xs text-gray-600 mb-1">End Date</div>
                       <div className="text-sm text-gray-900">{new Date(crop.endDate).toLocaleDateString()}</div>
                     </div>
                   </div>
 
                   {/* Duration */}
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Duration</div>
+                    <div className="text-xs text-gray-600 mb-1">Duration</div>
                     <div className="text-sm text-gray-900">{duration} days</div>
                   </div>
 
                   {/* Bed Assignment */}
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Bed Assignment</div>
+                    <div className="text-xs text-gray-600 mb-1">Bed Assignment</div>
                     {crop.resource ? (
                       <div className="text-sm text-gray-900">
                         {groupCrops.length === 1 ? (
@@ -1863,14 +1860,14 @@ export default function CropTimeline({
 
                   {/* Feet Needed */}
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Feet Needed</div>
+                    <div className="text-xs text-gray-600 mb-1">Feet Needed</div>
                     <div className="text-sm text-gray-900">{crop.feetNeeded || 50}&apos;</div>
                   </div>
 
                   {/* Multi-bed info */}
                   {groupCrops.length > 1 && (
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Bed Details</div>
+                      <div className="text-xs text-gray-600 mb-1">Bed Details</div>
                       <div className="text-xs text-gray-900 space-y-1">
                         {groupCrops.map((c) => (
                           <div key={c.id} className="flex justify-between py-1 border-b border-gray-100">
@@ -1890,14 +1887,14 @@ export default function CropTimeline({
                   {/* Planting ID */}
                   {crop.plantingId && (
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Planting ID</div>
+                      <div className="text-xs text-gray-600 mb-1">Planting ID</div>
                       <div className="font-mono text-xs text-gray-900">{crop.plantingId}</div>
                     </div>
                   )}
 
                   {/* Group ID */}
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Group ID</div>
+                    <div className="text-xs text-gray-600 mb-1">Group ID</div>
                     <div className="font-mono text-xs text-gray-900">{crop.groupId}</div>
                   </div>
 

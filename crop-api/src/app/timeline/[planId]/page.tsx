@@ -335,17 +335,17 @@ export default function TimelinePlanPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-500">Loading plan...</div>
+      <div className="flex items-center justify-center h-[calc(100vh-48px)]">
+        <div className="text-gray-600">Loading plan...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-48px)] gap-4">
         <div className="text-red-600 font-medium">{error}</div>
-        <Link href="/timeline" className="text-blue-600 hover:text-blue-800">
+        <Link href="/plans" className="text-blue-600 hover:text-blue-800">
           ← Back to plan list
         </Link>
       </div>
@@ -354,25 +354,16 @@ export default function TimelinePlanPage() {
 
   if (!currentPlan) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-500">No plan loaded</div>
+      <div className="flex items-center justify-center h-[calc(100vh-48px)]">
+        <div className="text-gray-600">No plan loaded</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      {/* Header */}
+    <div className="h-[calc(100vh-48px)] flex flex-col">
+      {/* Toolbar */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-4">
-        <div className="flex items-center gap-2 border-r pr-4">
-          <Link href="/timeline" className="text-sm font-medium text-gray-600 hover:text-gray-800">
-            Plans
-          </Link>
-          <span className="text-gray-300">|</span>
-          <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
-            Crops
-          </Link>
-        </div>
         {isEditingName ? (
           <div className="flex items-center gap-2">
             <input
@@ -386,7 +377,7 @@ export default function TimelinePlanPage() {
               style={{ width: Math.max(200, editedName.length * 12) }}
             />
             {currentPlan.metadata.version && (
-              <span className="text-sm font-normal text-gray-500">v{currentPlan.metadata.version}</span>
+              <span className="text-sm font-normal text-gray-600">v{currentPlan.metadata.version}</span>
             )}
           </div>
         ) : (
@@ -397,16 +388,12 @@ export default function TimelinePlanPage() {
           >
             {currentPlan.metadata.name}
             {currentPlan.metadata.version && (
-              <span className="text-sm font-normal text-gray-500 ml-2">v{currentPlan.metadata.version}</span>
+              <span className="text-sm font-normal text-gray-600 ml-2">v{currentPlan.metadata.version}</span>
             )}
           </h1>
         )}
-        <span className="text-sm font-medium text-gray-700">
-          {currentPlan.crops.length} crops
-        </span>
 
         {/* Plan year */}
-        <span className="text-gray-300">·</span>
         {isEditingYear ? (
           <input
             ref={yearInputRef}
@@ -431,18 +418,16 @@ export default function TimelinePlanPage() {
 
         {/* Save status indicator */}
         {isSaving ? (
-          <span className="text-sm text-blue-600 font-medium flex items-center gap-1">
+          <span className="text-sm text-gray-600 flex items-center gap-1">
             <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
             Saving...
           </span>
-        ) : isDirty ? (
-          <span className="text-sm text-amber-600 font-medium">
-            &bull; Unsaved changes
-          </span>
-        ) : null}
+        ) : (
+          <span className="text-sm text-gray-600">Saved</span>
+        )}
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -464,17 +449,6 @@ export default function TimelinePlanPage() {
             title={`Redo (${redoCount} available) - Ctrl+Shift+Z`}
           >
             Redo ↷
-          </button>
-        </div>
-
-        {/* Save/Reset buttons */}
-        <div className="flex items-center gap-2 border-l pl-4 ml-2">
-          <button
-            onClick={handleSave}
-            disabled={!isDirty}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Save
           </button>
         </div>
 
@@ -501,18 +475,6 @@ export default function TimelinePlanPage() {
             onChange={handleFileSelect}
             className="hidden"
           />
-        </div>
-
-        {/* Copy Plan button */}
-        <div className="border-l pl-4 ml-2">
-          <button
-            onClick={() => setCopyModalOpen(true)}
-            disabled={isCopying}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Copy plan for next year"
-          >
-            {isCopying ? 'Copying...' : 'Copy Plan'}
-          </button>
         </div>
 
         {/* History button */}

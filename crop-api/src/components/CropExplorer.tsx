@@ -805,7 +805,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   }, [addToPlanMessage]);
 
   return (
-    <div className="flex h-[calc(100vh-140px)]">
+    <div className="flex h-full">
       {/* Collapsible Filter Pane */}
       <div
         className={`flex-shrink-0 bg-white border-r border-gray-200 flex flex-col transition-all duration-200 ${
@@ -851,7 +851,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                 placeholder="Search all fields..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 placeholder:text-gray-600"
               />
             </div>
 
@@ -863,7 +863,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                   placeholder="Filter columns..."
                   value={sidebarColumnSearch}
                   onChange={(e) => setSidebarColumnSearch(e.target.value)}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 pr-7"
+                  className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 pr-7 placeholder:text-gray-600"
                 />
                 {sidebarColumnSearch && (
                   <button
@@ -929,7 +929,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Toolbar */}
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-700">
             {sortedCrops.length} of {crops.length} · {displayColumns.length} columns
           </span>
           {addingToPlan && (
@@ -946,17 +946,17 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
               </button>
             </span>
           )}
-          <span className="text-xs text-gray-400">Drag headers to reorder · Drag edges to resize</span>
+          <span className="text-xs text-gray-600">Drag headers to reorder · Drag edges to resize</span>
           <div className="flex-1" />
           <button
             onClick={() => setShowColumnManager(true)}
-            className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+            className="px-3 py-1.5 text-sm text-gray-900 bg-gray-100 hover:bg-gray-200 rounded"
           >
             Columns ({visibleColumns.size}/{allColumns.length})
           </button>
           <button
             onClick={resetColumns}
-            className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+            className="px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded"
             title="Reset columns to defaults"
           >
             Reset
@@ -984,7 +984,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                 </div>
                 {/* Actions column */}
                 <div className="w-10 flex-shrink-0 px-2 flex items-center justify-center border-r border-gray-100 bg-gray-50">
-                  <span className="text-xs text-gray-400">+</span>
+                  <span className="text-xs text-gray-600">+</span>
                 </div>
                 {displayColumns.map(col => (
                   <div
@@ -996,7 +996,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                     onDrop={(e) => handleDrop(e, col)}
                     onDragEnd={handleDragEnd}
                     style={{ width: getColumnWidth(col), minWidth: getColumnWidth(col) }}
-                    className={`relative px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
+                    className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
                       dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : getColumnBgClass(col, true)
                     } ${draggedColumn === col ? 'opacity-50' : ''}`}
                     onClick={() => handleSort(col)}
@@ -1033,6 +1033,11 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             style={{ height: 'calc(100% - 40px)' }}
             onScroll={handleBodyScroll}
           >
+            {sortedCrops.length === 0 ? (
+              <div className="flex items-center justify-center text-gray-600 h-full">
+                No crops match your filters
+              </div>
+            ) : (
             <div style={{ width: totalWidth + 80, minWidth: '100%' }}>
               <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -1093,13 +1098,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                 })}
               </div>
             </div>
+            )}
           </div>
-
-          {sortedCrops.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-              No crops match your filters
-            </div>
-          )}
         </div>
       </div>
 
@@ -1118,7 +1118,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                 placeholder="Search columns..."
                 value={columnSearch}
                 onChange={(e) => setColumnSearch(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 placeholder:text-gray-600"
                 autoFocus
               />
               <div className="flex gap-2 flex-wrap">
@@ -1138,7 +1138,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
               </div>
 
               <div className="flex gap-2 pt-2 border-t border-gray-100">
-                <span className="text-sm text-gray-500 py-1">{filteredColumns.length} columns:</span>
+                <span className="text-sm text-gray-700 py-1">{filteredColumns.length} columns:</span>
                 <button onClick={selectAllShown} className="px-2 py-1 text-sm bg-green-50 text-green-700 hover:bg-green-100 rounded">Select all shown</button>
                 <button onClick={deselectAllShown} className="px-2 py-1 text-sm bg-red-50 text-red-700 hover:bg-red-100 rounded">Deselect all shown</button>
                 <div className="flex-1" />
@@ -1162,11 +1162,11 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                       onChange={() => toggleColumn(col)}
                       className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                     />
-                    <span className={`text-sm truncate ${visibleColumns.has(col) ? 'text-gray-900' : 'text-gray-500'}`}>{col}</span>
+                    <span className={`text-sm truncate ${visibleColumns.has(col) ? 'text-gray-900' : 'text-gray-600'}`}>{col}</span>
                   </label>
                 ))}
               </div>
-              {filteredColumns.length === 0 && <div className="text-center text-gray-500 py-8">No columns match</div>}
+              {filteredColumns.length === 0 && <div className="text-center text-gray-700 py-8">No columns match</div>}
             </div>
 
             <div className="px-4 py-3 border-t border-gray-200 flex justify-end">
@@ -1182,7 +1182,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-green-50">
             <div>
               <h2 className="font-semibold text-gray-900">{selectedCrop.Crop}</h2>
-              <p className="text-xs text-gray-500 font-mono">{selectedCrop.id}</p>
+              <p className="text-xs text-gray-600 font-mono">{selectedCrop.id}</p>
             </div>
             <button onClick={() => setSelectedCropId(null)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
           </div>
@@ -1201,7 +1201,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                 const value = selectedCrop[key as keyof Crop];
                 return (
                   <div key={key} className="flex py-1 border-b border-gray-50 last:border-0">
-                    <span className="text-xs text-gray-500 w-36 flex-shrink-0 truncate" title={key}>{key}</span>
+                    <span className="text-xs text-gray-600 w-36 flex-shrink-0 truncate" title={key}>{key}</span>
                     <span className="text-sm text-gray-900 break-all">{formatValue(value)}</span>
                   </div>
                 );
@@ -1235,7 +1235,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                   <p className="text-sm text-gray-600 mb-2">
                     Add <strong>{cropsToAdd.length} crops</strong> to a plan. The selected plan will become your active plan.
                   </p>
-                  <div className="max-h-24 overflow-y-auto text-xs text-gray-500 bg-gray-50 rounded p-2">
+                  <div className="max-h-24 overflow-y-auto text-xs text-gray-600 bg-gray-50 rounded p-2">
                     {cropsToAdd.map(c => c.Crop).join(', ')}
                   </div>
                 </div>
@@ -1243,12 +1243,12 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
               {planList.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">No plans found.</p>
+                  <p className="text-gray-700 mb-4">No plans found.</p>
                   <button
                     onClick={() => {
                       setShowAddToPlan(false);
                       setCropsToAdd([]);
-                      router.push('/timeline');
+                      router.push('/plans');
                     }}
                     className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                   >
@@ -1265,7 +1265,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                       className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
                     >
                       <div className="font-medium text-gray-900">{plan.name}</div>
-                      <div className="text-xs text-gray-500">{plan.cropCount} crops</div>
+                      <div className="text-xs text-gray-600">{plan.cropCount} crops</div>
                     </button>
                   ))}
                 </div>
@@ -1355,7 +1355,7 @@ function FilterInput({
       <select
         value={value === 'true' ? 'true' : value === 'false' ? 'false' : ''}
         onChange={(e) => onChange(e.target.value || null)}
-        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+        className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
       >
         <option value="">Any</option>
         <option value="true">Yes</option>
@@ -1369,7 +1369,7 @@ function FilterInput({
       <select
         value={String(value ?? '')}
         onChange={(e) => onChange(e.target.value || null)}
-        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+        className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
       >
         <option value="">Any</option>
         {options.map(opt => (
@@ -1388,15 +1388,15 @@ function FilterInput({
           placeholder={String(range.min)}
           value={rangeVal.min ?? ''}
           onChange={(e) => onChange({ ...rangeVal, min: e.target.value ? Number(e.target.value) : undefined })}
-          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 placeholder:text-gray-600"
         />
-        <span className="text-gray-400 text-xs">to</span>
+        <span className="text-gray-600 text-xs">to</span>
         <input
           type="number"
           placeholder={String(range.max)}
           value={rangeVal.max ?? ''}
           onChange={(e) => onChange({ ...rangeVal, max: e.target.value ? Number(e.target.value) : undefined })}
-          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+          className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 placeholder:text-gray-600"
         />
       </div>
     );
@@ -1409,7 +1409,7 @@ function FilterInput({
       placeholder="Contains..."
       value={String(value ?? '')}
       onChange={(e) => onChange(e.target.value || null)}
-      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
+      className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 placeholder:text-gray-600"
     />
   );
 }

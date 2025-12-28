@@ -187,7 +187,7 @@ export default function CopyPlanModal({
                   Unassign all crops
                 </span>
               </label>
-              <p className="ml-6 text-xs text-gray-500 mt-1">
+              <p className="ml-6 text-xs text-gray-600 mt-1">
                 Move all crops to the Unassigned section for fresh bed planning
               </p>
             </div>

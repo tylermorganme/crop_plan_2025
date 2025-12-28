@@ -40,7 +40,7 @@ function formatDate(timestamp: number): string {
   });
 }
 
-export default function TimelineListPage() {
+export default function PlansPage() {
   const router = useRouter();
   const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,6 +79,8 @@ export default function TimelineListPage() {
     if (newPlan) {
       // Set as active plan for Crop Explorer
       localStorage.setItem('crop-explorer-active-plan', newPlan.id);
+      // Notify other components
+      window.dispatchEvent(new CustomEvent('plan-list-updated'));
       router.push(`/timeline/${newPlan.id}`);
     }
   }, [createNewPlan, router, getDefaultYear]);
@@ -94,6 +96,8 @@ export default function TimelineListPage() {
     if (newPlan) {
       // Set as active plan for Crop Explorer
       localStorage.setItem('crop-explorer-active-plan', newPlan.id);
+      // Notify other components
+      window.dispatchEvent(new CustomEvent('plan-list-updated'));
       router.push(`/timeline/${newPlan.id}`);
     }
   }, [createNewPlan, router, getDefaultYear]);
@@ -111,6 +115,11 @@ export default function TimelineListPage() {
       setToast({ message: `Loaded "${plan.metadata.name}"`, type: 'success' });
       // Set as active plan for Crop Explorer
       localStorage.setItem('crop-explorer-active-plan', plan.id);
+      // Refresh plan list
+      const planList = await getPlanList();
+      setPlans(planList);
+      // Notify other components
+      window.dispatchEvent(new CustomEvent('plan-list-updated'));
       // Navigate to the new plan
       router.push(`/timeline/${plan.id}`);
     } catch (err) {
@@ -137,27 +146,31 @@ export default function TimelineListPage() {
     const planList = await getPlanList();
     setPlans(planList);
     setToast({ message: `Deleted "${planName}"`, type: 'info' });
+    // Notify other components
+    window.dispatchEvent(new CustomEvent('plan-list-updated'));
   }, []);
+
+  const handleOpenPlan = useCallback((planId: string) => {
+    // Set as active plan
+    localStorage.setItem('crop-explorer-active-plan', planId);
+    window.dispatchEvent(new CustomEvent('plan-list-updated'));
+    router.push(`/timeline/${planId}`);
+  }, [router]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-gray-500">Loading plans...</div>
+      <div className="flex items-center justify-center h-[calc(100vh-60px)]">
+        <div className="text-gray-600">Loading plans...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
+    <div className="min-h-[calc(100vh-60px)] bg-gray-50">
+      {/* Toolbar */}
+      <div className="bg-white border-b px-6 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
-              ← Back
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900">Crop Plans</h1>
-          </div>
+          <h1 className="text-xl font-semibold text-gray-900">All Plans</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={handleImportClick}
@@ -195,7 +208,7 @@ export default function TimelineListPage() {
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">📋</div>
             <h2 className="text-xl font-medium text-gray-700 mb-2">No plans yet</h2>
-            <p className="text-gray-500 mb-6">Create a new plan or load one from a file.</p>
+            <p className="text-gray-600 mb-6">Create a new plan or load one from a file.</p>
             <div className="flex items-center justify-center gap-3">
               <button
                 onClick={handleImportClick}
@@ -226,18 +239,18 @@ export default function TimelineListPage() {
                 className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
               >
                 <div className="flex items-center justify-between p-4">
-                  <Link
-                    href={`/timeline/${plan.id}`}
-                    className="flex-1 min-w-0"
+                  <button
+                    onClick={() => handleOpenPlan(plan.id)}
+                    className="flex-1 min-w-0 text-left"
                   >
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {plan.name}
-                        <span className="text-sm font-normal text-gray-500 ml-2">
+                        <span className="text-sm font-normal text-gray-600 ml-2">
                           ({plan.year})
                         </span>
                         {plan.version && (
-                          <span className="text-sm font-normal text-gray-400 ml-1">
+                          <span className="text-sm font-normal text-gray-600 ml-1">
                             v{plan.version}
                           </span>
                         )}
@@ -248,18 +261,18 @@ export default function TimelineListPage() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                    <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                       <span>{plan.cropCount} crops</span>
                       <span>Modified {formatDate(plan.lastModified)}</span>
                     </div>
-                  </Link>
+                  </button>
                   <div className="flex items-center gap-2 ml-4">
-                    <Link
-                      href={`/timeline/${plan.id}`}
+                    <button
+                      onClick={() => handleOpenPlan(plan.id)}
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
                     >
                       Open
-                    </Link>
+                    </button>
                     <button
                       onClick={() => handleDelete(plan.id, plan.name)}
                       className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded"

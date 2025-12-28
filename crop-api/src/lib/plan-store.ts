@@ -560,6 +560,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           await savePlanToLibrary(currentState.currentPlan);
           set((state) => {
             state.isSaving = false;
+            state.isDirty = false;
           });
         } catch (e) {
           set((state) => {
@@ -709,6 +710,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           await savePlanToLibrary(currentState.currentPlan);
           set((state) => {
             state.isSaving = false;
+            state.isDirty = false;
           });
         } catch (e) {
           set((state) => {
@@ -756,6 +758,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           await savePlanToLibrary(currentState.currentPlan);
           set((state) => {
             state.isSaving = false;
+            state.isDirty = false;
           });
         } catch (e) {
           set((state) => {
@@ -798,6 +801,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           await savePlanToLibrary(currentState.currentPlan);
           set((state) => {
             state.isSaving = false;
+            state.isDirty = false;
           });
         } catch (e) {
           set((state) => {
@@ -848,6 +852,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           await savePlanToLibrary(currentState.currentPlan);
           set((state) => {
             state.isSaving = false;
+            state.isDirty = false;
           });
         } catch (e) {
           set((state) => {
@@ -916,6 +921,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           await savePlanToLibrary(currentState.currentPlan);
           set((state) => {
             state.isSaving = false;
+            state.isDirty = false;
           });
         } catch (e) {
           set((state) => {
@@ -946,6 +952,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           await savePlanToLibrary(currentState.currentPlan);
           set((state) => {
             state.isSaving = false;
+            state.isDirty = false;
           });
         } catch (e) {
           set((state) => {
