@@ -30,6 +30,8 @@ export interface PlanSummary {
   version?: number;
   lastModified: number;
   cropCount: number;
+  /** Target year for new plantings */
+  year: number;
 }
 
 /** Auto-save snapshot */
@@ -150,6 +152,7 @@ export class LocalStorageAdapter implements StorageAdapter {
       version: plan.metadata.version,
       lastModified: plan.metadata.lastModified,
       cropCount: plan.crops.length,
+      year: plan.metadata.year ?? new Date().getFullYear(),
     };
 
     const existingIndex = registry.findIndex(p => p.id === plan.id);

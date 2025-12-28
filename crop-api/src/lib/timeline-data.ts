@@ -33,6 +33,14 @@ interface BedAssignment {
   identifier: string;
   bed: string;
   bedsCount?: number;  // Number of 50ft beds (e.g., 0.4 = 20ft, 1 = 50ft, 2 = 100ft)
+  // Dates from the bed plan (actual bed occupation)
+  tpOrDsDate: string;           // When crop enters the bed (transplant or direct seed)
+  endOfHarvest: string;         // When crop leaves the bed
+  beginningOfHarvest: string;   // When harvest starts
+  // Additional metadata
+  category?: string;
+  growingStructure?: string;
+  dsTp?: 'DS' | 'TP';
 }
 
 interface BedPlanData {
@@ -245,24 +253,25 @@ export function getTimelineCrops(): TimelineCrop[] {
         const displayName = bedAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
 
         // Create a separate entry for each bed the crop occupies
+        // Use assignment dates (bed occupation) instead of crop dates (includes greenhouse time)
         bedSpanInfo.forEach((info, index) => {
           timelineCrops.push({
             id: `${assignment.identifier}_bed${index}`, // Unique ID for each bed entry
             name: displayName,
-            startDate: crop['Target Sewing Date']!,
-            endDate: crop['Target End of Harvest']!,
-            harvestStartDate: crop['Target Harvest Data'] || undefined,
+            startDate: assignment.tpOrDsDate,           // When crop enters the bed
+            endDate: assignment.endOfHarvest,           // When crop leaves the bed
+            harvestStartDate: assignment.beginningOfHarvest || undefined,
             resource: info.bed,
-            category: crop.Category || undefined,
+            category: assignment.category || crop.Category || undefined,
             feetNeeded,
-            structure: crop['Growing Structure'] || 'Field',
+            structure: assignment.growingStructure || crop['Growing Structure'] || 'Field',
             plantingId: assignment.identifier,
             totalBeds,
             bedIndex: index + 1, // 1-indexed for display
             groupId: assignment.identifier, // For grouping related entries
             feetUsed: info.feetUsed,
             bedCapacityFt: info.bedCapacityFt,
-            plantingMethod: crop['Planting Method'] || undefined,
+            plantingMethod: assignment.dsTp || crop['Planting Method'] || undefined,
           });
         });
       }

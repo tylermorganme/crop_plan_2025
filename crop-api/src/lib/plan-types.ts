@@ -56,6 +56,8 @@ export interface PlanMetadata {
   createdAt: number;
   lastModified: number;
   description?: string;
+  /** Target year for new plantings (crops added use this year with their target month/day) */
+  year: number;
   /** Version number, incremented on export */
   version?: number;
   /** ID of plan this was copied/forked from */

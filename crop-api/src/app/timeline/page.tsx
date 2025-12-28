@@ -61,17 +61,42 @@ export default function TimelineListPage() {
     init();
   }, []);
 
-  const handleCreateNew = useCallback(async () => {
+  // Calculate default year: closest April (if May or later, next year)
+  const getDefaultYear = useCallback(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    return currentMonth >= 4 ? currentYear + 1 : currentYear;
+  }, []);
+
+  const handleCreateFromTemplate = useCallback(async () => {
     const timelineCrops = getTimelineCrops();
     const { resources, groups } = getResources();
-    await createNewPlan('Crop Plan 2025', timelineCrops, resources, groups);
+    const defaultYear = getDefaultYear();
+    await createNewPlan(`Crop Plan ${defaultYear}`, timelineCrops, resources, groups);
 
     // Get the newly created plan ID
     const newPlan = usePlanStore.getState().currentPlan;
     if (newPlan) {
+      // Set as active plan for Crop Explorer
+      localStorage.setItem('crop-explorer-active-plan', newPlan.id);
       router.push(`/timeline/${newPlan.id}`);
     }
-  }, [createNewPlan, router]);
+  }, [createNewPlan, router, getDefaultYear]);
+
+  const handleCreateBlank = useCallback(async () => {
+    const { resources, groups } = getResources();
+    const defaultYear = getDefaultYear();
+    // Create with empty crops array
+    await createNewPlan(`Crop Plan ${defaultYear}`, [], resources, groups);
+
+    // Get the newly created plan ID
+    const newPlan = usePlanStore.getState().currentPlan;
+    if (newPlan) {
+      // Set as active plan for Crop Explorer
+      localStorage.setItem('crop-explorer-active-plan', newPlan.id);
+      router.push(`/timeline/${newPlan.id}`);
+    }
+  }, [createNewPlan, router, getDefaultYear]);
 
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -84,6 +109,8 @@ export default function TimelineListPage() {
     try {
       const plan = await importPlanFromFile(file);
       setToast({ message: `Loaded "${plan.metadata.name}"`, type: 'success' });
+      // Set as active plan for Crop Explorer
+      localStorage.setItem('crop-explorer-active-plan', plan.id);
       // Navigate to the new plan
       router.push(`/timeline/${plan.id}`);
     } catch (err) {
@@ -100,6 +127,13 @@ export default function TimelineListPage() {
     if (!confirm(`Delete "${planName}"? This cannot be undone.`)) return;
 
     await deletePlanFromLibrary(planId);
+
+    // If deleting the active plan, clear it
+    const activePlanId = localStorage.getItem('crop-explorer-active-plan');
+    if (activePlanId === planId) {
+      localStorage.removeItem('crop-explorer-active-plan');
+    }
+
     const planList = await getPlanList();
     setPlans(planList);
     setToast({ message: `Deleted "${planName}"`, type: 'info' });
@@ -132,10 +166,17 @@ export default function TimelineListPage() {
               Load from File
             </button>
             <button
-              onClick={handleCreateNew}
+              onClick={handleCreateBlank}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
             >
-              + New Plan
+              + Blank Plan
+            </button>
+            <button
+              onClick={handleCreateFromTemplate}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              title="Create from current Excel import"
+            >
+              + From Template
             </button>
             <input
               ref={fileInputRef}
@@ -163,10 +204,17 @@ export default function TimelineListPage() {
                 Load from File
               </button>
               <button
-                onClick={handleCreateNew}
+                onClick={handleCreateBlank}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
               >
-                + New Plan
+                + Blank Plan
+              </button>
+              <button
+                onClick={handleCreateFromTemplate}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                title="Create from current Excel import"
+              >
+                + From Template
               </button>
             </div>
           </div>
@@ -185,8 +233,11 @@ export default function TimelineListPage() {
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {plan.name}
+                        <span className="text-sm font-normal text-gray-500 ml-2">
+                          ({plan.year})
+                        </span>
                         {plan.version && (
-                          <span className="text-sm font-normal text-gray-500 ml-2">
+                          <span className="text-sm font-normal text-gray-400 ml-1">
                             v{plan.version}
                           </span>
                         )}

@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { addDays, format } from 'date-fns';
 import type { Crop } from '@/lib/crops';
+import type { TimelineCrop } from '@/lib/plan-types';
+import { getPlanList, loadPlanFromLibrary, savePlanToLibrary, type PlanSummary } from '@/lib/plan-store';
 import columnAnalysis from '@/data/column-analysis.json';
 
 // Build a map of column header -> source type
@@ -139,9 +143,97 @@ function getNumericRange(crops: Crop[], col: string): { min: number; max: number
   return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 100 : max };
 }
 
+// Helper to create a TimelineCrop from a Crop config
+// Uses the plan's target year with the crop's target month/day
+function createTimelineCropFromConfig(crop: Crop, planYear: number): TimelineCrop {
+  const now = Date.now();
+  const groupId = `new_${crop.id}_${now}`;
+  const dtm = typeof crop.DTM === 'number' ? crop.DTM : 60;
+
+  // Build display name
+  const name = crop.Product && crop.Product !== 'General'
+    ? `${crop.Crop} (${crop.Product})`
+    : crop.Crop;
+
+  // Use target dates from crop data if available
+  // The dates in crop data have arbitrary years - we use the month/day with the plan's year
+  const targetFieldDate = crop['Target Field Date'] as string | null | undefined;
+  const targetEndHarvest = crop['Target End of Harvest'] as string | null | undefined;
+
+  let startDate: string;
+  let endDate: string;
+
+  if (targetFieldDate) {
+    // Extract month and day from target date, use plan year
+    const parsed = new Date(targetFieldDate);
+    const month = parsed.getMonth(); // 0-indexed
+    const day = parsed.getDate();
+    startDate = format(new Date(planYear, month, day), 'yyyy-MM-dd');
+  } else {
+    // Fallback to today
+    startDate = format(new Date(), 'yyyy-MM-dd');
+  }
+
+  if (targetEndHarvest) {
+    // Extract month and day from target date, use plan year
+    // Note: if end date is before start date (crosses year boundary), add a year
+    const parsed = new Date(targetEndHarvest);
+    const month = parsed.getMonth();
+    const day = parsed.getDate();
+    let endYear = planYear;
+
+    // Check if end date would be before start date (harvest spans into next year)
+    const tentativeEnd = new Date(planYear, month, day);
+    const startDateObj = new Date(startDate);
+    if (tentativeEnd < startDateObj) {
+      endYear = planYear + 1;
+    }
+    endDate = format(new Date(endYear, month, day), 'yyyy-MM-dd');
+  } else {
+    // Fallback to start + DTM
+    endDate = format(addDays(new Date(startDate), dtm), 'yyyy-MM-dd');
+  }
+
+  // Default feet based on crop config (Beds field if available, else 50ft)
+  const beds = typeof crop.Beds === 'number' ? crop.Beds : 1;
+  const feetNeeded = beds * 50;
+
+  return {
+    id: `${groupId}_unassigned`,
+    name,
+    startDate,
+    endDate,
+    resource: '', // Unassigned
+    category: crop.Category || undefined,
+    feetNeeded,
+    structure: crop['Growing Structure'] || 'Field',
+    plantingMethod: (crop['Planting Method'] as 'DS' | 'TP' | 'PE') || undefined,
+    totalBeds: 1,
+    bedIndex: 1,
+    groupId,
+    plantingId: groupId,
+    lastModified: now,
+  };
+}
+
 export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCropId, setSelectedCropId] = useState<string | null>(null);
+
+  // Multi-select state
+  const [selectedCropIds, setSelectedCropIds] = useState<Set<string>>(new Set());
+
+  // Active plan state (remembered across sessions)
+  const [activePlanId, setActivePlanId] = useState<string | null>(null);
+  const [activePlan, setActivePlan] = useState<PlanSummary | null>(null);
+
+  // Add to Plan state
+  const [showAddToPlan, setShowAddToPlan] = useState(false);
+  const [cropsToAdd, setCropsToAdd] = useState<Crop[]>([]); // Crops to add (single or multiple)
+  const [planList, setPlanList] = useState<PlanSummary[]>([]);
+  const [addingToPlan, setAddingToPlan] = useState(false);
+  const [addToPlanMessage, setAddToPlanMessage] = useState<{ type: 'success' | 'error'; text: string; planId?: string } | null>(null);
 
   // Dynamic filters keyed by column name
   const [columnFilters, setColumnFilters] = useState<Record<string, FilterValue>>({});
@@ -510,6 +602,208 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     setColumnFilters(prev => ({ ...prev, [col]: value }));
   }, []);
 
+  // Load active plan ID from localStorage on mount
+  useEffect(() => {
+    const storedId = localStorage.getItem('crop-explorer-active-plan');
+    if (storedId) {
+      setActivePlanId(storedId);
+    }
+  }, []);
+
+  // Load plan list on mount and when needed
+  useEffect(() => {
+    getPlanList().then(plans => {
+      setPlanList(plans);
+      // Update active plan info
+      if (activePlanId) {
+        const plan = plans.find(p => p.id === activePlanId);
+        if (plan) {
+          setActivePlan(plan);
+        } else {
+          // Active plan was deleted, clear it
+          setActivePlanId(null);
+          setActivePlan(null);
+          localStorage.removeItem('crop-explorer-active-plan');
+        }
+      }
+    }).catch(console.error);
+  }, [activePlanId, showAddToPlan]);
+
+  // Toggle selection for a single crop
+  const toggleCropSelection = useCallback((cropId: string, event?: React.MouseEvent) => {
+    event?.stopPropagation();
+    setSelectedCropIds(prev => {
+      const next = new Set(prev);
+      if (next.has(cropId)) {
+        next.delete(cropId);
+      } else {
+        next.add(cropId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Select/deselect all visible crops
+  const selectAllVisible = useCallback(() => {
+    setSelectedCropIds(new Set(sortedCrops.map(c => c.id)));
+  }, [sortedCrops]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedCropIds(new Set());
+  }, []);
+
+  // Add crops directly to the active plan
+  const addCropsToActivePlan = useCallback(async (cropsToAddNow: Crop[]) => {
+    if (!activePlanId || cropsToAddNow.length === 0) return;
+
+    setAddingToPlan(true);
+    setAddToPlanMessage(null);
+
+    try {
+      const planData = await loadPlanFromLibrary(activePlanId);
+      if (!planData) {
+        throw new Error('Plan not found');
+      }
+
+      // Get the plan's target year (default to current year if not set)
+      const planYear = planData.plan.metadata.year ?? new Date().getFullYear();
+
+      for (const crop of cropsToAddNow) {
+        const newCrop = createTimelineCropFromConfig(crop, planYear);
+        planData.plan.crops.push(newCrop);
+      }
+
+      planData.plan.crops.sort((a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+      planData.plan.metadata.lastModified = Date.now();
+
+      await savePlanToLibrary(planData.plan);
+
+      // Dispatch custom event so timeline in same tab can refresh
+      window.dispatchEvent(new CustomEvent('plan-updated', { detail: { planId: activePlanId } }));
+
+      const cropCount = cropsToAddNow.length;
+      setAddToPlanMessage({
+        type: 'success',
+        text: cropCount === 1
+          ? `Added "${cropsToAddNow[0].Crop}" to "${activePlan?.name}"`
+          : `Added ${cropCount} crops to "${activePlan?.name}"`,
+        planId: activePlanId,
+      });
+      setSelectedCropIds(new Set());
+    } catch (err) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to add crops',
+      });
+    } finally {
+      setAddingToPlan(false);
+    }
+  }, [activePlanId, activePlan?.name]);
+
+  // Quick add single crop to plan (from row button)
+  const handleQuickAdd = useCallback((crop: Crop, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (activePlanId) {
+      // Add directly to active plan
+      addCropsToActivePlan([crop]);
+    } else {
+      // No active plan, show picker
+      setCropsToAdd([crop]);
+      setShowAddToPlan(true);
+    }
+  }, [activePlanId, addCropsToActivePlan]);
+
+  // Add selected crops to plan (from floating bar)
+  const handleAddSelectedToPlan = useCallback(() => {
+    const cropsToAddList = sortedCrops.filter(c => selectedCropIds.has(c.id));
+    if (cropsToAddList.length === 0) return;
+
+    if (activePlanId) {
+      // Add directly to active plan
+      addCropsToActivePlan(cropsToAddList);
+    } else {
+      // No active plan, show picker
+      setCropsToAdd(cropsToAddList);
+      setShowAddToPlan(true);
+    }
+  }, [selectedCropIds, sortedCrops, activePlanId, addCropsToActivePlan]);
+
+  // Handle adding crops to a plan (single or multiple) - also sets as active plan
+  const handleAddToPlan = useCallback(async (planId: string) => {
+    if (cropsToAdd.length === 0) return;
+
+    setAddingToPlan(true);
+    setAddToPlanMessage(null);
+
+    try {
+      // Load the plan
+      const planData = await loadPlanFromLibrary(planId);
+      if (!planData) {
+        throw new Error('Plan not found');
+      }
+
+      // Get the plan's target year (default to current year if not set)
+      const planYear = planData.plan.metadata.year ?? new Date().getFullYear();
+
+      // Create the new crops
+      for (const crop of cropsToAdd) {
+        const newCrop = createTimelineCropFromConfig(crop, planYear);
+        planData.plan.crops.push(newCrop);
+      }
+
+      // Sort by start date
+      planData.plan.crops.sort((a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+      planData.plan.metadata.lastModified = Date.now();
+
+      // Save back to library
+      await savePlanToLibrary(planData.plan);
+
+      // Dispatch custom event so timeline in same tab can refresh
+      window.dispatchEvent(new CustomEvent('plan-updated', { detail: { planId } }));
+
+      // Set this as the active plan for future adds
+      setActivePlanId(planId);
+      localStorage.setItem('crop-explorer-active-plan', planId);
+      const plan = planList.find(p => p.id === planId);
+      if (plan) {
+        setActivePlan(plan);
+      }
+
+      const planName = planData.plan.metadata.name;
+      const cropCount = cropsToAdd.length;
+      setAddToPlanMessage({
+        type: 'success',
+        text: cropCount === 1
+          ? `Added "${cropsToAdd[0].Crop}" to "${planName}"`
+          : `Added ${cropCount} crops to "${planName}"`,
+        planId,
+      });
+      setShowAddToPlan(false);
+      setCropsToAdd([]);
+      // Clear selection after adding
+      setSelectedCropIds(new Set());
+    } catch (err) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to add crops',
+      });
+    } finally {
+      setAddingToPlan(false);
+    }
+  }, [cropsToAdd, planList]);
+
+  // Clear message after a timeout
+  useEffect(() => {
+    if (addToPlanMessage) {
+      const timer = setTimeout(() => setAddToPlanMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [addToPlanMessage]);
+
   return (
     <div className="flex h-[calc(100vh-140px)]">
       {/* Collapsible Filter Pane */}
@@ -638,6 +932,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
           <span className="text-sm text-gray-500">
             {sortedCrops.length} of {crops.length} · {displayColumns.length} columns
           </span>
+          {addingToPlan && (
+            <span className="text-sm text-blue-600 animate-pulse">Adding to plan...</span>
+          )}
           {sortColumn && (
             <span className="text-sm text-green-600">
               Sorted by {sortColumn} ({sortDirection})
@@ -670,8 +967,25 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         <div className="flex-1 bg-white overflow-hidden">
           {/* Header */}
           <div ref={headerContainerRef} className="overflow-hidden border-b border-gray-200">
-            <div style={{ width: totalWidth, minWidth: '100%' }}>
+            <div style={{ width: totalWidth + 80, minWidth: '100%' }}>
               <div className="flex bg-gray-50" style={{ height: HEADER_HEIGHT }}>
+                {/* Checkbox column */}
+                <div
+                  className="w-10 flex-shrink-0 px-2 flex items-center justify-center border-r border-gray-100 bg-gray-50"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCropIds.size > 0 && selectedCropIds.size === sortedCrops.length}
+                    onChange={(e) => e.target.checked ? selectAllVisible() : deselectAll()}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    title={selectedCropIds.size === sortedCrops.length ? "Deselect all" : "Select all visible"}
+                  />
+                </div>
+                {/* Actions column */}
+                <div className="w-10 flex-shrink-0 px-2 flex items-center justify-center border-r border-gray-100 bg-gray-50">
+                  <span className="text-xs text-gray-400">+</span>
+                </div>
                 {displayColumns.map(col => (
                   <div
                     key={col}
@@ -719,17 +1033,18 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             style={{ height: 'calc(100% - 40px)' }}
             onScroll={handleBodyScroll}
           >
-            <div style={{ width: totalWidth, minWidth: '100%' }}>
+            <div style={{ width: totalWidth + 80, minWidth: '100%' }}>
               <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                   const crop = sortedCrops[virtualRow.index];
+                  const isSelected = selectedCropIds.has(crop.id);
                   return (
                     <div
                       key={crop.id}
                       onClick={() => setSelectedCropId(crop.id === selectedCropId ? null : crop.id)}
-                      className={`flex cursor-pointer hover:bg-gray-50 border-b border-gray-100 ${
+                      className={`flex cursor-pointer hover:bg-gray-50 border-b border-gray-100 group ${
                         selectedCropId === crop.id ? 'bg-green-50' : ''
-                      } ${crop.Deprecated ? 'opacity-50' : ''}`}
+                      } ${isSelected ? 'bg-blue-50' : ''} ${crop.Deprecated ? 'opacity-50' : ''}`}
                       style={{
                         position: 'absolute',
                         top: 0,
@@ -739,6 +1054,30 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                         transform: `translateY(${virtualRow.start}px)`,
                       }}
                     >
+                      {/* Checkbox */}
+                      <div
+                        className="w-10 shrink-0 px-2 flex items-center justify-center border-r border-gray-50"
+                        onClick={(e) => toggleCropSelection(crop.id, e)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {}}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </div>
+                      {/* Quick add button */}
+                      <div
+                        className="w-10 shrink-0 px-2 flex items-center justify-center border-r border-gray-50"
+                      >
+                        <button
+                          onClick={(e) => handleQuickAdd(crop, e)}
+                          className="w-6 h-6 flex items-center justify-center rounded bg-blue-100 text-blue-600 opacity-0 group-hover:opacity-100 hover:bg-blue-200 transition-opacity text-sm font-medium"
+                          title={`Add ${crop.Crop} to plan`}
+                        >
+                          +
+                        </button>
+                      </div>
                       {displayColumns.map(col => (
                         <div
                           key={col}
@@ -847,7 +1186,16 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             </div>
             <button onClick={() => setSelectedCropId(null)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
           </div>
-          <div className="overflow-y-auto max-h-[calc(100vh-200px)]">
+          {/* Add to Plan button */}
+          <div className="px-4 py-2 border-b border-gray-100">
+            <button
+              onClick={() => { setCropsToAdd([selectedCrop]); setShowAddToPlan(true); }}
+              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              + Add to Plan
+            </button>
+          </div>
+          <div className="overflow-y-auto max-h-[calc(100vh-250px)]">
             <div className="p-4 space-y-1">
               {allColumns.map(key => {
                 const value = selectedCrop[key as keyof Crop];
@@ -860,6 +1208,125 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
               })}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add to Plan Modal */}
+      {showAddToPlan && cropsToAdd.length > 0 && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-[400px] max-h-[80vh] flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900">Add to Plan</h2>
+              <button
+                onClick={() => { setShowAddToPlan(false); setCropsToAdd([]); }}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-4">
+              {cropsToAdd.length === 1 ? (
+                <p className="text-sm text-gray-600 mb-4">
+                  Add <strong>{cropsToAdd[0].Crop}</strong> to a plan. The selected plan will become your active plan.
+                </p>
+              ) : (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Add <strong>{cropsToAdd.length} crops</strong> to a plan. The selected plan will become your active plan.
+                  </p>
+                  <div className="max-h-24 overflow-y-auto text-xs text-gray-500 bg-gray-50 rounded p-2">
+                    {cropsToAdd.map(c => c.Crop).join(', ')}
+                  </div>
+                </div>
+              )}
+
+              {planList.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No plans found.</p>
+                  <button
+                    onClick={() => {
+                      setShowAddToPlan(false);
+                      setCropsToAdd([]);
+                      router.push('/timeline');
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  >
+                    Create a Plan
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                  {planList.map((plan) => (
+                    <button
+                      key={plan.id}
+                      onClick={() => handleAddToPlan(plan.id)}
+                      disabled={addingToPlan}
+                      className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                    >
+                      <div className="font-medium text-gray-900">{plan.name}</div>
+                      <div className="text-xs text-gray-500">{plan.cropCount} crops</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="px-4 py-3 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => { setShowAddToPlan(false); setCropsToAdd([]); }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating selection action bar */}
+      {selectedCropIds.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 bg-gray-900 text-white rounded-lg shadow-xl flex items-center gap-4 z-40">
+          <span className="text-sm">
+            <strong>{selectedCropIds.size}</strong> crop{selectedCropIds.size !== 1 ? 's' : ''} selected
+          </span>
+          <button
+            onClick={handleAddSelectedToPlan}
+            className="px-3 py-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+          >
+            Add to Plan
+          </button>
+          <button
+            onClick={deselectAll}
+            className="px-3 py-1.5 text-sm font-medium bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      {/* Toast notification */}
+      {addToPlanMessage && (
+        <div
+          className={`fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 ${
+            addToPlanMessage.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+          }`}
+        >
+          <span>{addToPlanMessage.text}</span>
+          {addToPlanMessage.type === 'success' && addToPlanMessage.planId && (
+            <button
+              onClick={() => router.push(`/timeline/${addToPlanMessage.planId}`)}
+              className="px-2 py-1 text-sm bg-white/20 hover:bg-white/30 rounded"
+            >
+              View Plan
+            </button>
+          )}
+          <button
+            onClick={() => setAddToPlanMessage(null)}
+            className="text-white/80 hover:text-white text-lg leading-none"
+          >
+            ×
+          </button>
         </div>
       )}
 

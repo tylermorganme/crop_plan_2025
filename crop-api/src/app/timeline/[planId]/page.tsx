@@ -51,11 +51,14 @@ export default function TimelinePlanPage() {
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [isEditingYear, setIsEditingYear] = useState(false);
+  const [editedYear, setEditedYear] = useState('');
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const yearInputRef = useRef<HTMLInputElement>(null);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
@@ -89,6 +92,8 @@ export default function TimelinePlanPage() {
         const planData = await loadPlanFromLibrary(planId);
         if (planData) {
           await loadPlanById(planId);
+          // Set this as the active plan for Crop Explorer
+          localStorage.setItem('crop-explorer-active-plan', planId);
           setLoading(false);
         } else {
           setError(`Plan not found: ${planId}`);
@@ -171,6 +176,30 @@ export default function TimelinePlanPage() {
   const handleDateChange = useCallback((groupId: string, startDate: string, endDate: string) => {
     updateCropDates(groupId, startDate, endDate);
   }, [updateCropDates]);
+
+  const duplicateCrop = usePlanStore((state) => state.duplicateCrop);
+  const deleteCrop = usePlanStore((state) => state.deleteCrop);
+
+  const handleDuplicateCrop = useCallback(async (groupId: string) => {
+    try {
+      await duplicateCrop(groupId);
+      setToast({ message: 'Planting duplicated - find it in Unassigned', type: 'success' });
+    } catch (e) {
+      setToast({ message: `Failed to duplicate: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
+    }
+  }, [duplicateCrop]);
+
+  const handleDeleteCrop = useCallback(async (groupIds: string[]) => {
+    try {
+      for (const groupId of groupIds) {
+        await deleteCrop(groupId);
+      }
+      const count = groupIds.length;
+      setToast({ message: `Deleted ${count} planting${count > 1 ? 's' : ''}`, type: 'success' });
+    } catch (e) {
+      setToast({ message: `Failed to delete: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
+    }
+  }, [deleteCrop]);
 
   const handleSave = useCallback(async () => {
     // Save to library is automatic now, but mark as saved
@@ -261,6 +290,49 @@ export default function TimelinePlanPage() {
     }
   }, [saveEditedName, cancelEditingName]);
 
+  // Year editing handlers
+  const startEditingYear = useCallback(() => {
+    if (currentPlan) {
+      const year = currentPlan.metadata.year ?? new Date().getFullYear();
+      setEditedYear(String(year));
+      setIsEditingYear(true);
+      setTimeout(() => yearInputRef.current?.select(), 0);
+    }
+  }, [currentPlan]);
+
+  const saveEditedYear = useCallback(async () => {
+    const yearNum = parseInt(editedYear, 10);
+    if (!isNaN(yearNum) && yearNum >= 2020 && yearNum <= 2100) {
+      if (currentPlan && yearNum !== currentPlan.metadata.year) {
+        // Update the plan's year directly
+        const planData = await loadPlanFromLibrary(planId);
+        if (planData) {
+          planData.plan.metadata.year = yearNum;
+          planData.plan.metadata.lastModified = Date.now();
+          await savePlanToLibrary(planData.plan);
+          // Reload to update the store
+          await loadPlanById(planId);
+          setToast({ message: `Plan year set to ${yearNum}`, type: 'success' });
+        }
+      }
+    }
+    setIsEditingYear(false);
+  }, [editedYear, currentPlan, planId, loadPlanById]);
+
+  const cancelEditingYear = useCallback(() => {
+    setIsEditingYear(false);
+    setEditedYear('');
+  }, []);
+
+  const handleYearKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveEditedYear();
+    } else if (e.key === 'Escape') {
+      cancelEditingYear();
+    }
+  }, [saveEditedYear, cancelEditingYear]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -292,9 +364,15 @@ export default function TimelinePlanPage() {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-4">
-        <Link href="/timeline" className="text-sm font-medium text-blue-600 hover:text-blue-800">
-          ← Plans
-        </Link>
+        <div className="flex items-center gap-2 border-r pr-4">
+          <Link href="/timeline" className="text-sm font-medium text-gray-600 hover:text-gray-800">
+            Plans
+          </Link>
+          <span className="text-gray-300">|</span>
+          <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-800">
+            Crops
+          </Link>
+        </div>
         {isEditingName ? (
           <div className="flex items-center gap-2">
             <input
@@ -326,6 +404,30 @@ export default function TimelinePlanPage() {
         <span className="text-sm font-medium text-gray-700">
           {currentPlan.crops.length} crops
         </span>
+
+        {/* Plan year */}
+        <span className="text-gray-300">·</span>
+        {isEditingYear ? (
+          <input
+            ref={yearInputRef}
+            type="number"
+            min="2020"
+            max="2100"
+            value={editedYear}
+            onChange={(e) => setEditedYear(e.target.value)}
+            onKeyDown={handleYearKeyDown}
+            onBlur={saveEditedYear}
+            className="w-16 text-sm font-medium text-gray-700 border border-blue-500 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        ) : (
+          <button
+            onClick={startEditingYear}
+            className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+            title="Click to change plan year"
+          >
+            {currentPlan.metadata.year ?? new Date().getFullYear()}
+          </button>
+        )}
 
         {/* Save status indicator */}
         {isSaving ? (
@@ -433,6 +535,8 @@ export default function TimelinePlanPage() {
           groups={currentPlan.groups}
           onCropMove={handleCropMove}
           onCropDateChange={handleDateChange}
+          onDuplicateCrop={handleDuplicateCrop}
+          onDeleteCrop={handleDeleteCrop}
         />
       </div>
 

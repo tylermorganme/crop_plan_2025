@@ -49,6 +49,8 @@ interface CropTimelineProps {
   groups?: ResourceGroup[] | null;
   onCropMove?: (cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => void;
   onCropDateChange?: (groupId: string, startDate: string, endDate: string) => void;
+  onDuplicateCrop?: (groupId: string) => void;
+  onDeleteCrop?: (groupIds: string[]) => void;
 }
 
 // =============================================================================
@@ -320,7 +322,9 @@ export default function CropTimeline({
   resources,
   groups,
   onCropMove,
-  onCropDateChange
+  onCropDateChange,
+  onDuplicateCrop,
+  onDeleteCrop,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -342,7 +346,7 @@ export default function CropTimeline({
   const [draggedCropId, setDraggedCropId] = useState<string | null>(null);
   const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null);
   const [dragOverResource, setDragOverResource] = useState<string | null>(null);
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
   const [unassignedHeight, setUnassignedHeight] = useState(
     savedState.current.unassignedHeight ?? 150
   );
@@ -883,7 +887,7 @@ export default function CropTimeline({
     const isDragging = draggedCropId === crop.id;
     // Highlight all beds in the group being dragged
     const isGroupBeingDragged = draggedGroupId === crop.groupId && draggedGroupId !== null;
-    const isSelected = selectedGroupId === crop.groupId;
+    const isSelected = selectedGroupIds.has(crop.groupId);
     // All beds are draggable - dragging a secondary bed acts like dragging the first bed
 
     // Check if this crop group has an active timing preview (only show on same row)
@@ -983,7 +987,7 @@ export default function CropTimeline({
           className={`absolute rounded select-none overflow-hidden hover:z-10 cursor-grab ${
             isDragging ? 'opacity-50 cursor-grabbing' : ''
           } ${isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
-          } ${isSelected ? 'ring-2 ring-yellow-400 ring-offset-1 z-20' : ''} ${
+          } ${isSelected ? 'ring-2 ring-blue-600 ring-offset-1 z-20' : ''} ${
             isOverlapping ? 'bg-transparent border-2' : ''
           }`}
           style={{
@@ -1193,23 +1197,44 @@ export default function CropTimeline({
   // Unassigned crops
   const unassignedCrops = cropsByResource['Unassigned'] || [];
 
-  // Get selected crop group info for inspector
-  const selectedCrops = useMemo(() => {
-    if (!selectedGroupId) return null;
-    const groupCrops = crops.filter(c => c.groupId === selectedGroupId);
-    if (groupCrops.length === 0) return null;
-    return groupCrops;
-  }, [crops, selectedGroupId]);
+  // Get selected crop groups info for inspector
+  const selectedCropsData = useMemo(() => {
+    if (selectedGroupIds.size === 0) return null;
+    // Get crops for all selected groups
+    const allSelected = crops.filter(c => selectedGroupIds.has(c.groupId));
+    if (allSelected.length === 0) return null;
+    return allSelected;
+  }, [crops, selectedGroupIds]);
 
-  // Click handler for crop selection
+  // Click handler for crop selection with multi-select support
   const handleCropClick = useCallback((e: React.MouseEvent, crop: TimelineCrop) => {
     e.stopPropagation();
-    setSelectedGroupId(prev => prev === crop.groupId ? null : crop.groupId);
+
+    // Cmd/Ctrl+Click toggles the crop in selection
+    if (e.metaKey || e.ctrlKey) {
+      setSelectedGroupIds(prev => {
+        const next = new Set(prev);
+        if (next.has(crop.groupId)) {
+          next.delete(crop.groupId);
+        } else {
+          next.add(crop.groupId);
+        }
+        return next;
+      });
+    } else {
+      // Regular click: if already selected as only item, deselect; otherwise select only this
+      setSelectedGroupIds(prev => {
+        if (prev.size === 1 && prev.has(crop.groupId)) {
+          return new Set();
+        }
+        return new Set([crop.groupId]);
+      });
+    }
   }, []);
 
   // Clear selection when clicking outside
   const handleBackgroundClick = useCallback(() => {
-    setSelectedGroupId(null);
+    setSelectedGroupIds(new Set());
   }, []);
 
   // Calculate duration in days
@@ -1682,13 +1707,15 @@ export default function CropTimeline({
       </div>
 
       {/* Inspector Panel */}
-      {selectedCrops && selectedCrops.length > 0 && (
+      {selectedCropsData && selectedCropsData.length > 0 && (
         <div className="w-80 bg-white border-l flex flex-col shrink-0">
           {/* Inspector Header */}
           <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
-            <h3 className="font-semibold text-sm">Crop Details</h3>
+            <h3 className="font-semibold text-sm">
+              {selectedGroupIds.size === 1 ? 'Planting Details' : `${selectedGroupIds.size} Plantings Selected`}
+            </h3>
             <button
-              onClick={() => setSelectedGroupId(null)}
+              onClick={() => setSelectedGroupIds(new Set())}
               className="text-gray-400 hover:text-gray-600 text-lg leading-none"
             >
               &times;
@@ -1698,11 +1725,87 @@ export default function CropTimeline({
           {/* Inspector Content */}
           <div className="flex-1 overflow-auto p-3">
             {(() => {
-              const crop = selectedCrops[0];
+              // Multi-select: show summary view
+              if (selectedGroupIds.size > 1) {
+                // Group crops by groupId to get unique plantings
+                const uniqueGroups = new Map<string, TimelineCrop>();
+                selectedCropsData.forEach(c => {
+                  if (!uniqueGroups.has(c.groupId)) {
+                    uniqueGroups.set(c.groupId, c);
+                  }
+                });
+                const plantings = Array.from(uniqueGroups.values());
+
+                return (
+                  <div className="space-y-4">
+                    {/* Summary */}
+                    <div className="text-sm text-gray-600">
+                      {plantings.length} planting{plantings.length > 1 ? 's' : ''} selected
+                    </div>
+
+                    {/* List of selected plantings */}
+                    <div className="space-y-2 max-h-60 overflow-auto">
+                      {plantings.map((crop) => {
+                        const colors = crop.bgColor
+                          ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
+                          : getColorForCategory(crop.category);
+                        return (
+                          <div
+                            key={crop.groupId}
+                            className="flex items-center gap-2 p-2 rounded border border-gray-100"
+                          >
+                            <div
+                              className="w-3 h-3 rounded-full shrink-0"
+                              style={{ backgroundColor: colors.bg }}
+                            />
+                            <span className="text-sm text-gray-900 truncate flex-1">{crop.name}</span>
+                            <button
+                              onClick={() => {
+                                setSelectedGroupIds(prev => {
+                                  const next = new Set(prev);
+                                  next.delete(crop.groupId);
+                                  return next;
+                                });
+                              }}
+                              className="text-gray-400 hover:text-gray-600 text-xs"
+                              title="Remove from selection"
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Bulk Actions */}
+                    <div className="pt-3 border-t space-y-2">
+                      <div className="text-xs text-gray-500 mb-2">
+                        Tip: {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Click to add/remove from selection
+                      </div>
+                      {onDeleteCrop && (
+                        <button
+                          onClick={() => {
+                            onDeleteCrop(Array.from(selectedGroupIds));
+                            setSelectedGroupIds(new Set());
+                          }}
+                          className="w-full px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                        >
+                          Delete {plantings.length} Planting{plantings.length > 1 ? 's' : ''}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Single selection: show detailed view
+              const crop = selectedCropsData[0];
               const colors = crop.bgColor
                 ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
                 : getColorForCategory(crop.category);
               const duration = getDuration(crop.startDate, crop.endDate);
+              // Get all bed entries for this single group
+              const groupCrops = selectedCropsData.filter(c => c.groupId === crop.groupId);
 
               return (
                 <div className="space-y-4">
@@ -1720,7 +1823,7 @@ export default function CropTimeline({
                   {crop.category && (
                     <div>
                       <div className="text-xs text-gray-500 mb-1">Category</div>
-                      <div className="text-sm">{crop.category}</div>
+                      <div className="text-sm text-gray-900">{crop.category}</div>
                     </div>
                   )}
 
@@ -1728,29 +1831,29 @@ export default function CropTimeline({
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <div className="text-xs text-gray-500 mb-1">Start Date</div>
-                      <div className="text-sm">{new Date(crop.startDate).toLocaleDateString()}</div>
+                      <div className="text-sm text-gray-900">{new Date(crop.startDate).toLocaleDateString()}</div>
                     </div>
                     <div>
                       <div className="text-xs text-gray-500 mb-1">End Date</div>
-                      <div className="text-sm">{new Date(crop.endDate).toLocaleDateString()}</div>
+                      <div className="text-sm text-gray-900">{new Date(crop.endDate).toLocaleDateString()}</div>
                     </div>
                   </div>
 
                   {/* Duration */}
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Duration</div>
-                    <div className="text-sm">{duration} days</div>
+                    <div className="text-sm text-gray-900">{duration} days</div>
                   </div>
 
                   {/* Bed Assignment */}
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Bed Assignment</div>
                     {crop.resource ? (
-                      <div className="text-sm">
-                        {selectedCrops.length === 1 ? (
+                      <div className="text-sm text-gray-900">
+                        {groupCrops.length === 1 ? (
                           <span>{crop.resource}</span>
                         ) : (
-                          <span>{selectedCrops.map(c => c.resource).join(', ')}</span>
+                          <span>{groupCrops.map(c => c.resource).join(', ')}</span>
                         )}
                       </div>
                     ) : (
@@ -1761,18 +1864,18 @@ export default function CropTimeline({
                   {/* Feet Needed */}
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Feet Needed</div>
-                    <div className="text-sm">{crop.feetNeeded || 50}&apos;</div>
+                    <div className="text-sm text-gray-900">{crop.feetNeeded || 50}&apos;</div>
                   </div>
 
                   {/* Multi-bed info */}
-                  {selectedCrops.length > 1 && (
+                  {groupCrops.length > 1 && (
                     <div>
                       <div className="text-xs text-gray-500 mb-1">Bed Details</div>
-                      <div className="text-xs space-y-1">
-                        {selectedCrops.map((c) => (
+                      <div className="text-xs text-gray-900 space-y-1">
+                        {groupCrops.map((c) => (
                           <div key={c.id} className="flex justify-between py-1 border-b border-gray-100">
                             <span>{c.resource}</span>
-                            <span className="text-gray-500">
+                            <span className="text-gray-700">
                               {c.feetUsed || c.bedCapacityFt || 50}&apos;
                               {c.feetUsed && c.bedCapacityFt && c.feetUsed < c.bedCapacityFt && (
                                 <span className="text-amber-600"> of {c.bedCapacityFt}&apos;</span>
@@ -1788,14 +1891,40 @@ export default function CropTimeline({
                   {crop.plantingId && (
                     <div>
                       <div className="text-xs text-gray-500 mb-1">Planting ID</div>
-                      <div className="text-sm font-mono text-xs">{crop.plantingId}</div>
+                      <div className="font-mono text-xs text-gray-900">{crop.plantingId}</div>
                     </div>
                   )}
 
                   {/* Group ID */}
                   <div>
                     <div className="text-xs text-gray-500 mb-1">Group ID</div>
-                    <div className="text-sm font-mono text-xs">{crop.groupId}</div>
+                    <div className="font-mono text-xs text-gray-900">{crop.groupId}</div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-3 border-t space-y-2">
+                    {onDuplicateCrop && (
+                      <button
+                        onClick={() => {
+                          onDuplicateCrop(crop.groupId);
+                          setSelectedGroupIds(new Set());
+                        }}
+                        className="w-full px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        Duplicate Planting
+                      </button>
+                    )}
+                    {onDeleteCrop && (
+                      <button
+                        onClick={() => {
+                          onDeleteCrop([crop.groupId]);
+                          setSelectedGroupIds(new Set());
+                        }}
+                        className="w-full px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                      >
+                        Delete Planting
+                      </button>
+                    )}
                   </div>
                 </div>
               );

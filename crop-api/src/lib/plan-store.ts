@@ -80,6 +80,27 @@ export async function planExistsInLibrary(planId: string): Promise<boolean> {
 }
 
 /**
+ * Generate a unique plan name by appending a number if needed
+ */
+export async function getUniquePlanName(baseName: string): Promise<string> {
+  const plans = await getPlanList();
+  const existingNames = new Set(plans.map(p => p.name));
+
+  // If the name is already unique, return it
+  if (!existingNames.has(baseName)) {
+    return baseName;
+  }
+
+  // Try appending numbers until we find a unique name
+  let counter = 2;
+  while (existingNames.has(`${baseName} (${counter})`)) {
+    counter++;
+  }
+
+  return `${baseName} (${counter})`;
+}
+
+/**
  * Options for copying a plan
  */
 export interface CopyPlanOptions {
@@ -170,14 +191,29 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     finalCrops = Array.from(groupMap.values());
   }
 
+  // Calculate the new plan year based on shift
+  let newYear = state.currentPlan.metadata.year ?? new Date().getFullYear();
+  if (options.shiftAmount !== 0 && options.shiftUnit === 'years') {
+    newYear += options.shiftAmount;
+  } else if (options.shiftAmount !== 0 && options.shiftUnit === 'months') {
+    // If shifting by months, calculate the new year based on month shift
+    const currentMonth = new Date().getMonth(); // 0-indexed
+    const totalMonths = currentMonth + options.shiftAmount;
+    newYear += Math.floor(totalMonths / 12);
+  }
+
+  // Ensure unique name
+  const uniqueName = await getUniquePlanName(options.newName);
+
   // Create new plan with lineage tracking
   const newPlan: Plan = {
     id: newId,
     metadata: {
       id: newId,
-      name: options.newName,
+      name: uniqueName,
       createdAt: now,
       lastModified: now,
+      year: newYear,
       version: 1,
       parentPlanId: state.currentPlan.id,
       parentVersion: state.currentPlan.metadata.version,
@@ -447,6 +483,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   moveCrop: (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => Promise<void>;
   updateCropDates: (groupId: string, startDate: string, endDate: string) => Promise<void>;
   deleteCrop: (groupId: string) => Promise<void>;
+  addCrop: (crop: TimelineCrop) => Promise<void>;
+  duplicateCrop: (groupId: string) => Promise<string>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -541,13 +579,20 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     ) => {
       const now = Date.now();
       const id = generateId();
+      // Default to closest April: if May or later, use next year; otherwise current year
+      const currentMonth = new Date().getMonth(); // 0-indexed (0=Jan, 4=May)
+      const currentYear = new Date().getFullYear();
+      const defaultYear = currentMonth >= 4 ? currentYear + 1 : currentYear;
+      // Ensure unique plan name
+      const uniqueName = await getUniquePlanName(name);
       const plan: Plan = {
         id,
         metadata: {
           id,
-          name,
+          name: uniqueName,
           createdAt: now,
           lastModified: now,
+          year: defaultYear,
         },
         crops,
         resources,
@@ -763,12 +808,99 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
+    addCrop: async (crop: TimelineCrop) => {
+      set((state) => {
+        if (!state.currentPlan) return;
+
+        // Save current state to undo stack
+        state.past.push([...state.currentPlan.crops]);
+        if (state.past.length > MAX_HISTORY_SIZE) {
+          state.past.shift();
+        }
+        state.future = [];
+
+        // Add the new crop with timestamp
+        const now = Date.now();
+        const newCrop: TimelineCrop = {
+          ...crop,
+          lastModified: now,
+        };
+        state.currentPlan.crops.push(newCrop);
+
+        // Sort by start date
+        state.currentPlan.crops.sort((a, b) =>
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
+
+        state.currentPlan.metadata.lastModified = now;
+        state.currentPlan.changeLog.push(
+          createChangeEntry('create', `Added ${crop.name}`, [crop.groupId])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => {
+            state.isSaving = false;
+          });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    duplicateCrop: async (groupId: string) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      // Find all crops with this groupId
+      const groupCrops = state.currentPlan.crops.filter(c => c.groupId === groupId);
+      if (groupCrops.length === 0) {
+        throw new Error(`No crop found with groupId: ${groupId}`);
+      }
+
+      // Create new unique IDs
+      const now = Date.now();
+      const newGroupId = `${groupId}_copy_${now}`;
+
+      // Create a single unassigned copy based on the first crop in the group
+      const template = groupCrops[0];
+      const newCrop: TimelineCrop = {
+        ...template,
+        id: `${newGroupId}_unassigned`,
+        groupId: newGroupId,
+        plantingId: newGroupId,
+        resource: '', // Unassigned
+        totalBeds: 1,
+        bedIndex: 1,
+        feetUsed: undefined,
+        bedCapacityFt: undefined,
+        lastModified: now,
+      };
+
+      // Use the addCrop action to add it
+      await get().addCrop(newCrop);
+
+      return newGroupId;
+    },
+
     // History
     undo: async () => {
       set((state) => {
         if (!state.currentPlan || state.past.length === 0) return;
 
-        const previous = state.past.pop()!;
+        const previous = state.past.pop()!
         state.future.push(state.currentPlan.crops.map(c => ({ ...c })));
         state.currentPlan.crops = previous;
         state.currentPlan.metadata.lastModified = Date.now();
