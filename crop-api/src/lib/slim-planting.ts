@@ -286,7 +286,7 @@ export function extractConfigLookup(assignment: {
   // This field contains the actual window used in the stored data,
   // which may differ from harvestWindow + additionalDaysOfHarvest.
   let harvestWindow = assignment.harvestWindow ?? 0;
-  if (useTrueHarvestWindow && assignment.trueHarvestWindow !== undefined) {
+  if (useTrueHarvestWindow && assignment.trueHarvestWindow != null) {
     harvestWindow = assignment.trueHarvestWindow;
   }
 

@@ -10,6 +10,13 @@ import bedPlanData from '@/data/bed-plan.json';
 export type { TimelineCrop, ResourceGroup, BedSpanInfo } from './plan-types';
 import type { TimelineCrop, ResourceGroup, BedSpanInfo } from './plan-types';
 
+// Import slim planting computation
+import {
+  computeTimelineCrop,
+  extractSlimPlanting,
+  extractConfigLookup,
+} from './slim-planting';
+
 interface RawCrop {
   id: string;
   Identifier: string;
@@ -33,12 +40,31 @@ interface BedAssignment {
   identifier: string;
   bed: string;
   bedsCount?: number;  // Number of 50ft beds (e.g., 0.4 = 20ft, 1 = 50ft, 2 = 100ft)
-  // Dates from the bed plan (actual bed occupation)
-  tpOrDsDate: string;           // When crop enters the bed (transplant or direct seed)
-  endOfHarvest: string;         // When crop leaves the bed
-  beginningOfHarvest: string;   // When harvest starts
+  // Dates from the bed plan (for comparison/fallback)
+  tpOrDsDate: string;
+  endOfHarvest: string;
+  beginningOfHarvest: string;
+  // Config fields (for computation)
+  dtm?: number;
+  harvestWindow?: number;
+  trueHarvestWindow?: number;
+  daysInCells?: number;
+  // Input fields (for computation)
+  fixedFieldStartDate?: string | null;
+  followsCrop?: string | null;
+  followOffset?: number | null;
+  // Override fields
+  additionalDaysOfHarvest?: number | string | null;
+  additionalDaysInField?: number | string | null;
+  additionalDaysInCells?: number | string | null;
+  // Actual fields
+  actualGreenhouseDate?: string | null;
+  actualTpOrDsDate?: string | null;
+  actualBeginningOfHarvest?: string | null;
+  actualEndOfHarvest?: string | null;
+  failed?: boolean | null;
   // Additional metadata
-  category?: string;
+  category?: string | number;
   growingStructure?: string;
   dsTp?: 'DS' | 'TP';
 }
@@ -239,41 +265,52 @@ export function getTimelineCrops(): TimelineCrop[] {
         }
         seenIdentifiers.add(assignment.identifier);
 
-        // Get feet needed from the assignment's bedsCount (in 50ft units), or fallback to crop default
-        const feetNeeded = (assignment.bedsCount ?? (crop.Beds || 1)) * STANDARD_BED_FT;
+        // Skip assignments without required timing data - fall back to stored dates
+        if (!assignment.dtm || !assignment.fixedFieldStartDate) {
+          // Use stored dates for assignments missing computation inputs
+          const feetNeeded = (assignment.bedsCount ?? (crop.Beds || 1)) * STANDARD_BED_FT;
+          const { bedSpanInfo } = calculateRowSpan(feetNeeded, assignment.bed, bedPlan.bedGroups);
+          const displayName = bedAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
 
-        // Calculate which beds this crop spans
-        const { bedSpanInfo } = calculateRowSpan(
-          feetNeeded,
-          assignment.bed,
-          bedPlan.bedGroups
-        );
+          bedSpanInfo.forEach((info, index) => {
+            timelineCrops.push({
+              id: `${assignment.identifier}_bed${index}`,
+              name: displayName,
+              startDate: assignment.tpOrDsDate,
+              endDate: assignment.endOfHarvest,
+              harvestStartDate: assignment.beginningOfHarvest || undefined,
+              resource: info.bed,
+              category: (typeof assignment.category === 'number' ? undefined : assignment.category) || crop.Category || undefined,
+              feetNeeded,
+              structure: assignment.growingStructure || crop['Growing Structure'] || 'Field',
+              plantingId: assignment.identifier,
+              totalBeds: bedSpanInfo.length,
+              bedIndex: index + 1,
+              groupId: assignment.identifier,
+              feetUsed: info.feetUsed,
+              bedCapacityFt: info.bedCapacityFt,
+              plantingMethod: assignment.dsTp || crop['Planting Method'] || undefined,
+            });
+          });
+          continue;
+        }
 
-        const totalBeds = bedSpanInfo.length;
+        // Extract slim planting and config, then compute dates
+        const slim = extractSlimPlanting(assignment);
+        const config = extractConfigLookup(assignment, true); // Use trueHarvestWindow
+
+        // Compute timeline crops with calculated dates
+        const computed = computeTimelineCrop(slim, config, bedPlan.bedGroups);
+
+        // Apply display name suffix for succession plantings
         const displayName = bedAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
 
-        // Create a separate entry for each bed the crop occupies
-        // Use assignment dates (bed occupation) instead of crop dates (includes greenhouse time)
-        bedSpanInfo.forEach((info, index) => {
+        for (const tc of computed) {
           timelineCrops.push({
-            id: `${assignment.identifier}_bed${index}`, // Unique ID for each bed entry
+            ...tc,
             name: displayName,
-            startDate: assignment.tpOrDsDate,           // When crop enters the bed
-            endDate: assignment.endOfHarvest,           // When crop leaves the bed
-            harvestStartDate: assignment.beginningOfHarvest || undefined,
-            resource: info.bed,
-            category: assignment.category || crop.Category || undefined,
-            feetNeeded,
-            structure: assignment.growingStructure || crop['Growing Structure'] || 'Field',
-            plantingId: assignment.identifier,
-            totalBeds,
-            bedIndex: index + 1, // 1-indexed for display
-            groupId: assignment.identifier, // For grouping related entries
-            feetUsed: info.feetUsed,
-            bedCapacityFt: info.bedCapacityFt,
-            plantingMethod: assignment.dsTp || crop['Planting Method'] || undefined,
           });
-        });
+        }
       }
     } else {
       // No bed assignment - put in Unassigned with unique counter

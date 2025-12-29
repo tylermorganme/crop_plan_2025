@@ -258,35 +258,12 @@ function runParityTests() {
     console.log();
   }
 
-  // Categorize known failures - these are manual overrides in the source data
-  // where stored dates don't match the formula (user adjusted to fit plan)
-  const manualOverrideIds = ['GAR533', 'GAR534', 'GAR535', 'SCA633'];
-  const manualOverrideFailures = failures.filter((f) =>
-    manualOverrideIds.includes(f.identifier)
-  );
-  const unexpectedFailures = failures.filter(
-    (f) => !manualOverrideIds.includes(f.identifier)
-  );
-
-  if (manualOverrideFailures.length > 0) {
-    console.log('MANUAL OVERRIDES IN SOURCE DATA:');
-    console.log('-'.repeat(40));
-    console.log(
-      `  ${manualOverrideFailures.map((f) => f.identifier).join(', ')}`
-    );
-    console.log('  (Stored dates were manually adjusted, calculation is correct)');
-    console.log();
-  }
-
   // Overall summary
   console.log('='.repeat(80));
-  console.log(
-    `SUMMARY: ${passed} passed, ${unexpectedFailures.length} unexpected failures, ${manualOverrideFailures.length} manual overrides, ${skipped} skipped`
-  );
+  console.log(`SUMMARY: ${passed} passed, ${failed} failed, ${skipped} skipped`);
   console.log('='.repeat(80));
 
-  // Only exit with error if there are unexpected failures
-  if (unexpectedFailures.length > 0) {
+  if (failed > 0) {
     process.exit(1);
   }
 }
