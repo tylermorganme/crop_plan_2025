@@ -14,7 +14,8 @@ import type { TimelineCrop, ResourceGroup, BedSpanInfo } from './plan-types';
 import {
   computeTimelineCrop,
   extractSlimPlanting,
-  extractConfigLookup,
+  lookupConfigFromCatalog,
+  type CropCatalogEntry,
 } from './slim-planting';
 
 interface RawCrop {
@@ -297,7 +298,31 @@ export function getTimelineCrops(): TimelineCrop[] {
 
         // Extract slim planting and config, then compute dates
         const slim = extractSlimPlanting(assignment);
-        const config = extractConfigLookup(assignment, true); // Use trueHarvestWindow
+
+        // Look up config from catalog (no fallback to bed-plan embedded config)
+        const catalogCrops = (cropsData as { crops: CropCatalogEntry[] }).crops;
+        const baseConfig = lookupConfigFromCatalog(assignment.crop, catalogCrops);
+
+        if (!baseConfig) {
+          console.warn(`Catalog lookup failed for: ${assignment.crop}`);
+          continue;
+        }
+
+        // Apply planting-level overrides to catalog base values
+        // These are adjustments for specific growing conditions
+        const additionalDaysInField = typeof assignment.additionalDaysInField === 'number'
+          ? assignment.additionalDaysInField : 0;
+        const additionalDaysOfHarvest = typeof assignment.additionalDaysOfHarvest === 'number'
+          ? assignment.additionalDaysOfHarvest : 0;
+        const additionalDaysInCells = typeof assignment.additionalDaysInCells === 'number'
+          ? assignment.additionalDaysInCells : 0;
+
+        const config = {
+          ...baseConfig,
+          dtm: baseConfig.dtm + additionalDaysInField,
+          harvestWindow: baseConfig.harvestWindow + additionalDaysOfHarvest,
+          daysInCells: baseConfig.daysInCells + additionalDaysInCells,
+        };
 
         // Compute timeline crops with calculated dates
         const computed = computeTimelineCrop(slim, config, bedPlan.bedGroups);
