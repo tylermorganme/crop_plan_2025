@@ -1,0 +1,1750 @@
+{
+  "table": "BedPlan",
+  "sheet": "Bed Plan",
+  "data_rows": 138,
+  "columns": {
+    "1": {
+      "header": "Crop",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "2": {
+      "header": "Identifier",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "3": {
+      "header": "Bed",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 136,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "4": {
+      "header": "CSA Portions Per Week",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "5": {
+      "header": "CSA Portions",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "6": {
+      "header": "Code",
+      "classification": "CALCULATED",
+      "base_formula": "=UPPER(LEFT(BedPlan[[#This Row],[Crop]],3))",
+      "formula_rows": 134,
+      "value_rows": 4,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Crop"
+      ],
+      "external_deps": []
+    },
+    "7": {
+      "header": "Notes",
+      "classification": "EMPTY",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 6,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "8": {
+      "header": "Name",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "9": {
+      "header": "Variety",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 131,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "11": {
+      "header": "Mix Constituents",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 127,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "12": {
+      "header": "Seeds",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "14": {
+      "header": "# Of Beds",
+      "classification": "CALCULATED",
+      "base_formula": "=1",
+      "formula_rows": 47,
+      "value_rows": 91,
+      "unique_formulas": 2,
+      "variance_pct": 2.1,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "15": {
+      "header": "Display Width",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX(BedPlan[[#This Row],['# Of Beds]],0.5)",
+      "formula_rows": 117,
+      "value_rows": 21,
+      "unique_formulas": 2,
+      "variance_pct": 1.7,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "16": {
+      "header": "Start Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Planned Greenhouse Start Date]]),BedPlan[[#This Row],[Planned Greenhouse Start Date]],BedPlan[[#This Row],[Planned TP or DS Date]])",
+      "formula_rows": 132,
+      "value_rows": 6,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Planned Greenhouse Start Date",
+        "Planned TP or DS Date"
+      ],
+      "external_deps": []
+    },
+    "17": {
+      "header": "Planned Greenhouse Start Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(BedPlan[[#This Row],[Days in Cells]]=0,\"\",IFERROR(_xlfn.XLOOKUP(BedPlan[[#This Row],[Follows Crop]],BedPlan[Identifier],BedPlan[Expected End of Harvest]) + 1+BedPlan[[#This Row],[Follow Offset]],BedPlan[[#This Row],[Fixed Field Start Date]])-BedPlan[[#This Row],[Days in Cells]])",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Days in Cells",
+        "Expected End of Harvest",
+        "Fixed Field Start Date",
+        "Follow Offset",
+        "Follows Crop",
+        "Identifier"
+      ],
+      "external_deps": []
+    },
+    "18": {
+      "header": "Actual Greenhouse Date",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 84,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "19": {
+      "header": "Greenhouse Start Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Actual Greenhouse Date]]),BedPlan[[#This Row],[Actual Greenhouse Date]],BedPlan[[#This Row],[Planned Greenhouse Start Date]])",
+      "formula_rows": 134,
+      "value_rows": 2,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual Greenhouse Date",
+        "Planned Greenhouse Start Date"
+      ],
+      "external_deps": []
+    },
+    "20": {
+      "header": "Fixed Field Start Date",
+      "classification": "MIXED",
+      "base_formula": "=_xlfn.XLOOKUP(BedPlan[[#This Row],[Crop]],Crops[Identifier],Crops[Target Field Date])",
+      "formula_rows": 93,
+      "value_rows": 45,
+      "unique_formulas": 18,
+      "variance_pct": 25.8,
+      "depends_on": [
+        "Crop"
+      ],
+      "external_deps": [
+        "Crops.Identifier",
+        "Crops.Target Field Date"
+      ]
+    },
+    "23": {
+      "header": "Planned TP or DS Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Actual Greenhouse Date]]),BedPlan[[#This Row],[Actual Greenhouse Date]]+BedPlan[[#This Row],[Days in Cells]],IFERROR(_xlfn.XLOOKUP(BedPlan[[#This Row],[Follows Crop]],BedPlan[Identifier],BedPlan[Expected End of Harvest]) + 1+BedPlan[[#This Row],[Follow Offset]],BedPlan[[#This Row],[Fixed Field Start Date]]))",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual Greenhouse Date",
+        "Days in Cells",
+        "Expected End of Harvest",
+        "Fixed Field Start Date",
+        "Follow Offset",
+        "Follows Crop",
+        "Identifier"
+      ],
+      "external_deps": []
+    },
+    "24": {
+      "header": "Actual TP or DS Date",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 95,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "25": {
+      "header": "In Ground Days Late",
+      "classification": "CALCULATED",
+      "base_formula": "=BedPlan[[#This Row],[Actual TP or DS Date]]-BedPlan[[#This Row],[Planned TP or DS Date]]",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual TP or DS Date",
+        "Planned TP or DS Date"
+      ],
+      "external_deps": []
+    },
+    "26": {
+      "header": "TP or DS Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Actual TP or DS Date]]),BedPlan[[#This Row],[Actual TP or DS Date]],BedPlan[[#This Row],[Planned TP or DS Date]])",
+      "formula_rows": 135,
+      "value_rows": 3,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual TP or DS Date",
+        "Planned TP or DS Date"
+      ],
+      "external_deps": []
+    },
+    "28": {
+      "header": "Expected Beginning of Harvest",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Greenhouse Start Date]]),BedPlan[[#This Row],[Greenhouse Start Date]]+BedPlan[[#This Row],[DTM]],BedPlan[[#This Row],[TP or DS Date]]+BedPlan[[#This Row],[DTM]])",
+      "formula_rows": 133,
+      "value_rows": 5,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "DTM",
+        "Greenhouse Start Date",
+        "TP or DS Date"
+      ],
+      "external_deps": []
+    },
+    "30": {
+      "header": "Beginning of Harvest",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Actual Beginning of Harvest]]),BedPlan[[#This Row],[Actual Beginning of Harvest]],BedPlan[[#This Row],[Expected Beginning of Harvest]])",
+      "formula_rows": 136,
+      "value_rows": 2,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual Beginning of Harvest",
+        "Expected Beginning of Harvest"
+      ],
+      "external_deps": []
+    },
+    "31": {
+      "header": "Expected End of Harvest",
+      "classification": "CALCULATED",
+      "base_formula": "=BedPlan[[#This Row],[Expected Beginning of Harvest]]+BedPlan[[#This Row],[Harvest Window]]+BedPlan[[#This Row],[Additional Days of Harvest]]",
+      "formula_rows": 131,
+      "value_rows": 7,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Additional Days of Harvest",
+        "Expected Beginning of Harvest",
+        "Harvest Window"
+      ],
+      "external_deps": []
+    },
+    "34": {
+      "header": "August Harvest",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(AND( BedPlan[[#This Row],[Expected End of Harvest]] >= DATE(2025, 8, 1), BedPlan[[#This Row],[Beginning of Harvest]] <= DATE(2025, 8, 31) ), TRUE, FALSE)",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "36": {
+      "header": "End of Harvest",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Actual End of Harvest]]),BedPlan[[#This Row],[Actual End of Harvest]],BedPlan[[#This Row],[Expected End of Harvest]])",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual End of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "37": {
+      "header": "Seeding Done",
+      "classification": "CALCULATED",
+      "base_formula": "=OR(ISNUMBER(BedPlan[[#This Row],[Actual Greenhouse Date]]),ISNUMBER(BedPlan[[#This Row],[Actual TP or DS Date]]))",
+      "formula_rows": 134,
+      "value_rows": 4,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual Greenhouse Date",
+        "Actual TP or DS Date"
+      ],
+      "external_deps": []
+    },
+    "38": {
+      "header": "Transplant Done",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Planned Greenhouse Start Date]]),OR(ISNUMBER(BedPlan[[#This Row],[Actual TP or DS Date]]),BedPlan[[#This Row],[Failed]]),\"-\")",
+      "formula_rows": 134,
+      "value_rows": 4,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual TP or DS Date",
+        "Failed",
+        "Planned Greenhouse Start Date"
+      ],
+      "external_deps": []
+    },
+    "39": {
+      "header": "Harvest Done",
+      "classification": "CALCULATED",
+      "base_formula": "=OR(ISNUMBER(BedPlan[[#This Row],[Actual End of Harvest]]),BedPlan[[#This Row],[Failed]])",
+      "formula_rows": 134,
+      "value_rows": 4,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual End of Harvest",
+        "Failed"
+      ],
+      "external_deps": []
+    },
+    "40": {
+      "header": "Crop Done",
+      "classification": "CALCULATED",
+      "base_formula": "=OR(BedPlan[[#This Row],[Harvest Done]],BedPlan[[#This Row],[Failed]],BedPlan[[#This Row],[Name]]=\"Tarp\")",
+      "formula_rows": 134,
+      "value_rows": 4,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Failed",
+        "Harvest Done",
+        "Name"
+      ],
+      "external_deps": []
+    },
+    "41": {
+      "header": "Broadfork",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 28,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "42": {
+      "header": "Tilther",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 38,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "43": {
+      "header": "Amend",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 64,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "44": {
+      "header": "Row Cover",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 19,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "45": {
+      "header": "Broadfork Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(BedPlan[[#This Row],[Broadfork]],BedPlan[[#This Row],[Actual TP or DS Date]],\"\")",
+      "formula_rows": 137,
+      "value_rows": 1,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual TP or DS Date",
+        "Broadfork"
+      ],
+      "external_deps": []
+    },
+    "46": {
+      "header": "Tilther Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(BedPlan[[#This Row],[Tilther]],BedPlan[[#This Row],[Actual TP or DS Date]],\"\")",
+      "formula_rows": 137,
+      "value_rows": 1,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual TP or DS Date",
+        "Tilther"
+      ],
+      "external_deps": []
+    },
+    "47": {
+      "header": "Amend Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(NOT(ISBLANK(BedPlan[[#This Row],[Amend]])),BedPlan[[#This Row],[Actual TP or DS Date]],\"\")",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual TP or DS Date",
+        "Amend"
+      ],
+      "external_deps": []
+    },
+    "48": {
+      "header": "Row Cover Date",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(BedPlan[[#This Row],[Row Cover]],BedPlan[[#This Row],[Actual TP or DS Date]],\"\")",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Actual TP or DS Date",
+        "Row Cover"
+      ],
+      "external_deps": []
+    },
+    "49": {
+      "header": "Observation 1",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 19,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "50": {
+      "header": "Observation 1 Date",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 19,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "51": {
+      "header": "Oberservation 2",
+      "classification": "EMPTY",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 6,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "52": {
+      "header": "Observation 2 Date",
+      "classification": "EMPTY",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 6,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "53": {
+      "header": "Observation 3",
+      "classification": "EMPTY",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 2,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "54": {
+      "header": "Observation 3 Date",
+      "classification": "EMPTY",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 2,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "55": {
+      "header": "Revenue",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "56": {
+      "header": "Revenue Per Bed Day",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "57": {
+      "header": "DTM",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "59": {
+      "header": "Harvest Window",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "60": {
+      "header": "DS/TP",
+      "classification": "CALCULATED",
+      "base_formula": "=IF(ISNUMBER(BedPlan[[#This Row],[Planned Greenhouse Start Date]]),\"TP\",\"DS\")",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Planned Greenhouse Start Date"
+      ],
+      "external_deps": []
+    },
+    "61": {
+      "header": "Full Bed Equivalent",
+      "classification": "CALCULATED",
+      "base_formula": "=BedPlan[[#This Row],['# Of Beds]]",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "62": {
+      "header": "Days in Cells",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "63": {
+      "header": "Rows",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "64": {
+      "header": "Spacing",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "65": {
+      "header": "Seeds Per Planting",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "66": {
+      "header": "Plantings",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "67": {
+      "header": "Irrigation",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "68": {
+      "header": "Chart Index",
+      "classification": "CALCULATED",
+      "base_formula": "=MATCH(BedPlan[[#This Row],[Crop]],Crops[Identifier],FALSE)",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Crop"
+      ],
+      "external_deps": [
+        "Crops.Identifier"
+      ]
+    },
+    "69": {
+      "header": "Variant",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "70": {
+      "header": "Seasons",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "71": {
+      "header": "Days Until Harvest",
+      "classification": "CALCULATED",
+      "base_formula": "=BedPlan[[#This Row],[Expected Beginning of Harvest]]-DATE(2023,1,1)",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Expected Beginning of Harvest"
+      ],
+      "external_deps": []
+    },
+    "72": {
+      "header": "True Harvest Window",
+      "classification": "CALCULATED",
+      "base_formula": "=BedPlan[[#This Row],[Expected End of Harvest]]-BedPlan[[#This Row],[Expected Beginning of Harvest]]",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Expected Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "73": {
+      "header": "Category",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "74": {
+      "header": "Height",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "75": {
+      "header": "Cover",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "76": {
+      "header": "Tray 1 Size",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "77": {
+      "header": "Tray 1 Days",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "78": {
+      "header": "Tray 1 Count",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "79": {
+      "header": "Tray 2 Size",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "80": {
+      "header": "Tray 2 Days",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "81": {
+      "header": "Tray 2 Count",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "82": {
+      "header": "Tray 3 Size",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "83": {
+      "header": "Tray 3 Days",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "84": {
+      "header": "Tray 3 Count",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "85": {
+      "header": "Safety Factor",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "86": {
+      "header": "DTG",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "87": {
+      "header": "Growing Structure",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "88": {
+      "header": " ",
+      "classification": "CALCULATED",
+      "base_formula": "=_xlfn.TEXTJOIN(CHAR(10),FALSE,BedPlan[[#This Row],[Name]],BedPlan[[#This Row],[Variety]],BedPlan[[#This Row],[Company]])",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Company",
+        "Name",
+        "Variety"
+      ],
+      "external_deps": []
+    },
+    "89": {
+      "header": "Harvest Days January 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CK$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CK$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "90": {
+      "header": "Harvest Days February 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CL$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CL$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "91": {
+      "header": "Harvest Days March 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CM$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CM$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "92": {
+      "header": "Harvest Days April 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CN$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CN$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "93": {
+      "header": "Harvest Days May 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CO$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CO$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "94": {
+      "header": "Harvest Days June 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CP$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CP$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "95": {
+      "header": "Harvest Days July 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CQ$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CQ$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "96": {
+      "header": "Harvest Days August 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CR$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CR$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "97": {
+      "header": "Harvest Days September 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CS$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CS$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "98": {
+      "header": "Harvest Days October 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CT$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CT$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "99": {
+      "header": "Harvest Days November 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CU$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CU$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "100": {
+      "header": "Harvest Days December 2025",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CV$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CV$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "101": {
+      "header": "Harvest Days January 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CW$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CW$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "102": {
+      "header": "Harvest Days February 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CX$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CX$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "103": {
+      "header": "Harvest Days March 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CY$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CY$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "104": {
+      "header": "Harvest Days April 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(CZ$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], CZ$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "105": {
+      "header": "Harvest Days May 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(DA$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], DA$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "106": {
+      "header": "Harvest Days June 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(DB$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], DB$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "107": {
+      "header": "Harvest Days July 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(DC$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], DC$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "108": {
+      "header": "Harvest Days August 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(DD$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], DD$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "109": {
+      "header": "Harvest Days September 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(DE$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], DE$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "110": {
+      "header": "Harvest Days October 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(DF$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], DF$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "111": {
+      "header": "Harvest Days November 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(DG$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], DG$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "112": {
+      "header": "Harvest Days December 2026",
+      "classification": "CALCULATED",
+      "base_formula": "=MAX( 0, MIN(BedPlan[[#This Row],[Expected End of Harvest]], EOMONTH(DH$4, 0)) - MAX(BedPlan[[#This Row],[Beginning of Harvest]], DH$4) + 1 )",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Beginning of Harvest",
+        "Expected End of Harvest"
+      ],
+      "external_deps": []
+    },
+    "113": {
+      "header": "Revenue January 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "114": {
+      "header": "Revenue February 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "115": {
+      "header": "Revenue March 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "116": {
+      "header": "Revenue April 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "117": {
+      "header": "Revenue May 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "118": {
+      "header": "Revenue June 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "119": {
+      "header": "Revenue July 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "120": {
+      "header": "Revenue August 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "121": {
+      "header": "Revenue September 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "122": {
+      "header": "Revenue October 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "123": {
+      "header": "Revenue November 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "124": {
+      "header": "Revenue December 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "125": {
+      "header": "Revenue January 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "126": {
+      "header": "Revenue February 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "127": {
+      "header": "Revenue March 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "128": {
+      "header": "Revenue April 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "129": {
+      "header": "Revenue May 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "130": {
+      "header": "Revenue June 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "131": {
+      "header": "Revenue July 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "132": {
+      "header": "Revenue August 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "133": {
+      "header": "Revenue September 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "134": {
+      "header": "Revenue October 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "135": {
+      "header": "Revenue November 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "136": {
+      "header": "Revenue December 2026",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "137": {
+      "header": "Revenue Check",
+      "classification": "CALCULATED",
+      "base_formula": "=SUM(BedPlan[[#This Row],[Revenue January 2025]:[Revenue December 2026]])=BedPlan[[#This Row],[Revenue]]",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Revenue"
+      ],
+      "external_deps": []
+    },
+    "138": {
+      "header": "Yield",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "139": {
+      "header": "Unit",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "140": {
+      "header": "Product",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "141": {
+      "header": "Compound Product",
+      "classification": "CALCULATED",
+      "base_formula": "=BedPlan[[#This Row],[Name]]&\" \"&BedPlan[[#This Row],[Product]]& \" - \" &BedPlan[[#This Row],[Unit]]",
+      "formula_rows": 138,
+      "value_rows": 0,
+      "unique_formulas": 1,
+      "variance_pct": 0.0,
+      "depends_on": [
+        "Name",
+        "Product",
+        "Unit"
+      ],
+      "external_deps": []
+    },
+    "142": {
+      "header": "Yield January 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "143": {
+      "header": "Yield February 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "144": {
+      "header": "Yield March 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "145": {
+      "header": "Yield April 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "146": {
+      "header": "Yield May 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "147": {
+      "header": "Yield June 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "148": {
+      "header": "Yield July 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "149": {
+      "header": "Yield August 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "150": {
+      "header": "Yield September 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "151": {
+      "header": "Yield October 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "152": {
+      "header": "Yield November 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    },
+    "153": {
+      "header": "Yield December 2025",
+      "classification": "INPUT",
+      "base_formula": null,
+      "formula_rows": 0,
+      "value_rows": 138,
+      "unique_formulas": 0,
+      "variance_pct": 0,
+      "depends_on": [],
+      "external_deps": []
+    }
+  }
+}

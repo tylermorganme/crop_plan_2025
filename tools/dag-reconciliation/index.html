@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAG Reconciliation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+  <style>
+    /*
+     * COLOR SYSTEM - Dark Theme with Vibrant Nodes
+     * =============================================
+     *
+     * NODE FILLS (saturated, distinct - easy to identify)
+     * - INPUT:      #2d8659  Green (data comes from outside)
+     * - CALCULATED: #3b82c4  Blue (computed values)
+     * - MIXED:      #c97a3a  Orange (inconsistent - needs attention)
+     * - EMPTY:      #6b7280  Gray (unused)
+     *
+     * BORDERS (high contrast, vivid - status signals)
+     * - Verified:   #22d3ee  Cyan (confirmed good)
+     * - Issue:      #f43f5e  Rose (problem)
+     * - Variance:   #fbbf24  Amber (warning)
+     * - Default:    #2a2a35  Dark (no status)
+     *
+     * UI ACCENT:    #22d3ee  Cyan (interactive elements)
+     *
+     * TOGGLES (unique colors, not used elsewhere)
+     * - Verified:   #22d3ee  Cyan
+     * - Remove:     #6b7280  Gray
+     * - Issue:      #f43f5e  Rose
+     * - Implemented:#a78bfa  Purple
+     */
+
+    :root {
+      /* Surface colors */
+      --bg-deep: #0c0c12;
+      --bg-panel: #14141e;
+      --bg-card: #1c1c28;
+      --bg-hover: #252532;
+      --border-subtle: #2a2a38;
+
+      /* Node fill colors (saturated, distinct) */
+      --node-input: #2d8659;
+      --node-calculated: #3b82c4;
+      --node-mixed: #c97a3a;
+      --node-empty: #6b7280;
+
+      /* Border status colors (vivid, high contrast) */
+      --status-verified: #22d3ee;
+      --status-issue: #f43f5e;
+      --status-variance: #fbbf24;
+      --status-skip: #a855f7;
+      --status-none: #2a2a35;
+
+      /* Toggle colors (distinct from everything else) */
+      --toggle-verified: #22d3ee;
+      --toggle-remove: #6b7280;
+      --toggle-issue: #f43f5e;
+      --toggle-implemented: #a78bfa;
+      --toggle-skip: #a855f7;
+
+      /* Stats colors */
+      --stat-verified: #22d3ee;
+      --stat-pending: #fbbf24;
+      --stat-issues: #f43f5e;
+      --stat-removed: #6b7280;
+
+      /* UI accent */
+      --accent: #22d3ee;
+      --accent-dim: #0e7490;
+
+      /* Text - high contrast */
+      --text-primary: #ffffff;
+      --text-secondary: #b8b8c8;
+      --text-muted: #8888a0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg-deep);
+    }
+
+    #sidebar {
+      width: 300px;
+      background: var(--bg-panel);
+      color: var(--text-primary);
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border-right: 1px solid var(--border-subtle);
+    }
+
+    #cy {
+      flex: 1;
+      background: var(--bg-deep);
+    }
+
+    #inspector {
+      width: 320px;
+      background: var(--bg-panel);
+      color: var(--text-primary);
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    #inspector.empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #inspector.empty::before {
+      content: 'Click a node to inspect';
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    #inspector:not(.empty)::before {
+      display: none;
+    }
+
+    #raw-data-panel {
+      width: 320px;
+      background: var(--bg-panel);
+      color: var(--text-primary);
+      padding: 16px;
+      overflow-y: auto;
+      border-left: 1px solid var(--border-subtle);
+      display: none;
+    }
+
+    #raw-data-panel.visible {
+      display: block;
+    }
+
+    #raw-data-panel h2 {
+      margin-bottom: 8px;
+    }
+
+    #raw-data-panel .column-header {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    #raw-data-panel .row-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    #raw-data-content {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    .cell-row {
+      padding: 4px 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      gap: 8px;
+    }
+
+    .cell-row:hover {
+      background: var(--bg-hover);
+    }
+
+    .cell-row .row-num {
+      color: var(--text-muted);
+      width: 28px;
+      flex-shrink: 0;
+      text-align: right;
+    }
+
+    .cell-row .cell-value {
+      color: var(--text-primary);
+      word-break: break-word;
+    }
+
+    .cell-row .cell-value.null {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .cell-row .cell-value.formula {
+      color: var(--node-calculated);
+    }
+
+    .cell-row .cell-value.boolean-true {
+      color: #22c55e;
+    }
+
+    .cell-row .cell-value.boolean-false {
+      color: var(--text-muted);
+    }
+
+    h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .stat {
+      background: var(--bg-card);
+      padding: 12px 8px;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+
+    .stat.verified .stat-value { color: var(--stat-verified); }
+    .stat.pending .stat-value { color: var(--stat-pending); }
+    .stat.issues .stat-value { color: var(--stat-issues); }
+    .stat.removed .stat-value { color: var(--stat-removed); }
+
+    .filters {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--text-muted);
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg-deep);
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .legend-section {
+      margin-bottom: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-primary);
+      padding: 4px 0;
+    }
+
+    .legend-color {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid transparent;
+      flex-shrink: 0;
+    }
+
+    #node-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #node-details.hidden { display: none; }
+
+    #node-details h3 {
+      color: var(--accent);
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .detail-label { color: var(--text-secondary); }
+    .detail-value {
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    .formula-preview {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: var(--bg-panel);
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 12px;
+      word-break: break-all;
+      max-height: 100px;
+      overflow-y: auto;
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .flag-toggles {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .flag-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .flag-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--bg-hover);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .flag-toggle.active {
+      background: var(--toggle-verified);
+      border-color: var(--toggle-verified);
+    }
+    .flag-toggle.active.remove {
+      background: var(--toggle-remove);
+      border-color: var(--toggle-remove);
+    }
+    .flag-toggle.active.issue {
+      background: var(--toggle-issue);
+      border-color: var(--toggle-issue);
+    }
+    .flag-toggle.active.implemented {
+      background: var(--toggle-implemented);
+      border-color: var(--toggle-implemented);
+    }
+    .flag-toggle.active.skip {
+      background: var(--toggle-skip);
+      border-color: var(--toggle-skip);
+    }
+
+    .flag-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    .flag-toggle.active::after {
+      transform: translateX(20px);
+    }
+
+    .flag-label {
+      font-size: 14px;
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    .notes-input {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 60px;
+      transition: border-color 0.15s ease;
+    }
+
+    .notes-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .table-select {
+      display: flex;
+      gap: 8px;
+    }
+
+    .table-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .table-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .table-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(34, 211, 238, 0.08);
+    }
+
+    #progress-bar {
+      height: 6px;
+      background: var(--bg-card);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-dim));
+      transition: width 0.3s ease;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .control-btn {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .control-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--text-muted);
+    }
+
+    .deps-list {
+      margin-top: 12px;
+      font-size: 13px;
+    }
+
+    .deps-list-title {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .dep-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      margin: 3px;
+      background: var(--bg-hover);
+      border-radius: 4px;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      transition: all 0.15s ease;
+    }
+
+    .dep-tag:hover {
+      background: var(--accent);
+      color: var(--bg-deep);
+    }
+
+    .dep-tag.external {
+      background: rgba(167, 139, 250, 0.2);
+      color: #a78bfa;
+    }
+
+    .status-indicator {
+      padding: 6px 12px;
+      background: var(--stat-verified);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--bg-deep);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-indicator.offline {
+      background: var(--stat-issues);
+    }
+
+    .status-indicator.connecting {
+      background: var(--stat-pending);
+    }
+
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-panel);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>DAG Reconciliation</h1>
+      <span class="status-indicator" id="server-status">Connecting...</span>
+    </div>
+
+    <div class="table-select">
+      <button class="table-btn active" data-table="crops">Crops</button>
+      <button class="table-btn" data-table="bedplan">BedPlan</button>
+    </div>
+
+    <div>
+      <h2>Progress</h2>
+      <div id="progress-bar"><div id="progress-fill" style="width: 0%"></div></div>
+      <div class="stats" style="margin-top: 8px;">
+        <div class="stat verified">
+          <div class="stat-value" id="stat-verified">0</div>
+          <div class="stat-label">Verified</div>
+        </div>
+        <div class="stat pending">
+          <div class="stat-value" id="stat-pending">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat issues">
+          <div class="stat-value" id="stat-issues">0</div>
+          <div class="stat-label">Issues</div>
+        </div>
+        <div class="stat removed">
+          <div class="stat-value" id="stat-removed">0</div>
+          <div class="stat-label">Remove</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <h2>Filter by Status</h2>
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+        <button class="filter-btn" data-filter="verified">Verified</button>
+        <button class="filter-btn" data-filter="unverified">Unverified</button>
+        <button class="filter-btn" data-filter="issues">Issues</button>
+        <button class="filter-btn" data-filter="skip">Skipped</button>
+        <button class="filter-btn" data-filter="remove">Remove</button>
+      </div>
+
+      <h2>Filter by Type</h2>
+      <div class="filter-group">
+        <button class="filter-btn" data-type="INPUT">Input</button>
+        <button class="filter-btn" data-type="CALCULATED">Calculated</button>
+        <button class="filter-btn" data-type="MIXED">Mixed</button>
+        <button class="filter-btn" data-type="variance">Has Variance</button>
+      </div>
+
+      <h2>Filter by Level</h2>
+      <div class="filter-group" id="level-filters"></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-section">
+        <h2>Node Classification</h2>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-input);"></div>
+          <span>INPUT - static data</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-calculated);"></div>
+          <span>CALCULATED - formula</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-mixed);"></div>
+          <span>MIXED - variance, needs review</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-empty);"></div>
+          <span>EMPTY - unused</span>
+        </div>
+      </div>
+      <div class="legend-section">
+        <h2>Border Status (dashed + white)</h2>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-calculated); border: 3px dashed #00ff88; outline: 2px solid #fff; outline-offset: -5px;"></div>
+          <span>Verified (mint/white)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-calculated); border: 3px dashed #ff3366; outline: 2px solid #fff; outline-offset: -5px;"></div>
+          <span>Has Issue (pink/white)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-calculated); border: 3px dashed #ffee00; outline: 2px solid #fff; outline-offset: -5px;"></div>
+          <span>Has Variance (yellow/white)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-calculated); border: 3px dashed #a855f7; outline: 2px solid #fff; outline-offset: -5px;"></div>
+          <span>Skip for now (purple/white)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: var(--node-calculated); opacity: 0.35;"></div>
+          <span>Marked for removal (faded)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="control-btn" onclick="fitGraph()">Fit</button>
+      <button class="control-btn" onclick="resetLayout()">Re-layout</button>
+      <button class="control-btn" onclick="resetDB()">Reset DB</button>
+      <button class="control-btn" onclick="exportData()">Export</button>
+    </div>
+  </div>
+
+  <div id="cy"></div>
+
+  <div id="inspector" class="empty">
+    <div id="node-details" class="hidden">
+      <h3 id="detail-header">Column Name</h3>
+      <div class="detail-row">
+        <span class="detail-label">Column</span>
+        <span class="detail-value"><span id="detail-letter">-</span> (<span id="detail-col">-</span>)</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Classification</span>
+        <span class="detail-value" id="detail-type">-</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Level</span>
+        <span class="detail-value" id="detail-level">-</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Row breakdown</span>
+        <span class="detail-value"><span id="detail-formula-count">0</span> formulas, <span id="detail-value-count">0</span> values</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Variance</span>
+        <span class="detail-value"><span id="detail-variance">-</span> (<span id="detail-unique">1</span> unique formulas)</span>
+      </div>
+
+      <div class="deps-list" id="deps-on">
+        <div class="deps-list-title">Depends on:</div>
+        <div id="deps-on-list"></div>
+      </div>
+
+      <div class="deps-list" id="used-by">
+        <div class="deps-list-title">Used by:</div>
+        <div id="used-by-list"></div>
+      </div>
+
+      <div class="formula-preview" id="detail-formula">No formula</div>
+
+      <div class="flag-toggles">
+        <div class="flag-row">
+          <div class="flag-toggle" id="toggle-verified" onclick="toggleFlag('verified')"></div>
+          <span class="flag-label">Verified</span>
+        </div>
+        <div class="flag-row">
+          <div class="flag-toggle remove" id="toggle-remove" onclick="toggleFlag('remove')"></div>
+          <span class="flag-label">Remove</span>
+        </div>
+        <div class="flag-row">
+          <div class="flag-toggle issue" id="toggle-issue" onclick="toggleFlag('has_issue')"></div>
+          <span class="flag-label">Has Issue</span>
+        </div>
+        <div class="flag-row">
+          <div class="flag-toggle implemented" id="toggle-implemented" onclick="toggleFlag('implemented')"></div>
+          <span class="flag-label">Implemented</span>
+        </div>
+        <div class="flag-row">
+          <div class="flag-toggle skip" id="toggle-skip" onclick="toggleFlag('skip')"></div>
+          <span class="flag-label">Skip for now</span>
+        </div>
+      </div>
+
+      <div>
+        <label style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Maps to code field:</label>
+        <input type="text" class="notes-input" id="code-field-input" placeholder="e.g. crop.identifier" style="min-height: auto; padding: 8px 10px; margin-top: 6px;" onchange="updateCodeField()">
+      </div>
+
+      <div>
+        <label style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Notes:</label>
+        <textarea class="notes-input" id="notes-input" placeholder="Add notes..." style="margin-top: 6px;" onchange="updateNotes()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div id="raw-data-panel">
+    <h2>Column Values</h2>
+    <div class="column-header" id="raw-column-name">-</div>
+    <div class="row-count" id="raw-row-count">-</div>
+    <div id="raw-data-content"></div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:4567/api';
+    const DATA_BASE = 'http://localhost:4567/data';
+    const RAW_DATA_URLS = {
+      crops: DATA_BASE + '/crops.json',
+      bedplan: DATA_BASE + '/bed-plan.json',
+    };
+
+    // ============================================================
+    // APPLICATION STATE - Single source of truth
+    // ============================================================
+    const state = {
+      cy: null,
+      currentTable: 'crops',
+      selectedNodeId: null,
+      activeFilter: 'all',        // Status filter: all, pending, verified, etc.
+      activeTypeFilter: null,     // Type filter: INPUT, CALCULATED, etc.
+      activeLevelFilter: null,    // Level filter: 0, 1, 2, etc.
+      rawData: { crops: null, bedplan: null },
+      edges: [],
+    };
+
+    // Backward compat aliases (will refactor away)
+    let cy;
+    let currentTable = 'crops';
+    let selectedNode = null;
+    let allColumns = [];
+    let edges = [];
+    let eventSource = null;
+    let rawData = { crops: null, bedplan: null };
+
+    // Node fill colors (saturated, distinct - easy to identify)
+    const classColors = {
+      INPUT: '#2d8659',        // Green
+      CALCULATED: '#3b82c4',   // Blue
+      MIXED: '#c97a3a',        // Orange
+      EMPTY: '#6b7280',        // Gray
+    };
+
+    // Border status colors - high contrast pairs (outer/inner for double border effect)
+    // Using colors that contrast with ALL node fills
+    const statusColors = {
+      verified: '#00ff88',     // Bright mint green (contrasts with blue/orange/gray fills)
+      issue: '#ff3366',        // Hot pink/magenta (contrasts with green/blue fills)
+      variance: '#ffee00',     // Bright yellow (contrasts with all fills)
+      skip: '#a855f7',         // Purple (skip for now)
+      none: '#2a2a35',         // Dark (no status)
+    };
+
+    async function api(endpoint, options = {}) {
+      const response = await fetch(API_BASE + endpoint, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+      });
+      return response.json();
+    }
+
+    async function init() {
+      try {
+        const stats = await api('/stats');
+        document.getElementById('server-status').textContent = 'Connected';
+        document.getElementById('server-status').classList.remove('offline');
+      } catch (e) {
+        document.getElementById('server-status').textContent = 'Offline';
+        document.getElementById('server-status').classList.add('offline');
+        console.error('Server not running. Start with: npm start');
+        return;
+      }
+
+      // Restore saved UI state
+      const savedState = restoreUIState();
+      const tableToLoad = savedState?.currentTable || 'crops';
+
+      edges = await api('/edges');
+      await loadRawData();
+      initCytoscape();
+      setupEventHandlers();
+      await showTable(tableToLoad);
+
+      // Apply saved state after graph loads
+      if (savedState) {
+        applyUIState(savedState);
+      }
+
+      connectSSE();
+    }
+
+    function connectSSE() {
+      if (eventSource) eventSource.close();
+
+      eventSource = new EventSource(API_BASE + '/events');
+
+      eventSource.onopen = () => {
+        console.log('SSE connected');
+        document.getElementById('server-status').textContent = 'Live';
+        document.getElementById('server-status').style.background = '#27ae60';
+      };
+
+      eventSource.onmessage = async (event) => {
+        const { type, data } = JSON.parse(event.data);
+
+        if (type === 'column-updated') {
+          // Update specific node's data
+          const node = cy.getElementById(data.id);
+          if (node.length) {
+            node.data('verified', data.verified);
+            node.data('remove', data.remove);
+            node.data('has_issue', data.has_issue);
+            node.data('implemented', data.implemented);
+            node.data('skip', data.skip);
+            node.data('notes', data.notes);
+
+            // Update style based on new data
+            node.style({
+              'border-width': getBorderWidth(node.data()),
+              'border-color': getBorderColor(node.data()),
+              'border-style': getBorderStyle(node.data()),
+              'opacity': node.data('remove') ? 0.4 : 1,
+            });
+
+            // Update detail panel if this node is selected
+            if (state.selectedNodeId === data.id) {
+              document.getElementById('toggle-verified').classList.toggle('active', data.verified);
+              document.getElementById('toggle-remove').classList.toggle('active', data.remove);
+              document.getElementById('toggle-issue').classList.toggle('active', data.has_issue);
+              document.getElementById('toggle-implemented').classList.toggle('active', data.implemented);
+              document.getElementById('toggle-skip').classList.toggle('active', data.skip);
+              document.getElementById('code-field-input').value = data.code_field || '';
+              document.getElementById('notes-input').value = data.notes || '';
+            }
+          }
+          await updateStats();
+          // Re-render to apply filter logic with updated data
+          renderGraph();
+        } else if (type === 'bulk-updated') {
+          // Refresh all data for bulk updates
+          await showTable(state.currentTable);
+        }
+      };
+
+      eventSource.onerror = () => {
+        document.getElementById('server-status').textContent = 'Reconnecting...';
+        document.getElementById('server-status').style.background = '#f39c12';
+        // EventSource auto-reconnects
+      };
+    }
+
+    function initCytoscape() {
+      cy = cytoscape({
+        container: document.getElementById('cy'),
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'label': 'data(label)',
+              'text-valign': 'center',
+              'text-halign': 'center',
+              'background-color': (ele) => classColors[ele.data('classification')] || '#666',
+              'color': '#fff',
+              'font-size': '10px',
+              'text-outline-color': '#000',
+              'text-outline-width': 1,
+              'width': (ele) => 20 + ele.data('label').length * 4,
+              'height': 24,
+              'shape': 'roundrectangle',
+              'border-width': (ele) => getBorderWidth(ele.data()),
+              'border-color': (ele) => getBorderColor(ele.data()),
+              'border-style': (ele) => getBorderStyle(ele.data()),
+              'opacity': (ele) => ele.data('remove') ? 0.4 : 1,
+              // White underlay creates the "second color" in the dashed border gaps
+              'underlay-color': '#ffffff',
+              'underlay-padding': (ele) => hasStatus(ele.data()) ? 2 : 0,
+              'underlay-opacity': (ele) => hasStatus(ele.data()) ? 1 : 0,
+            }
+          },
+          {
+            selector: 'node:selected',
+            style: { 'border-width': 4, 'border-color': '#fff' }
+          },
+          {
+            selector: 'node.highlighted',
+            style: { 'border-width': 4, 'border-color': '#22d3ee' }
+          },
+          {
+            selector: 'node.dimmed',
+            style: { 'opacity': 0.15 }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 1,
+              'line-color': '#444',
+              'target-arrow-color': '#444',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier',
+              'arrow-scale': 0.8,
+            }
+          },
+          {
+            selector: 'edge.highlighted',
+            style: { 'line-color': '#22d3ee', 'target-arrow-color': '#22d3ee', 'width': 2 }
+          },
+          {
+            selector: 'edge.dimmed',
+            style: { 'opacity': 0.1 }
+          },
+        ],
+      });
+
+      cy.on('tap', 'node', (evt) => selectNode(evt.target));
+      cy.on('tap', (evt) => { if (evt.target === cy) clearSelection(); });
+
+      // Save state on zoom/pan (debounced)
+      let saveTimeout;
+      cy.on('viewport', () => {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveUIState, 300);
+      });
+    }
+
+    function getBorderWidth(data) {
+      if (data.has_issue) return 4;
+      if (data.verified) return 4;
+      if (data.skip) return 4;
+      if (data.variance > 0) return 3;
+      return 1;
+    }
+
+    function getBorderColor(data) {
+      if (data.has_issue) return statusColors.issue;
+      if (data.verified) return statusColors.verified;
+      if (data.skip) return statusColors.skip;
+      if (data.variance > 0) return statusColors.variance;
+      return statusColors.none;
+    }
+
+    function getBorderStyle(data) {
+      // Dashed border + white underlay = two-color effect
+      if (data.has_issue || data.verified || data.skip || data.variance > 0) return 'dashed';
+      return 'solid';
+    }
+
+    function hasStatus(data) {
+      return data.has_issue || data.verified || data.skip || data.variance > 0;
+    }
+
+    async function showTable(table) {
+      currentTable = table;
+      state.currentTable = table;
+      document.querySelectorAll('.table-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.table === table);
+      });
+
+      allColumns = await api(`/columns?table=${table}`);
+      const nodes = allColumns.map(col => ({
+        data: {
+          id: col.id,
+          label: col.header,
+          col: col.col_num,
+          colLetter: col.col_letter,
+          classification: col.classification,
+          level: col.level,
+          formula: col.formula,
+          variance: col.variance,
+          formula_count: col.formula_count,
+          value_count: col.value_count,
+          unique_formulas: col.unique_formulas,
+          depends_on: col.depends_on,
+          external_deps: col.external_deps,
+          verified: col.verified,
+          remove: col.remove,
+          has_issue: col.has_issue,
+          implemented: col.implemented,
+          skip: col.skip,
+          notes: col.notes,
+          code_field: col.code_field,
+        }
+      }));
+
+      const nodeIds = new Set(nodes.map(n => n.data.id));
+      const tableEdges = edges.filter(e => nodeIds.has(e.data.source) && nodeIds.has(e.data.target));
+
+      cy.elements().remove();
+      cy.add({ nodes, edges: tableEdges });
+      cy.layout({ name: 'dagre', rankDir: 'TB', nodeSep: 30, rankSep: 50, padding: 30 }).run();
+
+      await updateStats();
+      updateLevelFilters();
+
+      // Apply current filter state to new nodes
+      renderGraph();
+      saveUIState();
+    }
+
+    async function updateStats() {
+      const stats = await api(`/stats?table=${currentTable}`);
+      document.getElementById('stat-verified').textContent = stats.stats.verified || 0;
+      document.getElementById('stat-pending').textContent = stats.stats.pending || 0;
+      document.getElementById('stat-issues').textContent = stats.stats.issues || 0;
+      document.getElementById('stat-removed').textContent = stats.stats.removed || 0;
+
+      const total = stats.stats.total || 0;
+      const done = (stats.stats.verified || 0) + (stats.stats.removed || 0);
+      const progress = total > 0 ? (done / total) * 100 : 0;
+      document.getElementById('progress-fill').style.width = progress + '%';
+    }
+
+    function updateLevelFilters() {
+      const levels = new Set();
+      cy.nodes().forEach(n => levels.add(n.data('level')));
+      const container = document.getElementById('level-filters');
+      container.innerHTML = '';
+      [...levels].sort((a, b) => a - b).forEach(level => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.dataset.level = level;
+        btn.textContent = `L${level}`;
+        btn.onclick = () => filterByLevel(level, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectNode(node) {
+      selectedNode = node;
+      state.selectedNodeId = node.id();
+
+      // Render handles all visual state now
+      renderGraph();
+
+      const data = node.data();
+      document.getElementById('inspector').classList.remove('empty');
+      document.getElementById('node-details').classList.remove('hidden');
+      document.getElementById('raw-data-panel').classList.add('visible');
+      updateRawDataPanel(data);
+      saveUIState();
+      document.getElementById('detail-header').textContent = data.label;
+      document.getElementById('detail-col').textContent = data.col;
+      document.getElementById('detail-letter').textContent = data.colLetter || '?';
+      document.getElementById('detail-type').textContent = data.classification;
+      document.getElementById('detail-level').textContent = data.level;
+      document.getElementById('detail-formula-count').textContent = data.formula_count || 0;
+      document.getElementById('detail-value-count').textContent = data.value_count || 0;
+      document.getElementById('detail-variance').textContent = data.variance > 0 ? data.variance + '%' : '0%';
+      document.getElementById('detail-unique').textContent = data.unique_formulas || 0;
+      document.getElementById('detail-formula').textContent = data.formula || 'No formula (input column)';
+
+      document.getElementById('toggle-verified').classList.toggle('active', data.verified);
+      document.getElementById('toggle-remove').classList.toggle('active', data.remove);
+      document.getElementById('toggle-issue').classList.toggle('active', data.has_issue);
+      document.getElementById('toggle-implemented').classList.toggle('active', data.implemented);
+      document.getElementById('toggle-skip').classList.toggle('active', data.skip);
+      document.getElementById('code-field-input').value = data.code_field || '';
+      document.getElementById('notes-input').value = data.notes || '';
+
+      const depsOnList = document.getElementById('deps-on-list');
+      const usedByList = document.getElementById('used-by-list');
+      depsOnList.innerHTML = '';
+      usedByList.innerHTML = '';
+
+      const incomers = node.incomers('node');
+      const outgoers = node.outgoers('node');
+
+      if (incomers.length === 0 && (!data.external_deps || data.external_deps.length === 0)) {
+        depsOnList.innerHTML = '<span style="color:#666">None (root/input)</span>';
+      } else {
+        incomers.forEach(n => {
+          const tag = document.createElement('span');
+          tag.className = 'dep-tag';
+          tag.textContent = n.data('label');
+          tag.onclick = () => selectNode(n);
+          depsOnList.appendChild(tag);
+        });
+        (data.external_deps || []).forEach(ext => {
+          const tag = document.createElement('span');
+          tag.className = 'dep-tag external';
+          tag.textContent = ext;
+          depsOnList.appendChild(tag);
+        });
+      }
+
+      if (outgoers.length === 0) {
+        usedByList.innerHTML = '<span style="color:#666">None (leaf)</span>';
+      } else {
+        outgoers.forEach(n => {
+          const tag = document.createElement('span');
+          tag.className = 'dep-tag';
+          tag.textContent = n.data('label');
+          tag.onclick = () => selectNode(n);
+          usedByList.appendChild(tag);
+        });
+      }
+    }
+
+    function clearSelection() {
+      selectedNode = null;
+      state.selectedNodeId = null;
+
+      // Render handles all visual state
+      renderGraph();
+
+      document.getElementById('node-details').classList.add('hidden');
+      document.getElementById('inspector').classList.add('empty');
+      document.getElementById('raw-data-panel').classList.remove('visible');
+      saveUIState();
+    }
+
+    async function loadRawData() {
+      try {
+        const cropsResp = await fetch(RAW_DATA_URLS.crops);
+        if (cropsResp.ok) {
+          const data = await cropsResp.json();
+          rawData.crops = data.crops || data;
+        }
+      } catch (e) {
+        console.log('Could not load crops raw data:', e);
+      }
+
+      try {
+        const bedplanResp = await fetch(RAW_DATA_URLS.bedplan);
+        if (bedplanResp.ok) {
+          const data = await bedplanResp.json();
+          rawData.bedplan = data.plantings || data.bedplan || data;
+        }
+      } catch (e) {
+        console.log('Could not load bedplan raw data:', e);
+      }
+    }
+
+    function updateRawDataPanel(nodeData) {
+      const container = document.getElementById('raw-data-content');
+      const columnName = nodeData.label;
+      const tableData = rawData[currentTable];
+
+      document.getElementById('raw-column-name').textContent = columnName;
+
+      if (!tableData || !Array.isArray(tableData)) {
+        document.getElementById('raw-row-count').textContent = 'No data loaded';
+        container.innerHTML = '<div style="color: var(--text-muted); padding: 20px;">Raw data not available</div>';
+        return;
+      }
+
+      // Get all values for this column
+      const values = tableData.map((row, idx) => ({
+        rowNum: idx + 1,
+        value: row[columnName]
+      }));
+
+      document.getElementById('raw-row-count').textContent = `${values.length} rows`;
+
+      // Build HTML for the values
+      let html = '';
+      for (const { rowNum, value } of values) {
+        const { display, className } = formatCellValue(value);
+        html += `<div class="cell-row">
+          <span class="row-num">${rowNum}</span>
+          <span class="cell-value ${className}">${escapeHtml(display)}</span>
+        </div>`;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function formatCellValue(value) {
+      if (value === null || value === undefined) {
+        return { display: '(null)', className: 'null' };
+      }
+      if (typeof value === 'boolean') {
+        return { display: value ? 'TRUE' : 'FALSE', className: value ? 'boolean-true' : 'boolean-false' };
+      }
+      if (typeof value === 'number') {
+        return { display: String(value), className: '' };
+      }
+      if (typeof value === 'string') {
+        if (value === '') return { display: '(empty)', className: 'null' };
+        if (value.startsWith('=')) return { display: value, className: 'formula' };
+        // Truncate very long strings for display
+        const display = value.length > 80 ? value.substring(0, 77) + '...' : value;
+        return { display, className: '' };
+      }
+      return { display: JSON.stringify(value), className: '' };
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function toggleFlag(flag) {
+      if (!selectedNode) return;
+      const current = selectedNode.data(flag);
+      const newValue = !current;
+      selectedNode.data(flag, newValue);
+
+      const toggleMap = { verified: 'toggle-verified', remove: 'toggle-remove', has_issue: 'toggle-issue', implemented: 'toggle-implemented', skip: 'toggle-skip' };
+      document.getElementById(toggleMap[flag]).classList.toggle('active', newValue);
+
+      await api(`/columns/${selectedNode.data('id')}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ [flag]: newValue }),
+      });
+
+      selectedNode.style({
+        'border-width': getBorderWidth(selectedNode.data()),
+        'border-color': getBorderColor(selectedNode.data()),
+        'opacity': selectedNode.data('remove') ? 0.4 : 1,
+      });
+
+      await updateStats();
+
+      // Reapply the active filter so the node visibility updates
+      reapplyActiveFilter();
+    }
+
+    // ============================================================
+    // RENDER - Single function to apply all visual state
+    // ============================================================
+    function renderGraph() {
+      if (!cy) return;
+
+      const filter = state.activeFilter;
+      const typeFilter = state.activeTypeFilter;
+      const levelFilter = state.activeLevelFilter;
+
+      cy.batch(() => {
+        cy.elements().removeClass('highlighted dimmed');
+
+        // Apply filters to determine which nodes should be visible
+        cy.nodes().forEach(n => {
+          const d = n.data();
+
+          // Check status filter
+          let passesStatusFilter = true;
+          if (filter === 'all') passesStatusFilter = true;
+          else if (filter === 'pending') passesStatusFilter = !d.verified && !d.remove && !d.has_issue && !d.skip;
+          else if (filter === 'verified') passesStatusFilter = d.verified && !d.remove;
+          else if (filter === 'unverified') passesStatusFilter = !d.verified && !d.remove;
+          else if (filter === 'issues') passesStatusFilter = d.has_issue;
+          else if (filter === 'skip') passesStatusFilter = d.skip;
+          else if (filter === 'remove') passesStatusFilter = d.remove;
+
+          // Check type filter
+          let passesTypeFilter = true;
+          if (typeFilter) {
+            passesTypeFilter = typeFilter === 'variance'
+              ? d.variance > 0
+              : d.classification === typeFilter;
+          }
+
+          // Check level filter
+          let passesLevelFilter = true;
+          if (levelFilter !== null) {
+            passesLevelFilter = d.level === levelFilter;
+          }
+
+          // Dim if doesn't pass any active filter
+          if (!passesStatusFilter || !passesTypeFilter || !passesLevelFilter) {
+            n.addClass('dimmed');
+          }
+        });
+
+        // Apply selection highlighting ON TOP of filter state
+        if (state.selectedNodeId) {
+          const node = cy.getElementById(state.selectedNodeId);
+          if (node.length) {
+            const predecessors = node.predecessors();
+            const successors = node.successors();
+
+            // Highlight selected and its dependencies
+            node.addClass('highlighted');
+            predecessors.addClass('highlighted');
+            // Successors just un-dim, don't highlight
+          }
+        }
+      });
+    }
+
+    // Backward compat - will remove
+    function reapplyActiveFilter() {
+      renderGraph();
+    }
+
+    async function updateNotes() {
+      if (!selectedNode) return;
+      const notes = document.getElementById('notes-input').value;
+      selectedNode.data('notes', notes);
+      await api(`/columns/${selectedNode.data('id')}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ notes }),
+      });
+    }
+
+    async function updateCodeField() {
+      if (!selectedNode) return;
+      const code_field = document.getElementById('code-field-input').value;
+      selectedNode.data('code_field', code_field);
+      await api(`/columns/${selectedNode.data('id')}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ code_field }),
+      });
+    }
+
+    function filterByLevel(level, btn) {
+      const isActive = btn.classList.contains('active');
+      document.querySelectorAll('#level-filters .filter-btn').forEach(b => b.classList.remove('active'));
+      if (!isActive) {
+        btn.classList.add('active');
+        state.activeLevelFilter = level;
+      } else {
+        state.activeLevelFilter = null;
+      }
+      renderGraph();
+      saveUIState();
+    }
+
+    function setupEventHandlers() {
+      document.querySelectorAll('.table-btn').forEach(btn => {
+        btn.onclick = () => showTable(btn.dataset.table);
+      });
+
+      document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.activeFilter = btn.dataset.filter;
+          renderGraph();
+          saveUIState();
+        };
+      });
+
+      document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+        btn.onclick = () => {
+          const wasActive = btn.classList.contains('active');
+          document.querySelectorAll('.filter-btn[data-type]').forEach(b => b.classList.remove('active'));
+          if (!wasActive) {
+            btn.classList.add('active');
+            state.activeTypeFilter = btn.dataset.type;
+          } else {
+            state.activeTypeFilter = null;
+          }
+          renderGraph();
+          saveUIState();
+        };
+      });
+    }
+
+    // UI State Persistence
+    const UI_STATE_KEY = 'dag-reconciliation-ui-state';
+
+    function saveUIState() {
+      const savedState = {
+        currentTable: state.currentTable,
+        selectedNodeId: state.selectedNodeId,
+        activeFilter: state.activeFilter,
+        activeTypeFilter: state.activeTypeFilter,
+        activeLevelFilter: state.activeLevelFilter,
+        zoom: cy ? cy.zoom() : 1,
+        pan: cy ? cy.pan() : { x: 0, y: 0 },
+      };
+      localStorage.setItem(UI_STATE_KEY, JSON.stringify(savedState));
+    }
+
+    function restoreUIState() {
+      const saved = localStorage.getItem(UI_STATE_KEY);
+      if (!saved) return null;
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function applyUIState(savedState) {
+      if (!savedState) return;
+
+      // Restore zoom/pan
+      if (savedState.zoom && savedState.pan) {
+        cy.zoom(savedState.zoom);
+        cy.pan(savedState.pan);
+      }
+
+      // Restore filters to state
+      state.activeFilter = savedState.activeFilter || 'all';
+      state.activeTypeFilter = savedState.activeTypeFilter || null;
+      state.activeLevelFilter = savedState.activeLevelFilter !== undefined ? savedState.activeLevelFilter : null;
+
+      // Update UI to match state
+      document.querySelectorAll('.filter-btn[data-filter]').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === state.activeFilter);
+      });
+      document.querySelectorAll('.filter-btn[data-type]').forEach(b => {
+        b.classList.toggle('active', b.dataset.type === state.activeTypeFilter);
+      });
+
+      // Level filter buttons are created dynamically, so we need to wait
+      setTimeout(() => {
+        document.querySelectorAll('#level-filters .filter-btn').forEach(b => {
+          b.classList.toggle('active', parseInt(b.dataset.level) === state.activeLevelFilter);
+        });
+      }, 50);
+
+      // Restore selected node
+      if (savedState.selectedNodeId) {
+        setTimeout(() => {
+          const node = cy.getElementById(savedState.selectedNodeId);
+          if (node.length) {
+            selectNode(node);
+          }
+        }, 100);
+      }
+
+      // Render with restored state
+      renderGraph();
+    }
+
+    function fitGraph() { cy.fit(50); saveUIState(); }
+
+    function resetLayout() {
+      cy.layout({ name: 'dagre', rankDir: 'TB', nodeSep: 30, rankSep: 50, padding: 30 }).run();
+      cy.fit(50);
+      saveUIState();
+    }
+
+    async function resetDB() {
+      if (!confirm('Reset database to initial state? This will lose all audit progress.')) return;
+      await api('/reset', { method: 'POST' });
+      await showTable(currentTable);
+    }
+
+    async function exportData() {
+      const exportObj = { exportedAt: new Date().toISOString(), tables: {} };
+      for (const table of ['crops', 'bedplan']) {
+        const columns = await api(`/columns?table=${table}`);
+        exportObj.tables[table] = { summary: { total: 0, verified: 0, pending: 0, issues: 0, remove: 0 }, columns: [] };
+        columns.forEach(col => {
+          const entry = {
+            col: col.col_num, colLetter: col.col_letter, header: col.header,
+            classification: col.classification, level: col.level, variance: col.variance,
+            verified: col.verified, remove: col.remove, has_issue: col.has_issue,
+            implemented: col.implemented, notes: col.notes || '',
+          };
+          exportObj.tables[table].columns.push(entry);
+          exportObj.tables[table].summary.total++;
+          if (col.remove) exportObj.tables[table].summary.remove++;
+          else if (col.has_issue) exportObj.tables[table].summary.issues++;
+          else if (col.verified) exportObj.tables[table].summary.verified++;
+          else exportObj.tables[table].summary.pending++;
+        });
+        exportObj.tables[table].columns.sort((a, b) => a.col - b.col);
+      }
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dag-reconciliation-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    init();
+  </script>
+</body>
+</html>
