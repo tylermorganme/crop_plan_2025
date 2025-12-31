@@ -1,0 +1,24 @@
+{
+  "name": "excel-formula-analyzer",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build-graph": "node build-cytoscape-graph.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "better-sqlite3": "^12.5.0",
+    "cors": "^2.8.5",
+    "cytoscape": "^3.33.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "vite": "^7.3.0"
+  }
+}

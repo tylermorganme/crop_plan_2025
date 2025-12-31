@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAG Reconciliation Viewer</title>
+  <script src="https://unpkg.com/cytoscape@3.28.1/dist/cytoscape.min.js"></script>
+  <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+  <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #sidebar {
+      width: 340px;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #cy {
+      flex: 1;
+      background: #0f0f1a;
+    }
+
+    h1 { font-size: 18px; color: #fff; }
+    h2 { font-size: 14px; color: #888; margin-bottom: 8px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .stat {
+      background: #252540;
+      padding: 8px 4px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+    }
+
+    .stat.verified .stat-value { color: #27ae60; }
+    .stat.pending .stat-value { color: #f39c12; }
+    .stat.issues .stat-value { color: #e74c3c; }
+    .stat.removed .stat-value { color: #7f8c8d; }
+
+    .filters {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 4px;
+      background: #252540;
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover { background: #353560; }
+    .filter-btn.active { background: #4ecdc4; color: #000; }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 2px solid transparent;
+    }
+
+    #node-details {
+      background: #252540;
+      border-radius: 6px;
+      padding: 12px;
+      display: none;
+    }
+
+    #node-details.visible { display: block; }
+
+    #node-details h3 {
+      color: #4ecdc4;
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px solid #353560;
+    }
+
+    .detail-label { color: #888; }
+    .detail-value { color: #fff; }
+
+    .formula-preview {
+      font-family: monospace;
+      font-size: 11px;
+      background: #1a1a2e;
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      word-break: break-all;
+      max-height: 80px;
+      overflow-y: auto;
+      color: #aaa;
+    }
+
+    .flag-toggles {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .flag-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .flag-toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: #353560;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .flag-toggle.active { background: #4ecdc4; }
+    .flag-toggle.active.remove { background: #7f8c8d; }
+    .flag-toggle.active.issue { background: #e74c3c; }
+    .flag-toggle.active.implemented { background: #3498db; }
+
+    .flag-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .flag-toggle.active::after {
+      transform: translateX(20px);
+    }
+
+    .flag-label {
+      font-size: 12px;
+      color: #ccc;
+      flex: 1;
+    }
+
+    .notes-input {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px;
+      background: #1a1a2e;
+      border: 1px solid #353560;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 12px;
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .notes-input:focus {
+      outline: none;
+      border-color: #4ecdc4;
+    }
+
+    .table-select {
+      display: flex;
+      gap: 8px;
+    }
+
+    .table-btn {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #353560;
+      border-radius: 6px;
+      background: transparent;
+      color: #ccc;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .table-btn.active {
+      border-color: #4ecdc4;
+      color: #4ecdc4;
+    }
+
+    #progress-bar {
+      height: 8px;
+      background: #252540;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ecdc4, #44a08d);
+      transition: width 0.3s;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .control-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #353560;
+      border-radius: 4px;
+      background: transparent;
+      color: #ccc;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .control-btn:hover { background: #252540; }
+
+    .deps-list {
+      margin-top: 8px;
+      font-size: 11px;
+    }
+
+    .deps-list-title {
+      color: #888;
+      margin-bottom: 4px;
+    }
+
+    .dep-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      margin: 2px;
+      background: #353560;
+      border-radius: 3px;
+      color: #aaa;
+      cursor: pointer;
+    }
+
+    .dep-tag:hover {
+      background: #4ecdc4;
+      color: #000;
+    }
+
+    .dep-tag.external {
+      background: #5d4e6d;
+      color: #c9b8db;
+    }
+
+    .status-indicator {
+      padding: 4px 8px;
+      background: #27ae60;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #fff;
+    }
+
+    .status-indicator.offline {
+      background: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1>DAG Reconciliation</h1>
+      <span class="status-indicator" id="server-status">Connecting...</span>
+    </div>
+
+    <div class="table-select">
+      <button class="table-btn active" data-table="crops">Crops</button>
+      <button class="table-btn" data-table="bedplan">BedPlan</button>
+    </div>
+
+    <div>
+      <h2>Progress</h2>
+      <div id="progress-bar"><div id="progress-fill" style="width: 0%"></div></div>
+      <div class="stats" style="margin-top: 8px;">
+        <div class="stat verified">
+          <div class="stat-value" id="stat-verified">0</div>
+          <div class="stat-label">Verified</div>
+        </div>
+        <div class="stat pending">
+          <div class="stat-value" id="stat-pending">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat issues">
+          <div class="stat-value" id="stat-issues">0</div>
+          <div class="stat-label">Issues</div>
+        </div>
+        <div class="stat removed">
+          <div class="stat-value" id="stat-removed">0</div>
+          <div class="stat-label">Remove</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <h2>Filter by Status</h2>
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+        <button class="filter-btn" data-filter="verified">Verified</button>
+        <button class="filter-btn" data-filter="issues">Issues</button>
+        <button class="filter-btn" data-filter="remove">Remove</button>
+      </div>
+
+      <h2>Filter by Type</h2>
+      <div class="filter-group">
+        <button class="filter-btn" data-type="INPUT">Input</button>
+        <button class="filter-btn" data-type="CALCULATED">Calculated</button>
+        <button class="filter-btn" data-type="MIXED">Mixed</button>
+        <button class="filter-btn" data-type="variance">Has Variance</button>
+      </div>
+
+      <h2>Filter by Level</h2>
+      <div class="filter-group" id="level-filters"></div>
+    </div>
+
+    <div class="legend">
+      <h2>Legend - Fill Color</h2>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #2ecc71;"></div>
+        <span>INPUT (static data)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #3498db;"></div>
+        <span>CALCULATED (formula)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e74c3c;"></div>
+        <span>MIXED (variance - needs review)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #95a5a6;"></div>
+        <span>EMPTY (unused)</span>
+      </div>
+      <h2 style="margin-top: 8px;">Legend - Border</h2>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #666; border: 3px solid #27ae60;"></div>
+        <span>Verified</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #666; border: 3px solid #e74c3c;"></div>
+        <span>Has Issue</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #666; border: 2px solid #f39c12;"></div>
+        <span>Has Variance (unreviewed)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #444; opacity: 0.4;"></div>
+        <span>Marked for removal</span>
+      </div>
+    </div>
+
+    <div id="node-details">
+      <h3 id="detail-header">Column Name</h3>
+      <div class="detail-row">
+        <span class="detail-label">Column</span>
+        <span class="detail-value"><span id="detail-letter">-</span> (<span id="detail-col">-</span>)</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Classification</span>
+        <span class="detail-value" id="detail-type">-</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Level</span>
+        <span class="detail-value" id="detail-level">-</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Row breakdown</span>
+        <span class="detail-value"><span id="detail-formula-count">0</span> formulas, <span id="detail-value-count">0</span> values</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Variance</span>
+        <span class="detail-value"><span id="detail-variance">-</span> (<span id="detail-unique">1</span> unique formulas)</span>
+      </div>
+
+      <div class="deps-list" id="deps-on">
+        <div class="deps-list-title">Depends on:</div>
+        <div id="deps-on-list"></div>
+      </div>
+
+      <div class="deps-list" id="used-by">
+        <div class="deps-list-title">Used by:</div>
+        <div id="used-by-list"></div>
+      </div>
+
+      <div class="formula-preview" id="detail-formula">No formula</div>
+
+      <div class="flag-toggles">
+        <div class="flag-row">
+          <div class="flag-toggle" id="toggle-verified" onclick="toggleFlag('verified')"></div>
+          <span class="flag-label">Verified (reviewed this column)</span>
+        </div>
+        <div class="flag-row">
+          <div class="flag-toggle remove" id="toggle-remove" onclick="toggleFlag('remove')"></div>
+          <span class="flag-label">Remove (exclude from codebase)</span>
+        </div>
+        <div class="flag-row">
+          <div class="flag-toggle issue" id="toggle-issue" onclick="toggleFlag('has_issue')"></div>
+          <span class="flag-label">Has Issue (needs resolution)</span>
+        </div>
+        <div class="flag-row">
+          <div class="flag-toggle implemented" id="toggle-implemented" onclick="toggleFlag('implemented')"></div>
+          <span class="flag-label">Implemented (has code)</span>
+        </div>
+      </div>
+
+      <textarea class="notes-input" id="notes-input" placeholder="Notes..." onchange="updateNotes()"></textarea>
+    </div>
+
+    <div class="controls">
+      <button class="control-btn" onclick="fitGraph()">Fit</button>
+      <button class="control-btn" onclick="resetDB()">Reset DB</button>
+      <button class="control-btn" onclick="exportData()">Export</button>
+    </div>
+  </div>
+
+  <div id="cy"></div>
+
+  <script>
+    const API_BASE = 'http://localhost:3456/api';
+    let cy;
+    let currentTable = 'crops';
+    let selectedNode = null;
+    let allColumns = []; // Cached columns from API
+    let edges = []; // Cached edges
+
+    // Colors by classification
+    const classColors = {
+      INPUT: '#2ecc71',
+      CALCULATED: '#3498db',
+      MIXED: '#e74c3c',
+      EMPTY: '#95a5a6',
+    };
+
+    async function api(endpoint, options = {}) {
+      const response = await fetch(API_BASE + endpoint, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', ...options.headers },
+      });
+      return response.json();
+    }
+
+    async function init() {
+      // Check server status
+      try {
+        const stats = await api('/stats');
+        document.getElementById('server-status').textContent = 'Connected';
+        document.getElementById('server-status').classList.remove('offline');
+      } catch (e) {
+        document.getElementById('server-status').textContent = 'Offline';
+        document.getElementById('server-status').classList.add('offline');
+        console.error('Server not running. Start with: npm start');
+        return;
+      }
+
+      // Load edges for graph
+      edges = await api('/edges');
+
+      initCytoscape();
+      setupEventHandlers();
+      await showTable('crops');
+    }
+
+    function initCytoscape() {
+      cy = cytoscape({
+        container: document.getElementById('cy'),
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'label': 'data(label)',
+              'text-valign': 'center',
+              'text-halign': 'center',
+              'background-color': (ele) => classColors[ele.data('classification')] || '#666',
+              'color': '#fff',
+              'font-size': '10px',
+              'text-outline-color': '#000',
+              'text-outline-width': 1,
+              'width': (ele) => 20 + ele.data('label').length * 4,
+              'height': 24,
+              'shape': 'roundrectangle',
+              'border-width': (ele) => getBorderWidth(ele.data()),
+              'border-color': (ele) => getBorderColor(ele.data()),
+              'opacity': (ele) => ele.data('remove') ? 0.4 : 1,
+            }
+          },
+          {
+            selector: 'node:selected',
+            style: {
+              'border-width': 4,
+              'border-color': '#fff',
+            }
+          },
+          {
+            selector: 'node.highlighted',
+            style: {
+              'border-width': 4,
+              'border-color': '#4ecdc4',
+            }
+          },
+          {
+            selector: 'node.dimmed',
+            style: {
+              'opacity': 0.15,
+            }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'width': 1,
+              'line-color': '#444',
+              'target-arrow-color': '#444',
+              'target-arrow-shape': 'triangle',
+              'curve-style': 'bezier',
+              'arrow-scale': 0.8,
+            }
+          },
+          {
+            selector: 'edge.highlighted',
+            style: {
+              'line-color': '#4ecdc4',
+              'target-arrow-color': '#4ecdc4',
+              'width': 2,
+            }
+          },
+          {
+            selector: 'edge.dimmed',
+            style: {
+              'opacity': 0.1,
+            }
+          },
+        ],
+      });
+
+      cy.on('tap', 'node', (evt) => {
+        selectNode(evt.target);
+      });
+
+      cy.on('tap', (evt) => {
+        if (evt.target === cy) {
+          clearSelection();
+        }
+      });
+    }
+
+    function getBorderWidth(data) {
+      if (data.has_issue) return 4;
+      if (data.verified) return 3;
+      if (data.variance > 0) return 2;
+      return 1;
+    }
+
+    function getBorderColor(data) {
+      if (data.has_issue) return '#e74c3c';
+      if (data.verified) return '#27ae60';
+      if (data.variance > 0) return '#f39c12';
+      return '#555';
+    }
+
+    async function showTable(table) {
+      currentTable = table;
+
+      // Update buttons
+      document.querySelectorAll('.table-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.table === table);
+      });
+
+      // Fetch columns from API
+      allColumns = await api(`/columns?table=${table}`);
+
+      // Convert to Cytoscape format
+      const prefix = table === 'crops' ? 'crops_' : 'bedplan_';
+      const nodes = allColumns.map(col => ({
+        data: {
+          id: col.id,
+          label: col.header,
+          col: col.col_num,
+          colLetter: col.col_letter,
+          classification: col.classification,
+          level: col.level,
+          formula: col.formula,
+          variance: col.variance,
+          formula_count: col.formula_count,
+          value_count: col.value_count,
+          unique_formulas: col.unique_formulas,
+          depends_on: col.depends_on,
+          external_deps: col.external_deps,
+          verified: col.verified,
+          remove: col.remove,
+          has_issue: col.has_issue,
+          implemented: col.implemented,
+          notes: col.notes,
+        }
+      }));
+
+      const nodeIds = new Set(nodes.map(n => n.data.id));
+      const tableEdges = edges.filter(e =>
+        nodeIds.has(e.data.source) && nodeIds.has(e.data.target)
+      );
+
+      cy.elements().remove();
+      cy.add({ nodes, edges: tableEdges });
+
+      // Run dagre layout
+      cy.layout({
+        name: 'dagre',
+        rankDir: 'TB',
+        nodeSep: 30,
+        rankSep: 50,
+        padding: 30,
+      }).run();
+
+      await updateStats();
+      updateLevelFilters();
+    }
+
+    async function updateStats() {
+      const stats = await api(`/stats?table=${currentTable}`);
+
+      document.getElementById('stat-verified').textContent = stats.stats.verified || 0;
+      document.getElementById('stat-pending').textContent = stats.stats.pending || 0;
+      document.getElementById('stat-issues').textContent = stats.stats.issues || 0;
+      document.getElementById('stat-removed').textContent = stats.stats.removed || 0;
+
+      const total = stats.stats.total || 0;
+      const done = (stats.stats.verified || 0) + (stats.stats.removed || 0);
+      const progress = total > 0 ? (done / total) * 100 : 0;
+      document.getElementById('progress-fill').style.width = progress + '%';
+    }
+
+    function updateLevelFilters() {
+      const levels = new Set();
+      cy.nodes().forEach(n => levels.add(n.data('level')));
+
+      const container = document.getElementById('level-filters');
+      container.innerHTML = '';
+
+      [...levels].sort((a, b) => a - b).forEach(level => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-btn';
+        btn.dataset.level = level;
+        btn.textContent = `L${level}`;
+        btn.onclick = () => filterByLevel(level, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectNode(node) {
+      selectedNode = node;
+
+      // Highlight dependencies
+      cy.elements().removeClass('highlighted dimmed');
+
+      const predecessors = node.predecessors();
+      const successors = node.successors();
+
+      cy.elements().addClass('dimmed');
+      node.removeClass('dimmed').addClass('highlighted');
+      predecessors.removeClass('dimmed').addClass('highlighted');
+      successors.removeClass('dimmed');
+
+      // Show details
+      const data = node.data();
+      document.getElementById('node-details').classList.add('visible');
+      document.getElementById('detail-header').textContent = data.label;
+      document.getElementById('detail-col').textContent = data.col;
+      document.getElementById('detail-letter').textContent = data.colLetter || '?';
+      document.getElementById('detail-type').textContent = data.classification;
+      document.getElementById('detail-level').textContent = data.level;
+      document.getElementById('detail-formula-count').textContent = data.formula_count || 0;
+      document.getElementById('detail-value-count').textContent = data.value_count || 0;
+      document.getElementById('detail-variance').textContent =
+        data.variance > 0 ? data.variance + '%' : '0%';
+      document.getElementById('detail-unique').textContent = data.unique_formulas || 0;
+      document.getElementById('detail-formula').textContent =
+        data.formula || 'No formula (input column)';
+
+      // Update flag toggles
+      document.getElementById('toggle-verified').classList.toggle('active', data.verified);
+      document.getElementById('toggle-remove').classList.toggle('active', data.remove);
+      document.getElementById('toggle-issue').classList.toggle('active', data.has_issue);
+      document.getElementById('toggle-implemented').classList.toggle('active', data.implemented);
+      document.getElementById('notes-input').value = data.notes || '';
+
+      // Show dependencies
+      const depsOnList = document.getElementById('deps-on-list');
+      const usedByList = document.getElementById('used-by-list');
+      depsOnList.innerHTML = '';
+      usedByList.innerHTML = '';
+
+      // Get dependency names from edges
+      const incomers = node.incomers('node');
+      const outgoers = node.outgoers('node');
+
+      if (incomers.length === 0 && (!data.external_deps || data.external_deps.length === 0)) {
+        depsOnList.innerHTML = '<span style="color:#666">None (root/input)</span>';
+      } else {
+        incomers.forEach(n => {
+          const tag = document.createElement('span');
+          tag.className = 'dep-tag';
+          tag.textContent = n.data('label');
+          tag.onclick = () => selectNode(n);
+          depsOnList.appendChild(tag);
+        });
+        (data.external_deps || []).forEach(ext => {
+          const tag = document.createElement('span');
+          tag.className = 'dep-tag external';
+          tag.textContent = ext;
+          depsOnList.appendChild(tag);
+        });
+      }
+
+      if (outgoers.length === 0) {
+        usedByList.innerHTML = '<span style="color:#666">None (leaf)</span>';
+      } else {
+        outgoers.forEach(n => {
+          const tag = document.createElement('span');
+          tag.className = 'dep-tag';
+          tag.textContent = n.data('label');
+          tag.onclick = () => selectNode(n);
+          usedByList.appendChild(tag);
+        });
+      }
+    }
+
+    function clearSelection() {
+      selectedNode = null;
+      cy.elements().removeClass('highlighted dimmed');
+      document.getElementById('node-details').classList.remove('visible');
+    }
+
+    async function toggleFlag(flag) {
+      if (!selectedNode) return;
+
+      const current = selectedNode.data(flag);
+      const newValue = !current;
+
+      // Update locally
+      selectedNode.data(flag, newValue);
+
+      // Update toggle UI
+      const toggleMap = { verified: 'toggle-verified', remove: 'toggle-remove', has_issue: 'toggle-issue', implemented: 'toggle-implemented' };
+      document.getElementById(toggleMap[flag]).classList.toggle('active', newValue);
+
+      // Save to server
+      await api(`/columns/${selectedNode.data('id')}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ [flag]: newValue }),
+      });
+
+      // Update visual styling
+      selectedNode.style({
+        'border-width': getBorderWidth(selectedNode.data()),
+        'border-color': getBorderColor(selectedNode.data()),
+        'opacity': selectedNode.data('remove') ? 0.4 : 1,
+      });
+
+      await updateStats();
+    }
+
+    async function updateNotes() {
+      if (!selectedNode) return;
+      const notes = document.getElementById('notes-input').value;
+      selectedNode.data('notes', notes);
+
+      await api(`/columns/${selectedNode.data('id')}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ notes }),
+      });
+    }
+
+    function filterByLevel(level, btn) {
+      const isActive = btn.classList.contains('active');
+
+      // Clear other level filters
+      document.querySelectorAll('#level-filters .filter-btn').forEach(b =>
+        b.classList.remove('active'));
+
+      if (!isActive) {
+        btn.classList.add('active');
+        cy.nodes().forEach(n => {
+          if (n.data('level') === level) {
+            n.removeClass('dimmed');
+          } else {
+            n.addClass('dimmed');
+          }
+        });
+      } else {
+        cy.nodes().removeClass('dimmed');
+      }
+    }
+
+    function setupEventHandlers() {
+      // Table selection
+      document.querySelectorAll('.table-btn').forEach(btn => {
+        btn.onclick = () => showTable(btn.dataset.table);
+      });
+
+      // Status filters
+      document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.filter-btn[data-filter]').forEach(b =>
+            b.classList.remove('active'));
+          btn.classList.add('active');
+
+          const filter = btn.dataset.filter;
+          cy.nodes().forEach(n => {
+            const d = n.data();
+            let show = false;
+
+            if (filter === 'all') show = true;
+            else if (filter === 'pending') show = !d.verified && !d.remove && !d.has_issue;
+            else if (filter === 'verified') show = d.verified && !d.remove;
+            else if (filter === 'issues') show = d.has_issue;
+            else if (filter === 'remove') show = d.remove;
+
+            if (show) n.removeClass('dimmed');
+            else n.addClass('dimmed');
+          });
+        };
+      });
+
+      // Type filters
+      document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+        btn.onclick = () => {
+          const wasActive = btn.classList.contains('active');
+          document.querySelectorAll('.filter-btn[data-type]').forEach(b =>
+            b.classList.remove('active'));
+
+          if (!wasActive) {
+            btn.classList.add('active');
+            const type = btn.dataset.type;
+            cy.nodes().forEach(n => {
+              let match = false;
+              if (type === 'variance') match = n.data('variance') > 0;
+              else match = n.data('classification') === type;
+
+              if (match) n.removeClass('dimmed');
+              else n.addClass('dimmed');
+            });
+          } else {
+            cy.nodes().removeClass('dimmed');
+          }
+        };
+      });
+    }
+
+    function fitGraph() {
+      cy.fit(50);
+    }
+
+    async function resetDB() {
+      if (!confirm('Reset database to initial state? This will lose all audit progress.')) return;
+      await api('/reset', { method: 'POST' });
+      await showTable(currentTable);
+    }
+
+    async function exportData() {
+      // Build comprehensive export
+      const exportObj = {
+        exportedAt: new Date().toISOString(),
+        tables: {}
+      };
+
+      for (const table of ['crops', 'bedplan']) {
+        const columns = await api(`/columns?table=${table}`);
+
+        exportObj.tables[table] = {
+          summary: { total: 0, verified: 0, pending: 0, issues: 0, remove: 0 },
+          columns: []
+        };
+
+        columns.forEach(col => {
+          const entry = {
+            col: col.col_num,
+            colLetter: col.col_letter,
+            header: col.header,
+            classification: col.classification,
+            level: col.level,
+            variance: col.variance,
+            verified: col.verified,
+            remove: col.remove,
+            has_issue: col.has_issue,
+            implemented: col.implemented,
+            notes: col.notes || '',
+          };
+
+          exportObj.tables[table].columns.push(entry);
+          exportObj.tables[table].summary.total++;
+
+          if (col.remove) exportObj.tables[table].summary.remove++;
+          else if (col.has_issue) exportObj.tables[table].summary.issues++;
+          else if (col.verified) exportObj.tables[table].summary.verified++;
+          else exportObj.tables[table].summary.pending++;
+        });
+
+        exportObj.tables[table].columns.sort((a, b) => a.col - b.col);
+      }
+
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dag-reconciliation-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    init();
+  </script>
+</body>
+</html>
