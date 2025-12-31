@@ -18,23 +18,6 @@ import {
   type CropCatalogEntry,
 } from './slim-planting';
 
-interface RawCrop {
-  id: string;
-  Identifier: string;
-  'In Plan': boolean;
-  Category: string | null;
-  Crop: string;
-  Variety: string;
-  Product: string;
-  'Growing Structure': string;
-  'Target Sewing Date': string | null;
-  'Target Field Date': string | null;
-  'Target Harvest Data': string | null;
-  'Target End of Harvest': string | null;
-  'Planting Method': 'DS' | 'TP' | 'PE' | null;
-  Beds?: number;
-  [key: string]: unknown;
-}
 
 interface BedAssignment {
   crop: string;
@@ -203,156 +186,118 @@ export function calculateRowSpan(feetNeeded: number, startBed: string, bedGroups
   };
 }
 
-/**
- * Build a mapping from crop Identifier -> bed assignments
- * One crop can have multiple bed assignments (succession plantings)
- */
-function buildBedAssignmentMap(): Map<string, BedAssignment[]> {
-  const bedPlan = bedPlanData as BedPlanData;
-  const cropToBeds = new Map<string, BedAssignment[]>();
-
-  for (const assignment of bedPlan.assignments) {
-    const cropId = assignment.crop.trim();
-    if (!cropToBeds.has(cropId)) {
-      cropToBeds.set(cropId, []);
-    }
-    cropToBeds.get(cropId)!.push(assignment);
-  }
-
-  return cropToBeds;
-}
 
 /**
- * Get crops that are "In Plan" with valid dates, formatted for the timeline
- * Uses actual bed assignments from the Bed Plan sheet
+ * Get crops from bed plan formatted for the timeline.
+ * Uses bed-plan.json for planting data and crops.json for config lookups.
  */
 export function getTimelineCrops(): TimelineCrop[] {
-  const rawCrops = (cropsData as { crops: RawCrop[] }).crops;
   const bedPlan = bedPlanData as BedPlanData;
-  const bedAssignmentMap = buildBedAssignmentMap();
+  const catalogCrops = (cropsData as { crops: CropCatalogEntry[] }).crops;
 
   const timelineCrops: TimelineCrop[] = [];
   const seenIdentifiers = new Set<string>();
 
-  // Filter to crops in plan with dates
-  const inPlanCrops = rawCrops.filter(c =>
-    c['In Plan'] === true &&
-    c['Target Sewing Date'] &&
-    c['Target End of Harvest']
-  );
+  // Group assignments by crop identifier to detect succession plantings
+  const assignmentsByCrop = new Map<string, BedAssignment[]>();
+  for (const assignment of bedPlan.assignments) {
+    const cropId = assignment.crop;
+    if (!assignmentsByCrop.has(cropId)) {
+      assignmentsByCrop.set(cropId, []);
+    }
+    assignmentsByCrop.get(cropId)!.push(assignment);
+  }
 
-  let unassignedCounter = 0;
+  for (const assignment of bedPlan.assignments) {
+    // Skip duplicates
+    if (seenIdentifiers.has(assignment.identifier)) {
+      continue;
+    }
+    seenIdentifiers.add(assignment.identifier);
 
-  for (const crop of inPlanCrops) {
-    const name = crop.Product && crop.Product !== 'General'
-      ? `${crop.Crop} (${crop.Product})`
-      : crop.Crop;
+    // Look up config from catalog
+    const baseConfig = lookupConfigFromCatalog(assignment.crop, catalogCrops);
 
-    // Get bed assignments for this crop
-    const bedAssignments = bedAssignmentMap.get(crop.Identifier) ||
-                           bedAssignmentMap.get(crop.Identifier.trim()) ||
-                           [];
+    // Build display name from config or parse from identifier
+    let name: string;
+    if (baseConfig) {
+      name = baseConfig.product && baseConfig.product !== 'General'
+        ? `${baseConfig.crop} (${baseConfig.product})`
+        : baseConfig.crop;
+    } else {
+      // Fallback: parse from identifier "Crop - Product X | ..."
+      const parts = assignment.crop.split(' | ')[0].split(' - ');
+      const cropName = parts[0];
+      const product = parts[1]?.replace(/ \dX$/, '');
+      name = product && product !== 'General' ? `${cropName} (${product})` : cropName;
+    }
 
-    // Default feet needed from crop.Beds (which is in 50ft units)
-    // This is a fallback; we prefer assignment.bedsCount
-    const defaultFeetNeeded = (crop.Beds || 1) * STANDARD_BED_FT;
+    // Check if this crop has multiple plantings (succession)
+    const allAssignments = assignmentsByCrop.get(assignment.crop) || [];
+    const displayName = allAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
 
-    if (bedAssignments.length > 0) {
-      // Create a timeline entry for each bed assignment (succession plantings)
-      for (const assignment of bedAssignments) {
-        // Skip if we've already seen this planting identifier (handles duplicate crops in source data)
-        if (seenIdentifiers.has(assignment.identifier)) {
-          continue;
-        }
-        seenIdentifiers.add(assignment.identifier);
+    // Calculate feet needed
+    const feetNeeded = (assignment.bedsCount ?? 1) * STANDARD_BED_FT;
 
-        // Skip assignments without required timing data - fall back to stored dates
-        if (!assignment.dtm || !assignment.fixedFieldStartDate) {
-          // Use stored dates for assignments missing computation inputs
-          const feetNeeded = (assignment.bedsCount ?? (crop.Beds || 1)) * STANDARD_BED_FT;
-          const { bedSpanInfo } = calculateRowSpan(feetNeeded, assignment.bed, bedPlan.bedGroups);
-          const displayName = bedAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
+    // If we can compute dates from config, do so
+    if (baseConfig && assignment.fixedFieldStartDate) {
+      // Extract slim planting
+      const slim = extractSlimPlanting(assignment);
 
-          bedSpanInfo.forEach((info, index) => {
-            timelineCrops.push({
-              id: `${assignment.identifier}_bed${index}`,
-              name: displayName,
-              startDate: assignment.tpOrDsDate,
-              endDate: assignment.endOfHarvest,
-              harvestStartDate: assignment.beginningOfHarvest || undefined,
-              resource: info.bed,
-              category: (typeof assignment.category === 'number' ? undefined : assignment.category) || crop.Category || undefined,
-              feetNeeded,
-              structure: assignment.growingStructure || crop['Growing Structure'] || 'Field',
-              plantingId: assignment.identifier,
-              totalBeds: bedSpanInfo.length,
-              bedIndex: index + 1,
-              groupId: assignment.identifier,
-              feetUsed: info.feetUsed,
-              bedCapacityFt: info.bedCapacityFt,
-              plantingMethod: assignment.dsTp || crop['Planting Method'] || undefined,
-            });
-          });
-          continue;
-        }
+      // Apply planting-level overrides to catalog base values
+      const additionalDaysInField = typeof assignment.additionalDaysInField === 'number'
+        ? assignment.additionalDaysInField : 0;
+      const additionalDaysOfHarvest = typeof assignment.additionalDaysOfHarvest === 'number'
+        ? assignment.additionalDaysOfHarvest : 0;
+      const additionalDaysInCells = typeof assignment.additionalDaysInCells === 'number'
+        ? assignment.additionalDaysInCells : 0;
 
-        // Extract slim planting and config, then compute dates
-        const slim = extractSlimPlanting(assignment);
+      const config = {
+        ...baseConfig,
+        dtm: baseConfig.dtm + additionalDaysInField,
+        harvestWindow: baseConfig.harvestWindow + additionalDaysOfHarvest,
+        daysInCells: baseConfig.daysInCells + additionalDaysInCells,
+      };
 
-        // Look up config from catalog (no fallback to bed-plan embedded config)
-        const catalogCrops = (cropsData as { crops: CropCatalogEntry[] }).crops;
-        const baseConfig = lookupConfigFromCatalog(assignment.crop, catalogCrops);
+      // Compute timeline crops with calculated dates
+      const computed = computeTimelineCrop(slim, config, bedPlan.bedGroups);
 
-        if (!baseConfig) {
-          console.warn(`Catalog lookup failed for: ${assignment.crop}`);
-          continue;
-        }
-
-        // Apply planting-level overrides to catalog base values
-        // These are adjustments for specific growing conditions
-        const additionalDaysInField = typeof assignment.additionalDaysInField === 'number'
-          ? assignment.additionalDaysInField : 0;
-        const additionalDaysOfHarvest = typeof assignment.additionalDaysOfHarvest === 'number'
-          ? assignment.additionalDaysOfHarvest : 0;
-        const additionalDaysInCells = typeof assignment.additionalDaysInCells === 'number'
-          ? assignment.additionalDaysInCells : 0;
-
-        const config = {
-          ...baseConfig,
-          dtm: baseConfig.dtm + additionalDaysInField,
-          harvestWindow: baseConfig.harvestWindow + additionalDaysOfHarvest,
-          daysInCells: baseConfig.daysInCells + additionalDaysInCells,
-        };
-
-        // Compute timeline crops with calculated dates
-        const computed = computeTimelineCrop(slim, config, bedPlan.bedGroups);
-
-        // Apply display name suffix for succession plantings
-        const displayName = bedAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
-
-        for (const tc of computed) {
-          timelineCrops.push({
-            ...tc,
-            name: displayName,
-          });
-        }
+      for (const tc of computed) {
+        timelineCrops.push({
+          ...tc,
+          name: displayName,
+        });
       }
     } else {
-      // No bed assignment - put in Unassigned with unique counter
-      timelineCrops.push({
-        id: `unassigned_${++unassignedCounter}`,
-        name,
-        startDate: crop['Target Sewing Date']!,
-        endDate: crop['Target End of Harvest']!,
-        harvestStartDate: crop['Target Harvest Data'] || undefined,
-        resource: '', // Unassigned
-        category: crop.Category || undefined,
-        feetNeeded: defaultFeetNeeded,
-        structure: crop['Growing Structure'] || 'Field',
-        totalBeds: 1,
-        bedIndex: 1,
-        groupId: `unassigned_${unassignedCounter}`,
-        plantingMethod: crop['Planting Method'] || undefined,
+      // Fall back to stored dates from bed plan
+      const { bedSpanInfo } = calculateRowSpan(feetNeeded, assignment.bed, bedPlan.bedGroups);
+
+      // Get category and structure from assignment or config
+      const category = typeof assignment.category === 'number'
+        ? (baseConfig?.category || undefined)
+        : (assignment.category || baseConfig?.category || undefined);
+      const structure = assignment.growingStructure || baseConfig?.growingStructure || 'Field';
+      const plantingMethod = assignment.dsTp || baseConfig?.plantingMethod || undefined;
+
+      bedSpanInfo.forEach((info, index) => {
+        timelineCrops.push({
+          id: `${assignment.identifier}_bed${index}`,
+          name: displayName,
+          startDate: assignment.tpOrDsDate,
+          endDate: assignment.endOfHarvest,
+          harvestStartDate: assignment.beginningOfHarvest || undefined,
+          resource: info.bed,
+          category,
+          feetNeeded,
+          structure,
+          plantingId: assignment.identifier,
+          totalBeds: bedSpanInfo.length,
+          bedIndex: index + 1,
+          groupId: assignment.identifier,
+          feetUsed: info.feetUsed,
+          bedCapacityFt: info.bedCapacityFt,
+          plantingMethod,
+        });
       });
     }
   }

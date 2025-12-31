@@ -22,5 +22,20 @@ build/
 .DS_Store
 Thumbs.db
 
+# Excel temp/lock files
+~$*.xlsx
+~$*.xlsm
+
 # Archives (tools, not project files)
 excel-formula-analyzer.zip
+
+# Data files that shouldn't be committed
+crop-api/src/data/crops.json.old
+crop-api/src/data/crops_from_excel.json
+
+# One-off analysis scripts
+scripts/harvest-formulas.js
+scripts/trace-timeline-deps.js
+
+# Root lockfile (accidental)
+/package-lock.json

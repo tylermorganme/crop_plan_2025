@@ -43,19 +43,19 @@ interface CropExplorerProps {
     crops: string[];
     categories: string[];
     growingStructures: string[];
-    plantingMethods: string[];
+    plantingMethods?: string[];
   };
-  allHeaders: string[];
+  allHeaders?: string[];
 }
 
-// Default visible columns
+// Default visible columns - using new camelCase field names from crops.json
 const DEFAULT_VISIBLE = [
-  'Crop', 'Variety', 'Product', 'Category', 'Growing Structure', 'Planting Method',
-  'Seasons', 'Rows', 'Spacing', 'DTM', 'Days in Cells', 'Harvests',
-  'Direct Price', 'Unit', 'Direct Revenue Per Bed', 'In Plan', 'Deprecated'
+  'crop', 'variant', 'product', 'category', 'growingStructure', 'normalMethod',
+  'dtm', 'daysToGermination', 'daysBetweenHarvest', 'numberOfHarvests',
+  'harvestBufferDays', 'yieldPerHarvest', 'yieldUnit', 'deprecated'
 ];
 
-const STORAGE_KEY = 'crop-explorer-state-v3';
+const STORAGE_KEY = 'crop-explorer-state-v4'; // Bumped for new camelCase field names
 
 type SortDirection = 'asc' | 'desc' | null;
 type FilterValue = string | { min?: number; max?: number } | boolean | null;
@@ -94,11 +94,10 @@ const DEFAULT_FILTER_PANE_WIDTH = 280;
 
 function getDefaultColumnWidth(col: string): number {
   if (col === 'id') return 120;
-  if (col === 'Identifier') return 300;
-  if (['Sp', 'Su', 'Fa', 'Wi', 'OW'].includes(col)) return 50;
-  if (['In Plan', 'Deprecated', 'Audited?', 'Might Grow'].includes(col)) return 80;
-  if (col.includes('Date')) return 110;
-  if (col.includes('Revenue') || col.includes('Profit') || col.includes('Cost')) return 140;
+  if (col === 'identifier') return 300;
+  if (['deprecated'].includes(col)) return 80;
+  if (col.toLowerCase().includes('date')) return 110;
+  if (col.includes('yield') || col.includes('harvest')) return 140;
   return DEFAULT_COL_WIDTH;
 }
 
@@ -143,60 +142,39 @@ function getNumericRange(crops: Crop[], col: string): { min: number; max: number
   return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 100 : max };
 }
 
+// Import calculation functions
+import {
+  calculateDaysInCells,
+  calculateSTH,
+  calculatePlantingMethod,
+  calculateHarvestWindow,
+} from '@/lib/crop-calculations';
+
 // Helper to create a TimelineCrop from a Crop config
-// Uses the plan's target year with the crop's target month/day
+// Uses the plan's target year with the crop's default timing
 function createTimelineCropFromConfig(crop: Crop, planYear: number): TimelineCrop {
   const now = Date.now();
   const groupId = `new_${crop.id}_${now}`;
-  const dtm = typeof crop.DTM === 'number' ? crop.DTM : 60;
 
-  // Build display name
-  const name = crop.Product && crop.Product !== 'General'
-    ? `${crop.Crop} (${crop.Product})`
-    : crop.Crop;
+  // Calculate derived values using our calculation functions
+  const daysInCells = calculateDaysInCells(crop);
+  const sth = calculateSTH(crop, daysInCells);
+  const plantingMethod = calculatePlantingMethod(crop);
+  const harvestWindow = calculateHarvestWindow(crop);
 
-  // Use target dates from crop data if available
-  // The dates in crop data have arbitrary years - we use the month/day with the plan's year
-  const targetFieldDate = crop['Target Field Date'] as string | null | undefined;
-  const targetEndHarvest = crop['Target End of Harvest'] as string | null | undefined;
+  // Build display name using new field names
+  const name = crop.product && crop.product !== 'General'
+    ? `${crop.crop} (${crop.product})`
+    : crop.crop;
 
-  let startDate: string;
-  let endDate: string;
+  // Default to today as start date (no target dates in minimal crops.json)
+  const startDate = format(new Date(), 'yyyy-MM-dd');
 
-  if (targetFieldDate) {
-    // Extract month and day from target date, use plan year
-    const parsed = new Date(targetFieldDate);
-    const month = parsed.getMonth(); // 0-indexed
-    const day = parsed.getDate();
-    startDate = format(new Date(planYear, month, day), 'yyyy-MM-dd');
-  } else {
-    // Fallback to today
-    startDate = format(new Date(), 'yyyy-MM-dd');
-  }
+  // End date is start + STH + harvest window
+  const endDate = format(addDays(new Date(startDate), sth + harvestWindow), 'yyyy-MM-dd');
 
-  if (targetEndHarvest) {
-    // Extract month and day from target date, use plan year
-    // Note: if end date is before start date (crosses year boundary), add a year
-    const parsed = new Date(targetEndHarvest);
-    const month = parsed.getMonth();
-    const day = parsed.getDate();
-    let endYear = planYear;
-
-    // Check if end date would be before start date (harvest spans into next year)
-    const tentativeEnd = new Date(planYear, month, day);
-    const startDateObj = new Date(startDate);
-    if (tentativeEnd < startDateObj) {
-      endYear = planYear + 1;
-    }
-    endDate = format(new Date(endYear, month, day), 'yyyy-MM-dd');
-  } else {
-    // Fallback to start + DTM
-    endDate = format(addDays(new Date(startDate), dtm), 'yyyy-MM-dd');
-  }
-
-  // Default feet based on crop config (Beds field if available, else 50ft)
-  const beds = typeof crop.Beds === 'number' ? crop.Beds : 1;
-  const feetNeeded = beds * 50;
+  // Default 50ft (1 bed)
+  const feetNeeded = 50;
 
   return {
     id: `${groupId}_unassigned`,
@@ -204,10 +182,10 @@ function createTimelineCropFromConfig(crop: Crop, planYear: number): TimelineCro
     startDate,
     endDate,
     resource: '', // Unassigned
-    category: crop.Category || undefined,
+    category: crop.category || undefined,
     feetNeeded,
-    structure: crop['Growing Structure'] || 'Field',
-    plantingMethod: (crop['Planting Method'] as 'DS' | 'TP' | 'PE') || undefined,
+    structure: crop.growingStructure || 'Field',
+    plantingMethod,
     totalBeds: 1,
     bedIndex: 1,
     groupId,
@@ -238,44 +216,48 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   // Dynamic filters keyed by column name
   const [columnFilters, setColumnFilters] = useState<Record<string, FilterValue>>({});
 
-  // All columns including 'id'
-  const allColumns = useMemo(() => ['id', ...allHeaders], [allHeaders]);
-
-  // Initialize from localStorage
-  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => {
-    const persisted = loadPersistedState();
-    return new Set(persisted?.visibleColumns ?? DEFAULT_VISIBLE);
-  });
-  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
-    const persisted = loadPersistedState();
-    if (persisted?.columnOrder) {
-      const existing = new Set(allColumns);
-      const order = persisted.columnOrder.filter(c => existing.has(c));
-      allColumns.forEach(c => { if (!order.includes(c)) order.push(c); });
-      return order;
+  // All columns - derive from crop keys if allHeaders not provided
+  const allColumns = useMemo(() => {
+    if (allHeaders && allHeaders.length > 0) {
+      return ['id', ...allHeaders];
     }
-    return allColumns;
-  });
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
+    // Generate headers from new crops.json fields
+    const fields = new Set<string>();
+    crops.forEach(crop => {
+      Object.keys(crop).forEach(key => fields.add(key));
+    });
+    return Array.from(fields);
+  }, [allHeaders, crops]);
+
+  // Initialize with defaults (hydration-safe), then load from localStorage
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set(DEFAULT_VISIBLE));
+  const [columnOrder, setColumnOrder] = useState<string[]>(allColumns);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [filterPaneOpen, setFilterPaneOpen] = useState(true);
+  const [filterPaneWidth, setFilterPaneWidth] = useState(DEFAULT_FILTER_PANE_WIDTH);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Load persisted state after hydration to avoid SSR mismatch
+  useEffect(() => {
     const persisted = loadPersistedState();
-    return persisted?.columnWidths ?? {};
-  });
-  const [sortColumn, setSortColumn] = useState<string | null>(() => {
-    const persisted = loadPersistedState();
-    return persisted?.sortColumn ?? null;
-  });
-  const [sortDirection, setSortDirection] = useState<SortDirection>(() => {
-    const persisted = loadPersistedState();
-    return persisted?.sortDirection ?? null;
-  });
-  const [filterPaneOpen, setFilterPaneOpen] = useState(() => {
-    const persisted = loadPersistedState();
-    return persisted?.filterPaneOpen ?? true;
-  });
-  const [filterPaneWidth, setFilterPaneWidth] = useState(() => {
-    const persisted = loadPersistedState();
-    return persisted?.filterPaneWidth ?? DEFAULT_FILTER_PANE_WIDTH;
-  });
+    if (persisted) {
+      setVisibleColumns(new Set(persisted.visibleColumns ?? DEFAULT_VISIBLE));
+      if (persisted.columnOrder) {
+        const existing = new Set(allColumns);
+        const order = persisted.columnOrder.filter(c => existing.has(c));
+        allColumns.forEach(c => { if (!order.includes(c)) order.push(c); });
+        setColumnOrder(order);
+      }
+      setColumnWidths(persisted.columnWidths ?? {});
+      setSortColumn(persisted.sortColumn ?? null);
+      setSortDirection(persisted.sortDirection ?? null);
+      setFilterPaneOpen(persisted.filterPaneOpen ?? true);
+      setFilterPaneWidth(persisted.filterPaneWidth ?? DEFAULT_FILTER_PANE_WIDTH);
+    }
+    setHydrated(true);
+  }, [allColumns]);
 
   const [showColumnManager, setShowColumnManager] = useState(false);
   const [columnSearch, setColumnSearch] = useState('');
@@ -296,8 +278,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const [paneResizeStartX, setPaneResizeStartX] = useState(0);
   const [paneResizeStartWidth, setPaneResizeStartWidth] = useState(0);
 
-  // Persist state
+  // Persist state (only after hydration to avoid overwriting with defaults)
   useEffect(() => {
+    if (!hydrated) return;
     savePersistedState({
       visibleColumns: Array.from(visibleColumns),
       columnOrder,
@@ -307,7 +290,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       filterPaneOpen,
       filterPaneWidth,
     });
-  }, [visibleColumns, columnOrder, columnWidths, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth]);
+  }, [hydrated, visibleColumns, columnOrder, columnWidths, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth]);
 
   // Clear filters for hidden columns
   useEffect(() => {
@@ -354,15 +337,15 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   // Filter crops
   const filteredCrops = useMemo(() => {
     return crops.filter(crop => {
-      // Text search
+      // Text search using new field names
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const searchable = [
-          crop.Identifier,
-          crop.Crop,
-          crop.Variety,
-          crop['Common Name'],
-          crop.Category,
+          crop.identifier,
+          crop.crop,
+          crop.variant,
+          crop.product,
+          crop.category,
         ].filter(Boolean).join(' ').toLowerCase();
         if (!searchable.includes(q)) return false;
       }
@@ -687,7 +670,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       setAddToPlanMessage({
         type: 'success',
         text: cropCount === 1
-          ? `Added "${cropsToAddNow[0].Crop}" to "${activePlan?.name}"`
+          ? `Added "${cropsToAddNow[0].crop}" to "${activePlan?.name}"`
           : `Added ${cropCount} crops to "${activePlan?.name}"`,
         planId: activePlanId,
       });
@@ -778,7 +761,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       setAddToPlanMessage({
         type: 'success',
         text: cropCount === 1
-          ? `Added "${cropsToAdd[0].Crop}" to "${planName}"`
+          ? `Added "${cropsToAdd[0].crop}" to "${planName}"`
           : `Added ${cropCount} crops to "${planName}"`,
         planId,
       });
@@ -1049,7 +1032,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                       onClick={() => setSelectedCropId(crop.id === selectedCropId ? null : crop.id)}
                       className={`flex cursor-pointer hover:bg-gray-50 border-b border-gray-100 group ${
                         selectedCropId === crop.id ? 'bg-green-50' : ''
-                      } ${isSelected ? 'bg-blue-50' : ''} ${crop.Deprecated ? 'opacity-50' : ''}`}
+                      } ${isSelected ? 'bg-blue-50' : ''} ${crop.deprecated ? 'opacity-50' : ''}`}
                       style={{
                         position: 'absolute',
                         top: 0,
@@ -1078,7 +1061,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                         <button
                           onClick={(e) => handleQuickAdd(crop, e)}
                           className="w-6 h-6 flex items-center justify-center rounded bg-blue-100 text-blue-600 opacity-0 group-hover:opacity-100 hover:bg-blue-200 transition-opacity text-sm font-medium"
-                          title={`Add ${crop.Crop} to plan`}
+                          title={`Add ${crop.crop} to plan`}
                         >
                           +
                         </button>
@@ -1181,7 +1164,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         <div className="fixed right-4 top-20 w-96 max-h-[calc(100vh-100px)] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-40">
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-green-50">
             <div>
-              <h2 className="font-semibold text-gray-900">{selectedCrop.Crop}</h2>
+              <h2 className="font-semibold text-gray-900">{selectedCrop.crop}</h2>
               <p className="text-xs text-gray-600 font-mono">{selectedCrop.id}</p>
             </div>
             <button onClick={() => setSelectedCropId(null)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
@@ -1228,7 +1211,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             <div className="p-4">
               {cropsToAdd.length === 1 ? (
                 <p className="text-sm text-gray-600 mb-4">
-                  Add <strong>{cropsToAdd[0].Crop}</strong> to a plan. The selected plan will become your active plan.
+                  Add <strong>{cropsToAdd[0].crop}</strong> to a plan. The selected plan will become your active plan.
                 </p>
               ) : (
                 <div className="mb-4">
@@ -1236,7 +1219,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                     Add <strong>{cropsToAdd.length} crops</strong> to a plan. The selected plan will become your active plan.
                   </p>
                   <div className="max-h-24 overflow-y-auto text-xs text-gray-600 bg-gray-50 rounded p-2">
-                    {cropsToAdd.map(c => c.Crop).join(', ')}
+                    {cropsToAdd.map(c => c.crop).join(', ')}
                   </div>
                 </div>
               )}

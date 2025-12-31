@@ -9,6 +9,13 @@ import { format } from 'date-fns';
 import { calculateCropTiming, type CropTimingInputs } from './crop-timing-calculator';
 import { calculateRowSpan } from './timeline-data';
 import type { TimelineCrop, BedSpanInfo } from './plan-types';
+import {
+  calculateDaysInCells,
+  calculateSTH,
+  calculatePlantingMethod,
+  calculateHarvestWindow,
+  type CropConfig,
+} from './crop-calculations';
 
 // =============================================================================
 // SLIM PLANTING TYPES
@@ -88,33 +95,9 @@ export interface PlantingConfigLookup {
 
 /**
  * Raw crop entry from crops.json catalog.
+ * This matches the CropConfig type from crop-calculations.ts
  */
-export interface CropCatalogEntry {
-  Identifier: string;
-  Crop: string;
-  Product: string;
-  Category: string | null;
-  'Growing Structure': string;
-  'Planting Method': 'DS' | 'TP' | 'PE' | 'X' | null;
-  /**
-   * DTM = Days To Maturity from transplant/direct seed to first harvest.
-   * For DS crops, this is days from seeding in field.
-   * For TP crops, this is days from transplant (in-field time only).
-   */
-  DTM: number | null;
-  /**
-   * STH = Seed To Harvest = total days from seeding to first harvest.
-   * For DS crops, STH ≈ DTM.
-   * For TP crops, STH = daysInCells + DTM (includes greenhouse time).
-   *
-   * The timing calculator expects STH (not DTM) because it calculates
-   * harvest date as: greenhouseStart + dtm (where dtm should be STH).
-   */
-  STH: number | null;
-  'Harvest window': number | null;
-  'Days in Cells': number | null;
-  [key: string]: unknown;
-}
+export type CropCatalogEntry = CropConfig;
 
 /**
  * Look up planting config from the crops catalog by identifier.
@@ -127,29 +110,24 @@ export function lookupConfigFromCatalog(
   cropIdentifier: string,
   catalog: CropCatalogEntry[]
 ): PlantingConfigLookup | null {
-  const entry = catalog.find(c => c.Identifier === cropIdentifier);
+  const entry = catalog.find(c => c.identifier === cropIdentifier);
   if (!entry) return null;
 
-  // Handle null/missing values with defaults
-  const plantingMethod = entry['Planting Method'];
-  const validMethod = plantingMethod === 'DS' || plantingMethod === 'TP' || plantingMethod === 'PE'
-    ? plantingMethod
-    : 'DS';
-
-  // Use STH (Seed To Harvest) for the dtm field, not raw DTM.
-  // The timing calculator adds this to greenhouse start date,
-  // so it needs the total time from seeding, not just in-field time.
-  const dtm = entry.STH ?? entry.DTM ?? 0;
+  // Calculate derived fields from the minimal crop config
+  const daysInCells = calculateDaysInCells(entry);
+  const sth = calculateSTH(entry, daysInCells);
+  const plantingMethod = calculatePlantingMethod(entry);
+  const harvestWindow = calculateHarvestWindow(entry);
 
   return {
-    crop: entry.Crop,
-    product: entry.Product || 'General',
-    category: entry.Category ?? '',
-    growingStructure: entry['Growing Structure'] || 'Field',
-    plantingMethod: validMethod,
-    dtm,
-    harvestWindow: entry['Harvest window'] ?? 0,
-    daysInCells: entry['Days in Cells'] ?? 0,
+    crop: entry.crop,
+    product: entry.product || 'General',
+    category: entry.category ?? '',
+    growingStructure: entry.growingStructure || 'Field',
+    plantingMethod,
+    dtm: sth, // Use STH for timeline calculations
+    harvestWindow,
+    daysInCells,
   };
 }
 

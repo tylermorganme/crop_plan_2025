@@ -1,25 +1,17 @@
 import cropsData from '@/data/crops.json';
+import {
+  type CropConfig,
+  calculateDaysInCells,
+  calculateSTH,
+  calculatePlantingMethod,
+  calculateHarvestWindow,
+} from './crop-calculations';
 
-export interface Crop {
-  id: string;
-  Identifier: string;
-  Crop: string;
-  Variety: string;
-  Product: string;
-  Category: string | null;
-  'Common Name': string;
-  'Growing Structure': string;
-  'Planting Method': string;
-  Seasons: string;
-  Deprecated: boolean;
-  'In Plan': boolean;
-  [key: string]: unknown; // Allow access to all other fields
-}
+// Re-export CropConfig as Crop for backwards compatibility
+export type Crop = CropConfig;
 
 export interface CropsData {
   crops: Crop[];
-  headers: string[];
-  extractedAt: string;
 }
 
 const data = cropsData as CropsData;
@@ -32,15 +24,13 @@ export function getCropById(id: string): Crop | undefined {
   return data.crops.find(c => c.id === id);
 }
 
-export function getHeaders(): string[] {
-  return data.headers.filter((h): h is string => h !== null);
+export function getCropByIdentifier(identifier: string): Crop | undefined {
+  return data.crops.find(c => c.identifier === identifier);
 }
 
 export function getMetadata() {
   return {
     totalCrops: data.crops.length,
-    extractedAt: data.extractedAt,
-    headerCount: data.headers.filter(h => h !== null).length,
   };
 }
 
@@ -60,11 +50,11 @@ export function getUniqueValues(field: keyof Crop): string[] {
 export function searchCrops(query: string): Crop[] {
   const q = query.toLowerCase();
   return data.crops.filter(crop =>
-    crop.Identifier?.toLowerCase().includes(q) ||
-    crop.Crop?.toLowerCase().includes(q) ||
-    crop.Variety?.toLowerCase().includes(q) ||
-    crop['Common Name']?.toLowerCase().includes(q) ||
-    crop.Category?.toLowerCase().includes(q)
+    crop.identifier?.toLowerCase().includes(q) ||
+    crop.crop?.toLowerCase().includes(q) ||
+    crop.variant?.toLowerCase().includes(q) ||
+    crop.product?.toLowerCase().includes(q) ||
+    crop.category?.toLowerCase().includes(q)
   );
 }
 
@@ -73,19 +63,26 @@ export function filterCrops(filters: {
   crop?: string;
   category?: string;
   growingStructure?: string;
-  plantingMethod?: string;
-  season?: string;
-  inPlan?: boolean;
+  plantingMethod?: 'DS' | 'TP' | 'PE';
   deprecated?: boolean;
 }): Crop[] {
   return data.crops.filter(c => {
-    if (filters.crop && c.Crop !== filters.crop) return false;
-    if (filters.category && c.Category !== filters.category) return false;
-    if (filters.growingStructure && c['Growing Structure'] !== filters.growingStructure) return false;
-    if (filters.plantingMethod && c['Planting Method'] !== filters.plantingMethod) return false;
-    if (filters.season && !c.Seasons?.includes(filters.season)) return false;
-    if (filters.inPlan !== undefined && c['In Plan'] !== filters.inPlan) return false;
-    if (filters.deprecated !== undefined && c.Deprecated !== filters.deprecated) return false;
+    if (filters.crop && c.crop !== filters.crop) return false;
+    if (filters.category && c.category !== filters.category) return false;
+    if (filters.growingStructure && c.growingStructure !== filters.growingStructure) return false;
+    if (filters.plantingMethod && calculatePlantingMethod(c) !== filters.plantingMethod) return false;
+    if (filters.deprecated !== undefined && c.deprecated !== filters.deprecated) return false;
     return true;
   });
+}
+
+// Get calculated values for a crop
+export function getCropCalculations(crop: Crop) {
+  const daysInCells = calculateDaysInCells(crop);
+  return {
+    daysInCells,
+    sth: calculateSTH(crop, daysInCells),
+    plantingMethod: calculatePlantingMethod(crop),
+    harvestWindow: calculateHarvestWindow(crop),
+  };
 }
