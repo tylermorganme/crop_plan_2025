@@ -30,13 +30,14 @@ export function ColumnData() {
     }
 
     const columnId = column.id;
+    const columnHeader = column.header;
 
     async function fetchData() {
       setLoading(true);
       setError(null);
 
       try {
-        const res = await fetch(`/api/column-values/${columnId}`);
+        const res = await fetch(`/api/column-values/${columnId}?header=${encodeURIComponent(columnHeader)}`);
         if (!res.ok) {
           throw new Error('Failed to fetch column data');
         }

@@ -27,6 +27,15 @@ interface ColumnRow {
   code_field: string | null;
 }
 
+// Convert DB columns (skip/remove as 0/1) to status field
+function dbToStatus(row: ColumnRow): 'include' | 'skip' | 'remove' | null {
+  if (row.remove) return 'remove';
+  if (row.skip) return 'skip';
+  // Note: 'include' is not stored in DB - it's the default when neither skip nor remove
+  // We treat it as null (not yet decided) unless explicitly set
+  return null;
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const table = searchParams.get('table');
@@ -65,16 +74,28 @@ export async function GET(request: NextRequest) {
 
   const rows = db.prepare(sql).all(...params) as ColumnRow[];
 
-  // Parse JSON fields and convert booleans
+  // Parse JSON fields and convert to new format
   const columns = rows.map(row => ({
-    ...row,
+    id: row.id,
+    table_name: row.table_name,
+    col_num: row.col_num,
+    col_letter: row.col_letter,
+    header: row.header,
+    classification: row.classification,
+    level: row.level,
+    formula: row.formula,
+    variance: row.variance,
+    formula_count: row.formula_count,
+    value_count: row.value_count,
+    unique_formulas: row.unique_formulas,
     depends_on: JSON.parse(row.depends_on || '[]'),
     external_deps: JSON.parse(row.external_deps || '[]'),
     verified: Boolean(row.verified),
-    remove: Boolean(row.remove),
+    status: dbToStatus(row),
     has_issue: Boolean(row.has_issue),
     implemented: Boolean(row.implemented),
-    skip: Boolean(row.skip),
+    notes: row.notes,
+    code_field: row.code_field,
   }));
 
   return NextResponse.json(columns);

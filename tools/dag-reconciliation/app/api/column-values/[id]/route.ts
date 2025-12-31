@@ -1,5 +1,6 @@
 /**
  * API route to get actual values for a column from the source data.
+ * Accepts column header name as query param to match against JSON keys.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -14,6 +15,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { searchParams } = new URL(request.url);
+  const headerParam = searchParams.get('header');
 
   // Parse the column ID (e.g., "crops_1" -> table: "crops", col: 1)
   const match = id.match(/^(crops|bedplan)_(\d+)$/);
@@ -21,7 +24,7 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid column ID' }, { status: 400 });
   }
 
-  const [, table, colNum] = match;
+  const [, table] = match;
   const dataFile = table === 'crops' ? 'crops.json' : 'bed-plan.json';
   const dataPath = path.join(DATA_PATH, dataFile);
 
@@ -37,15 +40,21 @@ export async function GET(
       return NextResponse.json({ values: [], header: null });
     }
 
-    // Get all keys from the first row to find the column by index
-    const keys = Object.keys(rows[0]);
-    const colIndex = parseInt(colNum) - 1; // Convert to 0-based index
-
-    if (colIndex < 0 || colIndex >= keys.length) {
-      return NextResponse.json({ error: 'Column index out of range' }, { status: 400 });
+    // Use provided header name, or return error if not provided
+    if (!headerParam) {
+      return NextResponse.json({ error: 'Header parameter required' }, { status: 400 });
     }
 
-    const header = keys[colIndex];
+    // Check if the header exists in the data
+    const keys = Object.keys(rows[0]);
+    if (!keys.includes(headerParam)) {
+      return NextResponse.json({
+        error: `Column "${headerParam}" not found in data`,
+        availableColumns: keys,
+      }, { status: 404 });
+    }
+
+    const header = headerParam;
 
     // Extract values for this column
     const values = rows.map((row: Record<string, unknown>, index: number) => ({

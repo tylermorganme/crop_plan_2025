@@ -171,24 +171,42 @@ export function Sidebar() {
         </div>
       </section>
 
-      {/* Legend - Border Status */}
+      {/* Legend - Status Icons */}
       <section className="flex flex-col gap-1">
-        <h2 className="text-xs font-semibold text-[#b8b8c8] uppercase tracking-wider mb-2.5">Border Status</h2>
+        <h2 className="text-xs font-semibold text-[#b8b8c8] uppercase tracking-wider mb-2.5">Status Icons</h2>
         <div className="flex items-center gap-2 text-[11px] py-0.5">
-          <div className="w-3.5 h-3.5 rounded-sm shrink-0 bg-[#3b82c4] border-2 border-dashed border-[#00ff88]" />
-          <span>Verified</span>
+          <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-[#22c55e] flex items-center justify-center text-white text-[8px]">✓</div>
+          <span>Verified (top-left)</span>
         </div>
         <div className="flex items-center gap-2 text-[11px] py-0.5">
-          <div className="w-3.5 h-3.5 rounded-sm shrink-0 bg-[#3b82c4] border-2 border-dashed border-[#ff3366]" />
-          <span>Has Issue</span>
+          <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-[#ef4444] flex items-center justify-center text-white text-[8px]">✕</div>
+          <span>Removed (top-right)</span>
         </div>
         <div className="flex items-center gap-2 text-[11px] py-0.5">
-          <div className="w-3.5 h-3.5 rounded-sm shrink-0 bg-[#3b82c4] border-2 border-dashed border-[#ffee00]" />
+          <div className="w-3.5 h-3.5 rounded-full shrink-0 bg-[#eab308] flex items-center justify-center text-white text-[8px]">▸</div>
+          <span>Skip (top-right)</span>
+        </div>
+        <div className="flex items-center gap-2 text-[11px] py-0.5">
+          <div className="w-0 h-0 shrink-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[12px] border-b-[#f97316] relative">
+            <span className="absolute -top-0.5 left-1/2 -translate-x-1/2 text-white text-[7px] font-bold">!</span>
+          </div>
+          <span>Has Issue (bottom-left)</span>
+        </div>
+      </section>
+
+      {/* Legend - Borders */}
+      <section className="flex flex-col gap-1">
+        <h2 className="text-xs font-semibold text-[#b8b8c8] uppercase tracking-wider mb-2.5">Borders</h2>
+        <div className="flex items-center gap-2 text-[11px] py-0.5">
+          <div className="w-3.5 h-3.5 rounded-sm shrink-0 bg-[#3b82c4] border-2 border-[#eab308]" />
           <span>Has Variance</span>
         </div>
         <div className="flex items-center gap-2 text-[11px] py-0.5">
-          <div className="w-3.5 h-3.5 rounded-sm shrink-0 bg-[#3b82c4] border-2 border-dashed border-purple-500" />
-          <span>Skip for now</span>
+          <div className="w-3.5 h-3.5 rounded-sm shrink-0 bg-[#3b82c4]" style={{
+            background: `repeating-linear-gradient(90deg, #22c55e 0px, #22c55e 2px, white 2px, white 4px)`,
+            backgroundSize: '4px 100%'
+          }} />
+          <span>Implemented</span>
         </div>
       </section>
     </div>

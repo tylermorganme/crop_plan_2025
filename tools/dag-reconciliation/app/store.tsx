@@ -3,12 +3,17 @@
 /**
  * Application state store using React context + useReducer.
  * Single source of truth for all UI state.
+ * UI preferences (filters, table, selection) persist to localStorage.
  */
 
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, useEffect } from 'react';
 import type { ReactNode, Dispatch } from 'react';
 
+const UI_STATE_KEY = 'dag-reconciliation-ui';
+
 // Types
+export type ColumnStatus = 'include' | 'skip' | 'remove' | null;
+
 export interface Column {
   id: string;
   header: string;
@@ -26,10 +31,9 @@ export interface Column {
   external_deps: string[];
   // Audit fields
   verified: boolean;
-  remove: boolean;
+  status: ColumnStatus;  // Replaces remove/skip - null means not yet decided
   has_issue: boolean;
   implemented: boolean;
-  skip: boolean;
   notes: string;
   code_field: string | null;
 }
@@ -97,6 +101,39 @@ const initialState: AppState = {
   loading: true,
 };
 
+// UI state that we persist to localStorage
+interface PersistedUIState {
+  currentTable: 'crops' | 'bedplan';
+  selectedColumnId: string | null;
+  statusFilter: StatusFilter;
+  typeFilter: TypeFilter;
+  levelFilter: number | null;
+}
+
+function loadPersistedState(): Partial<PersistedUIState> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const stored = localStorage.getItem(UI_STATE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return {};
+}
+
+function savePersistedState(state: AppState) {
+  const toSave: PersistedUIState = {
+    currentTable: state.currentTable,
+    selectedColumnId: state.selectedColumnId,
+    statusFilter: state.statusFilter,
+    typeFilter: state.typeFilter,
+    levelFilter: state.levelFilter,
+  };
+  localStorage.setItem(UI_STATE_KEY, JSON.stringify(toSave));
+}
+
 // Reducer
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -154,6 +191,31 @@ const DispatchContext = createContext<Dispatch<Action> | null>(null);
 // Provider component
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  // Load persisted UI state after mount (avoids hydration mismatch)
+  useEffect(() => {
+    const persisted = loadPersistedState();
+    if (persisted.currentTable) {
+      dispatch({ type: 'SET_TABLE', payload: persisted.currentTable });
+    }
+    if (persisted.statusFilter) {
+      dispatch({ type: 'SET_STATUS_FILTER', payload: persisted.statusFilter });
+    }
+    if (persisted.typeFilter !== undefined) {
+      dispatch({ type: 'SET_TYPE_FILTER', payload: persisted.typeFilter });
+    }
+    if (persisted.levelFilter !== undefined) {
+      dispatch({ type: 'SET_LEVEL_FILTER', payload: persisted.levelFilter });
+    }
+    if (persisted.selectedColumnId) {
+      dispatch({ type: 'SELECT_COLUMN', payload: persisted.selectedColumnId });
+    }
+  }, []);
+
+  // Save UI state to localStorage whenever it changes
+  useEffect(() => {
+    savePersistedState(state);
+  }, [state.currentTable, state.selectedColumnId, state.statusFilter, state.typeFilter, state.levelFilter]);
 
   return (
     <StateContext.Provider value={state}>

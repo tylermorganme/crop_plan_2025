@@ -36,7 +36,7 @@ export async function fetchStats(table: string): Promise<{ stats: Stats }> {
 
 export async function updateColumn(
   id: string,
-  updates: Partial<Pick<Column, 'verified' | 'remove' | 'has_issue' | 'implemented' | 'skip' | 'notes' | 'code_field'>>
+  updates: Partial<Pick<Column, 'verified' | 'status' | 'has_issue' | 'implemented' | 'notes' | 'code_field'>>
 ): Promise<Column> {
   return apiFetch(`/columns/${id}`, {
     method: 'PATCH',

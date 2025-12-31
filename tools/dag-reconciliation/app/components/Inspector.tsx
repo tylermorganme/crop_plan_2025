@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSelectedColumn, useDispatch } from '../store';
-import type { Column } from '../store';
+import type { Column, ColumnStatus } from '../store';
 import { updateColumn } from '../api';
 
 interface ToggleProps {
@@ -34,6 +34,42 @@ function Toggle({ label, checked, onChange, color = '#22d3ee' }: ToggleProps) {
         />
       </div>
       <span className="text-sm text-white flex-1">{label}</span>
+    </div>
+  );
+}
+
+interface StatusSelectorProps {
+  value: ColumnStatus;
+  onChange: (value: ColumnStatus) => void;
+}
+
+function StatusSelector({ value, onChange }: StatusSelectorProps) {
+  const options: { value: ColumnStatus; label: string; color: string }[] = [
+    { value: null, label: '—', color: '#4a4a5a' },
+    { value: 'include', label: 'Include', color: '#22c55e' },
+    { value: 'skip', label: 'Skip', color: '#eab308' },
+    { value: 'remove', label: 'Remove', color: '#ef4444' },
+  ];
+
+  return (
+    <div className="flex gap-1">
+      {options.map(opt => (
+        <button
+          key={opt.value ?? 'null'}
+          className={`flex-1 py-1.5 px-2 border rounded text-xs font-medium cursor-pointer transition-all ${
+            value === opt.value
+              ? 'text-[#0c0c12]'
+              : 'bg-transparent border-[#2a2a38] text-white hover:bg-[#252532]'
+          }`}
+          style={{
+            backgroundColor: value === opt.value ? opt.color : undefined,
+            borderColor: value === opt.value ? opt.color : undefined,
+          }}
+          onClick={() => onChange(opt.value)}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -181,6 +217,27 @@ export function Inspector() {
         {column.formula || 'No formula (input column)'}
       </div>
 
+      {/* Status selector */}
+      <div className="mt-4">
+        <label className="block text-[13px] text-[#b8b8c8] font-medium mb-1.5">
+          Status:
+        </label>
+        <StatusSelector
+          value={column.status}
+          onChange={async (status) => {
+            dispatch({
+              type: 'UPDATE_COLUMN',
+              payload: { id: column.id, status },
+            });
+            try {
+              await updateColumn(column.id, { status });
+            } catch (e) {
+              console.error('Failed to update status:', e);
+            }
+          }}
+        />
+      </div>
+
       {/* Toggle flags */}
       <div className="mt-4 flex flex-col gap-2.5">
         <Toggle
@@ -188,12 +245,6 @@ export function Inspector() {
           checked={column.verified}
           onChange={(v) => handleToggle('verified', v)}
           color="#22d3ee"
-        />
-        <Toggle
-          label="Remove"
-          checked={column.remove}
-          onChange={(v) => handleToggle('remove', v)}
-          color="#6b7280"
         />
         <Toggle
           label="Has Issue"
@@ -206,12 +257,6 @@ export function Inspector() {
           checked={column.implemented}
           onChange={(v) => handleToggle('implemented', v)}
           color="#a78bfa"
-        />
-        <Toggle
-          label="Skip for now"
-          checked={column.skip}
-          onChange={(v) => handleToggle('skip', v)}
-          color="#a855f7"
         />
       </div>
 

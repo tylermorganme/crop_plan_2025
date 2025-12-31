@@ -25,6 +25,41 @@ interface ColumnRow {
   code_field: string | null;
 }
 
+type ColumnStatus = 'include' | 'skip' | 'remove' | null;
+
+// Convert DB columns (skip/remove as 0/1) to status field
+function dbToStatus(row: ColumnRow): ColumnStatus {
+  if (row.remove) return 'remove';
+  if (row.skip) return 'skip';
+  return null;
+}
+
+// Convert row to API response format
+function rowToColumn(row: ColumnRow) {
+  return {
+    id: row.id,
+    table_name: row.table_name,
+    col_num: row.col_num,
+    col_letter: row.col_letter,
+    header: row.header,
+    classification: row.classification,
+    level: row.level,
+    formula: row.formula,
+    variance: row.variance,
+    formula_count: row.formula_count,
+    value_count: row.value_count,
+    unique_formulas: row.unique_formulas,
+    depends_on: JSON.parse(row.depends_on || '[]'),
+    external_deps: JSON.parse(row.external_deps || '[]'),
+    verified: Boolean(row.verified),
+    status: dbToStatus(row),
+    has_issue: Boolean(row.has_issue),
+    implemented: Boolean(row.implemented),
+    notes: row.notes,
+    code_field: row.code_field,
+  };
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,18 +73,7 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  const column = {
-    ...row,
-    depends_on: JSON.parse(row.depends_on || '[]'),
-    external_deps: JSON.parse(row.external_deps || '[]'),
-    verified: Boolean(row.verified),
-    remove: Boolean(row.remove),
-    has_issue: Boolean(row.has_issue),
-    implemented: Boolean(row.implemented),
-    skip: Boolean(row.skip),
-  };
-
-  return NextResponse.json(column);
+  return NextResponse.json(rowToColumn(row));
 }
 
 export async function PATCH(
@@ -58,7 +82,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const body = await request.json();
-  const { verified, remove, has_issue, implemented, skip, notes, code_field } = body;
+  const { verified, status, has_issue, implemented, notes, code_field } = body;
 
   const db = getDb();
 
@@ -69,10 +93,15 @@ export async function PATCH(
     updates.push('verified = ?');
     values.push(verified ? 1 : 0);
   }
-  if (remove !== undefined) {
+
+  // Handle new status field - converts to skip/remove columns
+  if (status !== undefined) {
+    updates.push('skip = ?');
     updates.push('remove = ?');
-    values.push(remove ? 1 : 0);
+    values.push(status === 'skip' ? 1 : 0);
+    values.push(status === 'remove' ? 1 : 0);
   }
+
   if (has_issue !== undefined) {
     updates.push('has_issue = ?');
     values.push(has_issue ? 1 : 0);
@@ -80,10 +109,6 @@ export async function PATCH(
   if (implemented !== undefined) {
     updates.push('implemented = ?');
     values.push(implemented ? 1 : 0);
-  }
-  if (skip !== undefined) {
-    updates.push('skip = ?');
-    values.push(skip ? 1 : 0);
   }
   if (notes !== undefined) {
     updates.push('notes = ?');
@@ -110,18 +135,7 @@ export async function PATCH(
 
   // Get updated column and broadcast
   const updated = db.prepare('SELECT * FROM columns WHERE id = ?').get(id) as ColumnRow;
-  const column = {
-    ...updated,
-    depends_on: JSON.parse(updated.depends_on || '[]'),
-    external_deps: JSON.parse(updated.external_deps || '[]'),
-    verified: Boolean(updated.verified),
-    remove: Boolean(updated.remove),
-    has_issue: Boolean(updated.has_issue),
-    implemented: Boolean(updated.implemented),
-    skip: Boolean(updated.skip),
-  };
-
-  broadcastUpdate('column-updated', column);
+  broadcastUpdate('column-updated', rowToColumn(updated));
 
   return NextResponse.json({ success: true });
 }
