@@ -11,6 +11,7 @@ import { fetchColumns, fetchEdges, fetchStats, connectSSE } from './api';
 import { DAGGraph } from './components/DAGGraph';
 import { Sidebar } from './components/Sidebar';
 import { Inspector } from './components/Inspector';
+import { ColumnData } from './components/ColumnData';
 
 function AppContent() {
   const dispatch = useDispatch();
@@ -63,10 +64,11 @@ function AppContent() {
   }, [dispatch]);
 
   return (
-    <div className="app">
+    <div className="flex w-full h-screen overflow-hidden">
       <Sidebar />
       <DAGGraph />
       <Inspector />
+      <ColumnData />
     </div>
   );
 }

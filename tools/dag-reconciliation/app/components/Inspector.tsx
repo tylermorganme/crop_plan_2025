@@ -19,13 +19,21 @@ interface ToggleProps {
 
 function Toggle({ label, checked, onChange, color = '#22d3ee' }: ToggleProps) {
   return (
-    <div className="flag-row">
+    <div className="flex items-center gap-3">
       <div
-        className={`flag-toggle ${checked ? 'active' : ''}`}
-        style={{ '--toggle-color': color } as React.CSSProperties}
+        className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors duration-200 border ${
+          checked ? 'border-transparent' : 'bg-[#252532] border-[#2a2a38]'
+        }`}
+        style={{ backgroundColor: checked ? color : undefined }}
         onClick={() => onChange(!checked)}
-      />
-      <span className="flag-label">{label}</span>
+      >
+        <div
+          className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200 ${
+            checked ? 'translate-x-5' : ''
+          }`}
+        />
+      </div>
+      <span className="text-sm text-white flex-1">{label}</span>
     </div>
   );
 }
@@ -46,7 +54,7 @@ export function Inspector() {
 
   if (!column) {
     return (
-      <div className="inspector empty">
+      <div className="w-[260px] min-w-[260px] shrink-0 bg-[#14141e] p-3 border-l border-[#2a2a38] flex items-center justify-center text-[#b8b8c8] text-sm">
         <span>Click a node to inspect</span>
       </div>
     );
@@ -100,70 +108,81 @@ export function Inspector() {
   };
 
   return (
-    <div className="inspector">
-      <h3 className="detail-header">{column.header}</h3>
+    <div className="w-[260px] min-w-[260px] shrink-0 bg-[#14141e] text-white p-3 overflow-y-auto flex flex-col gap-2.5 border-l border-[#2a2a38]">
+      <h3 className="text-cyan-400 text-sm font-semibold mb-3">{column.header}</h3>
 
-      <div className="detail-row">
-        <span className="detail-label">Column</span>
-        <span className="detail-value">
+      {/* Detail rows */}
+      <div className="flex justify-between text-[13px] py-2 border-b border-[#2a2a38]">
+        <span className="text-[#b8b8c8]">Column</span>
+        <span className="font-mono text-xs text-white">
           {column.col_letter} ({column.col_num})
         </span>
       </div>
 
-      <div className="detail-row">
-        <span className="detail-label">Classification</span>
-        <span className="detail-value">{column.classification}</span>
+      <div className="flex justify-between text-[13px] py-2 border-b border-[#2a2a38]">
+        <span className="text-[#b8b8c8]">Classification</span>
+        <span className="font-mono text-xs text-white">{column.classification}</span>
       </div>
 
-      <div className="detail-row">
-        <span className="detail-label">Level</span>
-        <span className="detail-value">{column.level}</span>
+      <div className="flex justify-between text-[13px] py-2 border-b border-[#2a2a38]">
+        <span className="text-[#b8b8c8]">Level</span>
+        <span className="font-mono text-xs text-white">{column.level}</span>
       </div>
 
-      <div className="detail-row">
-        <span className="detail-label">Row breakdown</span>
-        <span className="detail-value">
+      <div className="flex justify-between text-[13px] py-2 border-b border-[#2a2a38]">
+        <span className="text-[#b8b8c8]">Row breakdown</span>
+        <span className="font-mono text-xs text-white">
           {column.formula_count} formulas, {column.value_count} values
         </span>
       </div>
 
-      <div className="detail-row">
-        <span className="detail-label">Variance</span>
-        <span className="detail-value">
+      <div className="flex justify-between text-[13px] py-2 border-b border-[#2a2a38]">
+        <span className="text-[#b8b8c8]">Variance</span>
+        <span className="font-mono text-xs text-white">
           {column.variance > 0 ? `${column.variance}%` : '0%'} ({column.unique_formulas} unique formulas)
         </span>
       </div>
 
       {/* Dependencies */}
       {column.depends_on.length > 0 && (
-        <div className="deps-section">
-          <div className="deps-title">Depends on:</div>
-          <div className="deps-list">
+        <div className="mt-3">
+          <div className="text-[13px] text-[#b8b8c8] font-semibold mb-2">Depends on:</div>
+          <div className="flex flex-wrap gap-1.5">
             {column.depends_on.map(dep => (
-              <span key={dep} className="dep-tag">{dep}</span>
+              <span
+                key={dep}
+                className="inline-block py-1 px-2.5 bg-[#252532] rounded text-white font-mono text-[11px] cursor-pointer transition-colors hover:bg-cyan-400 hover:text-[#0c0c12]"
+              >
+                {dep}
+              </span>
             ))}
           </div>
         </div>
       )}
 
       {column.external_deps.length > 0 && (
-        <div className="deps-section">
-          <div className="deps-title">External deps:</div>
-          <div className="deps-list">
+        <div className="mt-3">
+          <div className="text-[13px] text-[#b8b8c8] font-semibold mb-2">External deps:</div>
+          <div className="flex flex-wrap gap-1.5">
             {column.external_deps.map(dep => (
-              <span key={dep} className="dep-tag external">{dep}</span>
+              <span
+                key={dep}
+                className="inline-block py-1 px-2.5 bg-purple-500/20 rounded text-purple-400 font-mono text-[11px]"
+              >
+                {dep}
+              </span>
             ))}
           </div>
         </div>
       )}
 
       {/* Formula preview */}
-      <div className="formula-preview">
+      <div className="font-mono text-xs bg-[#1c1c28] p-3 rounded-md mt-3 break-all max-h-[100px] overflow-y-auto text-white border border-[#2a2a38]">
         {column.formula || 'No formula (input column)'}
       </div>
 
       {/* Toggle flags */}
-      <div className="flag-toggles">
+      <div className="mt-4 flex flex-col gap-2.5">
         <Toggle
           label="Verified"
           checked={column.verified}
@@ -197,25 +216,31 @@ export function Inspector() {
       </div>
 
       {/* Code field mapping */}
-      <div className="input-group">
-        <label>Maps to code field:</label>
+      <div className="mt-3">
+        <label className="block text-[13px] text-[#b8b8c8] font-medium mb-1.5">
+          Maps to code field:
+        </label>
         <input
           type="text"
           value={codeField}
           onChange={(e) => setCodeField(e.target.value)}
           onBlur={handleCodeFieldBlur}
           placeholder="e.g. crop.identifier"
+          className="w-full py-2.5 px-3 bg-[#1c1c28] border border-[#2a2a38] rounded-md text-white text-sm transition-colors focus:outline-none focus:border-cyan-400"
         />
       </div>
 
       {/* Notes */}
-      <div className="input-group">
-        <label>Notes:</label>
+      <div className="mt-3">
+        <label className="block text-[13px] text-[#b8b8c8] font-medium mb-1.5">
+          Notes:
+        </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           onBlur={handleNotesBlur}
           placeholder="Add notes..."
+          className="w-full py-2.5 px-3 bg-[#1c1c28] border border-[#2a2a38] rounded-md text-white text-sm transition-colors focus:outline-none focus:border-cyan-400 resize-y min-h-[60px]"
         />
       </div>
     </div>

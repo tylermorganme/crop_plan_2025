@@ -1,13 +1,16 @@
+'use client';
+
 /**
- * DAG Graph visualization - simple HTML/CSS, no libraries.
- * Direct DOM, no intermediate state, no memoization issues.
+ * DAG Graph visualization using dagre layout + SVG rendering.
+ * Supports pan (drag) and zoom (wheel).
  */
 
 import dagre from 'dagre';
+import { useState, useRef, useCallback } from 'react';
 import { useAppState, useDispatch } from '../store';
 import type { Column } from '../store';
 
-// Colors
+// Colors matching the original React app
 const classColors: Record<string, string> = {
   INPUT: '#2d8659',
   CALCULATED: '#3b82c4',
@@ -48,7 +51,6 @@ function computeLayout(
 
   const nodeHeight = 28;
 
-  // Build a map for column lookup
   const colMap = new Map<string, Column>();
   columns.forEach(col => {
     const width = 20 + col.header.length * 7;
@@ -91,17 +93,61 @@ export function DAGGraph() {
   const dispatch = useDispatch();
   const { columns, edges: storeEdges, currentTable, selectedColumnId, statusFilter } = useAppState();
 
-  // DEBUG: Log when component renders and what columns look like
-  console.log('DAGGraph render:', {
-    statusFilter,
-    columnsCount: columns.length,
-    sampleCol: columns[0] ? { id: columns[0].id, verified: columns[0].verified } : null,
-  });
+  // Pan and zoom state
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Compute filtered IDs directly - no caching, no stale data
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Start panning on any click in the container
+    const target = e.target as SVGElement;
+    // Don't pan if clicking on a node (rect or text inside g)
+    if (target.closest('g[data-node]')) return;
+
+    setIsPanning(true);
+    panStartRef.current = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+    e.preventDefault();
+  }, [transform.x, transform.y]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isPanning) return;
+    setTransform(t => ({
+      ...t,
+      x: e.clientX - panStartRef.current.x,
+      y: e.clientY - panStartRef.current.y,
+    }));
+  }, [isPanning]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.min(Math.max(transform.scale * delta, 0.2), 3);
+
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) {
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      setTransform(t => ({
+        scale: newScale,
+        x: mouseX - (mouseX - t.x) * (newScale / t.scale),
+        y: mouseY - (mouseY - t.y) * (newScale / t.scale),
+      }));
+    }
+  }, [transform.scale]);
+
+  // Compute filtered IDs directly - no caching
   const filteredIds = new Set(
     columns.filter(col => {
-      // Apply current filter logic inline
       let passesStatus = true;
       switch (statusFilter) {
         case 'pending':
@@ -127,17 +173,12 @@ export function DAGGraph() {
     }).map(c => c.id)
   );
 
-  // Filter to current table - computed fresh each render
+  // Filter to current table
   const tableColumns = columns.filter(c => c.id.startsWith(currentTable));
+  const tableEdges = storeEdges.filter(
+    e => e.source.startsWith(currentTable) && e.target.startsWith(currentTable)
+  );
 
-  const tableEdges = (() => {
-    const prefix = currentTable + '_';
-    return storeEdges.filter(
-      e => e.source.startsWith(prefix) && e.target.startsWith(prefix)
-    );
-  })();
-
-  // Compute layout - this is expensive but we need fresh data
   const layout = computeLayout(tableColumns, tableEdges);
 
   // Build node position map for edge drawing
@@ -161,12 +202,24 @@ export function DAGGraph() {
   const svgHeight = bounds.maxY - bounds.minY;
 
   return (
-    <div style={{ width: '100%', height: '100%', background: '#0c0c12', overflow: 'auto' }}>
+    <div
+      ref={containerRef}
+      className="flex-1 min-w-0 h-full bg-[#0c0c12] overflow-auto"
+      style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+      onWheel={handleWheel}
+    >
       <svg
-        width={svgWidth}
-        height={svgHeight}
+        width={svgWidth * transform.scale}
+        height={svgHeight * transform.scale}
         viewBox={`${bounds.minX} ${bounds.minY} ${svgWidth} ${svgHeight}`}
-        style={{ display: 'block' }}
+        style={{
+          display: 'block',
+          transform: `translate(${transform.x}px, ${transform.y}px)`,
+        }}
       >
         {/* Edges */}
         {layout.edges.map(edge => {
@@ -192,9 +245,9 @@ export function DAGGraph() {
           );
         })}
 
-        {/* Nodes - always read fresh column data from columns array */}
+        {/* Nodes */}
         {layout.nodes.map(node => {
-          // CRITICAL: Always get fresh column data from the source of truth
+          // Always get fresh column data
           const col = columns.find(c => c.id === node.id) || node.col;
           const isFiltered = filteredIds.has(col.id);
           const isSelected = col.id === selectedColumnId;
@@ -223,9 +276,13 @@ export function DAGGraph() {
           return (
             <g
               key={node.id}
+              data-node="true"
               transform={`translate(${node.x}, ${node.y})`}
               style={{ cursor: 'pointer', opacity }}
-              onClick={() => dispatch({ type: 'SELECT_COLUMN', payload: col.id })}
+              onClick={(e) => {
+                e.stopPropagation();
+                dispatch({ type: 'SELECT_COLUMN', payload: col.id });
+              }}
             >
               <rect
                 width={node.width}

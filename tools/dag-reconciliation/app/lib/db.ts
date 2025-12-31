@@ -8,8 +8,8 @@ import path from 'path';
 import fs from 'fs';
 
 // Database path - store in the dag-reconciliation directory alongside graph-data.json
-const DB_PATH = path.join(process.cwd(), '..', 'dag-reconciliation', 'reconciliation.db');
-const GRAPH_DATA_PATH = path.join(process.cwd(), '..', 'dag-reconciliation', 'graph-data.json');
+const DB_PATH = path.join(process.cwd(), 'reconciliation.db');
+const GRAPH_DATA_PATH = path.join(process.cwd(), 'graph-data.json');
 
 // Singleton database instance
 let db: Database.Database | null = null;
