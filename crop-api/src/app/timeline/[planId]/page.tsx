@@ -6,6 +6,8 @@ import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import HistoryPanel from '@/components/HistoryPanel';
 import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal';
+import CropConfigEditor from '@/components/CropConfigEditor';
+import { type CropConfig } from '@/lib/crop-calculations';
 import { useCrossTabSync } from '@/hooks/useCrossTabSync';
 import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
 import {
@@ -56,6 +58,8 @@ export default function TimelinePlanPage() {
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [configEditorOpen, setConfigEditorOpen] = useState(false);
+  const [editingCrop, setEditingCrop] = useState<CropConfig | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const yearInputRef = useRef<HTMLInputElement>(null);
@@ -77,6 +81,19 @@ export default function TimelinePlanPage() {
 
   // Sync plan state across browser tabs/windows
   useCrossTabSync(planId);
+
+  // Update crop config action from store
+  const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
+
+  // Helper to get crop config from plan's catalog (falls back to master)
+  const getCropByIdentifier = useCallback((identifier: string) => {
+    // First try plan's catalog
+    if (currentPlan?.cropCatalog?.[identifier]) {
+      return currentPlan.cropCatalog[identifier];
+    }
+    // Fall back to master catalog (shouldn't happen for new plans)
+    return null;
+  }, [currentPlan?.cropCatalog]);
 
   // Load the specific plan by ID
   useEffect(() => {
@@ -200,6 +217,50 @@ export default function TimelinePlanPage() {
       setToast({ message: `Failed to delete: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
     }
   }, [deleteCrop]);
+
+  const handleEditCropConfig = useCallback((plantingId: string) => {
+    const timelineCrop = currentPlan?.crops.find(c => c.plantingId === plantingId || c.groupId === plantingId);
+
+    if (!timelineCrop) {
+      setToast({ message: `Crop not found: ${plantingId}`, type: 'error' });
+      return;
+    }
+
+    if (!timelineCrop.cropConfigId) {
+      setToast({ message: `Crop missing config reference: ${plantingId}`, type: 'error' });
+      return;
+    }
+
+    const crop = getCropByIdentifier(timelineCrop.cropConfigId);
+    if (!crop) {
+      setToast({ message: `Config not found: ${timelineCrop.cropConfigId}`, type: 'error' });
+      return;
+    }
+
+    setEditingCrop(crop);
+    setConfigEditorOpen(true);
+  }, [currentPlan?.crops, getCropByIdentifier]);
+
+  const handleSaveCropConfig = useCallback(async (updated: CropConfig) => {
+    try {
+      // Update the config in the plan's catalog (not global crops.json)
+      const affectedCount = await updateCropConfig(updated);
+
+      setConfigEditorOpen(false);
+      setEditingCrop(null);
+
+      if (affectedCount > 0) {
+        setToast({ message: `Saved "${updated.identifier}" - updated ${affectedCount} planting(s)`, type: 'success' });
+      } else {
+        setToast({ message: `Saved "${updated.identifier}"`, type: 'success' });
+      }
+    } catch (e) {
+      setToast({
+        message: `Failed to save: ${e instanceof Error ? e.message : 'Unknown error'}`,
+        type: 'error',
+      });
+    }
+  }, [updateCropConfig]);
 
   const handleSave = useCallback(async () => {
     // Save to library is automatic now, but mark as saved
@@ -499,6 +560,7 @@ export default function TimelinePlanPage() {
           onCropDateChange={handleDateChange}
           onDuplicateCrop={handleDuplicateCrop}
           onDeleteCrop={handleDeleteCrop}
+          onEditCropConfig={handleEditCropConfig}
         />
       </div>
 
@@ -526,6 +588,17 @@ export default function TimelinePlanPage() {
         currentPlanName={currentPlan?.metadata.name || ''}
         onClose={() => setCopyModalOpen(false)}
         onCopy={handleCopyPlan}
+      />
+
+      {/* Crop config editor modal */}
+      <CropConfigEditor
+        isOpen={configEditorOpen}
+        crop={editingCrop}
+        onClose={() => {
+          setConfigEditorOpen(false);
+          setEditingCrop(null);
+        }}
+        onSave={handleSaveCropConfig}
       />
     </div>
   );

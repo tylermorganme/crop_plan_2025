@@ -18,6 +18,12 @@ import {
   type CropCatalogEntry,
 } from './slim-planting';
 
+// Re-export for consumers
+export type { CropCatalogEntry };
+
+// Default catalog from static import (for backwards compatibility)
+const defaultCatalog = (cropsData as { crops: CropCatalogEntry[] }).crops;
+
 
 interface BedAssignment {
   crop: string;
@@ -190,10 +196,13 @@ export function calculateRowSpan(feetNeeded: number, startBed: string, bedGroups
 /**
  * Get crops from bed plan formatted for the timeline.
  * Uses bed-plan.json for planting data and crops.json for config lookups.
+ *
+ * @param cropCatalog - Optional crop catalog to use instead of static import.
+ *   Pass dynamically fetched crops to get live updates after editing configs.
  */
-export function getTimelineCrops(): TimelineCrop[] {
+export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop[] {
   const bedPlan = bedPlanData as BedPlanData;
-  const catalogCrops = (cropsData as { crops: CropCatalogEntry[] }).crops;
+  const catalogCrops = cropCatalog || defaultCatalog;
 
   const timelineCrops: TimelineCrop[] = [];
   const seenIdentifiers = new Set<string>();
@@ -291,6 +300,7 @@ export function getTimelineCrops(): TimelineCrop[] {
           feetNeeded,
           structure,
           plantingId: assignment.identifier,
+          cropConfigId: assignment.crop,
           totalBeds: bedSpanInfo.length,
           bedIndex: index + 1,
           groupId: assignment.identifier,

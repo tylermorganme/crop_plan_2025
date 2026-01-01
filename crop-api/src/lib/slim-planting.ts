@@ -207,6 +207,7 @@ export function computeTimelineCrop(
       feetNeeded,
       structure: config.growingStructure,
       plantingId: planting.id,
+      cropConfigId: planting.cropConfigId,
       totalBeds: 1,
       bedIndex: 1,
       groupId: planting.id,
@@ -229,6 +230,7 @@ export function computeTimelineCrop(
     feetNeeded,
     structure: config.growingStructure,
     plantingId: planting.id,
+    cropConfigId: planting.cropConfigId,
     totalBeds: spanResult.bedSpanInfo.length,
     bedIndex: index + 1,
     groupId: planting.id,
@@ -236,6 +238,84 @@ export function computeTimelineCrop(
     bedCapacityFt: info.bedCapacityFt,
     plantingMethod: config.plantingMethod,
   }));
+}
+
+// =============================================================================
+// RECALCULATION HELPERS
+// =============================================================================
+
+/**
+ * Recalculate timeline crops that use a specific config.
+ * Used after saving a crop config to update existing timeline entries.
+ *
+ * @param crops - Current timeline crops
+ * @param configIdentifier - The crop config identifier that was updated
+ * @param catalog - Fresh crop catalog with updated config
+ * @param bedGroups - Bed groupings for span calculation
+ * @returns Updated array of timeline crops with recalculated dates
+ */
+export function recalculateCropsForConfig(
+  crops: TimelineCrop[],
+  configIdentifier: string,
+  catalog: CropCatalogEntry[],
+  bedGroups: Record<string, string[]>
+): TimelineCrop[] {
+  const config = lookupConfigFromCatalog(configIdentifier, catalog);
+  if (!config) {
+    // Config not found, return crops unchanged
+    return crops;
+  }
+
+  // Group crops by groupId to process each planting once
+  const groupedCrops = new Map<string, TimelineCrop[]>();
+  for (const crop of crops) {
+    if (!groupedCrops.has(crop.groupId)) {
+      groupedCrops.set(crop.groupId, []);
+    }
+    groupedCrops.get(crop.groupId)!.push(crop);
+  }
+
+  const result: TimelineCrop[] = [];
+
+  for (const [groupId, groupCrops] of groupedCrops) {
+    const firstCrop = groupCrops[0];
+
+    // Only recalculate if this planting uses the updated config
+    if (firstCrop.cropConfigId !== configIdentifier) {
+      result.push(...groupCrops);
+      continue;
+    }
+
+    // Extract slim planting from existing timeline crop
+    const slim: SlimPlanting = {
+      id: firstCrop.plantingId || groupId,
+      cropConfigId: configIdentifier,
+      bed: firstCrop.resource || null,
+      bedsCount: (firstCrop.feetNeeded || 50) / STANDARD_BED_FT,
+      fixedFieldStartDate: firstCrop.startDate, // Use current start as fixed date
+    };
+
+    // Recalculate with fresh config
+    const recalculated = computeTimelineCrop(slim, config, bedGroups);
+
+    // Preserve any non-calculated fields from original crops
+    for (let i = 0; i < recalculated.length; i++) {
+      const original = groupCrops.find(c => c.bedIndex === recalculated[i].bedIndex);
+      if (original) {
+        recalculated[i] = {
+          ...recalculated[i],
+          id: original.id, // Preserve original ID for React keys
+          bgColor: original.bgColor,
+          textColor: original.textColor,
+          lastModified: Date.now(),
+        };
+      }
+    }
+
+    result.push(...recalculated);
+  }
+
+  return result;
 }
 
 // =============================================================================

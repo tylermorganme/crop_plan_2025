@@ -186,6 +186,7 @@ function createTimelineCropFromConfig(crop: Crop, planYear: number): TimelineCro
     feetNeeded,
     structure: crop.growingStructure || 'Field',
     plantingMethod,
+    cropConfigId: crop.identifier,
     totalBeds: 1,
     bedIndex: 1,
     groupId,

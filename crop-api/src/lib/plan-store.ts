@@ -25,8 +25,12 @@ import type {
   Checkpoint,
   HistoryEntry,
 } from './plan-types';
-import { CURRENT_SCHEMA_VERSION } from './plan-types';
+import { CURRENT_SCHEMA_VERSION, generatePlantingId, initializeIdCounter } from './plan-types';
 import { storage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
+import { recalculateCropsForConfig } from './slim-planting';
+import bedPlanData from '@/data/bed-plan.json';
+import { getAllCrops } from './crops';
+import type { CropConfig } from './crop-calculations';
 
 // Re-export types for consumers
 export type { PlanSummary, PlanSnapshot, PlanData };
@@ -485,6 +489,9 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   deleteCrop: (groupId: string) => Promise<void>;
   addCrop: (crop: TimelineCrop) => Promise<void>;
   duplicateCrop: (groupId: string) => Promise<string>;
+  recalculateCrops: (configIdentifier: string, catalog: import('./crop-calculations').CropConfig[]) => Promise<number>;
+  /** Update a crop config in the plan's catalog and recalculate affected crops */
+  updateCropConfig: (config: import('./crop-calculations').CropConfig) => Promise<number>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -536,6 +543,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`Plan not found: ${planId}`);
       }
 
+      // Initialize ID counter based on existing plantings to avoid collisions
+      const existingIds = data.plan.crops.map(c => c.groupId);
+      initializeIdCounter(existingIds);
+
       set((state) => {
         state.currentPlan = data.plan;
         state.past = data.past || [];
@@ -586,6 +597,15 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const defaultYear = currentMonth >= 4 ? currentYear + 1 : currentYear;
       // Ensure unique plan name
       const uniqueName = await getUniquePlanName(name);
+
+      // Build crop catalog map from master (deep copy for plan-specific edits)
+      const masterCrops = getAllCrops();
+      const cropCatalog: Record<string, CropConfig> = {};
+      for (const crop of masterCrops) {
+        // Deep copy to avoid mutations affecting master
+        cropCatalog[crop.identifier] = JSON.parse(JSON.stringify(crop));
+      }
+
       const plan: Plan = {
         id,
         metadata: {
@@ -599,6 +619,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         resources,
         groups,
         changeLog: [],
+        cropCatalog,
       };
 
       set((state) => {
@@ -875,9 +896,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`No crop found with groupId: ${groupId}`);
       }
 
-      // Create new unique IDs
+      // Generate a new short unique ID
+      const newGroupId = generatePlantingId();
       const now = Date.now();
-      const newGroupId = `${groupId}_copy_${now}`;
 
       // Create a single unassigned copy based on the first crop in the group
       const template = groupCrops[0];
@@ -898,6 +919,149 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       await get().addCrop(newCrop);
 
       return newGroupId;
+    },
+
+    recalculateCrops: async (configIdentifier: string, catalog: import('./crop-calculations').CropConfig[]) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+
+      // Count how many plantings will be affected
+      const affectedGroupIds = new Set<string>();
+      for (const crop of state.currentPlan.crops) {
+        if (crop.cropConfigId === configIdentifier) {
+          affectedGroupIds.add(crop.groupId);
+        }
+      }
+
+      if (affectedGroupIds.size === 0) {
+        return 0; // No crops to recalculate
+      }
+
+      // Recalculate crops
+      const recalculated = recalculateCropsForConfig(
+        state.currentPlan.crops,
+        configIdentifier,
+        catalog,
+        bedGroups
+      );
+
+      set((storeState) => {
+        if (!storeState.currentPlan) return;
+
+        // Save current state to undo stack
+        storeState.past.push([...storeState.currentPlan.crops]);
+        if (storeState.past.length > MAX_HISTORY_SIZE) {
+          storeState.past.shift();
+        }
+        storeState.future = [];
+
+        // Update crops
+        storeState.currentPlan.crops = recalculated;
+        storeState.currentPlan.metadata.lastModified = Date.now();
+        storeState.currentPlan.changeLog.push(
+          createChangeEntry('batch', `Recalculated ${affectedGroupIds.size} planting(s) for config change`, [...affectedGroupIds])
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return affectedGroupIds.size;
+    },
+
+    updateCropConfig: async (config: CropConfig) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (!state.currentPlan.cropCatalog) {
+        throw new Error('Plan has no crop catalog');
+      }
+
+      const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+
+      // Build updated catalog (copy, then update)
+      const updatedCatalog = { ...state.currentPlan.cropCatalog };
+      updatedCatalog[config.identifier] = JSON.parse(JSON.stringify(config));
+
+      // Build catalog array for recalculation
+      const catalogArray = Object.values(updatedCatalog);
+
+      // Count affected crops
+      const affectedGroupIds = new Set<string>();
+      for (const crop of state.currentPlan.crops) {
+        if (crop.cropConfigId === config.identifier) {
+          affectedGroupIds.add(crop.groupId);
+        }
+      }
+
+      // Recalculate affected crops
+      const recalculated = affectedGroupIds.size > 0
+        ? recalculateCropsForConfig(state.currentPlan.crops, config.identifier, catalogArray, bedGroups)
+        : state.currentPlan.crops;
+
+      set((storeState) => {
+        if (!storeState.currentPlan) return;
+
+        // Save current state to undo stack
+        storeState.past.push([...storeState.currentPlan.crops]);
+        if (storeState.past.length > MAX_HISTORY_SIZE) {
+          storeState.past.shift();
+        }
+        storeState.future = [];
+
+        // Update catalog and crops
+        storeState.currentPlan.cropCatalog = updatedCatalog;
+        storeState.currentPlan.crops = recalculated;
+        storeState.currentPlan.metadata.lastModified = Date.now();
+        storeState.currentPlan.changeLog.push(
+          createChangeEntry('batch', `Updated config "${config.identifier}"`, [...affectedGroupIds])
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return affectedGroupIds.size;
     },
 
     // History

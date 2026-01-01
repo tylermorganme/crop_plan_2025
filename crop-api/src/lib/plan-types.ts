@@ -17,7 +17,10 @@ export interface TimelineCrop {
   /** Total feet needed for this planting */
   feetNeeded?: number;
   structure?: string;
+  /** Short planting ID from bed plan (e.g., "PEP004") */
   plantingId?: string;
+  /** Crop config identifier matching crops.json (e.g., "Pepper (Hot) - Ripe Fruit...") */
+  cropConfigId: string;
   /** Total number of beds this crop occupies */
   totalBeds: number;
   /** Which bed number this is (1-indexed) in the sequence */
@@ -90,6 +93,12 @@ export interface Plan {
   groups: ResourceGroup[];
   /** Change history (for persistence) */
   changeLog: PlanChange[];
+  /**
+   * Plan's own crop catalog - copy from master on plan creation.
+   * Edits to crop configs modify this, not the global crops.json.
+   * Stored as a map keyed by identifier for fast lookup.
+   */
+  cropCatalog?: Record<string, import('./crop-calculations').CropConfig>;
 }
 
 /** State for the plan store */
@@ -141,6 +150,124 @@ export type PlanStore = PlanState & PlanActions;
 
 /** Current schema version for data migrations */
 export const CURRENT_SCHEMA_VERSION = 1;
+
+// ============================================
+// TimelineCrop Factory
+// ============================================
+
+/**
+ * Generate a deterministic ID for a timeline crop entry.
+ * Format: {plantingId}_bed{bedIndex} or {plantingId}_unassigned
+ *
+ * This ensures stable IDs when re-importing from the same source data.
+ */
+export function generateCropId(plantingId: string, bedIndex: number | 'unassigned'): string {
+  return bedIndex === 'unassigned'
+    ? `${plantingId}_unassigned`
+    : `${plantingId}_bed${bedIndex}`;
+}
+
+/**
+ * Extract the base planting ID, stripping any _copy_* suffixes.
+ * e.g., "PEP002_copy_123" -> "PEP002"
+ */
+export function getBasePlantingId(plantingId: string): string {
+  const match = plantingId.match(/^(.+?)(?:_\d+)?$/);
+  return match ? match[1] : plantingId;
+}
+
+// Simple counter for generating unique IDs within a session
+let nextId = 1;
+
+/**
+ * Generate a short unique planting ID.
+ * Format: P{sequential number} e.g., P1, P2, P3...
+ */
+export function generatePlantingId(): string {
+  return `P${nextId++}`;
+}
+
+/**
+ * Initialize the ID counter based on existing plantings.
+ * Call this when loading a plan to avoid ID collisions.
+ */
+export function initializeIdCounter(existingIds: string[]): void {
+  let maxId = 0;
+  for (const id of existingIds) {
+    const match = id.match(/^P(\d+)$/);
+    if (match) {
+      maxId = Math.max(maxId, parseInt(match[1], 10));
+    }
+  }
+  nextId = maxId + 1;
+}
+
+/** Required fields for creating a TimelineCrop */
+export interface CreateTimelineCropInput {
+  /** Base planting ID (e.g., "PEP004") */
+  plantingId: string;
+  /** Crop config identifier from crops.json */
+  cropConfigId: string;
+  /** Display name */
+  name: string;
+  /** Start date (ISO string) */
+  startDate: string;
+  /** End date (ISO string) */
+  endDate: string;
+  /** Bed assignment (empty string = unassigned) */
+  resource: string;
+  /** Total beds in this planting */
+  totalBeds: number;
+  /** Which bed this is (1-indexed), or 0 for unassigned */
+  bedIndex: number;
+  /** Optional: override groupId (for duplicates) */
+  groupId?: string;
+  /** Optional fields */
+  category?: string;
+  bgColor?: string;
+  textColor?: string;
+  feetNeeded?: number;
+  structure?: string;
+  feetUsed?: number;
+  bedCapacityFt?: number;
+  harvestStartDate?: string;
+  plantingMethod?: 'DS' | 'TP' | 'PE';
+  lastModified?: number;
+}
+
+/**
+ * Factory function for creating TimelineCrop objects.
+ * Ensures all required fields are set with deterministic IDs.
+ */
+export function createTimelineCrop(input: CreateTimelineCropInput): TimelineCrop {
+  const groupId = input.groupId ?? input.plantingId;
+  const id = input.resource
+    ? generateCropId(groupId, input.bedIndex - 1)  // bed index in ID is 0-based
+    : generateCropId(groupId, 'unassigned');
+
+  return {
+    id,
+    name: input.name,
+    startDate: input.startDate,
+    endDate: input.endDate,
+    resource: input.resource,
+    cropConfigId: input.cropConfigId,
+    totalBeds: input.totalBeds,
+    bedIndex: input.bedIndex,
+    groupId,
+    plantingId: input.plantingId,
+    category: input.category,
+    bgColor: input.bgColor,
+    textColor: input.textColor,
+    feetNeeded: input.feetNeeded,
+    structure: input.structure,
+    feetUsed: input.feetUsed,
+    bedCapacityFt: input.bedCapacityFt,
+    harvestStartDate: input.harvestStartDate,
+    plantingMethod: input.plantingMethod,
+    lastModified: input.lastModified,
+  };
+}
 
 /** Exported crop plan file format */
 export interface CropPlanFile {

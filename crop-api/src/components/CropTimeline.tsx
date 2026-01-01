@@ -28,8 +28,10 @@ interface TimelineCrop {
   feetUsed?: number;
   /** Total feet capacity of this bed */
   bedCapacityFt?: number;
-  /** The planting identifier from the source data */
+  /** Short planting ID from bed plan (e.g., "PEP004") */
   plantingId?: string;
+  /** Crop config identifier matching crops.json */
+  cropConfigId?: string;
   /** Harvest start date (ISO date) - when harvest window begins */
   harvestStartDate?: string;
   /** Planting method: DS (Direct Seed), TP (Transplant), PE (Perennial) */
@@ -51,6 +53,8 @@ interface CropTimelineProps {
   onCropDateChange?: (groupId: string, startDate: string, endDate: string) => void;
   onDuplicateCrop?: (groupId: string) => void;
   onDeleteCrop?: (groupIds: string[]) => void;
+  /** Callback when user wants to edit the crop config. Receives the planting identifier. */
+  onEditCropConfig?: (identifier: string) => void;
 }
 
 // =============================================================================
@@ -325,6 +329,7 @@ export default function CropTimeline({
   onCropDateChange,
   onDuplicateCrop,
   onDeleteCrop,
+  onEditCropConfig,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -1900,6 +1905,16 @@ export default function CropTimeline({
 
                   {/* Actions */}
                   <div className="pt-3 border-t space-y-2">
+                    {onEditCropConfig && crop.plantingId && (
+                      <button
+                        onClick={() => {
+                          onEditCropConfig(crop.plantingId!);
+                        }}
+                        className="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                      >
+                        Edit Crop Config
+                      </button>
+                    )}
                     {onDuplicateCrop && (
                       <button
                         onClick={() => {

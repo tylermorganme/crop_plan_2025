@@ -9,7 +9,8 @@
  * normalMethod (input) = How DTM is defined for this crop variety:
  *   - "DS": DTM is from direct seeding in field (seed packet says "60 days from sowing")
  *   - "TP": DTM is from transplant in field (seed packet says "60 days from transplant")
- *   - "X":  DTM is total time from seeding (used when you just want DTM = STH)
+ *   - "X":  DTM is total time from seeding a TRANSPLANT to harvest (from growers/books,
+ *          includes greenhouse time and transplant shock in the total)
  *
  * plantingMethod (calculated) = How you're actually growing it:
  *   - "DS": Direct seeding (no tray stages)
@@ -59,6 +60,16 @@ export interface CropConfig {
   // Perennial flag - indicates crop persists across seasons
   perennial?: boolean;
 
+  /**
+   * Assumed transplant age (days) when DTM was measured for TP crops.
+   * Used to calculate STH when direct seeding a normally-transplanted crop.
+   * Default: 35 days (5 weeks, typical Johnny's Seeds assumption).
+   *
+   * TODO: Could be populated per-crop by scraping seed catalogs (e.g., Johnny's
+   * Seeds culture notes often specify "sow X weeks before transplanting").
+   */
+  assumedTransplantDays?: number;
+
   // Harvest/yield data - normalized inputs
   // Frontend can offer different input modes that convert to this format
   /** Days between harvests (e.g., 7 = weekly, 14 = biweekly) */
@@ -102,26 +113,33 @@ export interface CropCalculated {
 // =============================================================================
 
 /**
- * Transplant shock compensation (days).
+ * Transplant shock / Direct seed establishment compensation (days).
  *
- * When a crop's DTM is based on direct seeding but you grow it as a transplant,
- * the transplanting process adds stress/shock that slows growth.
+ * This constant captures the timing difference between transplanting and
+ * direct seeding for the same crop:
+ * - Transplanting adds ~14 days due to shock ("kicked in the knee")
+ * - Direct seeding saves ~14 days by avoiding shock
  *
- * Note: Could be standardized with DIRECT_SEED_ESTABLISHMENT_DAYS to a single
- * value (~18 days) in the future if exact parity with legacy data isn't needed.
+ * Johnny's Seeds reference: "subtract about 14 days for days to maturity
+ * from transplant" when converting TP timing to DS timing.
  */
-const TRANSPLANT_SHOCK_DAYS = 15;
+const PLANTING_METHOD_DELTA_DAYS = 14;
 
 /**
- * Direct seed establishment compensation (days).
+ * Default assumed transplant age (days) for TP crops.
  *
- * When a crop's DTM is based on transplanting but you direct seed it instead,
- * the seedling needs extra time to establish compared to a transplant.
+ * When a seed catalog says "DTM from transplant", they measured from
+ * transplants of a certain age. This default represents ~4 weeks, which
+ * is a rough middle-ground assumption.
  *
- * Note: Could be standardized with TRANSPLANT_SHOCK_DAYS to a single value
- * (~18 days) in the future if exact parity with legacy data isn't needed.
+ * Fast crops like small brassicas might assume 21 days (3 weeks).
+ * Larger transplants like Solanaceae (tomatoes, peppers, eggplant) typically
+ * assume 42 days (6 weeks) in the greenhouse before transplanting.
+ *
+ * Individual crops can override via `assumedTransplantDays` field.
  */
-const DIRECT_SEED_ESTABLISHMENT_DAYS = 20;
+const DEFAULT_ASSUMED_TRANSPLANT_DAYS = 30;
+
 
 // =============================================================================
 // CALCULATIONS
@@ -160,21 +178,29 @@ export function calculateSTH(crop: CropConfig, daysInCells: number): number {
 
   switch (method) {
     case 'DS':
-      // DTM is measured from direct seeding in field.
-      // Base: germination time + DTM
-      // If grown as transplant: add shock compensation
-      return dtg + dtm + (isTransplant ? TRANSPLANT_SHOCK_DAYS : 0);
+      // DTM is measured from emergence (germination), not from seeding.
+      // DS direct: dtg + dtm (germination + time from emergence)
+      // DS transplant: dtg + dtm + shock (same baseline, plus transplant penalty)
+      return dtg + dtm + (isTransplant ? PLANTING_METHOD_DELTA_DAYS : 0);
 
-    case 'TP':
+    case 'TP': {
       // DTM is measured from transplant date (in-field time only).
-      // If grown as transplant: add greenhouse days
-      // If direct seeded: add establishment compensation (plant needs longer
-      // to establish than a transplant would, but no shock)
-      return dtm + (isTransplant ? daysInCells : DIRECT_SEED_ESTABLISHMENT_DAYS);
+      // TP transplant: daysInCells + dtm (greenhouse time + field time)
+      // TP direct: We need to estimate the full STH the seed producer assumed,
+      //   then subtract the shock savings from direct seeding.
+      //   Formula: assumedTransplantDays + dtm - delta
+      const assumedDays = crop.assumedTransplantDays ?? DEFAULT_ASSUMED_TRANSPLANT_DAYS;
+      return isTransplant
+        ? daysInCells + dtm
+        : assumedDays + dtm - PLANTING_METHOD_DELTA_DAYS;
+    }
 
     case 'X':
-      // DTM is already the full seed-to-harvest time, use as-is
-      return dtm;
+      // DTM is total time from seeding a transplant to harvest.
+      // X timing already includes greenhouse time and transplant shock.
+      // X transplant: dtm (use as-is)
+      // X direct: dtm - delta (no shock = faster)
+      return dtm - (isTransplant ? 0 : PLANTING_METHOD_DELTA_DAYS);
 
     default:
       return dtm;
