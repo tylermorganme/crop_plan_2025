@@ -219,7 +219,8 @@ export default function TimelinePlanPage() {
   }, [deleteCrop]);
 
   const handleEditCropConfig = useCallback((plantingId: string) => {
-    const timelineCrop = currentPlan?.crops.find(c => c.plantingId === plantingId || c.groupId === plantingId);
+    const crops = currentPlan?.crops ?? [];
+    const timelineCrop = crops.find(c => c.plantingId === plantingId || c.groupId === plantingId);
 
     if (!timelineCrop) {
       setToast({ message: `Crop not found: ${plantingId}`, type: 'error' });
@@ -553,9 +554,9 @@ export default function TimelinePlanPage() {
       {/* Timeline */}
       <div className="flex-1 min-h-0">
         <CropTimeline
-          crops={currentPlan.crops}
-          resources={currentPlan.resources}
-          groups={currentPlan.groups}
+          crops={currentPlan.crops ?? []}
+          resources={currentPlan.resources ?? []}
+          groups={currentPlan.groups ?? []}
           onCropMove={handleCropMove}
           onCropDateChange={handleDateChange}
           onDuplicateCrop={handleDuplicateCrop}

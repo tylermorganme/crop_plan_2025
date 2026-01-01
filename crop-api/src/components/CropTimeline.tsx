@@ -671,6 +671,7 @@ export default function CropTimeline({
       feetNeeded: effectiveCrop.feetNeeded || 50,
       startDate: effectiveCrop.startDate,
       endDate: effectiveCrop.endDate,
+      originalResource: effectiveCrop.resource,
     });
     e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.setData('text/plain', effectiveCrop.id); // Fallback for compatibility
@@ -779,6 +780,7 @@ export default function CropTimeline({
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
 
       // Apply timing changes if enabled and there was horizontal movement
+      let datesChanged = false;
       if (timingEditEnabled && dragStartX.current !== null && dragOriginalDates.current) {
         const deltaX = e.clientX - dragStartX.current;
         const deltaDays = pixelsToDays(deltaX);
@@ -787,14 +789,18 @@ export default function CropTimeline({
           const newStart = offsetDate(dragOriginalDates.current.start, deltaDays);
           const newEnd = offsetDate(dragOriginalDates.current.end, deltaDays);
           onCropDateChange(data.groupId, newStart, newEnd);
+          datesChanged = true;
         }
       }
 
-      // Always allow moving between beds
-      if (data.cropId && onCropMove) {
+      // Only call onCropMove if the resource actually changed
+      // (avoid double undo entry when only dates changed)
+      const targetResource = resource === 'Unassigned' ? '' : resource;
+      const resourceChanged = data.originalResource !== targetResource;
+      if (data.cropId && onCropMove && resourceChanged) {
         onCropMove(
           data.cropId,
-          resource === 'Unassigned' ? '' : resource,
+          targetResource,
           data.groupId,
           data.feetNeeded
         );

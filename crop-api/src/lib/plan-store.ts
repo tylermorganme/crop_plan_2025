@@ -38,6 +38,56 @@ export type { PlanSummary, PlanSnapshot, PlanData };
 const MAX_HISTORY_SIZE = 50;
 const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
+/**
+ * Helper to get crops from a plan safely.
+ * During transitional period, plans may have crops (legacy) or plantings (new).
+ * Returns crops array, defaulting to empty array if not present.
+ */
+function getPlanCrops(plan: Plan | null): TimelineCrop[] {
+  return plan?.crops ?? [];
+}
+
+/**
+ * Helper to get resources from a plan safely.
+ */
+function getPlanResources(plan: Plan | null): string[] {
+  return plan?.resources ?? [];
+}
+
+/**
+ * Helper to get groups from a plan safely.
+ */
+function getPlanGroups(plan: Plan | null): ResourceGroup[] {
+  return plan?.groups ?? [];
+}
+
+/**
+ * Deep copy crops array for undo stack.
+ * Must create new objects to avoid immer draft reference issues.
+ */
+function deepCopyCrops(crops: TimelineCrop[]): TimelineCrop[] {
+  return crops.map(c => ({ ...c }));
+}
+
+/**
+ * Snapshot the current crops state for undo.
+ * Call this BEFORE making any mutations.
+ */
+function snapshotForUndo(state: { currentPlan: Plan | null; past: TimelineCrop[][]; future: TimelineCrop[][] }): void {
+  if (!state.currentPlan) return;
+
+  const currentCrops = state.currentPlan.crops ?? [];
+  state.past.push(deepCopyCrops(currentCrops));
+
+  // Limit history size
+  if (state.past.length > MAX_HISTORY_SIZE) {
+    state.past.shift();
+  }
+
+  // Clear redo stack on new change
+  state.future = [];
+}
+
 // ============================================
 // Plan Library Functions (async, use adapter)
 // ============================================
@@ -158,7 +208,7 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
   }
 
   // Deep clone and transform crops
-  const newCrops: TimelineCrop[] = state.currentPlan.crops.map((crop) => {
+  const newCrops: TimelineCrop[] = getPlanCrops(state.currentPlan).map((crop) => {
     const newCrop: TimelineCrop = {
       ...crop,
       id: `${crop.groupId}_${newId.slice(-6)}`, // New unique ID
@@ -223,8 +273,8 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
       parentVersion: state.currentPlan.metadata.version,
     },
     crops: finalCrops,
-    resources: [...state.currentPlan.resources],
-    groups: state.currentPlan.groups.map((g) => ({
+    resources: [...getPlanResources(state.currentPlan)],
+    groups: getPlanGroups(state.currentPlan).map((g) => ({
       name: g.name,
       beds: [...g.beds],
     })),
@@ -544,7 +594,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       // Initialize ID counter based on existing plantings to avoid collisions
-      const existingIds = data.plan.crops.map(c => c.groupId);
+      const existingIds = getPlanCrops(data.plan).map(c => c.groupId);
       initializeIdCounter(existingIds);
 
       set((state) => {
@@ -660,17 +710,13 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan) return;
 
-        // Save current state to undo stack (deep copy)
-        state.past.push(state.currentPlan.crops.map(c => ({ ...c })));
-        if (state.past.length > MAX_HISTORY_SIZE) {
-          state.past.shift();
-        }
-        // Clear redo stack on new change
-        state.future = [];
+        // Snapshot for undo before any mutations
+        snapshotForUndo(state);
 
         // Find all crops with this groupId
-        const groupCrops = state.currentPlan.crops.filter((c) => c.groupId === groupId);
-        const otherCrops = state.currentPlan.crops.filter((c) => c.groupId !== groupId);
+        const currentCrops = state.currentPlan.crops ?? [];
+        const groupCrops = currentCrops.filter((c) => c.groupId === groupId);
+        const otherCrops = currentCrops.filter((c) => c.groupId !== groupId);
 
         if (groupCrops.length === 0) return;
 
@@ -710,7 +756,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         }
 
         // Sort by start date
-        state.currentPlan.crops.sort((a, b) =>
+        state.currentPlan.crops?.sort((a, b) =>
           new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
         );
 
@@ -746,16 +792,13 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan) return;
 
-        // Save current state to undo stack
-        state.past.push([...state.currentPlan.crops]);
-        if (state.past.length > MAX_HISTORY_SIZE) {
-          state.past.shift();
-        }
-        state.future = [];
+        // Snapshot for undo before any mutations
+        snapshotForUndo(state);
 
         // Update all crops with this groupId
+        const currentCrops = state.currentPlan.crops ?? [];
         const now = Date.now();
-        state.currentPlan.crops
+        currentCrops
           .filter((c) => c.groupId === groupId)
           .forEach((crop) => {
             crop.startDate = startDate;
@@ -794,15 +837,12 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan) return;
 
-        // Save current state to undo stack
-        state.past.push([...state.currentPlan.crops]);
-        if (state.past.length > MAX_HISTORY_SIZE) {
-          state.past.shift();
-        }
-        state.future = [];
+        // Snapshot for undo before any mutations
+        snapshotForUndo(state);
 
         // Remove all crops with this groupId
-        state.currentPlan.crops = state.currentPlan.crops.filter(
+        const currentCrops = state.currentPlan.crops ?? [];
+        state.currentPlan.crops = currentCrops.filter(
           (c) => c.groupId !== groupId
         );
 
@@ -837,12 +877,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan) return;
 
-        // Save current state to undo stack
-        state.past.push([...state.currentPlan.crops]);
-        if (state.past.length > MAX_HISTORY_SIZE) {
-          state.past.shift();
-        }
-        state.future = [];
+        // Snapshot for undo before any mutations
+        snapshotForUndo(state);
 
         // Add the new crop with timestamp
         const now = Date.now();
@@ -850,6 +886,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           ...crop,
           lastModified: now,
         };
+        if (!state.currentPlan.crops) state.currentPlan.crops = [];
         state.currentPlan.crops.push(newCrop);
 
         // Sort by start date
@@ -891,7 +928,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       // Find all crops with this groupId
-      const groupCrops = state.currentPlan.crops.filter(c => c.groupId === groupId);
+      const groupCrops = getPlanCrops(state.currentPlan).filter(c => c.groupId === groupId);
       if (groupCrops.length === 0) {
         throw new Error(`No crop found with groupId: ${groupId}`);
       }
@@ -928,10 +965,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+      const currentCrops = getPlanCrops(state.currentPlan);
 
       // Count how many plantings will be affected
       const affectedGroupIds = new Set<string>();
-      for (const crop of state.currentPlan.crops) {
+      for (const crop of currentCrops) {
         if (crop.cropConfigId === configIdentifier) {
           affectedGroupIds.add(crop.groupId);
         }
@@ -943,7 +981,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       // Recalculate crops
       const recalculated = recalculateCropsForConfig(
-        state.currentPlan.crops,
+        currentCrops,
         configIdentifier,
         catalog,
         bedGroups
@@ -953,7 +991,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         if (!storeState.currentPlan) return;
 
         // Save current state to undo stack
-        storeState.past.push([...storeState.currentPlan.crops]);
+        const storeCrops = storeState.currentPlan.crops ?? [];
+        storeState.past.push([...storeCrops]);
         if (storeState.past.length > MAX_HISTORY_SIZE) {
           storeState.past.shift();
         }
@@ -1008,10 +1047,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       // Build catalog array for recalculation
       const catalogArray = Object.values(updatedCatalog);
+      const currentCrops = getPlanCrops(state.currentPlan);
 
       // Count affected crops
       const affectedGroupIds = new Set<string>();
-      for (const crop of state.currentPlan.crops) {
+      for (const crop of currentCrops) {
         if (crop.cropConfigId === config.identifier) {
           affectedGroupIds.add(crop.groupId);
         }
@@ -1019,14 +1059,15 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       // Recalculate affected crops
       const recalculated = affectedGroupIds.size > 0
-        ? recalculateCropsForConfig(state.currentPlan.crops, config.identifier, catalogArray, bedGroups)
-        : state.currentPlan.crops;
+        ? recalculateCropsForConfig(currentCrops, config.identifier, catalogArray, bedGroups)
+        : currentCrops;
 
       set((storeState) => {
         if (!storeState.currentPlan) return;
 
         // Save current state to undo stack
-        storeState.past.push([...storeState.currentPlan.crops]);
+        const storeCrops = storeState.currentPlan.crops ?? [];
+        storeState.past.push([...storeCrops]);
         if (storeState.past.length > MAX_HISTORY_SIZE) {
           storeState.past.shift();
         }
@@ -1069,9 +1110,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan || state.past.length === 0) return;
 
-        const previous = state.past.pop()!
-        state.future.push(state.currentPlan.crops.map(c => ({ ...c })));
-        state.currentPlan.crops = previous;
+        const currentCrops = state.currentPlan.crops ?? [];
+        const previous = state.past.pop()!;
+        // Deep copy to avoid immer draft assignment issues
+        state.future.push(deepCopyCrops(currentCrops));
+        state.currentPlan.crops = deepCopyCrops(previous);
         state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
@@ -1100,9 +1143,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan || state.future.length === 0) return;
 
+        const currentCrops = state.currentPlan.crops ?? [];
         const next = state.future.pop()!;
-        state.past.push(state.currentPlan.crops.map(c => ({ ...c })));
-        state.currentPlan.crops = next;
+        // Deep copy to avoid immer draft assignment issues
+        state.past.push(deepCopyCrops(currentCrops));
+        state.currentPlan.crops = deepCopyCrops(next);
         state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;

@@ -652,6 +652,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       // Get the plan's target year (default to current year if not set)
       const planYear = planData.plan.metadata.year ?? new Date().getFullYear();
 
+      // Ensure crops array exists
+      if (!planData.plan.crops) planData.plan.crops = [];
+
       for (const crop of cropsToAddNow) {
         const newCrop = createTimelineCropFromConfig(crop, planYear);
         planData.plan.crops.push(newCrop);
@@ -730,6 +733,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
       // Get the plan's target year (default to current year if not set)
       const planYear = planData.plan.metadata.year ?? new Date().getFullYear();
+
+      // Ensure crops array exists
+      if (!planData.plan.crops) planData.plan.crops = [];
 
       // Create the new crops
       for (const crop of cropsToAdd) {

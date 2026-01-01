@@ -151,7 +151,7 @@ export class LocalStorageAdapter implements StorageAdapter {
       name: plan.metadata.name,
       version: plan.metadata.version,
       lastModified: plan.metadata.lastModified,
-      cropCount: plan.crops.length,
+      cropCount: plan.crops?.length ?? plan.plantings?.length ?? 0,
       year: plan.metadata.year ?? new Date().getFullYear(),
     };
 

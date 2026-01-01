@@ -53,11 +53,14 @@ export type {
   StashEntry,
   Checkpoint,
   HistoryEntry,
+  TimelineCrop,
 } from './plan';
 export {
   CURRENT_SCHEMA_VERSION,
   PlanValidationError,
   validatePlan,
+  isNewFormatPlan,
+  isLegacyPlan,
   getResources,
   getGroups,
 } from './plan';

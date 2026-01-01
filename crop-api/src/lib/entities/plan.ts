@@ -44,40 +44,79 @@ export interface PlanChange {
   timestamp: number;
   type: 'move' | 'date_change' | 'delete' | 'create' | 'batch';
   description: string;
-  /** Affected planting IDs */
-  plantingIds: string[];
+  /** Affected group IDs (legacy name, refers to planting/group IDs) */
+  groupIds: string[];
+}
+
+/**
+ * TimelineCrop - Legacy format for crop entries (one per bed).
+ * @deprecated Use Planting instead. Kept for migration compatibility.
+ */
+export interface TimelineCrop {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  resource: string;
+  category?: string;
+  bgColor?: string;
+  textColor?: string;
+  feetNeeded?: number;
+  structure?: string;
+  plantingId?: string;
+  cropConfigId: string;
+  totalBeds: number;
+  bedIndex: number;
+  groupId: string;
+  feetUsed?: number;
+  bedCapacityFt?: number;
+  harvestStartDate?: string;
+  plantingMethod?: 'DS' | 'TP' | 'PE';
+  lastModified?: number;
 }
 
 /**
  * A complete, self-contained crop plan.
  *
- * Design: Plans own all their data. No external references.
- * - beds: Plan's own bed layout with lengths
- * - cropCatalog: Plan's own copy of crop configs
- * - plantings: One per planting decision
+ * TRANSITIONAL: Supports both old (crops) and new (plantings) formats.
+ * - Old format: crops[], resources[], groups[]
+ * - New format: plantings[], beds{}
+ *
+ * During migration, plans may have both. New plans have only new format.
  */
 export interface Plan {
   /** Unique plan identifier */
   id: string;
 
-  /** Schema version for migrations */
-  schemaVersion: number;
+  /** Schema version for migrations (1 = legacy, 2 = new format) */
+  schemaVersion?: number;
 
   /** Plan metadata */
   metadata: PlanMetadata;
 
-  // ---- Owned Data (all required) ----
+  // ---- Legacy Format (v1) ----
+
+  /** @deprecated Use plantings instead */
+  crops?: TimelineCrop[];
+
+  /** @deprecated Use beds instead - Available resources (bed names) */
+  resources?: string[];
+
+  /** @deprecated Use beds instead - Resource grouping */
+  groups?: ResourceGroup[];
+
+  // ---- New Format (v2) ----
 
   /** Bed definitions with individual lengths */
-  beds: Record<string, Bed>;
+  beds?: Record<string, Bed>;
+
+  /** Planting instances (one per planting decision) */
+  plantings?: Planting[];
+
+  // ---- Required in both formats ----
 
   /** Crop configurations (keyed by identifier) */
-  cropCatalog: Record<string, CropConfig>;
-
-  /** Planting instances */
-  plantings: Planting[];
-
-  // ---- History ----
+  cropCatalog?: Record<string, CropConfig>;
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];
@@ -106,43 +145,80 @@ export class PlanValidationError extends Error {
 }
 
 /**
+ * Check if a plan is in the new format (v2 with plantings).
+ */
+export function isNewFormatPlan(plan: Plan): boolean {
+  return !!(plan.plantings && plan.beds);
+}
+
+/**
+ * Check if a plan is in the legacy format (v1 with crops).
+ */
+export function isLegacyPlan(plan: Plan): boolean {
+  return !!(plan.crops && !plan.plantings);
+}
+
+/**
  * Validate a plan's internal references.
  *
- * Throws PlanValidationError if:
+ * For new format plans (v2), throws PlanValidationError if:
  * - A planting references a missing config
  * - A planting references a missing bed
  * - A planting's followsPlantingId references a missing planting
  *
+ * For legacy format plans (v1), validates:
+ * - Each crop has a valid cropConfigId (if cropCatalog exists)
+ *
  * Call this on plan load and before save to catch bugs early.
  */
 export function validatePlan(plan: Plan): void {
-  const plantingIds = new Set(plan.plantings.map(p => p.id));
+  // New format validation (v2)
+  if (plan.plantings && plan.beds) {
+    const plantingIds = new Set(plan.plantings.map(p => p.id));
 
-  for (const planting of plan.plantings) {
-    // Check config reference
-    if (!plan.cropCatalog[planting.configId]) {
-      throw new PlanValidationError(
-        `Planting ${planting.id} references missing config ${planting.configId}`,
-        { plantingId: planting.id, configId: planting.configId }
-      );
-    }
+    for (const planting of plan.plantings) {
+      // Check config reference
+      if (plan.cropCatalog && !plan.cropCatalog[planting.configId]) {
+        throw new PlanValidationError(
+          `Planting ${planting.id} references missing config ${planting.configId}`,
+          { plantingId: planting.id, configId: planting.configId }
+        );
+      }
 
-    // Check bed reference (if assigned)
-    if (planting.startBed && !plan.beds[planting.startBed]) {
-      throw new PlanValidationError(
-        `Planting ${planting.id} references missing bed ${planting.startBed}`,
-        { plantingId: planting.id, bedId: planting.startBed }
-      );
-    }
+      // Check bed reference (if assigned)
+      if (planting.startBed && !plan.beds[planting.startBed]) {
+        throw new PlanValidationError(
+          `Planting ${planting.id} references missing bed ${planting.startBed}`,
+          { plantingId: planting.id, bedId: planting.startBed }
+        );
+      }
 
-    // Check followsPlantingId reference
-    if (planting.followsPlantingId && !plantingIds.has(planting.followsPlantingId)) {
-      throw new PlanValidationError(
-        `Planting ${planting.id} follows missing planting ${planting.followsPlantingId}`,
-        { plantingId: planting.id, followsPlantingId: planting.followsPlantingId }
-      );
+      // Check followsPlantingId reference
+      if (planting.followsPlantingId && !plantingIds.has(planting.followsPlantingId)) {
+        throw new PlanValidationError(
+          `Planting ${planting.id} follows missing planting ${planting.followsPlantingId}`,
+          { plantingId: planting.id, followsPlantingId: planting.followsPlantingId }
+        );
+      }
     }
+    return;
   }
+
+  // Legacy format validation (v1)
+  if (plan.crops) {
+    for (const crop of plan.crops) {
+      // Check config reference (if catalog exists)
+      if (plan.cropCatalog && !plan.cropCatalog[crop.cropConfigId]) {
+        throw new PlanValidationError(
+          `Crop ${crop.groupId} references missing config ${crop.cropConfigId}`,
+          { plantingId: crop.groupId, configId: crop.cropConfigId }
+        );
+      }
+    }
+    return;
+  }
+
+  // Empty plan is valid
 }
 
 // =============================================================================
@@ -151,44 +227,56 @@ export function validatePlan(plan: Plan): void {
 
 /**
  * Get the ordered list of bed IDs for timeline display.
- * Derived from plan.beds - not stored.
+ * Uses plan.beds if available (new format), otherwise plan.resources (legacy).
  */
 export function getResources(plan: Plan): string[] {
-  return Object.keys(plan.beds).sort((a, b) => {
-    const groupA = plan.beds[a].group;
-    const groupB = plan.beds[b].group;
-    if (groupA !== groupB) return groupA.localeCompare(groupB);
+  // New format: derive from beds
+  if (plan.beds) {
+    return Object.keys(plan.beds).sort((a, b) => {
+      const groupA = plan.beds![a].group;
+      const groupB = plan.beds![b].group;
+      if (groupA !== groupB) return groupA.localeCompare(groupB);
 
-    const numA = parseInt(a.replace(/\D/g, '')) || 0;
-    const numB = parseInt(b.replace(/\D/g, '')) || 0;
-    return numA - numB;
-  });
+      const numA = parseInt(a.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.replace(/\D/g, '')) || 0;
+      return numA - numB;
+    });
+  }
+
+  // Legacy format: use stored resources
+  return plan.resources || [];
 }
 
 /**
  * Get bed groups for timeline display.
- * Derived from plan.beds - not stored.
+ * Uses plan.beds if available (new format), otherwise plan.groups (legacy).
  */
 export function getGroups(plan: Plan): ResourceGroup[] {
-  const groupMap = new Map<string, string[]>();
+  // New format: derive from beds
+  if (plan.beds) {
+    const groupMap = new Map<string, string[]>();
 
-  for (const bed of Object.values(plan.beds)) {
-    if (!groupMap.has(bed.group)) {
-      groupMap.set(bed.group, []);
+    for (const bed of Object.values(plan.beds)) {
+      if (!groupMap.has(bed.group)) {
+        groupMap.set(bed.group, []);
+      }
+      groupMap.get(bed.group)!.push(bed.id);
     }
-    groupMap.get(bed.group)!.push(bed.id);
+
+    return Array.from(groupMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([group, bedIds]) => ({
+        name: `Row ${group}`,
+        beds: bedIds.sort((a, b) => {
+          const numA = parseInt(a.replace(/\D/g, '')) || 0;
+          const numB = parseInt(b.replace(/\D/g, '')) || 0;
+          return numA - numB;
+        }),
+      }));
   }
 
-  return Array.from(groupMap.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([group, bedIds]) => ({
-      name: `Row ${group}`,
-      beds: bedIds.sort((a, b) => {
-        const numA = parseInt(a.replace(/\D/g, '')) || 0;
-        const numB = parseInt(b.replace(/\D/g, '')) || 0;
-        return numA - numB;
-      }),
-    }));
+  // Legacy format: use stored groups
+  return plan.groups || [];
 }
 
 // =============================================================================

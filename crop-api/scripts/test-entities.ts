@@ -45,7 +45,7 @@ function assertEqual<T>(actual: T, expected: T, message?: string) {
   }
 }
 
-function assertThrows(fn: () => void, errorType?: new (...args: unknown[]) => Error) {
+function assertThrows(fn: () => void, errorType?: new (...args: any[]) => Error) {
   try {
     fn();
     throw new Error('Expected function to throw');
@@ -196,28 +196,28 @@ test('validatePlan passes for valid plan', () => {
 
 test('validatePlan throws for missing configId', () => {
   const plan = createTestPlan();
-  plan.plantings[0].configId = 'nonexistent-config';
+  plan.plantings![0].configId = 'nonexistent-config';
 
   assertThrows(() => validatePlan(plan), PlanValidationError);
 });
 
 test('validatePlan throws for missing bed', () => {
   const plan = createTestPlan();
-  plan.plantings[0].startBed = 'Z99';
+  plan.plantings![0].startBed = 'Z99';
 
   assertThrows(() => validatePlan(plan), PlanValidationError);
 });
 
 test('validatePlan allows null startBed (unassigned)', () => {
   const plan = createTestPlan();
-  plan.plantings[0].startBed = null;
+  plan.plantings![0].startBed = null;
 
   validatePlan(plan); // Should not throw
 });
 
 test('validatePlan throws for missing followsPlantingId', () => {
   const plan = createTestPlan();
-  plan.plantings[0].followsPlantingId = 'nonexistent-planting';
+  plan.plantings![0].followsPlantingId = 'nonexistent-planting';
 
   assertThrows(() => validatePlan(plan), PlanValidationError);
 });
@@ -226,7 +226,7 @@ test('validatePlan passes for valid followsPlantingId', () => {
   const plan = createTestPlan();
 
   // Add a second planting that follows the first
-  plan.plantings.push({
+  plan.plantings!.push({
     id: 'P2',
     configId: 'arugula-baby-leaf',
     fieldStartDate: '2025-06-01',

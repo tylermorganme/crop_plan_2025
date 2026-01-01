@@ -6,12 +6,13 @@ This document tracks all state structure changes needed for the self-contained p
 
 ## Progress Checklist
 
-### Step 1: Create `lib/entities/` with new types
-- [ ] `bed.ts` - Bed type + `createBedsFromTemplate()`
-- [ ] `planting.ts` - Planting type (one per planting)
-- [ ] `crop-config.ts` - Move CropConfig + calculations here
-- [ ] `plan.ts` - Plan type + `validatePlan()`
-- [ ] `index.ts` - Re-exports
+### Step 1: Create `lib/entities/` with new types ✅ COMPLETE
+- [x] `bed.ts` - Bed type + `createBedsFromTemplate()`
+- [x] `planting.ts` - Planting type (one per planting)
+- [x] `crop-config.ts` - Move CropConfig + calculations here
+- [x] `plan.ts` - Plan type + `validatePlan()`
+- [x] `index.ts` - Re-exports
+- [x] `test-entities.ts` - 14 validation tests (all pass)
 
 ### Step 2: Update plan-store to use new types
 - [ ] Make `beds` required (build from template on create)
@@ -525,12 +526,12 @@ Currently:
 
 ## Implementation Order
 
-### Step 1: Create `lib/entities/` with new types
-- [ ] `bed.ts` - `Bed` type + `createBedsFromTemplate(bedGroups)`
-- [ ] `planting.ts` - `Planting` type (one per planting, not per bed)
-- [ ] `crop-config.ts` - Move `CropConfig` here with its calculations
-- [ ] `plan.ts` - `Plan` with required `beds`, `cropCatalog`, `plantings` + `validatePlan()`
-- [ ] `index.ts` - Re-exports
+### Step 1: Create `lib/entities/` with new types ✅ COMPLETE
+- [x] `bed.ts` - `Bed` type + `createBedsFromTemplate(bedGroups)`
+- [x] `planting.ts` - `Planting` type (one per planting, not per bed)
+- [x] `crop-config.ts` - Move `CropConfig` here with its calculations
+- [x] `plan.ts` - `Plan` with required `beds`, `cropCatalog`, `plantings` + `validatePlan()`
+- [x] `index.ts` - Re-exports
 
 ### Step 2: Update plan-store to use new types
 - [ ] Make `beds` required (build from template on create)
