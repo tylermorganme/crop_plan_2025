@@ -8,10 +8,21 @@ This document tracks all state structure changes needed for the self-contained p
 
 1. **Plans are self-contained** - All data needed to render/calculate lives in the plan
 2. **Stock data is read-only** - `crops.json`, `bed-plan.json` are templates only
-3. **Everything is CRUD-able** - Every entity can be created, read, updated, deleted
-4. **Schema versioning** - Plans track their version for migration
-5. **Backward compatible loading** - Old plans auto-migrate on load
-6. **LLM-friendly** - Grepable, explicit, colocated (see Architecture Problems below)
+3. **Validation throws** - Invalid state = throw error, never warn silently
+4. **No sacred data** - Test data is disposable, can nuke and reimport
+5. **LLM-friendly** - Grepable, explicit, colocated
+
+---
+
+## Key Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Old plan data | Nuke it | Test data only, reimport from templates |
+| Validation | Throw errors | Loud failures catch bugs early |
+| `entities.ts` | Delete it | Unused future design, replaced by `lib/entities/` |
+| `TimelineCrop` | Replace with `Planting` | Store one per planting, compute display at render |
+| Migration code | Minimal | No backward compat needed for test data |
 
 ---
 
@@ -23,7 +34,7 @@ There are **THREE** different ways crop data is represented:
 
 | File | Types | Status |
 |------|-------|--------|
-| `entities.ts` | CropEntity, ProductEntity, ProductSequence, PlantingConfigEntity | Never used (future design) |
+| `entities.ts` | CropEntity, ProductEntity, ProductSequence, PlantingConfigEntity | DELETE - unused future design |
 | `crop-calculations.ts` | CropConfig, TrayStage, PlantingMethod | Active - what's stored |
 | `plan-types.ts` | TimelineCrop | Active - display representation |
 
@@ -84,13 +95,15 @@ followsCrop?: string;  // References... SlimPlanting.id? TimelineCrop.groupId?
 ### Core Principle: One Entity = One File = One Type
 
 ```
-lib/entities/
+crop-api/src/lib/entities/
 ├── crop-config.ts      # CropConfig type + all its calculations
 ├── planting.ts         # Planting type + all its calculations
 ├── bed.ts              # Bed type + factory
-├── plan.ts             # Plan type + computed views
+├── plan.ts             # Plan type + validation + computed views
 └── index.ts            # Re-exports all
 ```
+
+**Note**: Delete `crop-api/src/lib/types/entities.ts` (unused).
 
 ### Entity: Planting (replaces TimelineCrop for storage)
 
@@ -253,6 +266,20 @@ function getBedCapacity(bed: string): number {
 4. Update all `getBedCapacity()` calls to use `plan.beds[bedId].lengthFt`
 5. Remove `STANDARD_BED_FT`, `SHORT_BED_FT`, `SHORT_ROWS` constants
 
+### Canonical Bed Lengths
+
+```typescript
+// Bed lengths by row (this is the source of truth)
+const ROW_LENGTHS: Record<string, number> = {
+  A: 50, B: 50, C: 50, D: 50, E: 50,  // Standard field rows
+  F: 20,                               // Short row
+  G: 50, H: 50, I: 50,                // Standard field rows
+  J: 20,                               // Short row
+  U: 50,                               // Single bed
+  X: 80,                               // Long greenhouse beds
+};
+```
+
 ### Stock Beds Template
 
 From `bed-plan.json.bedGroups`:
@@ -263,6 +290,33 @@ From `bed-plan.json.bedGroups`:
 - Row X: 4 beds × 80ft = 320ft
 
 **Total**: ~92 beds, ~4,460 bed-feet
+
+### Deriving Resources and Groups from Beds
+
+```typescript
+function deriveResources(beds: Record<string, Bed>): string[] {
+  return Object.keys(beds).sort((a, b) => {
+    const rowA = a.replace(/\d+/g, '');
+    const rowB = b.replace(/\d+/g, '');
+    if (rowA !== rowB) return rowA.localeCompare(rowB);
+    const numA = parseInt(a.replace(/\D/g, '')) || 0;
+    const numB = parseInt(b.replace(/\D/g, '')) || 0;
+    return numA - numB;
+  });
+}
+
+function deriveGroups(beds: Record<string, Bed>): ResourceGroup[] {
+  const groupMap = new Map<string, string[]>();
+  for (const bed of Object.values(beds)) {
+    const group = bed.group ?? bed.id.replace(/\d+/g, '');
+    if (!groupMap.has(group)) groupMap.set(group, []);
+    groupMap.get(group)!.push(bed.id);
+  }
+  return Array.from(groupMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, bedIds]) => ({ name: `Row ${name}`, beds: bedIds.sort() }));
+}
+```
 
 ---
 
@@ -431,40 +485,41 @@ Currently:
 
 ---
 
-## Open Questions
+## Resolved Questions
 
-1. **U and X bed lengths**: What are the actual lengths for greenhouse/special beds?
-2. **Auto-migrate**: Yes, migrate on load (already doing this pattern)
-3. **bedsCount deprecation**: Keep for 1 version, remove in v3
+1. **U bed length**: 50ft (confirmed)
+2. **X bed length**: 80ft (confirmed)
+3. **Old plan data**: Nuke it, reimport fresh (no migration needed)
+4. **entities.ts**: Delete it (unused future design)
+5. **Validation**: Throw on invalid state, never warn
 
 ---
 
 ## Implementation Order
 
-### Phase 1: Types and Migration Foundation
-1. [ ] Add `Bed` interface to plan-types.ts
-2. [ ] Add `beds: Record<string, Bed>` to Plan (optional for now)
-3. [ ] Add `schemaVersion` to Plan
-4. [ ] Create `migratePlan()` function
-5. [ ] Update `loadPlanById` to call migration
+### Step 1: Create `lib/entities/` with new types
+- [ ] `bed.ts` - `Bed` type + `createBedsFromTemplate(bedGroups)`
+- [ ] `planting.ts` - `Planting` type (one per planting, not per bed)
+- [ ] `crop-config.ts` - Move `CropConfig` here with its calculations
+- [ ] `plan.ts` - `Plan` with required `beds`, `cropCatalog`, `plantings` + `validatePlan()`
+- [ ] `index.ts` - Re-exports
 
-### Phase 2: Bed Infrastructure
-6. [ ] Create `buildBedsFromStock()` helper
-7. [ ] Update `createNewPlan` to build beds map
-8. [ ] Consolidate `getBedCapacity` to use plan.beds
-9. [ ] Update span calculations for mixed lengths
+### Step 2: Update plan-store to use new types
+- [ ] Make `beds` required (build from template on create)
+- [ ] Make `cropCatalog` required (copy from stock on create)
+- [ ] Store `Planting[]` instead of `TimelineCrop[]`
+- [ ] Add `validatePlan()` call - throws on invalid state
 
-### Phase 3: Self-Contained Catalog
-10. [ ] Make `cropCatalog` required in type
-11. [ ] Migration backfills from stock if missing
-12. [ ] Update CropExplorer to accept catalog prop
-13. [ ] Timeline page passes plan catalog to explorer
+### Step 3: Update timeline computation
+- [ ] Create `computeTimelineEntries(plan)` - derives display data
+- [ ] Delete duplicate `TimelineCrop` from `CropTimeline.tsx`
+- [ ] One `calculateBedSpan()` function using `plan.beds`
 
-### Phase 4: Cleanup
-14. [ ] Remove `STANDARD_BED_FT`, `SHORT_BED_FT`, `SHORT_ROWS` constants
-15. [ ] Remove duplicate getBedCapacity functions
-16. [ ] Update tests
-17. [ ] Increment `CURRENT_SCHEMA_VERSION` to 2
+### Step 4: Delete dead code
+- [ ] Delete `crop-api/src/lib/types/entities.ts` (unused)
+- [ ] Remove `STANDARD_BED_FT`, `SHORT_BED_FT`, `SHORT_ROWS` constants
+- [ ] Remove duplicate `getBedCapacity` functions
+- [ ] Clean up re-exports
 
 ---
 
@@ -558,36 +613,49 @@ interface PlantingTimelineEntry { ... }
 ## Testing Checklist
 
 - [ ] New plan creation includes beds and cropCatalog
-- [ ] Old plan load migrates correctly
 - [ ] Bed capacity lookups use plan.beds
-- [ ] Span calculations work with mixed bed lengths
+- [ ] Span calculations work with mixed bed lengths (F=20, X=80)
+- [ ] X beds use 80ft (not 50ft - the bug we're fixing)
 - [ ] CropExplorer shows plan catalog when viewing plan
 - [ ] Export/import preserves all data
 - [ ] Undo/redo works with new structure
 - [ ] Checkpoints include beds and catalog
-- [ ] Cross-tab sync works
+- [ ] `validatePlan()` throws on missing config reference
+- [ ] `validatePlan()` throws on missing bed reference
+- [ ] Invalid plan data causes visible error (not silent failure)
 
 ---
 
-## Migration Decision Tree
+## Recalculation Triggers
 
-When loading a plan:
+| Event | Action |
+|-------|--------|
+| Edit crop config | Recalculate plantings using that config |
+| Edit bed length | Recalculate plantings starting on that bed |
+| Delete bed with plantings | Throw error (user must reassign first) |
+| Delete config with plantings | Throw error (user must reassign first) |
 
+## Validation Function
+
+```typescript
+function validatePlan(plan: Plan): void {
+  // Every planting references a valid config
+  for (const p of plan.plantings) {
+    if (!plan.cropCatalog[p.configId]) {
+      throw new Error(`Planting ${p.id} references missing config ${p.configId}`);
+    }
+    if (p.startBed && !plan.beds[p.startBed]) {
+      throw new Error(`Planting ${p.id} references missing bed ${p.startBed}`);
+    }
+    if (p.followsPlantingId) {
+      const exists = plan.plantings.some(other => other.id === p.followsPlantingId);
+      if (!exists) {
+        throw new Error(`Planting ${p.id} follows missing planting ${p.followsPlantingId}`);
+      }
+    }
+  }
+  // If we get here, plan is valid
+}
 ```
-1. Does plan have schemaVersion?
-   NO  → Set to 1, continue
-   YES → Continue
 
-2. Is schemaVersion < 2?
-   YES → Run migration v1→v2:
-         - Add beds from resources + legacy length rules
-         - Add cropCatalog from stock if missing
-         - Set schemaVersion = 2
-   NO  → Continue
-
-3. Is schemaVersion < 3? (future)
-   YES → Run migration v2→v3
-   NO  → Continue
-
-4. Return migrated plan
-```
+Call this on load and before save. If it throws, we have a bug to fix.
