@@ -33,9 +33,9 @@ excel-formula-analyzer.zip
 crop-api/src/data/crops.json.old
 crop-api/src/data/crops_from_excel.json
 
-# One-off analysis scripts
-scripts/harvest-formulas.js
-scripts/trace-timeline-deps.js
+# Temporary/scratch files (not committed)
+tmp/
+**/tmp/
 
 # Root lockfile (accidental)
 /package-lock.json

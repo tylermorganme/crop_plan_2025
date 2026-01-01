@@ -4,15 +4,15 @@
  * Verifies that computeTimelineCrop() produces dates matching
  * the pre-computed values in bed-plan.json.
  *
- * Run with: npx tsx src/lib/test-slim-planting.ts
+ * Run with: npx tsx scripts/test-slim-planting.ts
  */
 
-import bedPlanData from '../data/bed-plan.json';
+import bedPlanData from '../src/data/bed-plan.json';
 import {
   computeTimelineCrop,
   extractSlimPlanting,
   extractConfigLookup,
-} from './slim-planting';
+} from '../src/lib/slim-planting';
 
 interface BedPlanAssignment {
   crop: string;

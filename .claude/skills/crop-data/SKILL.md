@@ -125,51 +125,76 @@ harvestStartDate = startDate + (STH - daysInCells) = startDate + DTM
 endDate = harvestStartDate + harvestWindow
 ```
 
-## Key Implementation Files
+## Finding Things
 
-| File | Purpose |
-|------|---------|
-| `lib/slim-planting.ts` | computeTimelineCrop(), lookupConfigFromCatalog() |
-| `lib/timeline-data.ts` | getTimelineCrops() - orchestrates computation |
-| `lib/plan-types.ts` | TypeScript types for Plan, TimelineCrop |
-| `lib/plan-store.ts` | Zustand store for plan state |
+Run from `crop-api/` directory. Use patterns (not file paths) to locate code:
+
+```bash
+# Entity types (new canonical location)
+node scripts/ast-query.js "Plan"           # What does Plan contain?
+node scripts/ast-query.js "Planting"       # What does Planting contain?
+node scripts/ast-query.js "CropConfig"     # What does CropConfig contain?
+
+# Find type definitions
+grep -r "^export interface" src/lib/entities/
+
+# Find calculation functions
+grep -r "^export function calculate" src/lib
+
+# Find what uses entities
+grep -r "from.*entities" src/lib --include="*.ts"
+
+# Find bed length logic
+grep -r "lengthFt\|ROW_LENGTHS" src/lib
+
+# Find plan store actions
+grep -r "^  [a-z]*:" src/lib/plan-store.ts | head -30
+```
+
+## Data Extraction
+
+Re-extract from Excel when workbook changes (run from `crop-api/`):
+
+```bash
+python scripts/extract-products.py
+```
 
 ## Testing & Verification
 
-| Test | Purpose |
-|------|---------|
-| `test-slim-planting.ts` | Verifies computed dates match bed-plan stored dates |
-| `test-catalog-parity.ts` | Verifies catalog lookup matches bed-plan config values |
-| `scripts/inspect-column.py` | Inspect actual Excel formulas |
+Run from `crop-api/`:
 
-Run tests:
 ```bash
-npx tsx src/lib/test-slim-planting.ts
-npx tsx src/lib/test-catalog-parity.ts
+npx tsx scripts/test-entities.ts        # Entity validation
+npx tsx scripts/test-slim-planting.ts   # Date computation parity
+npx tsx scripts/test-catalog-parity.ts  # Catalog lookup parity
+npx tsx scripts/test-crop-calculations.ts  # Crop calc vs Excel
+
+# Inspect actual Excel formulas
+python scripts/inspect-column.py "STH"
+python scripts/inspect-column.py --list
 ```
 
-## Current vs Target Architecture
+## Architecture
 
-**Current**: Fat copies - each planting stores all 155 fields
-**Target**: Slim references - plantings reference a plan catalog
+**New canonical types** live in `lib/entities/`:
+- `Bed` - bed with `lengthFt` (F/J=20, A-E/G-I/U=50, X=80)
+- `Planting` - one per planting, references `configId`
+- `CropConfig` - planting configuration with calculations
+- `Plan` - self-contained: owns `beds`, `cropCatalog`, `plantings`
 
-Target model:
+**Key principle**: Plans own their data. No external references.
+
 ```typescript
-// Slim planting (what we store)
-interface SlimPlanting {
-  id: string;
-  cropId: string;           // references catalog
-  bed: string | null;
-  bedsCount: number;
-  fixedFieldStartDate: string;
-  overrides?: {
-    additionalDaysInField?: number;
-    additionalDaysOfHarvest?: number;
-    additionalDaysInCells?: number;
-  };
+// What we store
+interface Plan {
+  beds: Record<string, Bed>;           // Plan's bed layout
+  cropCatalog: Record<string, CropConfig>;  // Plan's crop configs
+  plantings: Planting[];               // One per planting decision
 }
 
-// Config looked up from catalog at render time
-const config = lookupConfigFromCatalog(cropId, catalog);
-const endDate = addDays(startDate, config.dtm + config.harvestWindow);
+// Computed at render time
+const timing = calculateCropTiming(planting, config);
+const bedSpan = calculateBedSpan(planting.bedFeet, planting.startBed, plan.beds);
 ```
+
+See `.claude/plans/state-migration.md` for full migration plan.

@@ -4,15 +4,15 @@
  * Verifies that config values from crops.json catalog match
  * the embedded values in bed-plan.json assignments.
  *
- * Run with: npx tsx src/lib/test-catalog-parity.ts
+ * Run with: npx tsx scripts/test-catalog-parity.ts
  */
 
-import cropsData from '../data/crops.json';
-import bedPlanData from '../data/bed-plan.json';
+import cropsData from '../src/data/crops.json';
+import bedPlanData from '../src/data/bed-plan.json';
 import {
   lookupConfigFromCatalog,
   type CropCatalogEntry,
-} from './slim-planting';
+} from '../src/lib/slim-planting';
 
 interface BedPlanAssignment {
   crop: string;

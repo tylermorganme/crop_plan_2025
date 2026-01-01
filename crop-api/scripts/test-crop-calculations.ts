@@ -2,7 +2,7 @@
  * Test Harness for Crop Calculations
  *
  * Compares calculated values against the original Excel export to verify parity.
- * Run with: npx tsx src/lib/test-crop-calculations.ts
+ * Run with: npx tsx scripts/test-crop-calculations.ts
  */
 
 import * as fs from 'fs';
@@ -14,10 +14,10 @@ import {
   calculateHarvestWindow,
   calculateCropFields,
   type CropConfig,
-} from './crop-calculations';
+} from '../src/lib/crop-calculations';
 
 // Load both datasets
-const dataDir = path.join(__dirname, '../data');
+const dataDir = path.join(__dirname, '../src/data');
 const newCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crops.json'), 'utf8')).crops as CropConfig[];
 const oldCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crops.json.old'), 'utf8')).crops;
 

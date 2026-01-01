@@ -1,0 +1,160 @@
+/**
+ * Planting Entity
+ *
+ * Represents a single planting instance in a plan.
+ * One Planting = one planting decision, regardless of how many beds it spans.
+ * Bed span is calculated at render time from bedFeet + bed lengths.
+ */
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
+/**
+ * Overrides to default config values for this specific planting.
+ * These are additive adjustments, not absolute values.
+ */
+export interface PlantingOverrides {
+  /** Additional days to extend harvest window */
+  additionalDaysOfHarvest?: number;
+  /** Additional days to add to DTM (delays harvest) */
+  additionalDaysInField?: number;
+  /** Additional days in greenhouse (delays field date) */
+  additionalDaysInCells?: number;
+}
+
+/**
+ * Actual dates for tracking variance from plan.
+ * Used for in-season tracking against planned dates.
+ */
+export interface PlantingActuals {
+  /** Actual greenhouse seeding date */
+  greenhouseDate?: string;
+  /** Actual transplant or direct seed date */
+  tpOrDsDate?: string;
+  /** Actual first harvest date */
+  beginningOfHarvest?: string;
+  /** Actual last harvest date */
+  endOfHarvest?: string;
+  /** Whether the planting failed (disease, pests, etc.) */
+  failed?: boolean;
+}
+
+/**
+ * A planting instance in a plan.
+ *
+ * Design: Store one Planting per planting decision.
+ * The bed span (which beds it occupies) is calculated at render time
+ * from bedFeet + starting bed + bed lengths.
+ */
+export interface Planting {
+  /** Unique planting identifier (e.g., "ARU001", "P1") */
+  id: string;
+
+  /** Reference to CropConfig.id in plan's cropCatalog */
+  configId: string;
+
+  // ---- Scheduling ----
+
+  /** When crop enters field (ISO date string) */
+  fieldStartDate: string;
+
+  /** Reference to another Planting.id for succession scheduling */
+  followsPlantingId?: string;
+
+  /** Days after followed planting ends before this one starts */
+  followOffset?: number;
+
+  // ---- Bed Assignment ----
+
+  /** Starting bed ID, or null if unassigned */
+  startBed: string | null;
+
+  /** Total feet needed for this planting */
+  bedFeet: number;
+
+  // ---- Adjustments ----
+
+  /** Overrides to default config timing */
+  overrides?: PlantingOverrides;
+
+  /** Actual dates for variance tracking */
+  actuals?: PlantingActuals;
+
+  // ---- Metadata ----
+
+  /** Timestamp of last modification */
+  lastModified: number;
+}
+
+// =============================================================================
+// FACTORY FUNCTIONS
+// =============================================================================
+
+// Simple counter for generating unique IDs within a session
+let nextPlantingId = 1;
+
+/**
+ * Generate a unique planting ID.
+ * Format: P{sequential number} e.g., P1, P2, P3...
+ */
+export function generatePlantingId(): string {
+  return `P${nextPlantingId++}`;
+}
+
+/**
+ * Initialize the ID counter based on existing plantings.
+ * Call this when loading a plan to avoid ID collisions.
+ */
+export function initializePlantingIdCounter(existingIds: string[]): void {
+  let maxId = 0;
+  for (const id of existingIds) {
+    const match = id.match(/^P(\d+)$/);
+    if (match) {
+      maxId = Math.max(maxId, parseInt(match[1], 10));
+    }
+  }
+  nextPlantingId = maxId + 1;
+}
+
+/**
+ * Input for creating a new Planting.
+ */
+export interface CreatePlantingInput {
+  /** Optional ID (generated if not provided) */
+  id?: string;
+  /** Reference to crop config identifier */
+  configId: string;
+  /** When crop enters field (ISO date string) */
+  fieldStartDate: string;
+  /** Starting bed ID, or null if unassigned */
+  startBed: string | null;
+  /** Total feet needed */
+  bedFeet: number;
+  /** Optional: planting this follows */
+  followsPlantingId?: string;
+  /** Optional: days after followed crop */
+  followOffset?: number;
+  /** Optional: timing overrides */
+  overrides?: PlantingOverrides;
+  /** Optional: actual dates */
+  actuals?: PlantingActuals;
+}
+
+/**
+ * Factory function for creating Planting objects.
+ */
+export function createPlanting(input: CreatePlantingInput): Planting {
+  return {
+    id: input.id ?? generatePlantingId(),
+    configId: input.configId,
+    fieldStartDate: input.fieldStartDate,
+    startBed: input.startBed,
+    bedFeet: input.bedFeet,
+    followsPlantingId: input.followsPlantingId,
+    followOffset: input.followOffset,
+    overrides: input.overrides,
+    actuals: input.actuals,
+    lastModified: Date.now(),
+  };
+}

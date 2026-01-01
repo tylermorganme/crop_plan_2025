@@ -45,7 +45,9 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(node:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

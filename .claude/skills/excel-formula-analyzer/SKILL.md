@@ -10,7 +10,7 @@ description: Analyze Excel spreadsheet formulas to build dependency DAGs (Direct
 To trace formula dependencies in an Excel workbook:
 
 ```bash
-python scripts/trace-formula-dag.py "Workbook.xlsx" "Sheet Name" \
+python .claude/skills/excel-formula-analyzer/scripts/trace-formula-dag.py "Workbook.xlsx" "Sheet Name" \
     --table MyTable \
     --columns 16-36,57,58,59
 ```
@@ -64,7 +64,7 @@ Key patterns:
 Run the trace script to analyze dependencies:
 
 ```bash
-python scripts/trace-formula-dag.py "file.xlsx" "Sheet" --columns 16-36
+python .claude/skills/excel-formula-analyzer/scripts/trace-formula-dag.py "file.xlsx" "Sheet" --columns 16-36
 ```
 
 ### Step 4: Implement in Code

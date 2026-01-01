@@ -4,6 +4,34 @@ This document tracks all state structure changes needed for the self-contained p
 
 ---
 
+## Progress Checklist
+
+### Step 1: Create `lib/entities/` with new types
+- [ ] `bed.ts` - Bed type + `createBedsFromTemplate()`
+- [ ] `planting.ts` - Planting type (one per planting)
+- [ ] `crop-config.ts` - Move CropConfig + calculations here
+- [ ] `plan.ts` - Plan type + `validatePlan()`
+- [ ] `index.ts` - Re-exports
+
+### Step 2: Update plan-store to use new types
+- [ ] Make `beds` required (build from template on create)
+- [ ] Make `cropCatalog` required (copy from stock on create)
+- [ ] Store `Planting[]` instead of `TimelineCrop[]`
+- [ ] Add `validatePlan()` call on load/save
+
+### Step 3: Update timeline computation
+- [ ] Create `computeTimelineEntries(plan)` - derives display data
+- [ ] Delete duplicate `TimelineCrop` from `CropTimeline.tsx`
+- [ ] Consolidate `calculateBedSpan()` to use `plan.beds`
+
+### Step 4: Delete dead code
+- [ ] Delete `crop-api/src/lib/types/entities.ts`
+- [ ] Remove `STANDARD_BED_FT`, `SHORT_BED_FT`, `SHORT_ROWS` constants
+- [ ] Remove duplicate `getBedCapacity` functions
+- [ ] Clean up re-exports
+
+---
+
 ## Design Principles
 
 1. **Plans are self-contained** - All data needed to render/calculate lives in the plan
