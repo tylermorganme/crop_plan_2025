@@ -4,89 +4,59 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a prototype **crop planning system** for a small organic farm (1.5 acres, 92 beds). The project has two main components: 
+This is a **crop planning webapp** for a small organic farm (1.5 acres, 92 beds). Built with Next.js, it provides a visual timeline for planning and managing crop plantings.
 
-1. **Excel Workbook** (`Crop Plan 2025 V20.xlsm`) - A comprehensive farm management tool with VBA macros, containing ~340 planting configurations, seed ordering, task scheduling, and revenue projections
-2. **Google Sheets Add-on** (`google-sheets-addon/`) - A Gantt-style visual planner that syncs bidirectionally with spreadsheet data
-
-
+Reference data was originally sourced from an Excel workbook (`Crop Plan 2025 V20.xlsm`) containing ~340 planting configurations.
 
 ## Architecture
 
-### Google Sheets Add-on
-
-The add-on uses a **data provider abstraction** pattern for development flexibility:
+### Data Model
 
 ```
-Sidebar.html
-├── mockProvider (for local browser testing)
-└── googleProvider (wraps google.script.run)
+Planting[] (storage)
+    ↓ expandPlantingsToTimelineCrops()
+TimelineCrop[] (display)
+    ↓
+CropTimeline Component
 ```
 
-Key architectural decisions:
-- **Polling engine**: Uses client-side JavaScript polling (~100ms in production) via `google.script.run` to bypass the 60 reads/minute external API quota
-- **OAuth scope**: Uses `spreadsheets.currentonly` to avoid Google's security assessment requirements for Marketplace publishing
-- **Modeless dialog**: Opens as a floating window that can be positioned on a second monitor while editing the sheet
+Key entities in `src/lib/entities/`:
+- **Plan** - Contains plantings[], beds, cropCatalog, metadata
+- **Planting** - A single planting decision (configId, fieldStartDate, startBed, bedFeet)
+- **CropConfig** - Static crop configuration from catalog (DTM, spacing, season, etc.)
+- **TimelineCrop** - Computed display format for timeline rendering
 
-Files:
-- `Code.gs` - Server-side Apps Script (column mapping, data CRUD, user preferences)
-- `Sidebar.html` - Single-file client with all CSS/JS (timeline rendering, drag-drop, zoom)
-- `Settings.html` - Column configuration dialog
-- `appsscript.json` - Manifest with OAuth scopes
+### Key Files
 
-### Excel Workbook Data Flow
-
-```
-Crop Chart (340 planting configurations)
-    ↓ filter & copy identifiers
-Bed Plan (this year's ~138 plantings)
-    ↓ VBA generates shapes
-Crop Map (visual Gantt calendar)
-    ↓ VBA syncs back
-Bed Plan → Reports (seed orders, tasks, schedules)
-```
-
-Key sheets: Config, Crop Chart, Bed Plan, Crop Map, Varieties (731 entries), Seed Mixes
+| File | Purpose |
+|------|---------|
+| `src/lib/plan-store.ts` | Zustand store for plan state management |
+| `src/lib/timeline-data.ts` | Expands Planting[] → TimelineCrop[] |
+| `src/lib/slim-planting.ts` | Planting creation and computation |
+| `src/lib/entities/` | Core type definitions |
+| `src/components/CropTimeline.tsx` | Main timeline visualization |
+| `src/data/crops.json` | Crop catalog (340 configurations) |
 
 ## Development Commands
 
-### Google Sheets Add-on
-
 ```bash
-# Deploy to Apps Script (requires clasp authentication)
-cd google-sheets-addon
-clasp push
+# Install dependencies
+npm install
 
-# Login to clasp
-clasp login
+# Run development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Type check
+npx tsc --noEmit
 ```
-
-Local development: Open `Sidebar.html` directly in a browser - it detects the non-Google environment and uses mock data.
-
-### Testing the Add-on
-
-1. In Google Sheet: Extensions > Apps Script > Deploy > Test deployments
-2. Install on test account
-3. Reload sheet, access via Crop Planner menu
 
 ## Key Concepts
 
-- **Planting Configuration**: A specific way to grow a crop (e.g., "Tomato (Cherry) - Fresh / Field TP Su" captures crop, product type, structure, method, season)
-- **Seed Mixes**: Named compositions (e.g., "Lettuce Mix" = 30% Salanova, 40% Romaine, 30% Butterhead) that Power Query explodes for seed calculations
-- **Crop Year**: Plan spans crop years, not calendar years - overwintering crops carry forward
-- **Bidirectional Sync**: Drag shapes on Crop Map to assign beds, VBA syncs assignments back to Bed Plan
-
-## Column Configuration
-
-The add-on uses configurable column mapping (stored in DocumentProperties):
-- Default columns: Name, Start Date, End Date, Bed, _id
-- The _id column is auto-generated, hidden, and protected for stable row identification across edits
-
-## User Preferences
-
-Stored per-user in UserProperties:
-- `zoomIndex` - Timeline zoom level (2yr, 1yr, 6mo, 3mo, 1mo)
-- `viewMode` - overlap or stacked
-- `scrollDate` - Last scroll position
-- `collapsedGroups` - Collapsed resource groups
-- `unassignedSectionHeight` - Staging area height
+- **Planting**: A single decision to grow a crop (one entry even if spanning multiple beds)
+- **TimelineCrop**: Display format - one entry per bed for timeline rendering
+- **CropConfig**: Static configuration (DTM, spacing, seasons) from the crop catalog
+- **Bed**: A 50-foot growing bed (92 total on the farm)
+- **Crop Year**: Plans span crop years, not calendar years - overwintering crops carry forward
