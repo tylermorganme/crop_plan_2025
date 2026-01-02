@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
@@ -72,6 +72,7 @@ interface PersistedState {
   sortDirection: SortDirection;
   filterPaneOpen: boolean;
   filterPaneWidth: number;
+  scrollTop?: number;
 }
 
 function loadPersistedState(): PersistedState | null {
@@ -191,7 +192,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Use shared store state - automatically syncs across tabs
-  const currentPlan = usePlanStore((state) => state.currentPlan);
+  // Only subscribe to cropCatalog, not the entire plan (avoids re-renders when plantings change)
+  const cropCatalog = usePlanStore((state) => state.currentPlan?.cropCatalog);
+  const currentPlanId = usePlanStore((state) => state.currentPlan?.id);
   const catalogLoading = usePlanStore((state) => state.isLoading);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const addPlanting = usePlanStore((state) => state.addPlanting);
@@ -210,9 +213,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
   // Convert catalog object to array for display
   const planCatalog = useMemo(() => {
-    if (!currentPlan?.cropCatalog) return [];
-    return Object.values(currentPlan.cropCatalog) as CropConfig[];
-  }, [currentPlan?.cropCatalog]);
+    if (!cropCatalog) return [];
+    return Object.values(cropCatalog) as CropConfig[];
+  }, [cropCatalog]);
 
   // Dynamic filters keyed by column name
   const [columnFilters, setColumnFilters] = useState<Record<string, FilterValue>>({});
@@ -220,12 +223,12 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   // Use plan's catalog when active, otherwise fall back to master list (crops prop)
   const displayCrops = useMemo(() => {
     // Check if the store has the active plan loaded
-    if (activePlanId && currentPlan?.id === activePlanId && planCatalog.length > 0) {
+    if (activePlanId && currentPlanId === activePlanId && planCatalog.length > 0) {
       return planCatalog as Crop[];
     }
     // No active plan or catalog not loaded yet - use master list as fallback
     return crops;
-  }, [activePlanId, currentPlan?.id, planCatalog, crops]);
+  }, [activePlanId, currentPlanId, planCatalog, crops]);
 
   // All columns - derive from crop keys if allHeaders not provided
   const allColumns = useMemo(() => {
@@ -249,6 +252,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const [filterPaneOpen, setFilterPaneOpen] = useState(true);
   const [filterPaneWidth, setFilterPaneWidth] = useState(DEFAULT_FILTER_PANE_WIDTH);
   const [hydrated, setHydrated] = useState(false);
+  const [pendingScrollTop, setPendingScrollTop] = useState<number | null>(null);
+  const scrollRestoredRef = useRef(false);
 
   // Load persisted state after hydration to avoid SSR mismatch
   useEffect(() => {
@@ -266,6 +271,10 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       setSortDirection(persisted.sortDirection ?? 'asc');
       setFilterPaneOpen(persisted.filterPaneOpen ?? true);
       setFilterPaneWidth(persisted.filterPaneWidth ?? DEFAULT_FILTER_PANE_WIDTH);
+      // Queue scroll restoration for after render
+      if (persisted.scrollTop != null && persisted.scrollTop > 0) {
+        setPendingScrollTop(persisted.scrollTop);
+      }
     }
     setHydrated(true);
   }, [allColumns]);
@@ -574,20 +583,113 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const headerContainerRef = useRef<HTMLDivElement>(null);
 
+  // Track current scroll position for restoration after data updates
+  const lastScrollTopRef = useRef<number>(0);
+  const lastScrollLeftRef = useRef<number>(0);
+  // Track if we're in the middle of restoring scroll (to avoid loops)
+  const isRestoringScrollRef = useRef(false);
+
   const rowVirtualizer = useVirtualizer({
     count: sortedCrops.length,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => ROW_HEIGHT,
     overscan: 10,
+    // Restore scroll position when virtualizer updates due to data changes
+    onChange: (instance) => {
+      // If we have a saved scroll position and the virtualizer scrolled to a different position,
+      // restore it (unless we're already restoring or this is initial load)
+      if (
+        scrollRestoredRef.current &&
+        lastScrollTopRef.current > 0 &&
+        !isRestoringScrollRef.current &&
+        instance.scrollOffset !== lastScrollTopRef.current
+      ) {
+        isRestoringScrollRef.current = true;
+        // Restore synchronously to avoid flash - set scrollTop directly on the container
+        const container = tableContainerRef.current;
+        if (container) {
+          container.scrollTop = lastScrollTopRef.current;
+        }
+        isRestoringScrollRef.current = false;
+      }
+    },
   });
 
   const totalWidth = useMemo(() => {
     return displayColumns.reduce((sum, col) => sum + getColumnWidth(col), 0);
   }, [displayColumns, getColumnWidth]);
 
+  // Restore scroll position synchronously before paint when data changes
+  // useLayoutEffect runs synchronously after DOM mutations but before browser paint
+  useLayoutEffect(() => {
+    if (scrollRestoredRef.current) {
+      const container = tableContainerRef.current;
+      const header = headerContainerRef.current;
+
+      // Restore vertical scroll
+      if (container && lastScrollTopRef.current > 0 && container.scrollTop !== lastScrollTopRef.current) {
+        container.scrollTop = lastScrollTopRef.current;
+        // Also update virtualizer's internal scroll offset so it renders correct rows
+        (rowVirtualizer as unknown as { scrollOffset: number }).scrollOffset = lastScrollTopRef.current;
+      }
+
+      // Restore horizontal scroll
+      if (container && lastScrollLeftRef.current > 0 && container.scrollLeft !== lastScrollLeftRef.current) {
+        container.scrollLeft = lastScrollLeftRef.current;
+        if (header) {
+          header.scrollLeft = lastScrollLeftRef.current;
+        }
+      }
+    }
+  }, [sortedCrops, rowVirtualizer]); // Re-run when data changes
+
+  // Restore scroll position after hydration (once)
+  useEffect(() => {
+    if (pendingScrollTop !== null && !scrollRestoredRef.current && sortedCrops.length > 0) {
+      // Use virtualizer's scrollToOffset for reliable positioning
+      rowVirtualizer.scrollToOffset(pendingScrollTop);
+      scrollRestoredRef.current = true;
+      lastScrollTopRef.current = pendingScrollTop;
+      setPendingScrollTop(null);
+    }
+  }, [pendingScrollTop, sortedCrops.length, rowVirtualizer]);
+
+  // Debounced scroll position save
+  const scrollSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleBodyScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = e.currentTarget.scrollTop;
+    const scrollLeft = e.currentTarget.scrollLeft;
+
+    // Don't save scroll position of 0 if we had a real position - this is likely
+    // a spurious scroll event from a re-render resetting the container
+    if (scrollTop === 0 && lastScrollTopRef.current > 100) {
+      return; // Don't update lastScrollTopRef or sync header
+    }
+
+    lastScrollTopRef.current = scrollTop;
+    lastScrollLeftRef.current = scrollLeft;
+
+    // Mark as "restored" after any user scroll - this enables scroll preservation
+    if (!scrollRestoredRef.current && scrollTop > 0) {
+      scrollRestoredRef.current = true;
+    }
+
     if (headerContainerRef.current) {
-      headerContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+      headerContainerRef.current.scrollLeft = scrollLeft;
+    }
+
+    // Save scroll position to localStorage (debounced)
+    if (scrollRestoredRef.current) {
+      if (scrollSaveTimeoutRef.current) {
+        clearTimeout(scrollSaveTimeoutRef.current);
+      }
+      scrollSaveTimeoutRef.current = setTimeout(() => {
+        const persisted = loadPersistedState();
+        if (persisted) {
+          savePersistedState({ ...persisted, scrollTop });
+        }
+      }, 150);
     }
   }, []);
 
@@ -598,12 +700,12 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
   // Load plan into store when activePlanId changes (if not already loaded)
   useEffect(() => {
-    if (activePlanId && currentPlan?.id !== activePlanId) {
+    if (activePlanId && currentPlanId !== activePlanId) {
       loadPlanById(activePlanId).catch(err => {
         console.error('Failed to load plan:', err);
       });
     }
-  }, [activePlanId, currentPlan?.id, loadPlanById]);
+  }, [activePlanId, currentPlanId, loadPlanById]);
 
   // Toggle selection for a single crop
   const toggleCropSelection = useCallback((cropId: string, event?: React.MouseEvent) => {
@@ -637,7 +739,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
     try {
       // Ensure the plan is loaded in the store
-      if (currentPlan?.id !== activePlanId) {
+      if (currentPlanId !== activePlanId) {
         await loadPlanById(activePlanId);
       }
 
@@ -664,7 +766,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [activePlanId, activePlan?.name, currentPlan?.id, loadPlanById, addPlanting]);
+  }, [activePlanId, activePlan?.name, currentPlanId, loadPlanById, addPlanting]);
 
   // Quick add single crop to plan (from row button)
   const handleQuickAdd = useCallback((crop: Crop, event: React.MouseEvent) => {
@@ -703,7 +805,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
     try {
       // Load the plan into the store if not already loaded
-      if (currentPlan?.id !== planId) {
+      if (currentPlanId !== planId) {
         await loadPlanById(planId);
       }
 
@@ -739,7 +841,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [cropsToAdd, planList, currentPlan?.id, loadPlanById, addPlanting, setActivePlanId]);
+  }, [cropsToAdd, planList, currentPlanId, loadPlanById, addPlanting, setActivePlanId]);
 
   // Clear message after a timeout
   useEffect(() => {
@@ -780,7 +882,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
     try {
       // Ensure the plan is loaded in the store
-      if (currentPlan?.id !== activePlanId) {
+      if (currentPlanId !== activePlanId) {
         await loadPlanById(activePlanId);
       }
 
@@ -800,7 +902,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         text: err instanceof Error ? err.message : 'Failed to update config',
       });
     }
-  }, [activePlanId, currentPlan?.id, loadPlanById, updateCropConfig]);
+  }, [activePlanId, currentPlanId, loadPlanById, updateCropConfig]);
 
   // Handle saving a new custom config via store
   const handleSaveCustomConfig = useCallback(async (config: CropConfig) => {
@@ -814,7 +916,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
     try {
       // Ensure the plan is loaded in the store
-      if (currentPlan?.id !== activePlanId) {
+      if (currentPlanId !== activePlanId) {
         await loadPlanById(activePlanId);
       }
 
@@ -833,7 +935,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         text: err instanceof Error ? err.message : 'Failed to create config',
       });
     }
-  }, [activePlanId, currentPlan?.id, loadPlanById, addCropConfig]);
+  }, [activePlanId, currentPlanId, loadPlanById, addCropConfig]);
 
   // Handle initiating delete for a single config (from inspector)
   const handleDeleteConfig = useCallback((crop: Crop) => {
@@ -870,7 +972,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     setIsDeleting(true);
     try {
       // Ensure the plan is loaded in the store for undo/redo to work
-      if (currentPlan?.id !== activePlanId) {
+      if (currentPlanId !== activePlanId) {
         await loadPlanById(activePlanId);
       }
 
@@ -913,7 +1015,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     } finally {
       setIsDeleting(false);
     }
-  }, [activePlanId, configsToDelete, selectedCropId, currentPlan?.id, loadPlanById, deleteCropConfigs]);
+  }, [activePlanId, configsToDelete, selectedCropId, currentPlanId, loadPlanById, deleteCropConfigs]);
 
   // Handle cancel delete
   const handleCancelDelete = useCallback(() => {
