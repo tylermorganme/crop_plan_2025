@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import PlanDropdown, { ACTIVE_PLAN_KEY } from './PlanDropdown';
+import { useUndoRedo } from '@/lib/plan-store';
 
 interface AppHeaderProps {
   /** Optional toolbar content to render below the main nav */
@@ -14,27 +15,67 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const pathname = usePathname();
   const [activePlanId, setActivePlanId] = useState<string | null>(null);
 
+  // Undo/redo from store
+  const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
+
   // Load active plan ID for Timeline tab link
   useEffect(() => {
     const storedId = localStorage.getItem(ACTIVE_PLAN_KEY);
     setActivePlanId(storedId);
 
+    // Listen for storage changes (cross-tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === ACTIVE_PLAN_KEY) {
         setActivePlanId(e.newValue);
       }
     };
 
+    // Listen for plan-list-updated events (same tab)
+    const handlePlanListUpdated = () => {
+      const currentId = localStorage.getItem(ACTIVE_PLAN_KEY);
+      setActivePlanId(currentId);
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('plan-list-updated', handlePlanListUpdated);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('plan-list-updated', handlePlanListUpdated);
+    };
   }, []);
+
+  // Global keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input/textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          if (canRedo) redo();
+        } else {
+          if (canUndo) undo();
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+        e.preventDefault();
+        if (canRedo) redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canUndo, canRedo, undo, redo]);
 
   // Determine which tab is active
   const isExplorerActive = pathname === '/';
   const isTimelineActive = pathname.startsWith('/timeline/');
   const isPlansActive = pathname === '/plans';
 
-  // Timeline link - goes to active plan's timeline, or /plans if no plan selected
+  // Timeline link - goes to active plan's timeline
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
 
   return (
@@ -49,33 +90,62 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           Crop Planner
         </Link>
 
-        {/* View Tabs */}
+        {/* View Tabs - only show Explorer/Timeline when a plan is selected */}
         <nav className="flex items-center gap-1">
-          <Link
-            href="/"
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              isExplorerActive
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            Explorer
-          </Link>
-          <Link
-            href={timelineHref}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              isTimelineActive
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            } ${!activePlanId && !isTimelineActive ? 'opacity-60' : ''}`}
-            title={!activePlanId ? 'Select a plan first' : undefined}
-          >
-            Timeline
-          </Link>
+          {activePlanId ? (
+            <>
+              <Link
+                href="/"
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  isExplorerActive
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                Explorer
+              </Link>
+              <Link
+                href={timelineHref}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  isTimelineActive
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                Timeline
+              </Link>
+            </>
+          ) : (
+            <span className="px-3 py-1.5 text-sm text-gray-500">
+              Select a plan to get started
+            </span>
+          )}
         </nav>
 
         {/* Spacer */}
         <div className="flex-1" />
+
+        {/* Undo/Redo buttons - only show when a plan is active */}
+        {activePlanId && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:border-gray-200 disabled:cursor-not-allowed"
+              title={`Undo${undoCount > 0 ? ` (${undoCount})` : ''} - Ctrl+Z`}
+            >
+              ↶
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:border-gray-200 disabled:cursor-not-allowed"
+              title={`Redo${redoCount > 0 ? ` (${redoCount})` : ''} - Ctrl+Shift+Z`}
+            >
+              ↷
+            </button>
+          </div>
+        )}
 
         {/* Plan Dropdown */}
         <PlanDropdown />

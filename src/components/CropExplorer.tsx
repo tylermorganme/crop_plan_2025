@@ -7,7 +7,10 @@ import { format } from 'date-fns';
 import type { Crop } from '@/lib/crops';
 import type { Planting } from '@/lib/plan-types';
 import { generatePlantingId } from '@/lib/plan-types';
-import { getPlanList, loadPlanFromLibrary, savePlanToLibrary, type PlanSummary } from '@/lib/plan-store';
+import { getPlanList, usePlanStore, type PlanSummary } from '@/lib/plan-store';
+import { type CropConfig } from '@/lib/entities/crop-config';
+import CropConfigCreator from './CropConfigCreator';
+import CropConfigEditor from './CropConfigEditor';
 import columnAnalysis from '@/data/column-analysis.json';
 
 // Build a map of column header -> source type
@@ -51,7 +54,7 @@ interface CropExplorerProps {
 
 // Default visible columns - using new camelCase field names from crops.json
 const DEFAULT_VISIBLE = [
-  'crop', 'variant', 'product', 'category', 'growingStructure', 'normalMethod',
+  'identifier', 'crop', 'variant', 'product', 'category', 'growingStructure', 'normalMethod',
   'dtm', 'daysToGermination', 'daysBetweenHarvest', 'numberOfHarvests',
   'harvestBufferDays', 'yieldPerHarvest', 'yieldUnit', 'deprecated'
 ];
@@ -180,28 +183,65 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const [addingToPlan, setAddingToPlan] = useState(false);
   const [addToPlanMessage, setAddToPlanMessage] = useState<{ type: 'success' | 'error'; text: string; planId?: string } | null>(null);
 
+  // Create custom config state
+  const [showCreateConfig, setShowCreateConfig] = useState(false);
+
+  // Edit config state
+  const [showEditConfig, setShowEditConfig] = useState(false);
+  const [configToEdit, setConfigToEdit] = useState<CropConfig | null>(null);
+
+  // Delete config state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [configsToDelete, setConfigsToDelete] = useState<Crop[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Use shared store state for plan catalog and mutations
+  const currentPlan = usePlanStore((state) => state.currentPlan);
+  const catalogLoading = usePlanStore((state) => state.isLoading);
+  const loadPlanById = usePlanStore((state) => state.loadPlanById);
+  const addPlanting = usePlanStore((state) => state.addPlanting);
+  const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
+  const addCropConfig = usePlanStore((state) => state.addCropConfig);
+  const deleteCropConfigs = usePlanStore((state) => state.deleteCropConfigs);
+
+  // Convert catalog object to array for display
+  const planCatalog = useMemo(() => {
+    if (!currentPlan?.cropCatalog) return [];
+    return Object.values(currentPlan.cropCatalog) as CropConfig[];
+  }, [currentPlan?.cropCatalog]);
+
   // Dynamic filters keyed by column name
   const [columnFilters, setColumnFilters] = useState<Record<string, FilterValue>>({});
+
+  // Use plan's catalog when active, otherwise fall back to master list (crops prop)
+  const displayCrops = useMemo(() => {
+    // Check if the store has the active plan loaded
+    if (activePlanId && currentPlan?.id === activePlanId && planCatalog.length > 0) {
+      return planCatalog as Crop[];
+    }
+    // No active plan or catalog not loaded yet - use master list as fallback
+    return crops;
+  }, [activePlanId, currentPlan?.id, planCatalog, crops]);
 
   // All columns - derive from crop keys if allHeaders not provided
   const allColumns = useMemo(() => {
     if (allHeaders && allHeaders.length > 0) {
       return ['id', ...allHeaders];
     }
-    // Generate headers from new crops.json fields
+    // Generate headers from displayCrops fields
     const fields = new Set<string>();
-    crops.forEach(crop => {
+    displayCrops.forEach(crop => {
       Object.keys(crop).forEach(key => fields.add(key));
     });
     return Array.from(fields);
-  }, [allHeaders, crops]);
+  }, [allHeaders, displayCrops]);
 
   // Initialize with defaults (hydration-safe), then load from localStorage
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set(DEFAULT_VISIBLE));
   const [columnOrder, setColumnOrder] = useState<string[]>(allColumns);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [sortColumn, setSortColumn] = useState<string | null>('identifier');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filterPaneOpen, setFilterPaneOpen] = useState(true);
   const [filterPaneWidth, setFilterPaneWidth] = useState(DEFAULT_FILTER_PANE_WIDTH);
   const [hydrated, setHydrated] = useState(false);
@@ -218,8 +258,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         setColumnOrder(order);
       }
       setColumnWidths(persisted.columnWidths ?? {});
-      setSortColumn(persisted.sortColumn ?? null);
-      setSortDirection(persisted.sortDirection ?? null);
+      setSortColumn(persisted.sortColumn ?? 'identifier');
+      setSortDirection(persisted.sortDirection ?? 'asc');
       setFilterPaneOpen(persisted.filterPaneOpen ?? true);
       setFilterPaneWidth(persisted.filterPaneWidth ?? DEFAULT_FILTER_PANE_WIDTH);
     }
@@ -286,16 +326,16 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const columnMeta = useMemo(() => {
     const meta: Record<string, { type: 'boolean' | 'number' | 'categorical' | 'text'; options?: string[]; range?: { min: number; max: number } }> = {};
     displayColumns.forEach(col => {
-      const type = getColumnType(crops, col);
+      const type = getColumnType(displayCrops, col);
       meta[col] = { type };
       if (type === 'categorical') {
-        meta[col].options = getUniqueValuesForColumn(crops, col);
+        meta[col].options = getUniqueValuesForColumn(displayCrops, col);
       } else if (type === 'number') {
-        meta[col].range = getNumericRange(crops, col);
+        meta[col].range = getNumericRange(displayCrops, col);
       }
     });
     return meta;
-  }, [crops, displayColumns]);
+  }, [displayCrops, displayColumns]);
 
   const getColumnWidth = useCallback((col: string) => {
     return columnWidths[col] ?? getDefaultColumnWidth(col);
@@ -303,7 +343,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
   // Filter crops
   const filteredCrops = useMemo(() => {
-    return crops.filter(crop => {
+    return displayCrops.filter(crop => {
       // Text search using new field names
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -343,7 +383,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
       return true;
     });
-  }, [crops, searchQuery, columnFilters, columnMeta]);
+  }, [displayCrops, searchQuery, columnFilters, columnMeta]);
 
   // Sort crops
   const sortedCrops = useMemo(() => {
@@ -373,8 +413,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
   const selectedCrop = useMemo(() => {
     if (!selectedCropId) return null;
-    return crops.find(c => c.id === selectedCropId) || null;
-  }, [crops, selectedCropId]);
+    return displayCrops.find(c => c.id === selectedCropId) || null;
+  }, [displayCrops, selectedCropId]);
 
   // Filtered columns for column manager
   const filteredColumns = useMemo(() => {
@@ -552,13 +592,42 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     setColumnFilters(prev => ({ ...prev, [col]: value }));
   }, []);
 
-  // Load active plan ID from localStorage on mount
+  // Load active plan ID from localStorage on mount and listen for changes
   useEffect(() => {
     const storedId = localStorage.getItem('crop-explorer-active-plan');
     if (storedId) {
       setActivePlanId(storedId);
     }
+
+    // Listen for plan-list-updated events (when plan is selected via header dropdown)
+    const handlePlanListUpdated = () => {
+      const currentId = localStorage.getItem('crop-explorer-active-plan');
+      setActivePlanId(currentId);
+    };
+
+    // Listen for storage changes (cross-tab sync)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'crop-explorer-active-plan') {
+        setActivePlanId(e.newValue);
+      }
+    };
+
+    window.addEventListener('plan-list-updated', handlePlanListUpdated);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('plan-list-updated', handlePlanListUpdated);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
+
+  // Load plan into store when activePlanId changes (if not already loaded)
+  useEffect(() => {
+    if (activePlanId && currentPlan?.id !== activePlanId) {
+      loadPlanById(activePlanId).catch(err => {
+        console.error('Failed to load plan:', err);
+      });
+    }
+  }, [activePlanId, currentPlan?.id, loadPlanById]);
 
   // Load plan list on mount and when needed
   useEffect(() => {
@@ -602,7 +671,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     setSelectedCropIds(new Set());
   }, []);
 
-  // Add crops directly to the active plan
+  // Add crops directly to the active plan via store
   const addCropsToActivePlan = useCallback(async (cropsToAddNow: Crop[]) => {
     if (!activePlanId || cropsToAddNow.length === 0) return;
 
@@ -610,25 +679,16 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     setAddToPlanMessage(null);
 
     try {
-      const planData = await loadPlanFromLibrary(activePlanId);
-      if (!planData) {
-        throw new Error('Plan not found');
+      // Ensure the plan is loaded in the store
+      if (currentPlan?.id !== activePlanId) {
+        await loadPlanById(activePlanId);
       }
 
-      // Ensure plantings array exists
-      if (!planData.plan.plantings) planData.plan.plantings = [];
-
+      // Add each crop as a planting via the store (supports undo/redo)
       for (const crop of cropsToAddNow) {
         const newPlanting = createPlantingFromConfig(crop);
-        planData.plan.plantings.push(newPlanting);
+        await addPlanting(newPlanting);
       }
-
-      planData.plan.metadata.lastModified = Date.now();
-
-      await savePlanToLibrary(planData.plan);
-
-      // Dispatch custom event so timeline in same tab can refresh
-      window.dispatchEvent(new CustomEvent('plan-updated', { detail: { planId: activePlanId } }));
 
       const cropCount = cropsToAddNow.length;
       setAddToPlanMessage({
@@ -647,7 +707,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [activePlanId, activePlan?.name]);
+  }, [activePlanId, activePlan?.name, currentPlan?.id, loadPlanById, addPlanting]);
 
   // Quick add single crop to plan (from row button)
   const handleQuickAdd = useCallback((crop: Crop, event: React.MouseEvent) => {
@@ -685,28 +745,16 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     setAddToPlanMessage(null);
 
     try {
-      // Load the plan
-      const planData = await loadPlanFromLibrary(planId);
-      if (!planData) {
-        throw new Error('Plan not found');
+      // Load the plan into the store if not already loaded
+      if (currentPlan?.id !== planId) {
+        await loadPlanById(planId);
       }
 
-      // Ensure plantings array exists
-      if (!planData.plan.plantings) planData.plan.plantings = [];
-
-      // Create the new plantings
+      // Add each crop as a planting via the store (supports undo/redo)
       for (const crop of cropsToAdd) {
         const newPlanting = createPlantingFromConfig(crop);
-        planData.plan.plantings.push(newPlanting);
+        await addPlanting(newPlanting);
       }
-
-      planData.plan.metadata.lastModified = Date.now();
-
-      // Save back to library
-      await savePlanToLibrary(planData.plan);
-
-      // Dispatch custom event so timeline in same tab can refresh
-      window.dispatchEvent(new CustomEvent('plan-updated', { detail: { planId } }));
 
       // Set this as the active plan for future adds
       setActivePlanId(planId);
@@ -716,7 +764,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         setActivePlan(plan);
       }
 
-      const planName = planData.plan.metadata.name;
+      // Get plan name from the store's current plan
+      const planName = usePlanStore.getState().currentPlan?.metadata.name || plan?.name || 'Plan';
       const cropCount = cropsToAdd.length;
       setAddToPlanMessage({
         type: 'success',
@@ -737,7 +786,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [cropsToAdd, planList]);
+  }, [cropsToAdd, planList, currentPlan?.id, loadPlanById, addPlanting]);
 
   // Clear message after a timeout
   useEffect(() => {
@@ -746,6 +795,178 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       return () => clearTimeout(timer);
     }
   }, [addToPlanMessage]);
+
+  // Get existing identifiers from active plan's catalog
+  const existingIdentifiers = useMemo(() => {
+    if (!activePlanId || planCatalog.length === 0) return [];
+    return planCatalog.map(c => c.identifier);
+  }, [activePlanId, planCatalog]);
+
+  // Handle opening the edit config modal
+  const handleEditConfig = useCallback((crop: Crop) => {
+    if (!activePlanId) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'Select an active plan first to edit configs',
+      });
+      return;
+    }
+    setConfigToEdit(crop as CropConfig);
+    setShowEditConfig(true);
+  }, [activePlanId]);
+
+  // Handle saving an edited config via store
+  const handleSaveEditedConfig = useCallback(async (config: CropConfig) => {
+    if (!activePlanId) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'Please select an active plan first',
+      });
+      return;
+    }
+
+    try {
+      // Ensure the plan is loaded in the store
+      if (currentPlan?.id !== activePlanId) {
+        await loadPlanById(activePlanId);
+      }
+
+      // Update the config via the store (supports undo/redo)
+      await updateCropConfig(config);
+
+      setAddToPlanMessage({
+        type: 'success',
+        text: `Updated config "${config.identifier}"`,
+        planId: activePlanId,
+      });
+      setShowEditConfig(false);
+      setConfigToEdit(null);
+    } catch (err) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to update config',
+      });
+    }
+  }, [activePlanId, currentPlan?.id, loadPlanById, updateCropConfig]);
+
+  // Handle saving a new custom config via store
+  const handleSaveCustomConfig = useCallback(async (config: CropConfig) => {
+    if (!activePlanId) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'Please select an active plan first',
+      });
+      return;
+    }
+
+    try {
+      // Ensure the plan is loaded in the store
+      if (currentPlan?.id !== activePlanId) {
+        await loadPlanById(activePlanId);
+      }
+
+      // Add the config via the store (supports undo/redo)
+      await addCropConfig(config);
+
+      setAddToPlanMessage({
+        type: 'success',
+        text: `Created config "${config.identifier}"`,
+        planId: activePlanId,
+      });
+      setShowCreateConfig(false);
+    } catch (err) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to create config',
+      });
+    }
+  }, [activePlanId, currentPlan?.id, loadPlanById, addCropConfig]);
+
+  // Handle initiating delete for a single config (from inspector)
+  const handleDeleteConfig = useCallback((crop: Crop) => {
+    if (!activePlanId) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'Select an active plan first to delete configs',
+      });
+      return;
+    }
+    setConfigsToDelete([crop]);
+    setShowDeleteConfirm(true);
+  }, [activePlanId]);
+
+  // Handle initiating bulk delete (from selection bar)
+  const handleBulkDelete = useCallback(() => {
+    if (!activePlanId) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'Select an active plan first to delete configs',
+      });
+      return;
+    }
+    const cropsToDeleteList = sortedCrops.filter(c => selectedCropIds.has(c.id));
+    if (cropsToDeleteList.length === 0) return;
+    setConfigsToDelete(cropsToDeleteList);
+    setShowDeleteConfirm(true);
+  }, [activePlanId, sortedCrops, selectedCropIds]);
+
+  // Handle confirmed deletion (uses store actions from component-level hooks)
+  const handleConfirmDelete = useCallback(async () => {
+    if (!activePlanId || configsToDelete.length === 0) return;
+
+    setIsDeleting(true);
+    try {
+      // Ensure the plan is loaded in the store for undo/redo to work
+      if (currentPlan?.id !== activePlanId) {
+        await loadPlanById(activePlanId);
+      }
+
+      const identifiers = configsToDelete.map(c => c.identifier);
+      const deletedCount = await deleteCropConfigs(identifiers);
+
+      if (deletedCount === 0) {
+        throw new Error('No configs were found to delete');
+      }
+
+      // No event dispatch needed - store update triggers UI refresh via Zustand reactivity
+
+      setAddToPlanMessage({
+        type: 'success',
+        text: deletedCount === 1
+          ? `Deleted "${identifiers[0]}"`
+          : `Deleted ${deletedCount} configs`,
+        planId: activePlanId,
+      });
+
+      // Clear selection if we deleted selected items
+      setSelectedCropIds(prev => {
+        const next = new Set(prev);
+        configsToDelete.forEach(c => next.delete(c.id));
+        return next;
+      });
+
+      // Clear selected crop if it was deleted
+      if (selectedCropId && configsToDelete.some(c => c.id === selectedCropId)) {
+        setSelectedCropId(null);
+      }
+
+      setShowDeleteConfirm(false);
+      setConfigsToDelete([]);
+    } catch (err) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to delete configs',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [activePlanId, configsToDelete, selectedCropId, currentPlan?.id, loadPlanById, deleteCropConfigs]);
+
+  // Handle cancel delete
+  const handleCancelDelete = useCallback(() => {
+    setShowDeleteConfirm(false);
+    setConfigsToDelete([]);
+  }, []);
 
   return (
     <div className="flex h-full">
@@ -873,7 +1094,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         {/* Toolbar */}
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
           <span className="text-sm text-gray-700">
-            {sortedCrops.length} of {crops.length} · {displayColumns.length} columns
+            {sortedCrops.length} of {displayCrops.length} · {displayColumns.length} columns
           </span>
           {addingToPlan && (
             <span className="text-sm text-blue-600 animate-pulse">Adding to plan...</span>
@@ -903,6 +1124,22 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             title="Reset columns to defaults"
           >
             Reset
+          </button>
+          <button
+            onClick={() => {
+              if (!activePlanId) {
+                setAddToPlanMessage({
+                  type: 'error',
+                  text: 'Select an active plan first to create custom configs',
+                });
+                return;
+              }
+              setShowCreateConfig(true);
+            }}
+            className="px-3 py-1.5 text-sm text-white bg-green-600 hover:bg-green-700 rounded"
+            title="Create a custom crop config for your plan"
+          >
+            + Custom Config
           </button>
         </div>
 
@@ -976,7 +1213,11 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             style={{ height: 'calc(100% - 40px)' }}
             onScroll={handleBodyScroll}
           >
-            {sortedCrops.length === 0 ? (
+            {catalogLoading ? (
+              <div className="flex items-center justify-center text-gray-600 h-full">
+                <span className="animate-pulse">Loading catalog...</span>
+              </div>
+            ) : sortedCrops.length === 0 ? (
               <div className="flex items-center justify-center text-gray-600 h-full">
                 No crops match your filters
               </div>
@@ -986,9 +1227,11 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                   const crop = sortedCrops[virtualRow.index];
                   const isSelected = selectedCropIds.has(crop.id);
+                  // Use identifier as key since it's guaranteed unique within a plan's catalog
+                  const rowKey = crop.identifier || `row-${virtualRow.index}`;
                   return (
                     <div
-                      key={crop.id}
+                      key={rowKey}
                       onClick={() => setSelectedCropId(crop.id === selectedCropId ? null : crop.id)}
                       className={`flex cursor-pointer hover:bg-gray-50 border-b border-gray-100 group ${
                         selectedCropId === crop.id ? 'bg-green-50' : ''
@@ -1129,16 +1372,23 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             </div>
             <button onClick={() => setSelectedCropId(null)} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
           </div>
-          {/* Add to Plan button */}
-          <div className="px-4 py-2 border-b border-gray-100">
+          {/* Action buttons */}
+          <div className="px-4 py-2 border-b border-gray-100 flex gap-2">
             <button
               onClick={() => { setCropsToAdd([selectedCrop]); setShowAddToPlan(true); }}
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
             >
               + Add to Plan
             </button>
+            <button
+              onClick={() => handleEditConfig(selectedCrop)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              title="Edit this config in the active plan's catalog"
+            >
+              Edit
+            </button>
           </div>
-          <div className="overflow-y-auto max-h-[calc(100vh-250px)]">
+          <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
             <div className="p-4 space-y-1">
               {allColumns.map(key => {
                 const value = selectedCrop[key as keyof Crop];
@@ -1150,6 +1400,15 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                 );
               })}
             </div>
+          </div>
+          {/* Delete button at bottom */}
+          <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <button
+              onClick={() => handleDeleteConfig(selectedCrop)}
+              className="w-full px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
+            >
+              Delete Config
+            </button>
           </div>
         </div>
       )}
@@ -1240,6 +1499,12 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             Add to Plan
           </button>
           <button
+            onClick={handleBulkDelete}
+            className="px-3 py-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 rounded transition-colors"
+          >
+            Delete
+          </button>
+          <button
             onClick={deselectAll}
             className="px-3 py-1.5 text-sm font-medium bg-gray-700 hover:bg-gray-600 rounded transition-colors"
           >
@@ -1270,6 +1535,89 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
           >
             ×
           </button>
+        </div>
+      )}
+
+      {/* Create Custom Config Modal */}
+      <CropConfigCreator
+        isOpen={showCreateConfig}
+        onClose={() => setShowCreateConfig(false)}
+        onSave={handleSaveCustomConfig}
+        availableCrops={displayCrops as CropConfig[]}
+        existingIdentifiers={existingIdentifiers}
+      />
+
+      {/* Edit Config Modal */}
+      <CropConfigEditor
+        isOpen={showEditConfig}
+        crop={configToEdit}
+        onClose={() => { setShowEditConfig(false); setConfigToEdit(null); }}
+        onSave={handleSaveEditedConfig}
+        mode="edit"
+        existingIdentifiers={existingIdentifiers}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && configsToDelete.length > 0 && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-[400px] max-h-[80vh] flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900">Confirm Delete</h2>
+              <button
+                onClick={handleCancelDelete}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+                disabled={isDeleting}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-4">
+              {configsToDelete.length === 1 ? (
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to delete <strong>{configsToDelete[0].identifier}</strong>?
+                  This cannot be undone.
+                </p>
+              ) : (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Are you sure you want to delete <strong>{configsToDelete.length} configs</strong>?
+                    This cannot be undone.
+                  </p>
+                  <div className="max-h-32 overflow-y-auto text-xs text-gray-600 bg-gray-50 rounded p-2 border border-gray-200">
+                    {configsToDelete.map(c => c.identifier).join(', ')}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+              <button
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  `Delete ${configsToDelete.length === 1 ? 'Config' : `${configsToDelete.length} Configs`}`
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

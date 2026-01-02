@@ -8,9 +8,23 @@ This is a **crop planning webapp** for a small organic farm (1.5 acres, 92 beds)
 
 Reference data was originally sourced from an Excel workbook (`Crop Plan 2025 V20.xlsm`) containing ~340 planting configurations.
 
+## Prototype
+
+This is a prototype. No data or code is sacred. Don't waste time on doing migrations.
+
+## Development Commands
+
+```bash
+npm install          # Install dependencies
+npm run dev          # Run development server (localhost:3000)
+npm run build        # Build for production
+npm run lint         # Run ESLint
+npx tsc --noEmit     # Type check without emitting
+```
+
 ## Architecture
 
-### Data Model
+### Data Flow
 
 ```
 Planting[] (storage)
@@ -20,38 +34,34 @@ TimelineCrop[] (display)
 CropTimeline Component
 ```
 
-Key entities in `src/lib/entities/`:
-- **Plan** - Contains plantings[], beds, cropCatalog, metadata
-- **Planting** - A single planting decision (configId, fieldStartDate, startBed, bedFeet)
-- **CropConfig** - Static crop configuration from catalog (DTM, spacing, season, etc.)
-- **TimelineCrop** - Computed display format for timeline rendering
+**Planting** = one planting decision (stored), even if spanning multiple beds
+**TimelineCrop** = one entry per bed (computed at render time for display)
+
+### State Management
+
+- **Zustand store** (`plan-store.ts`) - manages Plan state with immer for immutable updates
+- **localStorage persistence** via `storage-adapter.ts`
+- Undo/redo via full Plan snapshots
+
+### Key Types
+
+| Type | Purpose |
+|------|---------|
+| `Plan` | Root entity: plantings[], beds, cropCatalog, metadata |
+| `Planting` | Storage format: configId, fieldStartDate, startBed, bedFeet |
+| `TimelineCrop` | Display format: one per bed with computed dates |
+| `CropConfig` | Static config from catalog (DTM, spacing, seasons) |
 
 ### Key Files
 
 | File | Purpose |
 |------|---------|
-| `src/lib/plan-store.ts` | Zustand store for plan state management |
-| `src/lib/timeline-data.ts` | Expands Planting[] → TimelineCrop[] |
-| `src/lib/slim-planting.ts` | Planting creation and computation |
-| `src/lib/entities/` | Core type definitions |
+| `src/lib/plan-store.ts` | Zustand store with all plan mutations |
+| `src/lib/timeline-data.ts` | `getTimelineCropsFromPlan()` - expands Planting[] → TimelineCrop[] |
+| `src/lib/slim-planting.ts` | `computeTimelineCrop()` - timing calculations |
+| `src/lib/entities/` | Core type definitions (plan.ts, planting.ts, crop-config.ts) |
 | `src/components/CropTimeline.tsx` | Main timeline visualization |
 | `src/data/crops.json` | Crop catalog (340 configurations) |
-
-## Development Commands
-
-```bash
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Type check
-npx tsc --noEmit
-```
 
 ## Key Concepts
 

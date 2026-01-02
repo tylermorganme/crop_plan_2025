@@ -461,6 +461,10 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
   /** Update a crop config in the plan's catalog and recalculate affected crops */
   updateCropConfig: (config: import('./entities/crop-config').CropConfig) => Promise<number>;
+  /** Add a new crop config to the plan's catalog */
+  addCropConfig: (config: import('./entities/crop-config').CropConfig) => Promise<void>;
+  /** Delete crop configs from the plan's catalog by their identifiers */
+  deleteCropConfigs: (identifiers: string[]) => Promise<number>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -531,11 +535,18 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       initializePlantingIdCounter(existingIds);
 
       set((state) => {
+        // Only clear undo/redo history if loading a different plan
+        const isNewPlan = state.currentPlan?.id !== data.plan.id;
+
         state.currentPlan = data.plan;
-        // Start with empty undo/redo history (old format was TimelineCrop[][], new is Plan[])
-        // History is session-only anyway, not worth migrating
-        state.past = [];
-        state.future = [];
+
+        if (isNewPlan) {
+          // Start with empty undo/redo history for new plan
+          state.past = [];
+          state.future = [];
+        }
+        // If same plan, preserve undo/redo history
+
         state.isDirty = false;
         state.isLoading = false;
       });
@@ -943,6 +954,127 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       return affectedPlantingIds.length;
+    },
+
+    addCropConfig: async (config: CropConfig) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      // Initialize catalog if it doesn't exist
+      if (!state.currentPlan.cropCatalog) {
+        state.currentPlan.cropCatalog = {};
+      }
+
+      // Check for duplicate identifier
+      if (state.currentPlan.cropCatalog[config.identifier]) {
+        throw new Error(`A config with identifier "${config.identifier}" already exists`);
+      }
+
+      set((storeState) => {
+        if (!storeState.currentPlan) return;
+
+        // Initialize catalog if needed
+        if (!storeState.currentPlan.cropCatalog) {
+          storeState.currentPlan.cropCatalog = {};
+        }
+
+        // Snapshot for undo
+        snapshotForUndo(storeState);
+
+        // Add new config to catalog
+        storeState.currentPlan.cropCatalog[config.identifier] = JSON.parse(JSON.stringify(config));
+        storeState.currentPlan.metadata.lastModified = Date.now();
+        storeState.currentPlan.changeLog.push(
+          createChangeEntry('batch', `Added new config "${config.identifier}"`, [])
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    deleteCropConfigs: async (identifiers: string[]) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (!state.currentPlan.cropCatalog) {
+        throw new Error('Plan has no crop catalog');
+      }
+
+      // Find which identifiers actually exist
+      const existingIdentifiers = identifiers.filter(
+        id => state.currentPlan!.cropCatalog![id]
+      );
+
+      if (existingIdentifiers.length === 0) {
+        return 0;
+      }
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.cropCatalog) return;
+
+        // Snapshot for undo
+        snapshotForUndo(storeState);
+
+        // Delete configs from catalog
+        for (const identifier of existingIdentifiers) {
+          delete storeState.currentPlan.cropCatalog[identifier];
+        }
+
+        storeState.currentPlan.metadata.lastModified = Date.now();
+        storeState.currentPlan.changeLog.push(
+          createChangeEntry(
+            'batch',
+            existingIdentifiers.length === 1
+              ? `Deleted config "${existingIdentifiers[0]}"`
+              : `Deleted ${existingIdentifiers.length} configs`,
+            []
+          )
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return existingIdentifiers.length;
     },
 
     // History - now stores full Plan snapshots

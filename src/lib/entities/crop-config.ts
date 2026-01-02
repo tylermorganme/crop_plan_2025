@@ -282,3 +282,55 @@ export function getTimelineConfig(crop: CropConfig): {
     daysInCells: calculated.daysInCells,
   };
 }
+
+// =============================================================================
+// FACTORY FUNCTIONS
+// =============================================================================
+
+/**
+ * Generate a unique ID for a custom crop config.
+ * Format: custom_{timestamp}_{random}
+ */
+export function generateConfigId(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8);
+  return `custom_${timestamp}_${random}`;
+}
+
+/**
+ * Create a blank CropConfig with sensible defaults.
+ * Used when creating a new config from scratch.
+ */
+export function createBlankConfig(): CropConfig {
+  return {
+    id: generateConfigId(),
+    identifier: '',
+    crop: '',
+    variant: '',
+    product: '',
+    category: '',
+    growingStructure: 'Field',
+    normalMethod: 'DS',
+    dtm: 60,
+    daysToGermination: 7,
+    harvestWindow: 7,
+    harvestBufferDays: 7,
+    numberOfHarvests: 1,
+    daysBetweenHarvest: 0,
+    trayStages: [],
+    deprecated: false,
+    perennial: false,
+  };
+}
+
+/**
+ * Create a copy of an existing CropConfig for modification.
+ * Generates a new ID and clears the identifier (user must provide a new one).
+ */
+export function copyConfig(source: CropConfig): CropConfig {
+  return {
+    ...source,
+    id: generateConfigId(),
+    identifier: '', // User must provide a unique identifier
+  };
+}

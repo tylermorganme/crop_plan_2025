@@ -1,5 +1,30 @@
 # TODO
 
+## Cross-Tab Undo/Redo
+
+Currently undo/redo history is per-tab - each browser tab has its own undo stack in memory. When Tab B receives changes from Tab A via `storage` event, Tab B has no undo history for those changes.
+
+**Desired behavior:** Any tab can undo recent operations regardless of which tab performed them.
+
+**Approach:** Operation-log based undo stored in localStorage alongside the plan:
+```typescript
+type Operation =
+  | { type: 'addPlanting', planting: Planting }
+  | { type: 'deleteCropConfigs', configs: CropConfig[] }
+  | { type: 'updateCropConfig', before: CropConfig, after: CropConfig }
+  // etc.
+```
+
+**Challenges:**
+- Storage size constraints (~5MB localStorage limit)
+- Operation interleaving across tabs
+- Conflict resolution for concurrent edits
+- Operation expiration/cleanup
+
+See `.claude/plans/shiny-scribbling-milner.md` for more context.
+
+---
+
 ## Code Quality
 
 ### Transaction wrapper for undo batching

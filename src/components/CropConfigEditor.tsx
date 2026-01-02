@@ -8,6 +8,7 @@ import {
   calculateSTH,
   calculatePlantingMethod,
   calculateHarvestWindow,
+  createBlankConfig,
 } from '@/lib/entities/crop-config';
 
 /** Standard tray sizes (cells per tray) */
@@ -18,9 +19,14 @@ type GrowingMethod = 'direct-seed' | 'transplant' | 'perennial';
 
 interface CropConfigEditorProps {
   isOpen: boolean;
+  /** The crop to edit (required in edit mode, optional in create mode) */
   crop: CropConfig | null;
   onClose: () => void;
   onSave: (updated: CropConfig) => void;
+  /** Mode: 'edit' for editing existing config, 'create' for creating new one */
+  mode?: 'edit' | 'create';
+  /** Optional validation: check if identifier already exists */
+  existingIdentifiers?: string[];
 }
 
 /**
@@ -120,6 +126,8 @@ export default function CropConfigEditor({
   crop,
   onClose,
   onSave,
+  mode = 'edit',
+  existingIdentifiers = [],
 }: CropConfigEditorProps) {
   // Form state - initialize from crop when opened
   const [formData, setFormData] = useState<Partial<CropConfig>>({});
@@ -127,20 +135,26 @@ export default function CropConfigEditor({
   const [growingMethod, setGrowingMethod] = useState<GrowingMethod>('direct-seed');
   const [showRemovalConfirm, setShowRemovalConfirm] = useState(false);
   const [pendingRemovalInfo, setPendingRemovalInfo] = useState<DataRemovalInfo | null>(null);
+  const [identifierError, setIdentifierError] = useState<string | null>(null);
   const identifierInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset form when crop changes
+  // Reset form when crop changes or modal opens
   useEffect(() => {
-    if (crop && isOpen) {
-      setFormData({ ...crop });
-      const stages = crop.trayStages ? [...crop.trayStages] : [];
-      setTrayStages(stages);
-      setGrowingMethod(deriveGrowingMethod(crop, stages));
-      setShowRemovalConfirm(false);
-      setPendingRemovalInfo(null);
-      setTimeout(() => identifierInputRef.current?.focus(), 0);
+    if (isOpen) {
+      // In create mode with no crop, start with blank config
+      const sourceConfig = crop ?? (mode === 'create' ? createBlankConfig() : null);
+      if (sourceConfig) {
+        setFormData({ ...sourceConfig });
+        const stages = sourceConfig.trayStages ? [...sourceConfig.trayStages] : [];
+        setTrayStages(stages);
+        setGrowingMethod(deriveGrowingMethod(sourceConfig, stages));
+        setShowRemovalConfirm(false);
+        setPendingRemovalInfo(null);
+        setIdentifierError(null);
+        setTimeout(() => identifierInputRef.current?.focus(), 0);
+      }
     }
-  }, [crop, isOpen]);
+  }, [crop, isOpen, mode]);
 
   // Handle growing method changes - just change visibility, don't modify data
   const handleGrowingMethodChange = (method: GrowingMethod) => {
@@ -191,6 +205,18 @@ export default function CropConfigEditor({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.identifier?.trim() || !formData.crop?.trim()) return;
+
+    // In create mode (or when identifier changed), check for duplicates
+    const identifierToCheck = formData.identifier.trim();
+    const originalIdentifier = crop?.identifier;
+    const isNewIdentifier = mode === 'create' || identifierToCheck !== originalIdentifier;
+
+    if (isNewIdentifier && existingIdentifiers.includes(identifierToCheck)) {
+      setIdentifierError(`A config with identifier "${identifierToCheck}" already exists`);
+      identifierInputRef.current?.focus();
+      return;
+    }
+    setIdentifierError(null);
 
     // Check if any data will be removed
     const removalInfo = getDataRemovalInfo(growingMethod, trayStages, formData);
@@ -245,7 +271,9 @@ export default function CropConfigEditor({
     ));
   };
 
-  if (!isOpen || !crop) return null;
+  // In edit mode, require crop. In create mode, we generate a blank one.
+  if (!isOpen) return null;
+  if (mode === 'edit' && !crop) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -262,7 +290,9 @@ export default function CropConfigEditor({
       >
         {/* Header */}
         <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Edit Crop Configuration</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {mode === 'create' ? 'Create Crop Configuration' : 'Edit Crop Configuration'}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-xl leading-none p-1"
@@ -350,10 +380,20 @@ export default function CropConfigEditor({
                     ref={identifierInputRef}
                     type="text"
                     value={formData.identifier || ''}
-                    onChange={(e) => updateField('identifier', e.target.value)}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => {
+                      updateField('identifier', e.target.value);
+                      if (identifierError) setIdentifierError(null);
+                    }}
+                    className={`w-full px-3 py-2 text-sm text-gray-900 border rounded-md focus:outline-none focus:ring-2 ${
+                      identifierError
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
                     required
                   />
+                  {identifierError && (
+                    <p className="text-xs text-red-600 mt-1">{identifierError}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Crop *</label>
@@ -688,7 +728,7 @@ export default function CropConfigEditor({
               disabled={!formData.identifier?.trim() || !formData.crop?.trim()}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Changes
+              {mode === 'create' ? 'Create Config' : 'Save Changes'}
             </button>
           </div>
         </form>

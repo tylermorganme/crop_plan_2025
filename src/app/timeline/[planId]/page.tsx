@@ -13,7 +13,6 @@ import { getTimelineCrops, calculateRowSpan, getTimelineCropsFromPlan } from '@/
 import { getResources, getGroups } from '@/lib/plan-types';
 import {
   usePlanStore,
-  useUndoRedo,
   useSaveState,
   startAutoSave,
   stopAutoSave,
@@ -52,30 +51,20 @@ export default function TimelinePlanPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState('');
-  const [isEditingYear, setIsEditingYear] = useState(false);
-  const [editedYear, setEditedYear] = useState('');
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [configEditorOpen, setConfigEditorOpen] = useState(false);
   const [editingCrop, setEditingCrop] = useState<CropConfig | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-  const yearInputRef = useRef<HTMLInputElement>(null);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const isDirty = usePlanStore((state) => state.isDirty);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
-  const renamePlan = usePlanStore((state) => state.renamePlan);
   const moveCrop = usePlanStore((state) => state.moveCrop);
   const updateCropDates = usePlanStore((state) => state.updateCropDates);
   const markSaved = usePlanStore((state) => state.markSaved);
-
-  // Undo/redo
-  const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
 
   // Save state (for saving indicator and error handling)
   const { isSaving, saveError, clearSaveError } = useSaveState();
@@ -139,26 +128,7 @@ export default function TimelinePlanPage() {
     }
   }, [saveError, clearSaveError]);
 
-  // Keyboard shortcuts for undo/redo
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
-        e.preventDefault();
-        if (e.shiftKey) {
-          if (canRedo) redo();
-        } else {
-          if (canUndo) undo();
-        }
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
-        e.preventDefault();
-        if (canRedo) redo();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, canRedo, undo, redo]);
+  // Keyboard shortcuts for undo/redo are now handled in AppHeader
 
   const handleCropMove = useCallback((cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => {
     const feet = feetNeeded || 50;
@@ -299,29 +269,6 @@ export default function TimelinePlanPage() {
     }
   }, [router]);
 
-  const startEditingName = useCallback(() => {
-    if (currentPlan) {
-      setEditedName(currentPlan.metadata.name);
-      setIsEditingName(true);
-      // Focus input after render
-      setTimeout(() => nameInputRef.current?.select(), 0);
-    }
-  }, [currentPlan]);
-
-  const saveEditedName = useCallback(async () => {
-    const trimmedName = editedName.trim();
-    if (trimmedName && trimmedName !== currentPlan?.metadata.name) {
-      await renamePlan(trimmedName);
-      setToast({ message: 'Plan renamed', type: 'success' });
-    }
-    setIsEditingName(false);
-  }, [editedName, currentPlan, renamePlan]);
-
-  const cancelEditingName = useCallback(() => {
-    setIsEditingName(false);
-    setEditedName('');
-  }, []);
-
   const handleCopyPlan = useCallback(async (options: CopyPlanOptions) => {
     setIsCopying(true);
     try {
@@ -338,58 +285,6 @@ export default function TimelinePlanPage() {
     }
     setIsCopying(false);
   }, [router]);
-
-  const handleNameKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      saveEditedName();
-    } else if (e.key === 'Escape') {
-      cancelEditingName();
-    }
-  }, [saveEditedName, cancelEditingName]);
-
-  // Year editing handlers
-  const startEditingYear = useCallback(() => {
-    if (currentPlan) {
-      const year = currentPlan.metadata.year ?? new Date().getFullYear();
-      setEditedYear(String(year));
-      setIsEditingYear(true);
-      setTimeout(() => yearInputRef.current?.select(), 0);
-    }
-  }, [currentPlan]);
-
-  const saveEditedYear = useCallback(async () => {
-    const yearNum = parseInt(editedYear, 10);
-    if (!isNaN(yearNum) && yearNum >= 2020 && yearNum <= 2100) {
-      if (currentPlan && yearNum !== currentPlan.metadata.year) {
-        // Update the plan's year directly
-        const planData = await loadPlanFromLibrary(planId);
-        if (planData) {
-          planData.plan.metadata.year = yearNum;
-          planData.plan.metadata.lastModified = Date.now();
-          await savePlanToLibrary(planData.plan);
-          // Reload to update the store
-          await loadPlanById(planId);
-          setToast({ message: `Plan year set to ${yearNum}`, type: 'success' });
-        }
-      }
-    }
-    setIsEditingYear(false);
-  }, [editedYear, currentPlan, planId, loadPlanById]);
-
-  const cancelEditingYear = useCallback(() => {
-    setIsEditingYear(false);
-    setEditedYear('');
-  }, []);
-
-  const handleYearKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      saveEditedYear();
-    } else if (e.key === 'Escape') {
-      cancelEditingYear();
-    }
-  }, [saveEditedYear, cancelEditingYear]);
 
   if (loading) {
     return (
@@ -422,58 +317,6 @@ export default function TimelinePlanPage() {
     <div className="h-[calc(100vh-48px)] flex flex-col">
       {/* Toolbar */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-4">
-        {isEditingName ? (
-          <div className="flex items-center gap-2">
-            <input
-              ref={nameInputRef}
-              type="text"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              onKeyDown={handleNameKeyDown}
-              onBlur={saveEditedName}
-              className="text-xl font-bold text-gray-900 border border-blue-500 rounded px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ width: Math.max(200, editedName.length * 12) }}
-            />
-            {currentPlan.metadata.version && (
-              <span className="text-sm font-normal text-gray-600">v{currentPlan.metadata.version}</span>
-            )}
-          </div>
-        ) : (
-          <h1
-            className="text-xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
-            onClick={startEditingName}
-            title="Click to rename"
-          >
-            {currentPlan.metadata.name}
-            {currentPlan.metadata.version && (
-              <span className="text-sm font-normal text-gray-600 ml-2">v{currentPlan.metadata.version}</span>
-            )}
-          </h1>
-        )}
-
-        {/* Plan year */}
-        {isEditingYear ? (
-          <input
-            ref={yearInputRef}
-            type="number"
-            min="2020"
-            max="2100"
-            value={editedYear}
-            onChange={(e) => setEditedYear(e.target.value)}
-            onKeyDown={handleYearKeyDown}
-            onBlur={saveEditedYear}
-            className="w-16 text-sm font-medium text-gray-700 border border-blue-500 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        ) : (
-          <button
-            onClick={startEditingYear}
-            className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-            title="Click to change plan year"
-          >
-            {currentPlan.metadata.year ?? new Date().getFullYear()}
-          </button>
-        )}
-
         {/* Save status indicator */}
         {isSaving ? (
           <span className="text-sm text-gray-600 flex items-center gap-1">
@@ -490,25 +333,7 @@ export default function TimelinePlanPage() {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Undo/Redo buttons */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:border-gray-200 disabled:cursor-not-allowed"
-            title={`Undo (${undoCount} available) - Ctrl+Z`}
-          >
-            ↶ Undo
-          </button>
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:border-gray-200 disabled:cursor-not-allowed"
-            title={`Redo (${redoCount} available) - Ctrl+Shift+Z`}
-          >
-            Redo ↷
-          </button>
-        </div>
+        {/* Undo/Redo buttons are now in AppHeader */}
 
         {/* Save/Load to file buttons */}
         <div className="flex items-center gap-2 border-l pl-4 ml-2">
