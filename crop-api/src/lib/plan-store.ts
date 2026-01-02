@@ -24,8 +24,15 @@ import type {
   StashEntry,
   Checkpoint,
   HistoryEntry,
+  Bed,
 } from './plan-types';
-import { CURRENT_SCHEMA_VERSION, generatePlantingId, initializeIdCounter } from './plan-types';
+import {
+  CURRENT_SCHEMA_VERSION,
+  generatePlantingId,
+  initializeIdCounter,
+  validatePlan,
+  createBedsFromTemplate,
+} from './plan-types';
 import { storage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
 import { recalculateCropsForConfig } from './slim-planting';
 import bedPlanData from '@/data/bed-plan.json';
@@ -62,22 +69,21 @@ function getPlanGroups(plan: Plan | null): ResourceGroup[] {
 }
 
 /**
- * Deep copy crops array for undo stack.
+ * Deep copy a plan for undo stack.
  * Must create new objects to avoid immer draft reference issues.
  */
-function deepCopyCrops(crops: TimelineCrop[]): TimelineCrop[] {
-  return crops.map(c => ({ ...c }));
+function deepCopyPlan(plan: Plan): Plan {
+  return JSON.parse(JSON.stringify(plan));
 }
 
 /**
- * Snapshot the current crops state for undo.
+ * Snapshot the current plan state for undo.
  * Call this BEFORE making any mutations.
  */
-function snapshotForUndo(state: { currentPlan: Plan | null; past: TimelineCrop[][]; future: TimelineCrop[][] }): void {
+function snapshotForUndo(state: { currentPlan: Plan | null; past: Plan[]; future: Plan[] }): void {
   if (!state.currentPlan) return;
 
-  const currentCrops = state.currentPlan.crops ?? [];
-  state.past.push(deepCopyCrops(currentCrops));
+  state.past.push(deepCopyPlan(state.currentPlan));
 
   // Limit history size
   if (state.past.length > MAX_HISTORY_SIZE) {
@@ -259,9 +265,24 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
   // Ensure unique name
   const uniqueName = await getUniquePlanName(options.newName);
 
+  // Copy beds from source plan or create from template
+  let beds: Record<string, Bed>;
+  if (state.currentPlan.beds) {
+    beds = JSON.parse(JSON.stringify(state.currentPlan.beds));
+  } else {
+    const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+    beds = createBedsFromTemplate(bedGroups);
+  }
+
+  // Copy cropCatalog from source plan
+  const cropCatalog = state.currentPlan.cropCatalog
+    ? JSON.parse(JSON.stringify(state.currentPlan.cropCatalog))
+    : {};
+
   // Create new plan with lineage tracking
   const newPlan: Plan = {
     id: newId,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     metadata: {
       id: newId,
       name: uniqueName,
@@ -278,8 +299,17 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
       name: g.name,
       beds: [...g.beds],
     })),
+    beds,
+    cropCatalog,
     changeLog: [],
   };
+
+  // Validate before saving
+  try {
+    validatePlan(newPlan);
+  } catch (e) {
+    console.warn('[copyPlan] Plan validation warning:', e);
+  }
 
   // Save to library
   await savePlanToLibrary(newPlan);
@@ -593,14 +623,24 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`Plan not found: ${planId}`);
       }
 
+      // Validate plan on load
+      try {
+        validatePlan(data.plan);
+      } catch (e) {
+        console.warn('[loadPlanById] Plan validation warning:', e);
+        // Continue loading - don't fail on invalid data, just warn
+      }
+
       // Initialize ID counter based on existing plantings to avoid collisions
       const existingIds = getPlanCrops(data.plan).map(c => c.groupId);
       initializeIdCounter(existingIds);
 
       set((state) => {
         state.currentPlan = data.plan;
-        state.past = data.past || [];
-        state.future = data.future || [];
+        // Start with empty undo/redo history (old format was TimelineCrop[][], new is Plan[])
+        // History is session-only anyway, not worth migrating
+        state.past = [];
+        state.future = [];
         state.isDirty = false;
         state.isLoading = false;
       });
@@ -656,8 +696,13 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         cropCatalog[crop.identifier] = JSON.parse(JSON.stringify(crop));
       }
 
+      // Build beds from template
+      const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+      const beds: Record<string, Bed> = createBedsFromTemplate(bedGroups);
+
       const plan: Plan = {
         id,
+        schemaVersion: CURRENT_SCHEMA_VERSION,
         metadata: {
           id,
           name: uniqueName,
@@ -668,9 +713,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         crops,
         resources,
         groups,
-        changeLog: [],
+        beds,
         cropCatalog,
+        changeLog: [],
       };
+
+      // Validate before saving
+      try {
+        validatePlan(plan);
+      } catch (e) {
+        console.warn('[createNewPlan] Plan validation warning:', e);
+      }
 
       set((state) => {
         state.currentPlan = plan;
@@ -990,13 +1043,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((storeState) => {
         if (!storeState.currentPlan) return;
 
-        // Save current state to undo stack
-        const storeCrops = storeState.currentPlan.crops ?? [];
-        storeState.past.push([...storeCrops]);
-        if (storeState.past.length > MAX_HISTORY_SIZE) {
-          storeState.past.shift();
-        }
-        storeState.future = [];
+        // Snapshot for undo
+        snapshotForUndo(storeState);
 
         // Update crops
         storeState.currentPlan.crops = recalculated;
@@ -1065,13 +1113,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((storeState) => {
         if (!storeState.currentPlan) return;
 
-        // Save current state to undo stack
-        const storeCrops = storeState.currentPlan.crops ?? [];
-        storeState.past.push([...storeCrops]);
-        if (storeState.past.length > MAX_HISTORY_SIZE) {
-          storeState.past.shift();
-        }
-        storeState.future = [];
+        // Snapshot for undo
+        snapshotForUndo(storeState);
 
         // Update catalog and crops
         storeState.currentPlan.cropCatalog = updatedCatalog;
@@ -1105,16 +1148,15 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return affectedGroupIds.size;
     },
 
-    // History
+    // History - now stores full Plan snapshots
     undo: async () => {
       set((state) => {
         if (!state.currentPlan || state.past.length === 0) return;
 
-        const currentCrops = state.currentPlan.crops ?? [];
         const previous = state.past.pop()!;
-        // Deep copy to avoid immer draft assignment issues
-        state.future.push(deepCopyCrops(currentCrops));
-        state.currentPlan.crops = deepCopyCrops(previous);
+        // Push current to future, restore previous
+        state.future.push(deepCopyPlan(state.currentPlan));
+        state.currentPlan = deepCopyPlan(previous);
         state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
@@ -1143,11 +1185,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan || state.future.length === 0) return;
 
-        const currentCrops = state.currentPlan.crops ?? [];
         const next = state.future.pop()!;
-        // Deep copy to avoid immer draft assignment issues
-        state.past.push(deepCopyCrops(currentCrops));
-        state.currentPlan.crops = deepCopyCrops(next);
+        // Push current to past, restore next
+        state.past.push(deepCopyPlan(state.currentPlan));
+        state.currentPlan = deepCopyPlan(next);
         state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
@@ -1247,29 +1288,22 @@ export function useSaveState() {
 }
 
 // ============================================
-// Auto-Save Timer
+// Auto-Save Timer (DISABLED)
 // ============================================
+// Auto-save snapshots are disabled because:
+// 1. Every mutation already saves to the plan library immediately
+// 2. Full Plan snapshots (with beds + cropCatalog) are ~400KB each
+// 3. localStorage has a 5-10MB limit, easily exceeded with a few snapshots
+//
+// If crash recovery is needed, consider:
+// - IndexedDB (larger quota)
+// - Slim snapshots (exclude beds/cropCatalog, rebuild on restore)
 
 let autoSaveInterval: ReturnType<typeof setInterval> | null = null;
 
 export function startAutoSave(): void {
-  if (autoSaveInterval) return; // Already running
-
-  autoSaveInterval = setInterval(async () => {
-    const state = usePlanStore.getState();
-    if (state.currentPlan) {
-      await saveSnapshot(state.currentPlan);
-      console.log('[AutoSave] Snapshot saved at', new Date().toLocaleTimeString());
-    }
-  }, SNAPSHOT_INTERVAL_MS);
-
-  // Save initial snapshot when starting
-  const state = usePlanStore.getState();
-  if (state.currentPlan) {
-    saveSnapshot(state.currentPlan).catch(e => {
-      console.warn('[AutoSave] Failed to save initial snapshot:', e);
-    });
-  }
+  // Disabled - mutations save immediately, snapshots would bloat localStorage
+  console.log('[AutoSave] Disabled - mutations save immediately');
 }
 
 export function stopAutoSave(): void {

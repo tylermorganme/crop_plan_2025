@@ -75,10 +75,10 @@ export interface BedSpanInfo {
 export interface PlanState {
   /** Current plan being edited */
   currentPlan: Plan | null;
-  /** Past states for undo (stores crop arrays for legacy compat) */
-  past: TimelineCrop[][];
-  /** Future states for redo (stores crop arrays for legacy compat) */
-  future: TimelineCrop[][];
+  /** Past plan states for undo (full Plan snapshots) */
+  past: Plan[];
+  /** Future plan states for redo (full Plan snapshots) */
+  future: Plan[];
   /** Whether there are unsaved changes */
   isDirty: boolean;
   /** Loading/saving state */
