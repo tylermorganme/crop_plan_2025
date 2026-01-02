@@ -8,7 +8,6 @@ import HistoryPanel from '@/components/HistoryPanel';
 import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal';
 import CropConfigEditor from '@/components/CropConfigEditor';
 import { type CropConfig } from '@/lib/entities/crop-config';
-import { useCrossTabSync } from '@/hooks/useCrossTabSync';
 import { getTimelineCrops, calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';
 import {
@@ -69,8 +68,7 @@ export default function TimelinePlanPage() {
   // Save state (for saving indicator and error handling)
   const { isSaving, saveError, clearSaveError } = useSaveState();
 
-  // Sync plan state across browser tabs/windows
-  useCrossTabSync(planId);
+  // Note: Cross-tab sync is handled centrally by PlanStoreProvider
 
   // Update crop config action from store
   const updateCropConfig = usePlanStore((state) => state.updateCropConfig);

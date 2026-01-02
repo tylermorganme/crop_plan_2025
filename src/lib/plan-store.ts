@@ -34,13 +34,16 @@ import {
   generatePlantingId,
   initializePlantingIdCounter,
 } from './entities/planting';
-import { storage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
+import { storage, onSyncMessage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
 import type { CropConfig } from './entities/crop-config';
 
 // Re-export types for consumers
 export type { PlanSummary, PlanSnapshot, PlanData };
+
+// Active plan ID key (shared with components that need it)
+export const ACTIVE_PLAN_KEY = 'crop-explorer-active-plan';
 
 const MAX_HISTORY_SIZE = 50;
 
@@ -446,6 +449,10 @@ export async function restoreFromHistory(entry: HistoryEntry): Promise<void> {
 interface ExtendedPlanState extends PlanState {
   isSaving: boolean;
   saveError: string | null;
+  /** Centralized plan list for all components */
+  planList: PlanSummary[];
+  /** Active plan ID (synced to localStorage for cross-tab) */
+  activePlanId: string | null;
 }
 
 interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'renamePlan' | 'createNewPlan' | 'moveCrop' | 'updateCropDates' | 'deleteCrop' | 'undo' | 'redo'> {
@@ -468,6 +475,10 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
+  /** Refresh plan list from storage */
+  refreshPlanList: () => Promise<void>;
+  /** Set active plan ID (syncs to localStorage) */
+  setActivePlanId: (planId: string | null) => void;
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -487,6 +498,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     isSaving: false,
     saveError: null,
     lastSaved: null,
+    planList: [],
+    activePlanId: null,
 
     // Plan lifecycle
     loadPlan: (plan: Plan) => {
@@ -1171,8 +1184,84 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.saveError = null;
       });
     },
+
+    refreshPlanList: async () => {
+      const plans = await storage.getPlanList();
+      set((state) => {
+        state.planList = plans;
+        // If active plan was deleted, clear it
+        if (state.activePlanId && !plans.some(p => p.id === state.activePlanId)) {
+          state.activePlanId = null;
+          try {
+            localStorage.removeItem(ACTIVE_PLAN_KEY);
+          } catch { /* ignore */ }
+        }
+      });
+    },
+
+    setActivePlanId: (planId: string | null) => {
+      set((state) => {
+        state.activePlanId = planId;
+      });
+      // Sync to localStorage for cross-tab via storage events
+      try {
+        if (planId) {
+          localStorage.setItem(ACTIVE_PLAN_KEY, planId);
+        } else {
+          localStorage.removeItem(ACTIVE_PLAN_KEY);
+        }
+      } catch { /* ignore */ }
+      // Dispatch event for same-tab components that still listen
+      window.dispatchEvent(new CustomEvent('plan-list-updated'));
+    },
   }))
 );
+
+// ============================================
+// Store Initialization
+// ============================================
+
+/**
+ * Initialize the plan store with data from storage.
+ * Should be called once on app startup (client-side only).
+ */
+export async function initializePlanStore(): Promise<void> {
+  if (typeof window === 'undefined') return;
+
+  const store = usePlanStore.getState();
+
+  // Load plan list from storage
+  await store.refreshPlanList();
+
+  // Load active plan ID from localStorage
+  try {
+    const storedId = localStorage.getItem(ACTIVE_PLAN_KEY);
+    if (storedId) {
+      store.setActivePlanId(storedId);
+    }
+  } catch { /* ignore */ }
+
+  // Set up cross-tab sync listener (BroadcastChannel)
+  onSyncMessage((message) => {
+    if (message.type === 'plan-updated' || message.type === 'plan-deleted') {
+      // Refresh plan list when any tab creates/updates/deletes a plan
+      usePlanStore.getState().refreshPlanList();
+
+      // If the current plan was updated in another tab, reload it
+      const state = usePlanStore.getState();
+      if (message.type === 'plan-updated' && state.currentPlan?.id === message.planId) {
+        state.loadPlanById(message.planId).catch(console.error);
+      }
+    }
+  });
+
+  // Also listen for localStorage changes (for active plan ID cross-tab sync)
+  window.addEventListener('storage', (e) => {
+    if (e.key === ACTIVE_PLAN_KEY) {
+      usePlanStore.setState({ activePlanId: e.newValue });
+    }
+  });
+}
 
 // ============================================
 // Helper Hooks

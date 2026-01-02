@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import type { Crop } from '@/lib/crops';
 import type { Planting } from '@/lib/plan-types';
 import { generatePlantingId } from '@/lib/plan-types';
-import { getPlanList, usePlanStore, type PlanSummary } from '@/lib/plan-store';
+import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
 import { type CropConfig } from '@/lib/entities/crop-config';
 import CropConfigCreator from './CropConfigCreator';
 import CropConfigEditor from './CropConfigEditor';
@@ -172,14 +172,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   // Multi-select state
   const [selectedCropIds, setSelectedCropIds] = useState<Set<string>>(new Set());
 
-  // Active plan state (remembered across sessions)
-  const [activePlanId, setActivePlanId] = useState<string | null>(null);
-  const [activePlan, setActivePlan] = useState<PlanSummary | null>(null);
-
   // Add to Plan state
   const [showAddToPlan, setShowAddToPlan] = useState(false);
   const [cropsToAdd, setCropsToAdd] = useState<Crop[]>([]); // Crops to add (single or multiple)
-  const [planList, setPlanList] = useState<PlanSummary[]>([]);
   const [addingToPlan, setAddingToPlan] = useState(false);
   const [addToPlanMessage, setAddToPlanMessage] = useState<{ type: 'success' | 'error'; text: string; planId?: string } | null>(null);
 
@@ -195,7 +190,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const [configsToDelete, setConfigsToDelete] = useState<Crop[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Use shared store state for plan catalog and mutations
+  // Use shared store state - automatically syncs across tabs
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const catalogLoading = usePlanStore((state) => state.isLoading);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
@@ -203,6 +198,15 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
   const addCropConfig = usePlanStore((state) => state.addCropConfig);
   const deleteCropConfigs = usePlanStore((state) => state.deleteCropConfigs);
+  const activePlanId = usePlanStore((state) => state.activePlanId);
+  const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
+  const planList = usePlanStore((state) => state.planList);
+
+  // Find active plan info from list
+  const activePlan = useMemo(() => {
+    if (!activePlanId) return null;
+    return planList.find(p => p.id === activePlanId) ?? null;
+  }, [planList, activePlanId]);
 
   // Convert catalog object to array for display
   const planCatalog = useMemo(() => {
@@ -592,34 +596,6 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     setColumnFilters(prev => ({ ...prev, [col]: value }));
   }, []);
 
-  // Load active plan ID from localStorage on mount and listen for changes
-  useEffect(() => {
-    const storedId = localStorage.getItem('crop-explorer-active-plan');
-    if (storedId) {
-      setActivePlanId(storedId);
-    }
-
-    // Listen for plan-list-updated events (when plan is selected via header dropdown)
-    const handlePlanListUpdated = () => {
-      const currentId = localStorage.getItem('crop-explorer-active-plan');
-      setActivePlanId(currentId);
-    };
-
-    // Listen for storage changes (cross-tab sync)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'crop-explorer-active-plan') {
-        setActivePlanId(e.newValue);
-      }
-    };
-
-    window.addEventListener('plan-list-updated', handlePlanListUpdated);
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('plan-list-updated', handlePlanListUpdated);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
   // Load plan into store when activePlanId changes (if not already loaded)
   useEffect(() => {
     if (activePlanId && currentPlan?.id !== activePlanId) {
@@ -628,25 +604,6 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       });
     }
   }, [activePlanId, currentPlan?.id, loadPlanById]);
-
-  // Load plan list on mount and when needed
-  useEffect(() => {
-    getPlanList().then(plans => {
-      setPlanList(plans);
-      // Update active plan info
-      if (activePlanId) {
-        const plan = plans.find(p => p.id === activePlanId);
-        if (plan) {
-          setActivePlan(plan);
-        } else {
-          // Active plan was deleted, clear it
-          setActivePlanId(null);
-          setActivePlan(null);
-          localStorage.removeItem('crop-explorer-active-plan');
-        }
-      }
-    }).catch(console.error);
-  }, [activePlanId, showAddToPlan]);
 
   // Toggle selection for a single crop
   const toggleCropSelection = useCallback((cropId: string, event?: React.MouseEvent) => {
@@ -756,15 +713,11 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         await addPlanting(newPlanting);
       }
 
-      // Set this as the active plan for future adds
+      // Set this as the active plan for future adds (store handles localStorage sync)
       setActivePlanId(planId);
-      localStorage.setItem('crop-explorer-active-plan', planId);
-      const plan = planList.find(p => p.id === planId);
-      if (plan) {
-        setActivePlan(plan);
-      }
 
       // Get plan name from the store's current plan
+      const plan = planList.find(p => p.id === planId);
       const planName = usePlanStore.getState().currentPlan?.metadata.name || plan?.name || 'Plan';
       const cropCount = cropsToAdd.length;
       setAddToPlanMessage({
@@ -786,7 +739,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [cropsToAdd, planList, currentPlan?.id, loadPlanById, addPlanting]);
+  }, [cropsToAdd, planList, currentPlan?.id, loadPlanById, addPlanting, setActivePlanId]);
 
   // Clear message after a timeout
   useEffect(() => {

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import PlanDropdown, { ACTIVE_PLAN_KEY } from './PlanDropdown';
-import { useUndoRedo } from '@/lib/plan-store';
+import PlanDropdown from './PlanDropdown';
+import { usePlanStore, useUndoRedo } from '@/lib/plan-store';
 
 interface AppHeaderProps {
   /** Optional toolbar content to render below the main nav */
@@ -13,36 +13,12 @@ interface AppHeaderProps {
 
 export default function AppHeader({ toolbar }: AppHeaderProps) {
   const pathname = usePathname();
-  const [activePlanId, setActivePlanId] = useState<string | null>(null);
+
+  // Use centralized store state - automatically syncs across tabs
+  const activePlanId = usePlanStore((state) => state.activePlanId);
 
   // Undo/redo from store
   const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
-
-  // Load active plan ID for Timeline tab link
-  useEffect(() => {
-    const storedId = localStorage.getItem(ACTIVE_PLAN_KEY);
-    setActivePlanId(storedId);
-
-    // Listen for storage changes (cross-tab)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === ACTIVE_PLAN_KEY) {
-        setActivePlanId(e.newValue);
-      }
-    };
-
-    // Listen for plan-list-updated events (same tab)
-    const handlePlanListUpdated = () => {
-      const currentId = localStorage.getItem(ACTIVE_PLAN_KEY);
-      setActivePlanId(currentId);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('plan-list-updated', handlePlanListUpdated);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('plan-list-updated', handlePlanListUpdated);
-    };
-  }, []);
 
   // Global keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -73,7 +49,6 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   // Determine which tab is active
   const isExplorerActive = pathname === '/';
   const isTimelineActive = pathname.startsWith('/timeline/');
-  const isPlansActive = pathname === '/plans';
 
   // Timeline link - goes to active plan's timeline
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';

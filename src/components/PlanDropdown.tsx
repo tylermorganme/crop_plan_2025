@@ -1,81 +1,27 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getPlanList, type PlanSummary } from '@/lib/plan-store';
-
-const ACTIVE_PLAN_KEY = 'crop-explorer-active-plan';
+import { usePlanStore, ACTIVE_PLAN_KEY } from '@/lib/plan-store';
 
 export default function PlanDropdown() {
   const router = useRouter();
   const pathname = usePathname();
-  const [activePlanId, setActivePlanId] = useState<string | null>(null);
-  const [activePlan, setActivePlan] = useState<PlanSummary | null>(null);
-  const [planList, setPlanList] = useState<PlanSummary[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load active plan ID from localStorage on mount
-  useEffect(() => {
-    const storedId = localStorage.getItem(ACTIVE_PLAN_KEY);
-    if (storedId) {
-      setActivePlanId(storedId);
-    }
-  }, []);
+  // Use centralized store state - automatically syncs across tabs
+  const planList = usePlanStore((state) => state.planList);
+  const activePlanId = usePlanStore((state) => state.activePlanId);
+  const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
+  const refreshPlanList = usePlanStore((state) => state.refreshPlanList);
 
-  // Load plan list and update active plan info
-  useEffect(() => {
-    getPlanList().then(plans => {
-      setPlanList(plans);
-      if (activePlanId) {
-        const plan = plans.find(p => p.id === activePlanId);
-        if (plan) {
-          setActivePlan(plan);
-        } else {
-          // Active plan was deleted, clear it
-          setActivePlanId(null);
-          setActivePlan(null);
-          localStorage.removeItem(ACTIVE_PLAN_KEY);
-        }
-      }
-    }).catch(console.error);
-  }, [activePlanId]);
-
-  // Listen for storage changes (cross-tab sync)
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === ACTIVE_PLAN_KEY) {
-        const newId = e.newValue;
-        setActivePlanId(newId);
-        if (newId) {
-          const plan = planList.find(p => p.id === newId);
-          setActivePlan(plan || null);
-        } else {
-          setActivePlan(null);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [planList]);
-
-  // Listen for plan list updates (when plans are created/deleted)
-  useEffect(() => {
-    const handlePlanListUpdate = () => {
-      getPlanList().then(plans => {
-        setPlanList(plans);
-        if (activePlanId) {
-          const plan = plans.find(p => p.id === activePlanId);
-          setActivePlan(plan || null);
-        }
-      }).catch(console.error);
-    };
-
-    window.addEventListener('plan-list-updated', handlePlanListUpdate);
-    return () => window.removeEventListener('plan-list-updated', handlePlanListUpdate);
-  }, [activePlanId]);
+  // Find active plan from list
+  const activePlan = useMemo(() => {
+    if (!activePlanId) return null;
+    return planList.find(p => p.id === activePlanId) ?? null;
+  }, [planList, activePlanId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -91,18 +37,13 @@ export default function PlanDropdown() {
 
   const handleSetActivePlan = useCallback((planId: string) => {
     setActivePlanId(planId);
-    localStorage.setItem(ACTIVE_PLAN_KEY, planId);
-    const plan = planList.find(p => p.id === planId);
-    if (plan) {
-      setActivePlan(plan);
-    }
     setIsOpen(false);
 
     // If we're on a timeline page, navigate to the new plan's timeline
     if (pathname.startsWith('/timeline/')) {
       router.push(`/timeline/${planId}`);
     }
-  }, [planList, pathname, router]);
+  }, [pathname, router, setActivePlanId]);
 
   const handleAllPlans = useCallback(() => {
     setIsOpen(false);
@@ -125,14 +66,10 @@ export default function PlanDropdown() {
     try {
       const { importPlanFromFile } = await import('@/lib/plan-store');
       const plan = await importPlanFromFile(file);
-      // Set as active plan
-      localStorage.setItem(ACTIVE_PLAN_KEY, plan.id);
       setActivePlanId(plan.id);
+      await refreshPlanList();
       setIsOpen(false);
-      // Navigate to the new plan
       router.push(`/timeline/${plan.id}`);
-      // Trigger plan list refresh
-      window.dispatchEvent(new CustomEvent('plan-list-updated'));
     } catch (err) {
       console.error('Failed to import plan:', err);
       alert(`Load failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -142,13 +79,15 @@ export default function PlanDropdown() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [router]);
+  }, [router, setActivePlanId, refreshPlanList]);
 
   // Get recent plans (up to 5, excluding current)
-  const recentPlans = planList
-    .filter(p => p.id !== activePlanId)
-    .sort((a, b) => b.lastModified - a.lastModified)
-    .slice(0, 5);
+  const recentPlans = useMemo(() => {
+    return planList
+      .filter(p => p.id !== activePlanId)
+      .sort((a, b) => b.lastModified - a.lastModified)
+      .slice(0, 5);
+  }, [planList, activePlanId]);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -242,5 +181,5 @@ export default function PlanDropdown() {
   );
 }
 
-// Export the key for use in other components
+// Re-export the key for use in other components
 export { ACTIVE_PLAN_KEY };

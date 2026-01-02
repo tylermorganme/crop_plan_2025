@@ -2,13 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   usePlanStore,
-  getPlanList,
   importPlanFromFile,
   deletePlanFromLibrary,
-  type PlanSummary,
 } from '@/lib/plan-store';
 import { getTimelineCrops, collapseToPlantings } from '@/lib/timeline-data';
 
@@ -41,23 +38,22 @@ function formatDate(timestamp: number): string {
 
 export default function PlansPage() {
   const router = useRouter();
-  const [plans, setPlans] = useState<PlanSummary[]>([]);
-  const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const createNewPlan = usePlanStore((state) => state.createNewPlan);
+  // Use centralized store state - automatically syncs across tabs
+  const plans = usePlanStore((state) => state.planList);
   const currentPlan = usePlanStore((state) => state.currentPlan);
+  const createNewPlan = usePlanStore((state) => state.createNewPlan);
+  const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
+  const refreshPlanList = usePlanStore((state) => state.refreshPlanList);
 
-  // Load plan list
+  // Ensure plan list is loaded (may already be from PlanStoreProvider)
   useEffect(() => {
-    async function init() {
-      const planList = await getPlanList();
-      setPlans(planList);
-      setLoading(false);
+    if (plans.length === 0) {
+      refreshPlanList();
     }
-    init();
-  }, []);
+  }, [plans.length, refreshPlanList]);
 
   // Calculate default year: closest April (if May or later, next year)
   const getDefaultYear = useCallback(() => {
@@ -72,32 +68,27 @@ export default function PlansPage() {
     const defaultYear = getDefaultYear();
     await createNewPlan(`Crop Plan ${defaultYear}`, plantings);
 
-    // Get the newly created plan ID
+    // Get the newly created plan ID and set as active
     const newPlan = usePlanStore.getState().currentPlan;
     if (newPlan) {
-      // Set as active plan for Crop Explorer
-      localStorage.setItem('crop-explorer-active-plan', newPlan.id);
-      // Notify other components
-      window.dispatchEvent(new CustomEvent('plan-list-updated'));
+      setActivePlanId(newPlan.id);
+      await refreshPlanList();
       router.push(`/timeline/${newPlan.id}`);
     }
-  }, [createNewPlan, router, getDefaultYear]);
+  }, [createNewPlan, router, getDefaultYear, setActivePlanId, refreshPlanList]);
 
   const handleCreateBlank = useCallback(async () => {
     const defaultYear = getDefaultYear();
-    // Create with empty plantings
     await createNewPlan(`Crop Plan ${defaultYear}`);
 
-    // Get the newly created plan ID
+    // Get the newly created plan ID and set as active
     const newPlan = usePlanStore.getState().currentPlan;
     if (newPlan) {
-      // Set as active plan for Crop Explorer
-      localStorage.setItem('crop-explorer-active-plan', newPlan.id);
-      // Notify other components
-      window.dispatchEvent(new CustomEvent('plan-list-updated'));
+      setActivePlanId(newPlan.id);
+      await refreshPlanList();
       router.push(`/timeline/${newPlan.id}`);
     }
-  }, [createNewPlan, router, getDefaultYear]);
+  }, [createNewPlan, router, getDefaultYear, setActivePlanId, refreshPlanList]);
 
   const handleImportClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -110,14 +101,8 @@ export default function PlansPage() {
     try {
       const plan = await importPlanFromFile(file);
       setToast({ message: `Loaded "${plan.metadata.name}"`, type: 'success' });
-      // Set as active plan for Crop Explorer
-      localStorage.setItem('crop-explorer-active-plan', plan.id);
-      // Refresh plan list
-      const planList = await getPlanList();
-      setPlans(planList);
-      // Notify other components
-      window.dispatchEvent(new CustomEvent('plan-list-updated'));
-      // Navigate to the new plan
+      setActivePlanId(plan.id);
+      await refreshPlanList();
       router.push(`/timeline/${plan.id}`);
     } catch (err) {
       setToast({ message: `Load failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
@@ -127,40 +112,20 @@ export default function PlansPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [router]);
+  }, [router, setActivePlanId, refreshPlanList]);
 
   const handleDelete = useCallback(async (planId: string, planName: string) => {
     if (!confirm(`Delete "${planName}"? This cannot be undone.`)) return;
 
     await deletePlanFromLibrary(planId);
-
-    // If deleting the active plan, clear it
-    const activePlanId = localStorage.getItem('crop-explorer-active-plan');
-    if (activePlanId === planId) {
-      localStorage.removeItem('crop-explorer-active-plan');
-    }
-
-    const planList = await getPlanList();
-    setPlans(planList);
+    await refreshPlanList(); // This also clears activePlanId if deleted
     setToast({ message: `Deleted "${planName}"`, type: 'info' });
-    // Notify other components
-    window.dispatchEvent(new CustomEvent('plan-list-updated'));
-  }, []);
+  }, [refreshPlanList]);
 
   const handleOpenPlan = useCallback((planId: string) => {
-    // Set as active plan
-    localStorage.setItem('crop-explorer-active-plan', planId);
-    window.dispatchEvent(new CustomEvent('plan-list-updated'));
+    setActivePlanId(planId);
     router.push(`/timeline/${planId}`);
-  }, [router]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-60px)]">
-        <div className="text-gray-600">Loading plans...</div>
-      </div>
-    );
-  }
+  }, [router, setActivePlanId]);
 
   return (
     <div className="min-h-[calc(100vh-60px)] bg-gray-50">
