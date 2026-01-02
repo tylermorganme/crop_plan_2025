@@ -3,9 +3,10 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import type { Crop } from '@/lib/crops';
-import type { TimelineCrop } from '@/lib/plan-types';
+import type { Planting } from '@/lib/plan-types';
+import { generatePlantingId } from '@/lib/plan-types';
 import { getPlanList, loadPlanFromLibrary, savePlanToLibrary, type PlanSummary } from '@/lib/plan-store';
 import columnAnalysis from '@/data/column-analysis.json';
 
@@ -142,55 +143,20 @@ function getNumericRange(crops: Crop[], col: string): { min: number; max: number
   return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 100 : max };
 }
 
-// Import calculation functions
-import {
-  calculateDaysInCells,
-  calculateSTH,
-  calculatePlantingMethod,
-  calculateHarvestWindow,
-} from '@/lib/crop-calculations';
-
-// Helper to create a TimelineCrop from a Crop config
-// Uses the plan's target year with the crop's default timing
-function createTimelineCropFromConfig(crop: Crop, planYear: number): TimelineCrop {
+// Helper to create a Planting from a Crop config
+function createPlantingFromConfig(crop: Crop): Planting {
+  const id = generatePlantingId();
   const now = Date.now();
-  const groupId = `new_${crop.id}_${now}`;
 
-  // Calculate derived values using our calculation functions
-  const daysInCells = calculateDaysInCells(crop);
-  const sth = calculateSTH(crop, daysInCells);
-  const plantingMethod = calculatePlantingMethod(crop);
-  const harvestWindow = calculateHarvestWindow(crop);
-
-  // Build display name using new field names
-  const name = crop.product && crop.product !== 'General'
-    ? `${crop.crop} (${crop.product})`
-    : crop.crop;
-
-  // Default to today as start date (no target dates in minimal crops.json)
+  // Default to today as start date
   const startDate = format(new Date(), 'yyyy-MM-dd');
 
-  // End date is start + STH + harvest window
-  const endDate = format(addDays(new Date(startDate), sth + harvestWindow), 'yyyy-MM-dd');
-
-  // Default 50ft (1 bed)
-  const feetNeeded = 50;
-
   return {
-    id: `${groupId}_unassigned`,
-    name,
-    startDate,
-    endDate,
-    resource: '', // Unassigned
-    category: crop.category || undefined,
-    feetNeeded,
-    structure: crop.growingStructure || 'Field',
-    plantingMethod,
-    cropConfigId: crop.identifier,
-    totalBeds: 1,
-    bedIndex: 1,
-    groupId,
-    plantingId: groupId,
+    id,
+    configId: crop.identifier,
+    fieldStartDate: startDate,
+    startBed: null, // Unassigned
+    bedFeet: 50, // Default 1 bed
     lastModified: now,
   };
 }
@@ -649,20 +615,14 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         throw new Error('Plan not found');
       }
 
-      // Get the plan's target year (default to current year if not set)
-      const planYear = planData.plan.metadata.year ?? new Date().getFullYear();
-
-      // Ensure crops array exists
-      if (!planData.plan.crops) planData.plan.crops = [];
+      // Ensure plantings array exists
+      if (!planData.plan.plantings) planData.plan.plantings = [];
 
       for (const crop of cropsToAddNow) {
-        const newCrop = createTimelineCropFromConfig(crop, planYear);
-        planData.plan.crops.push(newCrop);
+        const newPlanting = createPlantingFromConfig(crop);
+        planData.plan.plantings.push(newPlanting);
       }
 
-      planData.plan.crops.sort((a, b) =>
-        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-      );
       planData.plan.metadata.lastModified = Date.now();
 
       await savePlanToLibrary(planData.plan);
@@ -731,22 +691,15 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         throw new Error('Plan not found');
       }
 
-      // Get the plan's target year (default to current year if not set)
-      const planYear = planData.plan.metadata.year ?? new Date().getFullYear();
+      // Ensure plantings array exists
+      if (!planData.plan.plantings) planData.plan.plantings = [];
 
-      // Ensure crops array exists
-      if (!planData.plan.crops) planData.plan.crops = [];
-
-      // Create the new crops
+      // Create the new plantings
       for (const crop of cropsToAdd) {
-        const newCrop = createTimelineCropFromConfig(crop, planYear);
-        planData.plan.crops.push(newCrop);
+        const newPlanting = createPlantingFromConfig(crop);
+        planData.plan.plantings.push(newPlanting);
       }
 
-      // Sort by start date
-      planData.plan.crops.sort((a, b) =>
-        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-      );
       planData.plan.metadata.lastModified = Date.now();
 
       // Save back to library

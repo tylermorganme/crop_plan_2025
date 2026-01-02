@@ -22,6 +22,7 @@ import {
 
 // Import plan types
 import type { Plan, Planting, Bed } from './plan-types';
+import { getBedGroup, getBedNumber, getBedLengthFromId } from './plan-types';
 
 // Re-export for consumers
 export type { CropCatalogEntry };
@@ -70,41 +71,7 @@ interface BedPlanData {
   bedGroups: Record<string, string[]>;
 }
 
-/** Bed size in feet - F and J rows are 20ft, all others are 50ft */
-const SHORT_ROWS = ['F', 'J'];
 const STANDARD_BED_FT = 50;
-const SHORT_BED_FT = 20;
-
-/**
- * Get the row letter from a bed name (e.g., "A5" -> "A", "GH1" -> "GH")
- */
-function getBedRow(bed: string): string {
-  let row = '';
-  for (const char of bed) {
-    if (char.match(/[A-Za-z]/)) {
-      row += char;
-    } else {
-      break;
-    }
-  }
-  return row;
-}
-
-/**
- * Get the bed number from a bed name (e.g., "A5" -> 5)
- */
-function getBedNumber(bed: string): number {
-  const match = bed.match(/\d+/);
-  return match ? parseInt(match[0], 10) : 0;
-}
-
-/**
- * Get bed size in feet for a given bed
- */
-function getBedSizeFt(bed: string): number {
-  const row = getBedRow(bed);
-  return SHORT_ROWS.includes(row) ? SHORT_BED_FT : STANDARD_BED_FT;
-}
 
 /**
  * Calculate how many beds a crop spans based on feetNeeded and the starting bed.
@@ -123,8 +90,8 @@ export function calculateRowSpan(feetNeeded: number, startBed: string, bedGroups
   feetAvailable: number;
 } {
   const groups = bedGroups || (bedPlanData as BedPlanData).bedGroups;
-  const row = getBedRow(startBed);
-  const bedSizeFt = getBedSizeFt(startBed);
+  const row = getBedGroup(startBed);
+  const bedSizeFt = getBedLengthFromId(startBed);
 
   // Default to one bed if no feet specified
   if (!feetNeeded || feetNeeded <= 0) {
@@ -162,7 +129,7 @@ export function calculateRowSpan(feetNeeded: number, startBed: string, bedGroups
 
   for (let i = startIndex; i < rowBeds.length && remainingFeet > 0; i++) {
     const bed = rowBeds[i];
-    const thisBedCapacity = getBedSizeFt(bed);
+    const thisBedCapacity = getBedLengthFromId(bed);
     const feetUsed = Math.min(remainingFeet, thisBedCapacity);
 
     spanBeds.push(bed);
@@ -446,7 +413,11 @@ export function expandPlantingsToTimelineCrops(
   const result: TimelineCrop[] = [];
 
   for (const planting of plantings) {
-    const config = lookupConfigFromCatalog(planting.configId, catalogArray);
+    // Try plan catalog first, then fall back to default catalog
+    let config = lookupConfigFromCatalog(planting.configId, catalogArray);
+    if (!config) {
+      config = lookupConfigFromCatalog(planting.configId, defaultCatalog);
+    }
     if (!config) {
       console.warn(`[expandPlantings] Config not found: ${planting.configId}`);
       continue;
@@ -469,32 +440,19 @@ export function expandPlantingsToTimelineCrops(
 }
 
 /**
- * Get TimelineCrop[] from a Plan, handling both legacy and new formats.
- *
- * - New format (v2): plan.plantings → expand to TimelineCrop[]
- * - Legacy format (v1): plan.crops → return as-is
- *
+ * Get TimelineCrop[] from a Plan by expanding plantings.
  * This is the single entry point for getting displayable crops from a plan.
  */
 export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
-  // New format: expand plantings
-  if (plan.plantings && plan.beds && plan.cropCatalog) {
-    return expandPlantingsToTimelineCrops(
-      plan.plantings,
-      plan.beds,
-      plan.cropCatalog
-    );
+  if (!plan.plantings || !plan.beds || !plan.cropCatalog) {
+    return [];
   }
 
-  // Legacy format: return crops as-is
-  if (plan.crops) {
-    return [...plan.crops].sort((a, b) =>
-      new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-    );
-  }
-
-  // Empty plan
-  return [];
+  return expandPlantingsToTimelineCrops(
+    plan.plantings,
+    plan.beds,
+    plan.cropCatalog
+  );
 }
 
 // Re-export collapseToPlantings for use in plan-store

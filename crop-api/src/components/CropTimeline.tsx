@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { getBedGroup, getBedNumber, getBedLengthFromId } from '@/lib/plan-types';
 
 // =============================================================================
 // Types
@@ -179,32 +180,6 @@ function parseDate(dateStr: string): Date {
   return new Date(dateStr);
 }
 
-/** Bed size in feet - F and J rows are 20ft, all others are 50ft */
-const SHORT_ROWS = ['F', 'J'];
-const STANDARD_BED_FT = 50;
-const SHORT_BED_FT = 20;
-
-function getBedRow(bed: string): string {
-  let row = '';
-  for (const char of bed) {
-    if (char.match(/[A-Za-z]/)) {
-      row += char;
-    } else {
-      break;
-    }
-  }
-  return row;
-}
-
-function getBedSizeFt(bed: string): number {
-  const row = getBedRow(bed);
-  return SHORT_ROWS.includes(row) ? SHORT_BED_FT : STANDARD_BED_FT;
-}
-
-function getBedNumber(bed: string): number {
-  const match = bed.match(/\d+/);
-  return match ? parseInt(match[0], 10) : 0;
-}
 
 /** Info about each bed in a span, including how much is used */
 interface BedSpanInfoLocal {
@@ -232,7 +207,7 @@ function calculateBedSpan(
   feetNeeded: number;
   feetAvailable: number;
 } {
-  const bedSize = getBedSizeFt(startBed);
+  const bedSize = getBedLengthFromId(startBed);
 
   // Default to one bed if no feet specified
   if (!groups || !feetNeeded || feetNeeded <= 0) {
@@ -245,7 +220,7 @@ function calculateBedSpan(
     };
   }
 
-  const row = getBedRow(startBed);
+  const row = getBedGroup(startBed);
 
   // Find the group containing this bed
   const group = groups.find(g => g.beds.includes(startBed));
@@ -261,7 +236,7 @@ function calculateBedSpan(
 
   // Get beds in this row, sorted numerically
   const rowBeds = group.beds
-    .filter(b => getBedRow(b) === row)
+    .filter(b => getBedGroup(b) === row)
     .sort((a, b) => getBedNumber(a) - getBedNumber(b));
 
   // Find beds starting from startBed
@@ -284,7 +259,7 @@ function calculateBedSpan(
 
   for (let i = startIndex; i < rowBeds.length && remainingFeet > 0; i++) {
     const bed = rowBeds[i];
-    const thisBedCapacity = getBedSizeFt(bed);
+    const thisBedCapacity = getBedLengthFromId(bed);
     const feetUsed = Math.min(remainingFeet, thisBedCapacity);
 
     spanBeds.push(bed);
@@ -1588,7 +1563,7 @@ export default function CropTimeline({
                         </span>
                       )}
                       <span className="truncate text-gray-900">{resource}</span>
-                      <span className="text-xs text-gray-600 ml-1">({getBedSizeFt(resource)}&apos;)</span>
+                      <span className="text-xs text-gray-600 ml-1">({getBedLengthFromId(resource)}&apos;)</span>
                     </div>
                   </td>
                   {/* Timeline lane - spans all month columns */}

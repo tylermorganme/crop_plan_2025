@@ -110,7 +110,9 @@ export function lookupConfigFromCatalog(
   cropIdentifier: string,
   catalog: CropCatalogEntry[]
 ): PlantingConfigLookup | null {
-  const entry = catalog.find(c => c.identifier === cropIdentifier);
+  // Trim both to handle trailing whitespace in legacy data
+  const trimmedId = cropIdentifier.trim();
+  const entry = catalog.find(c => c.identifier.trim() === trimmedId);
   if (!entry) return null;
 
   // Calculate derived fields from the minimal crop config

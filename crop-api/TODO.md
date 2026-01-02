@@ -22,16 +22,27 @@ npx jscpd src/lib --min-lines 10 --threshold 3
 ```
 Fails if duplication exceeds 3%.
 
-## State Migration (Step 2 - DONE)
+## State Migration (COMPLETE)
 
 See `.claude/plans/state-migration.md` for full plan.
 
+### Step 2 ✅
 - [x] Make `beds` required (build from template on create)
 - [x] Make `cropCatalog` required (copy from stock on create)
 - [x] Undo/redo stores full `Plan` snapshots (not `TimelineCrop[][]`)
 - [x] Add `validatePlan()` call on load/save
 
-### Step 3: Store `Planting[]` instead of `TimelineCrop[]`
-- [ ] Implement `collapseToPlantings()` function
-- [ ] Update timeline-data.ts to expand Planting[] → TimelineCrop[] for display
-- [ ] Migrate existing plans on load
+### Step 3 ✅
+- [x] `collapseToPlantings()` in slim-planting.ts
+- [x] `expandPlantingsToTimelineCrops()` in timeline-data.ts
+- [x] Migrate existing plans on load (loadPlanById)
+- [x] All mutations work with plantings[]
+
+### Step 4 ✅
+- [x] Delete `lib/types/entities.ts` (and dead code: dtm-conversion.ts, normalize.ts)
+- [x] Centralize `getBedLengthFromId` (removed duplicates from timeline-data, CropTimeline)
+- [x] Clean up re-exports
+
+### Future cleanup
+- [ ] Remove `crops` field from Plan type after all old plans are migrated
+- [ ] Delete `crop-calculations.ts` (use `entities/crop-config.ts` as single source)

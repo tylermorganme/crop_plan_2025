@@ -11,7 +11,7 @@ import {
   migrateOldStorageFormat,
   type PlanSummary,
 } from '@/lib/plan-store';
-import { getTimelineCrops, getResources } from '@/lib/timeline-data';
+import { getTimelineCrops, collapseToPlantings } from '@/lib/timeline-data';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -70,9 +70,9 @@ export default function PlansPage() {
 
   const handleCreateFromTemplate = useCallback(async () => {
     const timelineCrops = getTimelineCrops();
-    const { resources, groups } = getResources();
+    const plantings = collapseToPlantings(timelineCrops);
     const defaultYear = getDefaultYear();
-    await createNewPlan(`Crop Plan ${defaultYear}`, timelineCrops, resources, groups);
+    await createNewPlan(`Crop Plan ${defaultYear}`, plantings);
 
     // Get the newly created plan ID
     const newPlan = usePlanStore.getState().currentPlan;
@@ -86,10 +86,9 @@ export default function PlansPage() {
   }, [createNewPlan, router, getDefaultYear]);
 
   const handleCreateBlank = useCallback(async () => {
-    const { resources, groups } = getResources();
     const defaultYear = getDefaultYear();
-    // Create with empty crops array
-    await createNewPlan(`Crop Plan ${defaultYear}`, [], resources, groups);
+    // Create with empty plantings
+    await createNewPlan(`Crop Plan ${defaultYear}`);
 
     // Get the newly created plan ID
     const newPlan = usePlanStore.getState().currentPlan;

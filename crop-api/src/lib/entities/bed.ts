@@ -156,3 +156,12 @@ export function getBedLength(beds: Record<string, Bed>, bedId: string): number {
   }
   return bed.lengthFt;
 }
+
+/**
+ * Get bed length from just a bed ID string, using ROW_LENGTHS lookup.
+ * Use this when you don't have access to the full beds map.
+ */
+export function getBedLengthFromId(bedId: string): number {
+  const group = getBedGroup(bedId);
+  return ROW_LENGTHS[group] ?? DEFAULT_BED_LENGTH;
+}

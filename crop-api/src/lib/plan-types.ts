@@ -36,6 +36,7 @@ export {
   getBedGroup,
   getBedNumber,
   getBedLength,
+  getBedLengthFromId,
   createBedsFromTemplate,
   deriveResources,
   deriveGroups,
@@ -92,7 +93,7 @@ export interface PlanActions {
   // Plan lifecycle
   loadPlan: (plan: Plan) => void;
   loadPlanById: (planId: string) => void;
-  createNewPlan: (name: string, crops: TimelineCrop[], resources: string[], groups: import('./entities/bed').ResourceGroup[]) => void;
+  createNewPlan: (name: string, plantings?: import('./entities/planting').Planting[]) => void;
   renamePlan: (newName: string) => void;
   resetPlan: () => void;
 

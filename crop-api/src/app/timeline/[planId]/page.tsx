@@ -9,7 +9,8 @@ import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal'
 import CropConfigEditor from '@/components/CropConfigEditor';
 import { type CropConfig } from '@/lib/crop-calculations';
 import { useCrossTabSync } from '@/hooks/useCrossTabSync';
-import { getTimelineCrops, getResources, calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { getTimelineCrops, calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { getResources, getGroups } from '@/lib/plan-types';
 import {
   usePlanStore,
   useUndoRedo,
@@ -194,17 +195,17 @@ export default function TimelinePlanPage() {
     updateCropDates(groupId, startDate, endDate);
   }, [updateCropDates]);
 
-  const duplicateCrop = usePlanStore((state) => state.duplicateCrop);
+  const duplicatePlanting = usePlanStore((state) => state.duplicatePlanting);
   const deleteCrop = usePlanStore((state) => state.deleteCrop);
 
   const handleDuplicateCrop = useCallback(async (groupId: string) => {
     try {
-      await duplicateCrop(groupId);
+      await duplicatePlanting(groupId);
       setToast({ message: 'Planting duplicated - find it in Unassigned', type: 'success' });
     } catch (e) {
       setToast({ message: `Failed to duplicate: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
     }
-  }, [duplicateCrop]);
+  }, [duplicatePlanting]);
 
   const handleDeleteCrop = useCallback(async (groupIds: string[]) => {
     try {
@@ -219,28 +220,23 @@ export default function TimelinePlanPage() {
   }, [deleteCrop]);
 
   const handleEditCropConfig = useCallback((plantingId: string) => {
-    const crops = currentPlan?.crops ?? [];
-    const timelineCrop = crops.find(c => c.plantingId === plantingId || c.groupId === plantingId);
+    // Find the planting to get the configId
+    const planting = currentPlan?.plantings?.find(p => p.id === plantingId);
 
-    if (!timelineCrop) {
-      setToast({ message: `Crop not found: ${plantingId}`, type: 'error' });
+    if (!planting) {
+      setToast({ message: `Planting not found: ${plantingId}`, type: 'error' });
       return;
     }
 
-    if (!timelineCrop.cropConfigId) {
-      setToast({ message: `Crop missing config reference: ${plantingId}`, type: 'error' });
-      return;
-    }
-
-    const crop = getCropByIdentifier(timelineCrop.cropConfigId);
+    const crop = getCropByIdentifier(planting.configId);
     if (!crop) {
-      setToast({ message: `Config not found: ${timelineCrop.cropConfigId}`, type: 'error' });
+      setToast({ message: `Config not found: ${planting.configId}`, type: 'error' });
       return;
     }
 
     setEditingCrop(crop);
     setConfigEditorOpen(true);
-  }, [currentPlan?.crops, getCropByIdentifier]);
+  }, [currentPlan?.plantings, getCropByIdentifier]);
 
   const handleSaveCropConfig = useCallback(async (updated: CropConfig) => {
     try {
@@ -555,8 +551,8 @@ export default function TimelinePlanPage() {
       <div className="flex-1 min-h-0">
         <CropTimeline
           crops={getTimelineCropsFromPlan(currentPlan)}
-          resources={currentPlan.resources ?? []}
-          groups={currentPlan.groups ?? []}
+          resources={getResources(currentPlan)}
+          groups={getGroups(currentPlan)}
           onCropMove={handleCropMove}
           onCropDateChange={handleDateChange}
           onDuplicateCrop={handleDuplicateCrop}

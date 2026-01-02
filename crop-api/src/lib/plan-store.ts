@@ -15,9 +15,6 @@ import type {
   PlanMetadata,
   PlanState,
   PlanActions,
-  PlanStore,
-  TimelineCrop,
-  ResourceGroup,
   PlanChange,
   BedSpanInfo,
   CropPlanFile,
@@ -25,6 +22,8 @@ import type {
   Checkpoint,
   HistoryEntry,
   Bed,
+  Planting,
+  TimelineCrop,
 } from './plan-types';
 import {
   CURRENT_SCHEMA_VERSION,
@@ -34,7 +33,7 @@ import {
   createBedsFromTemplate,
 } from './plan-types';
 import { storage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
-import { recalculateCropsForConfig, collapseToPlantings } from './slim-planting';
+import { collapseToPlantings } from './slim-planting';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
 import type { CropConfig } from './crop-calculations';
@@ -43,30 +42,6 @@ import type { CropConfig } from './crop-calculations';
 export type { PlanSummary, PlanSnapshot, PlanData };
 
 const MAX_HISTORY_SIZE = 50;
-const SNAPSHOT_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
-
-/**
- * Helper to get crops from a plan safely.
- * During transitional period, plans may have crops (legacy) or plantings (new).
- * Returns crops array, defaulting to empty array if not present.
- */
-function getPlanCrops(plan: Plan | null): TimelineCrop[] {
-  return plan?.crops ?? [];
-}
-
-/**
- * Helper to get resources from a plan safely.
- */
-function getPlanResources(plan: Plan | null): string[] {
-  return plan?.resources ?? [];
-}
-
-/**
- * Helper to get groups from a plan safely.
- */
-function getPlanGroups(plan: Plan | null): ResourceGroup[] {
-  return plan?.groups ?? [];
-}
 
 /**
  * Deep copy a plan for undo stack.
@@ -186,100 +161,59 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
 
   /**
    * Shift a date string by the specified amount.
-   * Handles ISO date strings (e.g., 2025-01-26T00:00:00).
    */
   function shiftDate(dateStr: string): string {
     if (!options.shiftDates || options.shiftAmount === 0) {
       return dateStr;
     }
 
-    // Parse the ISO date string
     const date = parseISO(dateStr);
-
     if (!isValid(date)) {
       console.warn('[shiftDate] Invalid date:', dateStr);
       return dateStr;
     }
 
-    // Apply the shift
     const shifted = options.shiftUnit === 'years'
       ? addYears(date, options.shiftAmount)
       : addMonths(date, options.shiftAmount);
 
-    // Return in same format as input (with time component if present)
     if (dateStr.includes('T')) {
       return format(shifted, "yyyy-MM-dd'T'HH:mm:ss");
     }
     return format(shifted, 'yyyy-MM-dd');
   }
 
-  // Deep clone and transform crops
-  const newCrops: TimelineCrop[] = getPlanCrops(state.currentPlan).map((crop) => {
-    const newCrop: TimelineCrop = {
-      ...crop,
-      id: `${crop.groupId}_${newId.slice(-6)}`, // New unique ID
-      startDate: shiftDate(crop.startDate),
-      endDate: shiftDate(crop.endDate),
-      harvestStartDate: crop.harvestStartDate ? shiftDate(crop.harvestStartDate) : undefined,
-      lastModified: now,
-    };
-
-    // Unassign all crops if requested
-    if (options.unassignAll) {
-      newCrop.resource = '';
-      newCrop.totalBeds = 1;
-      newCrop.bedIndex = 1;
-      newCrop.feetUsed = undefined;
-      newCrop.bedCapacityFt = undefined;
-    }
-
-    return newCrop;
-  });
-
-  // If unassigning, collapse each group to a single entry
-  let finalCrops = newCrops;
-  if (options.unassignAll) {
-    const groupMap = new Map<string, TimelineCrop>();
-    for (const crop of newCrops) {
-      if (!groupMap.has(crop.groupId)) {
-        groupMap.set(crop.groupId, {
-          ...crop,
-          id: `${crop.groupId}_unassigned`,
-        });
-      }
-    }
-    finalCrops = Array.from(groupMap.values());
-  }
+  // Deep clone and transform plantings
+  const sourcePlantings = state.currentPlan.plantings ?? [];
+  const newPlantings: Planting[] = sourcePlantings.map((p) => ({
+    ...p,
+    id: generatePlantingId(),
+    fieldStartDate: shiftDate(p.fieldStartDate),
+    startBed: options.unassignAll ? null : p.startBed,
+    lastModified: now,
+  }));
 
   // Calculate the new plan year based on shift
   let newYear = state.currentPlan.metadata.year ?? new Date().getFullYear();
   if (options.shiftAmount !== 0 && options.shiftUnit === 'years') {
     newYear += options.shiftAmount;
   } else if (options.shiftAmount !== 0 && options.shiftUnit === 'months') {
-    // If shifting by months, calculate the new year based on month shift
-    const currentMonth = new Date().getMonth(); // 0-indexed
+    const currentMonth = new Date().getMonth();
     const totalMonths = currentMonth + options.shiftAmount;
     newYear += Math.floor(totalMonths / 12);
   }
 
-  // Ensure unique name
   const uniqueName = await getUniquePlanName(options.newName);
 
-  // Copy beds from source plan or create from template
-  let beds: Record<string, Bed>;
-  if (state.currentPlan.beds) {
-    beds = JSON.parse(JSON.stringify(state.currentPlan.beds));
-  } else {
-    const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
-    beds = createBedsFromTemplate(bedGroups);
-  }
+  // Copy beds and catalog
+  const beds = state.currentPlan.beds
+    ? JSON.parse(JSON.stringify(state.currentPlan.beds))
+    : createBedsFromTemplate((bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups);
 
-  // Copy cropCatalog from source plan
   const cropCatalog = state.currentPlan.cropCatalog
     ? JSON.parse(JSON.stringify(state.currentPlan.cropCatalog))
     : {};
 
-  // Create new plan with lineage tracking
   const newPlan: Plan = {
     id: newId,
     schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -293,18 +227,12 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
       parentPlanId: state.currentPlan.id,
       parentVersion: state.currentPlan.metadata.version,
     },
-    crops: finalCrops,
-    resources: [...getPlanResources(state.currentPlan)],
-    groups: getPlanGroups(state.currentPlan).map((g) => ({
-      name: g.name,
-      beds: [...g.beds],
-    })),
+    plantings: newPlantings,
     beds,
     cropCatalog,
     changeLog: [],
   };
 
-  // Validate before saving
   try {
     validatePlan(newPlan);
   } catch (e) {
@@ -563,12 +491,12 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   // Async versions of actions that persist
   loadPlanById: (planId: string) => Promise<void>;
   renamePlan: (newName: string) => Promise<void>;
-  createNewPlan: (name: string, crops: TimelineCrop[], resources: string[], groups: ResourceGroup[]) => Promise<void>;
+  createNewPlan: (name: string, plantings?: Planting[]) => Promise<void>;
   moveCrop: (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => Promise<void>;
   updateCropDates: (groupId: string, startDate: string, endDate: string) => Promise<void>;
   deleteCrop: (groupId: string) => Promise<void>;
-  addCrop: (crop: TimelineCrop) => Promise<void>;
-  duplicateCrop: (groupId: string) => Promise<string>;
+  addPlanting: (planting: Planting) => Promise<void>;
+  duplicatePlanting: (plantingId: string) => Promise<string>;
   recalculateCrops: (configIdentifier: string, catalog: import('./crop-calculations').CropConfig[]) => Promise<number>;
   /** Update a crop config in the plan's catalog and recalculate affected crops */
   updateCropConfig: (config: import('./crop-calculations').CropConfig) => Promise<number>;
@@ -623,18 +551,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`Plan not found: ${planId}`);
       }
 
-      // Migrate legacy plans: crops[] → plantings[]
-      if (data.plan.crops && !data.plan.plantings) {
-        console.log('[loadPlanById] Migrating legacy plan to plantings format');
-        data.plan.plantings = collapseToPlantings(data.plan.crops);
-        data.plan.schemaVersion = CURRENT_SCHEMA_VERSION;
-        // Keep crops for backward compat during transition (will be removed later)
-      }
-
-      // Ensure beds exist (may be missing in old plans)
+      // Ensure beds exist
       if (!data.plan.beds) {
         const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
         data.plan.beds = createBedsFromTemplate(bedGroups);
+      }
+
+      // Migrate old crops[] to plantings[] if needed
+      const legacyCrops = (data.plan as { crops?: TimelineCrop[] }).crops;
+      if ((!data.plan.plantings || data.plan.plantings.length === 0) && legacyCrops && legacyCrops.length > 0) {
+        console.log('[loadPlanById] Migrating crops[] to plantings[]');
+        data.plan.plantings = collapseToPlantings(legacyCrops);
       }
 
       // Validate plan on load
@@ -646,9 +573,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       // Initialize ID counter based on existing plantings to avoid collisions
-      const existingIds = data.plan.plantings
-        ? data.plan.plantings.map(p => p.id)
-        : getPlanCrops(data.plan).map(c => c.groupId);
+      const existingIds = (data.plan.plantings ?? []).map(p => p.id);
       initializeIdCounter(existingIds);
 
       set((state) => {
@@ -689,12 +614,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
-    createNewPlan: async (
-      name: string,
-      crops: TimelineCrop[],
-      resources: string[],
-      groups: ResourceGroup[]
-    ) => {
+    createNewPlan: async (name: string, plantings?: Planting[]) => {
       const now = Date.now();
       const id = generateId();
       // Default to closest April: if May or later, use next year; otherwise current year
@@ -726,9 +646,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           lastModified: now,
           year: defaultYear,
         },
-        crops,
-        resources,
-        groups,
+        plantings: plantings ?? [],
         beds,
         cropCatalog,
         changeLog: [],
@@ -777,60 +695,30 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     // Crop mutations - all push to undo stack and save
     moveCrop: async (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => {
       set((state) => {
-        if (!state.currentPlan) return;
+        if (!state.currentPlan?.plantings) return;
 
         // Snapshot for undo before any mutations
         snapshotForUndo(state);
 
-        // Find all crops with this groupId
-        const currentCrops = state.currentPlan.crops ?? [];
-        const groupCrops = currentCrops.filter((c) => c.groupId === groupId);
-        const otherCrops = currentCrops.filter((c) => c.groupId !== groupId);
-
-        if (groupCrops.length === 0) return;
-
-        const template = groupCrops[0];
-        const feetNeeded = template.feetNeeded || 50;
+        // Find the planting (groupId = planting.id in new format)
+        const planting = state.currentPlan.plantings.find(p => p.id === groupId);
+        if (!planting) return;
 
         const now = Date.now();
 
         if (newResource === '' || !bedSpanInfo || bedSpanInfo.length === 0) {
-          // Moving to Unassigned - collapse to single entry
-          const unassignedCrop: TimelineCrop = {
-            ...template,
-            id: `${template.groupId}_unassigned`,
-            resource: '',
-            totalBeds: 1,
-            bedIndex: 1,
-            feetNeeded: feetNeeded,
-            feetUsed: undefined,
-            bedCapacityFt: undefined,
-            lastModified: now,
-          };
-          state.currentPlan.crops = [...otherCrops, unassignedCrop];
+          // Moving to Unassigned
+          planting.startBed = null;
+          // Keep existing bedFeet
         } else {
-          // Moving to specific beds - expand to multiple entries with proper feetUsed
-          const newGroupCrops: TimelineCrop[] = bedSpanInfo.map((info, index) => ({
-            ...template,
-            id: `${template.groupId}_bed${index}`,
-            resource: info.bed,
-            totalBeds: bedSpanInfo.length,
-            bedIndex: index + 1,
-            feetNeeded: feetNeeded,
-            feetUsed: info.feetUsed,
-            bedCapacityFt: info.bedCapacityFt,
-            lastModified: now,
-          }));
-          state.currentPlan.crops = [...otherCrops, ...newGroupCrops];
+          // Moving to specific bed - update startBed and bedFeet
+          planting.startBed = newResource;
+          planting.bedFeet = bedSpanInfo.reduce((sum, b) => sum + b.feetUsed, 0);
         }
-
-        // Sort by start date
-        state.currentPlan.crops?.sort((a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-        );
+        planting.lastModified = now;
 
         // Update metadata
-        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.metadata.lastModified = now;
         state.currentPlan.changeLog.push(
           createChangeEntry('move', `Moved ${groupId} to ${newResource || 'unassigned'}`, [groupId])
         );
@@ -859,23 +747,22 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
     updateCropDates: async (groupId: string, startDate: string, endDate: string) => {
       set((state) => {
-        if (!state.currentPlan) return;
+        if (!state.currentPlan?.plantings) return;
 
         // Snapshot for undo before any mutations
         snapshotForUndo(state);
 
-        // Update all crops with this groupId
-        const currentCrops = state.currentPlan.crops ?? [];
-        const now = Date.now();
-        currentCrops
-          .filter((c) => c.groupId === groupId)
-          .forEach((crop) => {
-            crop.startDate = startDate;
-            crop.endDate = endDate;
-            crop.lastModified = now;
-          });
+        // Find the planting
+        const planting = state.currentPlan.plantings.find(p => p.id === groupId);
+        if (!planting) return;
 
-        state.currentPlan.metadata.lastModified = Date.now();
+        const now = Date.now();
+        // Only fieldStartDate is stored; endDate is computed from config
+        // TODO: If user drags endDate, may need to store override
+        planting.fieldStartDate = startDate;
+        planting.lastModified = now;
+
+        state.currentPlan.metadata.lastModified = now;
         state.currentPlan.changeLog.push(
           createChangeEntry('date_change', `Updated dates for ${groupId}`, [groupId])
         );
@@ -904,15 +791,14 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
     deleteCrop: async (groupId: string) => {
       set((state) => {
-        if (!state.currentPlan) return;
+        if (!state.currentPlan?.plantings) return;
 
         // Snapshot for undo before any mutations
         snapshotForUndo(state);
 
-        // Remove all crops with this groupId
-        const currentCrops = state.currentPlan.crops ?? [];
-        state.currentPlan.crops = currentCrops.filter(
-          (c) => c.groupId !== groupId
+        // Remove the planting
+        state.currentPlan.plantings = state.currentPlan.plantings.filter(
+          p => p.id !== groupId
         );
 
         state.currentPlan.metadata.lastModified = Date.now();
@@ -942,30 +828,24 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
-    addCrop: async (crop: TimelineCrop) => {
+    addPlanting: async (planting: Planting) => {
       set((state) => {
-        if (!state.currentPlan) return;
+        if (!state.currentPlan?.plantings) return;
 
         // Snapshot for undo before any mutations
         snapshotForUndo(state);
 
-        // Add the new crop with timestamp
+        // Add the new planting
         const now = Date.now();
-        const newCrop: TimelineCrop = {
-          ...crop,
+        const newPlanting: Planting = {
+          ...planting,
           lastModified: now,
         };
-        if (!state.currentPlan.crops) state.currentPlan.crops = [];
-        state.currentPlan.crops.push(newCrop);
-
-        // Sort by start date
-        state.currentPlan.crops.sort((a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-        );
+        state.currentPlan.plantings.push(newPlanting);
 
         state.currentPlan.metadata.lastModified = now;
         state.currentPlan.changeLog.push(
-          createChangeEntry('create', `Added ${crop.name}`, [crop.groupId])
+          createChangeEntry('create', `Added planting ${planting.id}`, [planting.id])
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -990,107 +870,73 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
-    duplicateCrop: async (groupId: string) => {
+    duplicatePlanting: async (plantingId: string) => {
       const state = get();
-      if (!state.currentPlan) {
+      if (!state.currentPlan?.plantings) {
         throw new Error('No plan loaded');
       }
 
-      // Find all crops with this groupId
-      const groupCrops = getPlanCrops(state.currentPlan).filter(c => c.groupId === groupId);
-      if (groupCrops.length === 0) {
-        throw new Error(`No crop found with groupId: ${groupId}`);
+      // Find the planting
+      const original = state.currentPlan.plantings.find(p => p.id === plantingId);
+      if (!original) {
+        throw new Error(`No planting found with id: ${plantingId}`);
       }
 
-      // Generate a new short unique ID
-      const newGroupId = generatePlantingId();
+      // Generate a new ID
+      const newId = generatePlantingId();
       const now = Date.now();
 
-      // Create a single unassigned copy based on the first crop in the group
-      const template = groupCrops[0];
-      const newCrop: TimelineCrop = {
-        ...template,
-        id: `${newGroupId}_unassigned`,
-        groupId: newGroupId,
-        plantingId: newGroupId,
-        resource: '', // Unassigned
-        totalBeds: 1,
-        bedIndex: 1,
-        feetUsed: undefined,
-        bedCapacityFt: undefined,
+      // Create unassigned copy
+      const newPlanting: Planting = {
+        ...original,
+        id: newId,
+        startBed: null, // Unassigned
         lastModified: now,
       };
 
-      // Use the addCrop action to add it
-      await get().addCrop(newCrop);
+      await get().addPlanting(newPlanting);
 
-      return newGroupId;
+      return newId;
     },
 
-    recalculateCrops: async (configIdentifier: string, catalog: import('./crop-calculations').CropConfig[]) => {
+    recalculateCrops: async (configIdentifier: string) => {
       const state = get();
-      if (!state.currentPlan) {
+      if (!state.currentPlan?.plantings) {
         throw new Error('No plan loaded');
       }
 
-      const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
-      const currentCrops = getPlanCrops(state.currentPlan);
-
-      // Count how many plantings will be affected
-      const affectedGroupIds = new Set<string>();
-      for (const crop of currentCrops) {
-        if (crop.cropConfigId === configIdentifier) {
-          affectedGroupIds.add(crop.groupId);
-        }
+      // Count affected plantings
+      const affected = state.currentPlan.plantings.filter(p => p.configId === configIdentifier);
+      if (affected.length === 0) {
+        return 0;
       }
 
-      if (affectedGroupIds.size === 0) {
-        return 0; // No crops to recalculate
-      }
-
-      // Recalculate crops
-      const recalculated = recalculateCropsForConfig(
-        currentCrops,
-        configIdentifier,
-        catalog,
-        bedGroups
-      );
-
+      // With plantings model, no stored data needs updating - display is computed on-demand
+      // Just touch lastModified to trigger re-render
       set((storeState) => {
         if (!storeState.currentPlan) return;
 
-        // Snapshot for undo
         snapshotForUndo(storeState);
-
-        // Update crops
-        storeState.currentPlan.crops = recalculated;
         storeState.currentPlan.metadata.lastModified = Date.now();
         storeState.currentPlan.changeLog.push(
-          createChangeEntry('batch', `Recalculated ${affectedGroupIds.size} planting(s) for config change`, [...affectedGroupIds])
+          createChangeEntry('batch', `Config changed: ${configIdentifier}`, affected.map(p => p.id))
         );
         storeState.isDirty = true;
         storeState.isSaving = true;
         storeState.saveError = null;
       });
 
-      // Save to library
       const currentState = get();
       if (currentState.currentPlan) {
         try {
           await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
+          set((s) => { s.isSaving = false; s.isDirty = false; });
         } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
+          set((s) => { s.isSaving = false; s.saveError = e instanceof Error ? e.message : 'Failed to save'; });
         }
       }
 
-      return affectedGroupIds.size;
+      return affected.length;
     },
 
     updateCropConfig: async (config: CropConfig) => {
@@ -1103,41 +949,22 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error('Plan has no crop catalog');
       }
 
-      const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
-
-      // Build updated catalog (copy, then update)
-      const updatedCatalog = { ...state.currentPlan.cropCatalog };
-      updatedCatalog[config.identifier] = JSON.parse(JSON.stringify(config));
-
-      // Build catalog array for recalculation
-      const catalogArray = Object.values(updatedCatalog);
-      const currentCrops = getPlanCrops(state.currentPlan);
-
-      // Count affected crops
-      const affectedGroupIds = new Set<string>();
-      for (const crop of currentCrops) {
-        if (crop.cropConfigId === config.identifier) {
-          affectedGroupIds.add(crop.groupId);
-        }
-      }
-
-      // Recalculate affected crops
-      const recalculated = affectedGroupIds.size > 0
-        ? recalculateCropsForConfig(currentCrops, config.identifier, catalogArray, bedGroups)
-        : currentCrops;
+      // Count affected plantings
+      const affectedPlantingIds = (state.currentPlan.plantings ?? [])
+        .filter(p => p.configId === config.identifier)
+        .map(p => p.id);
 
       set((storeState) => {
-        if (!storeState.currentPlan) return;
+        if (!storeState.currentPlan?.cropCatalog) return;
 
         // Snapshot for undo
         snapshotForUndo(storeState);
 
-        // Update catalog and crops
-        storeState.currentPlan.cropCatalog = updatedCatalog;
-        storeState.currentPlan.crops = recalculated;
+        // Update catalog - display will recompute automatically
+        storeState.currentPlan.cropCatalog[config.identifier] = JSON.parse(JSON.stringify(config));
         storeState.currentPlan.metadata.lastModified = Date.now();
         storeState.currentPlan.changeLog.push(
-          createChangeEntry('batch', `Updated config "${config.identifier}"`, [...affectedGroupIds])
+          createChangeEntry('batch', `Updated config "${config.identifier}"`, affectedPlantingIds)
         );
         storeState.isDirty = true;
         storeState.isSaving = true;
@@ -1161,7 +988,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         }
       }
 
-      return affectedGroupIds.size;
+      return affectedPlantingIds.length;
     },
 
     // History - now stores full Plan snapshots
@@ -1264,13 +1091,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 // ============================================
 // Helper Hooks
 // ============================================
-
-/**
- * Helper hook to get just the crops array
- */
-export function usePlanCrops(): TimelineCrop[] {
-  return usePlanStore((state) => state.currentPlan?.crops ?? []);
-}
 
 /**
  * Helper hook to get plan metadata
