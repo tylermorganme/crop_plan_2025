@@ -15,8 +15,13 @@ import {
   computeTimelineCrop,
   extractSlimPlanting,
   lookupConfigFromCatalog,
+  collapseToPlantings,
+  type SlimPlanting,
   type CropCatalogEntry,
 } from './slim-planting';
+
+// Import plan types
+import type { Plan, Planting, Bed } from './plan-types';
 
 // Re-export for consumers
 export type { CropCatalogEntry };
@@ -382,3 +387,115 @@ export function getTimelineStats() {
     categories: Object.fromEntries(categories),
   };
 }
+
+// =============================================================================
+// PLAN-BASED TIMELINE (Step 3 migration)
+// =============================================================================
+
+/**
+ * Convert beds map to bedGroups format expected by calculateRowSpan.
+ */
+function deriveBedGroups(beds: Record<string, Bed>): Record<string, string[]> {
+  const groups: Record<string, string[]> = {};
+  for (const bed of Object.values(beds)) {
+    if (!groups[bed.group]) {
+      groups[bed.group] = [];
+    }
+    groups[bed.group].push(bed.id);
+  }
+  // Sort beds within each group numerically
+  for (const group of Object.keys(groups)) {
+    groups[group].sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.replace(/\D/g, '')) || 0;
+      return numA - numB;
+    });
+  }
+  return groups;
+}
+
+/**
+ * Convert Planting entity to SlimPlanting for computeTimelineCrop.
+ */
+function plantingToSlim(planting: Planting): SlimPlanting {
+  return {
+    id: planting.id,
+    cropConfigId: planting.configId,
+    bed: planting.startBed,
+    bedsCount: planting.bedFeet / STANDARD_BED_FT,
+    fixedFieldStartDate: planting.fieldStartDate,
+    followsCrop: planting.followsPlantingId,
+    followOffset: planting.followOffset,
+    overrides: planting.overrides,
+    actuals: planting.actuals,
+  };
+}
+
+/**
+ * Expand Planting[] to TimelineCrop[] for display.
+ * Uses the existing computeTimelineCrop function.
+ */
+export function expandPlantingsToTimelineCrops(
+  plantings: Planting[],
+  beds: Record<string, Bed>,
+  catalog: Record<string, CropCatalogEntry>
+): TimelineCrop[] {
+  const bedGroups = deriveBedGroups(beds);
+  const catalogArray = Object.values(catalog);
+
+  const result: TimelineCrop[] = [];
+
+  for (const planting of plantings) {
+    const config = lookupConfigFromCatalog(planting.configId, catalogArray);
+    if (!config) {
+      console.warn(`[expandPlantings] Config not found: ${planting.configId}`);
+      continue;
+    }
+
+    const slim = plantingToSlim(planting);
+    const crops = computeTimelineCrop(slim, config, bedGroups);
+
+    // Add lastModified from planting
+    for (const crop of crops) {
+      crop.lastModified = planting.lastModified;
+    }
+
+    result.push(...crops);
+  }
+
+  return result.sort((a, b) =>
+    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+  );
+}
+
+/**
+ * Get TimelineCrop[] from a Plan, handling both legacy and new formats.
+ *
+ * - New format (v2): plan.plantings → expand to TimelineCrop[]
+ * - Legacy format (v1): plan.crops → return as-is
+ *
+ * This is the single entry point for getting displayable crops from a plan.
+ */
+export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
+  // New format: expand plantings
+  if (plan.plantings && plan.beds && plan.cropCatalog) {
+    return expandPlantingsToTimelineCrops(
+      plan.plantings,
+      plan.beds,
+      plan.cropCatalog
+    );
+  }
+
+  // Legacy format: return crops as-is
+  if (plan.crops) {
+    return [...plan.crops].sort((a, b) =>
+      new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+    );
+  }
+
+  // Empty plan
+  return [];
+}
+
+// Re-export collapseToPlantings for use in plan-store
+export { collapseToPlantings };

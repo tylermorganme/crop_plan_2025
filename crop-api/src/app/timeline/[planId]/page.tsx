@@ -9,7 +9,7 @@ import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal'
 import CropConfigEditor from '@/components/CropConfigEditor';
 import { type CropConfig } from '@/lib/crop-calculations';
 import { useCrossTabSync } from '@/hooks/useCrossTabSync';
-import { getTimelineCrops, getResources, calculateRowSpan } from '@/lib/timeline-data';
+import { getTimelineCrops, getResources, calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import {
   usePlanStore,
   useUndoRedo,
@@ -554,7 +554,7 @@ export default function TimelinePlanPage() {
       {/* Timeline */}
       <div className="flex-1 min-h-0">
         <CropTimeline
-          crops={currentPlan.crops ?? []}
+          crops={getTimelineCropsFromPlan(currentPlan)}
           resources={currentPlan.resources ?? []}
           groups={currentPlan.groups ?? []}
           onCropMove={handleCropMove}

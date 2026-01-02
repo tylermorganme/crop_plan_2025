@@ -34,7 +34,7 @@ import {
   createBedsFromTemplate,
 } from './plan-types';
 import { storage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
-import { recalculateCropsForConfig } from './slim-planting';
+import { recalculateCropsForConfig, collapseToPlantings } from './slim-planting';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
 import type { CropConfig } from './crop-calculations';
@@ -623,6 +623,20 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`Plan not found: ${planId}`);
       }
 
+      // Migrate legacy plans: crops[] → plantings[]
+      if (data.plan.crops && !data.plan.plantings) {
+        console.log('[loadPlanById] Migrating legacy plan to plantings format');
+        data.plan.plantings = collapseToPlantings(data.plan.crops);
+        data.plan.schemaVersion = CURRENT_SCHEMA_VERSION;
+        // Keep crops for backward compat during transition (will be removed later)
+      }
+
+      // Ensure beds exist (may be missing in old plans)
+      if (!data.plan.beds) {
+        const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+        data.plan.beds = createBedsFromTemplate(bedGroups);
+      }
+
       // Validate plan on load
       try {
         validatePlan(data.plan);
@@ -632,7 +646,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       // Initialize ID counter based on existing plantings to avoid collisions
-      const existingIds = getPlanCrops(data.plan).map(c => c.groupId);
+      const existingIds = data.plan.plantings
+        ? data.plan.plantings.map(p => p.id)
+        : getPlanCrops(data.plan).map(c => c.groupId);
       initializeIdCounter(existingIds);
 
       set((state) => {

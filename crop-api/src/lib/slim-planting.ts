@@ -8,7 +8,7 @@
 import { format } from 'date-fns';
 import { calculateCropTiming, type CropTimingInputs } from './crop-timing-calculator';
 import { calculateRowSpan } from './timeline-data';
-import type { TimelineCrop, BedSpanInfo } from './plan-types';
+import type { TimelineCrop, BedSpanInfo, Planting } from './plan-types';
 import {
   calculateDaysInCells,
   calculateSTH,
@@ -430,4 +430,42 @@ export function extractConfigLookup(assignment: {
     harvestWindow,
     daysInCells: assignment.daysInCells ?? 0,
   };
+}
+
+/**
+ * Collapse TimelineCrop[] (one per bed) to Planting[] (one per decision).
+ * Used to migrate from legacy storage format to new slim format.
+ *
+ * @param crops - Array of TimelineCrop entries (multiple per planting)
+ * @returns Array of Planting entries (one per planting decision)
+ */
+export function collapseToPlantings(crops: TimelineCrop[]): Planting[] {
+  // Group crops by groupId (all beds of same planting share groupId)
+  const groups = new Map<string, TimelineCrop[]>();
+  for (const crop of crops) {
+    const list = groups.get(crop.groupId) || [];
+    list.push(crop);
+    groups.set(crop.groupId, list);
+  }
+
+  // Convert each group to a single Planting
+  return Array.from(groups.values()).map(beds => {
+    const first = beds[0];
+
+    // Find the entry with bedIndex=1 to get the starting bed
+    const startBedEntry = beds.find(b => b.bedIndex === 1);
+
+    // Sum feetUsed across all beds for total bedFeet
+    // Default to 50ft per bed if feetUsed not set
+    const totalFeet = beds.reduce((sum, b) => sum + (b.feetUsed || 50), 0);
+
+    return {
+      id: first.plantingId || first.groupId,
+      configId: first.cropConfigId,
+      fieldStartDate: first.startDate,
+      startBed: startBedEntry?.resource || null,
+      bedFeet: totalFeet,
+      lastModified: first.lastModified || Date.now(),
+    };
+  });
 }
