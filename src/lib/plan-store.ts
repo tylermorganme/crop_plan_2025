@@ -465,6 +465,7 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   deleteCrop: (groupId: string) => Promise<void>;
   addPlanting: (planting: Planting) => Promise<void>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes'>>) => Promise<void>;
   recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
   /** Update a crop config in the plan's catalog and recalculate affected crops */
   updateCropConfig: (config: import('./entities/crop-config').CropConfig) => Promise<number>;
@@ -875,6 +876,63 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       await get().addPlanting(newPlanting);
 
       return newId;
+    },
+
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes'>>) => {
+      set((state) => {
+        if (!state.currentPlan?.plantings) return;
+
+        // Find the planting
+        const planting = state.currentPlan.plantings.find(p => p.id === plantingId);
+        if (!planting) return;
+
+        // Snapshot for undo before any mutations
+        snapshotForUndo(state);
+
+        const now = Date.now();
+
+        // Apply updates
+        if (updates.bedFeet !== undefined) {
+          planting.bedFeet = updates.bedFeet;
+        }
+        if (updates.overrides !== undefined) {
+          // Merge overrides (shallow merge)
+          planting.overrides = {
+            ...planting.overrides,
+            ...updates.overrides,
+          };
+        }
+        if (updates.notes !== undefined) {
+          planting.notes = updates.notes || undefined; // Clear if empty string
+        }
+
+        planting.lastModified = now;
+
+        state.currentPlan.metadata.lastModified = now;
+        state.currentPlan.changeLog.push(
+          createChangeEntry('edit', `Updated planting ${plantingId}`, [plantingId])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => {
+            state.isSaving = false;
+            state.isDirty = false;
+          });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
     },
 
     recalculateCrops: async (configIdentifier: string) => {

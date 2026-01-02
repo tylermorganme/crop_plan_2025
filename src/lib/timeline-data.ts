@@ -426,9 +426,11 @@ export function expandPlantingsToTimelineCrops(
     const slim = plantingToSlim(planting);
     const crops = computeTimelineCrop(slim, config, bedGroups);
 
-    // Add lastModified from planting
+    // Add planting fields for inspector editing
     for (const crop of crops) {
       crop.lastModified = planting.lastModified;
+      crop.overrides = planting.overrides;
+      crop.notes = planting.notes;
     }
 
     result.push(...crops);

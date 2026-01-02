@@ -42,7 +42,7 @@ export interface PlanMetadata {
 export interface PlanChange {
   id: string;
   timestamp: number;
-  type: 'move' | 'date_change' | 'delete' | 'create' | 'batch';
+  type: 'move' | 'date_change' | 'delete' | 'create' | 'batch' | 'edit';
   description: string;
   /** Affected group IDs (legacy name, refers to planting/group IDs) */
   groupIds: string[];
@@ -73,6 +73,10 @@ export interface TimelineCrop {
   harvestStartDate?: string;
   plantingMethod?: 'DS' | 'TP' | 'PE';
   lastModified?: number;
+  /** Planting-level timing overrides (for editing in inspector) */
+  overrides?: import('./planting').PlantingOverrides;
+  /** User notes about this planting */
+  notes?: string;
 }
 
 /**

@@ -134,6 +134,52 @@ export function lookupConfigFromCatalog(
 }
 
 // =============================================================================
+// EFFECTIVE TIMING RESOLUTION
+// =============================================================================
+
+/**
+ * Effective timing values after applying overrides with sensible clamping.
+ * This is the single source of truth for resolved timing values.
+ */
+export interface EffectiveTiming {
+  /** Effective days to maturity (base + override, min 1) */
+  dtm: number;
+  /** Effective harvest window (base + override, min 0) */
+  harvestWindow: number;
+  /** Effective days in greenhouse (base + override, min 0) */
+  daysInCells: number;
+}
+
+/**
+ * Resolve effective timing values by coalescing overrides onto base config.
+ *
+ * Applies the pattern: planting overrides → base config → defaults
+ * Clamps values to sensible minimums to prevent invalid states.
+ *
+ * @param baseConfig - Config values from the catalog
+ * @param overrides - Planting-level adjustments (additive)
+ * @returns Resolved effective values with clamping applied
+ */
+export function resolveEffectiveTiming(
+  baseConfig: Pick<PlantingConfigLookup, 'dtm' | 'harvestWindow' | 'daysInCells'>,
+  overrides?: SlimPlanting['overrides']
+): EffectiveTiming {
+  const additionalDaysInField = overrides?.additionalDaysInField ?? 0;
+  const additionalDaysInCells = overrides?.additionalDaysInCells ?? 0;
+  const additionalDaysOfHarvest = overrides?.additionalDaysOfHarvest ?? 0;
+
+  return {
+    // DTM can go negative (harvest before field date) but clamp to at least 1 day
+    // to prevent zero-duration or time-traveling crops
+    dtm: Math.max(1, baseConfig.dtm + additionalDaysInField),
+    // Harvest window: 0 = single-day harvest (valid), can't be negative
+    harvestWindow: Math.max(0, baseConfig.harvestWindow + additionalDaysOfHarvest),
+    // Greenhouse time: 0 = direct seed (valid), can't be negative
+    daysInCells: Math.max(0, baseConfig.daysInCells + additionalDaysInCells),
+  };
+}
+
+// =============================================================================
 // COMPUTATION
 // =============================================================================
 
@@ -154,17 +200,19 @@ export function computeTimelineCrop(
   bedGroups: Record<string, string[]>,
   getFollowedCropEndDate?: (identifier: string) => Date | null
 ): TimelineCrop[] {
-  // Build timing inputs
+  // Resolve effective timing values with overrides and clamping
+  const effective = resolveEffectiveTiming(config, planting.overrides);
+
   const timingInputs: CropTimingInputs = {
-    dtm: config.dtm,
-    harvestWindow: config.harvestWindow,
-    daysInCells: config.daysInCells,
+    dtm: effective.dtm,
+    harvestWindow: effective.harvestWindow,
+    daysInCells: effective.daysInCells,
     fixedFieldStartDate: planting.fixedFieldStartDate
       ? new Date(planting.fixedFieldStartDate)
       : undefined,
     followsCrop: planting.followsCrop,
     followOffset: planting.followOffset ?? 0,
-    additionalDaysOfHarvest: planting.overrides?.additionalDaysOfHarvest ?? 0,
+    additionalDaysOfHarvest: 0, // Already applied via resolveEffectiveTiming
     actualGreenhouseDate: planting.actuals?.greenhouseDate
       ? new Date(planting.actuals.greenhouseDate)
       : undefined,

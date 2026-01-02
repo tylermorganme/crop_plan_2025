@@ -4,12 +4,19 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { getBedGroup, getBedNumber, getBedLengthFromId } from '@/lib/plan-types';
 import type { CropConfig } from '@/lib/entities/crop-config';
-import { calculateCropFields } from '@/lib/entities/crop-config';
+import { calculateCropFields, calculateDaysInCells, calculateSTH, calculateHarvestWindow } from '@/lib/entities/crop-config';
+import { resolveEffectiveTiming } from '@/lib/slim-planting';
 import AddToBedPanel from './AddToBedPanel';
 
 // =============================================================================
 // Types
 // =============================================================================
+
+interface PlantingOverrides {
+  additionalDaysOfHarvest?: number;
+  additionalDaysInField?: number;
+  additionalDaysInCells?: number;
+}
 
 interface TimelineCrop {
   id: string;
@@ -42,6 +49,10 @@ interface TimelineCrop {
   plantingMethod?: 'DS' | 'TP' | 'PE';
   /** Preview ghost - not a real crop, just for hover preview */
   isPreview?: boolean;
+  /** Planting-level timing overrides (for editing in inspector) */
+  overrides?: PlantingOverrides;
+  /** User notes about this planting */
+  notes?: string;
 }
 
 interface ResourceGroup {
@@ -67,6 +78,12 @@ interface CropTimelineProps {
   planYear?: number;
   /** Callback when user adds a planting from timeline */
   onAddPlanting?: (configId: string, fieldStartDate: string, bedId: string) => Promise<string | void>;
+  /** Callback when user updates planting fields (bedFeet, overrides, notes) */
+  onUpdatePlanting?: (plantingId: string, updates: {
+    bedFeet?: number;
+    overrides?: PlantingOverrides;
+    notes?: string;
+  }) => Promise<void>;
 }
 
 // =============================================================================
@@ -319,6 +336,7 @@ export default function CropTimeline({
   cropCatalog,
   planYear,
   onAddPlanting,
+  onUpdatePlanting,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -1940,6 +1958,29 @@ export default function CropTimeline({
               // Get all bed entries for this single group
               const groupCrops = selectedCropsData.filter(c => c.groupId === crop.groupId);
 
+              // Get base config for calculating effective values
+              const configId = crop.cropConfigId;
+              const baseConfig = configId && cropCatalog ? cropCatalog[configId] : undefined;
+              const baseValues = baseConfig ? {
+                dtm: calculateSTH(baseConfig, calculateDaysInCells(baseConfig)),
+                harvestWindow: calculateHarvestWindow(baseConfig),
+                daysInCells: calculateDaysInCells(baseConfig),
+              } : null;
+
+              // Calculate effective values (with overrides applied and clamped)
+              const effectiveValues = baseValues
+                ? resolveEffectiveTiming(baseValues, crop.overrides)
+                : null;
+
+              // Calculate minimum allowed adjustments (to not go below clamped minimums)
+              // DTM: effective min is 1, so adjustment min is 1 - baseDTM
+              // Others: effective min is 0, so adjustment min is -baseValue
+              const minAdjustments = baseValues ? {
+                dtm: 1 - baseValues.dtm,
+                harvestWindow: -baseValues.harvestWindow,
+                daysInCells: -baseValues.daysInCells,
+              } : { dtm: -999, harvestWindow: -999, daysInCells: -999 };
+
               return (
                 <div className="space-y-4">
                   {/* Crop Name with Color */}
@@ -1994,10 +2035,31 @@ export default function CropTimeline({
                     )}
                   </div>
 
-                  {/* Feet Needed */}
+                  {/* Bed Feet - Editable */}
                   <div>
-                    <div className="text-xs text-gray-600 mb-1">Feet Needed</div>
-                    <div className="text-sm text-gray-900">{crop.feetNeeded || 50}&apos;</div>
+                    <div className="text-xs text-gray-600 mb-1">Bed Feet</div>
+                    {onUpdatePlanting ? (
+                      <input
+                        type="number"
+                        min={1}
+                        step={25}
+                        defaultValue={crop.feetNeeded || 50}
+                        onBlur={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val) && val > 0 && val !== (crop.feetNeeded || 50)) {
+                            onUpdatePlanting(crop.groupId, { bedFeet: val });
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            (e.target as HTMLInputElement).blur();
+                          }
+                        }}
+                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <div className="text-sm text-gray-900">{crop.feetNeeded || 50}&apos;</div>
+                    )}
                   </div>
 
                   {/* Multi-bed info */}
@@ -2017,6 +2079,187 @@ export default function CropTimeline({
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Timing Adjustments - Editable with effective values */}
+                  {onUpdatePlanting && (
+                    <div className="pt-3 border-t">
+                      <div className="text-xs font-semibold text-gray-600 mb-2">Timing Adjustments</div>
+                      <div className="space-y-3">
+                        {/* Days to Maturity */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600">Days to Maturity</span>
+                            <div className="flex items-center gap-1">
+                              <input
+                                key={`dtm-${crop.groupId}-${crop.overrides?.additionalDaysInField || 0}`}
+                                type="number"
+                                defaultValue={crop.overrides?.additionalDaysInField || 0}
+                                onBlur={(e) => {
+                                  let val = parseInt(e.target.value, 10);
+                                  if (!isNaN(val)) {
+                                    val = Math.max(minAdjustments.dtm, val);
+                                    e.target.value = val.toString();
+                                    onUpdatePlanting(crop.groupId, {
+                                      overrides: { additionalDaysInField: val }
+                                    });
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                                }}
+                                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+                              />
+                              <button
+                                onClick={() => onUpdatePlanting(crop.groupId, { overrides: { additionalDaysInField: 0 } })}
+                                className={`w-5 h-5 flex items-center justify-center rounded ${
+                                  (crop.overrides?.additionalDaysInField || 0) !== 0
+                                    ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                    : 'invisible'
+                                }`}
+                                title="Reset to 0"
+                                tabIndex={-1}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          </div>
+                          {effectiveValues && (
+                            <div className="text-xs text-gray-500 text-right">
+                              = {effectiveValues.dtm} days total
+                              {baseValues && effectiveValues.dtm !== baseValues.dtm && (
+                                <span className="text-gray-400"> (base: {baseValues.dtm})</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Harvest Window */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600">Harvest Window</span>
+                            <div className="flex items-center gap-1">
+                              <input
+                                key={`harvest-${crop.groupId}-${crop.overrides?.additionalDaysOfHarvest || 0}`}
+                                type="number"
+                                defaultValue={crop.overrides?.additionalDaysOfHarvest || 0}
+                                onBlur={(e) => {
+                                  let val = parseInt(e.target.value, 10);
+                                  if (!isNaN(val)) {
+                                    val = Math.max(minAdjustments.harvestWindow, val);
+                                    e.target.value = val.toString();
+                                    onUpdatePlanting(crop.groupId, {
+                                      overrides: { additionalDaysOfHarvest: val }
+                                    });
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                                }}
+                                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+                              />
+                              <button
+                                onClick={() => onUpdatePlanting(crop.groupId, { overrides: { additionalDaysOfHarvest: 0 } })}
+                                className={`w-5 h-5 flex items-center justify-center rounded ${
+                                  (crop.overrides?.additionalDaysOfHarvest || 0) !== 0
+                                    ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                    : 'invisible'
+                                }`}
+                                title="Reset to 0"
+                                tabIndex={-1}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          </div>
+                          {effectiveValues && (
+                            <div className="text-xs text-gray-500 text-right">
+                              = {effectiveValues.harvestWindow} days total
+                              {baseValues && effectiveValues.harvestWindow !== baseValues.harvestWindow && (
+                                <span className="text-gray-400"> (base: {baseValues.harvestWindow})</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Greenhouse Days - only show if crop uses greenhouse */}
+                        {baseValues && baseValues.daysInCells > 0 && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-gray-600">Greenhouse Days</span>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  key={`gh-${crop.groupId}-${crop.overrides?.additionalDaysInCells || 0}`}
+                                  type="number"
+                                  defaultValue={crop.overrides?.additionalDaysInCells || 0}
+                                  onBlur={(e) => {
+                                    let val = parseInt(e.target.value, 10);
+                                    if (!isNaN(val)) {
+                                      val = Math.max(minAdjustments.daysInCells, val);
+                                      e.target.value = val.toString();
+                                      onUpdatePlanting(crop.groupId, {
+                                        overrides: { additionalDaysInCells: val }
+                                      });
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                                  }}
+                                  className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+                                />
+                                <button
+                                  onClick={() => onUpdatePlanting(crop.groupId, { overrides: { additionalDaysInCells: 0 } })}
+                                  className={`w-5 h-5 flex items-center justify-center rounded ${
+                                    (crop.overrides?.additionalDaysInCells || 0) !== 0
+                                      ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                      : 'invisible'
+                                  }`}
+                                  title="Reset to 0"
+                                  tabIndex={-1}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            </div>
+                            {effectiveValues && (
+                              <div className="text-xs text-gray-500 text-right">
+                                = {effectiveValues.daysInCells} days total
+                                {baseValues && effectiveValues.daysInCells !== baseValues.daysInCells && (
+                                  <span className="text-gray-400"> (base: {baseValues.daysInCells})</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes - Editable */}
+                  {onUpdatePlanting && (
+                    <div className="pt-3 border-t">
+                      <div className="text-xs text-gray-600 mb-1">Notes</div>
+                      <textarea
+                        defaultValue={crop.notes || ''}
+                        placeholder="Add notes..."
+                        rows={2}
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val !== (crop.notes || '')) {
+                            onUpdatePlanting(crop.groupId, { notes: val });
+                          }
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* Notes Display (read-only mode) */}
+                  {!onUpdatePlanting && crop.notes && (
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Notes</div>
+                      <div className="text-sm text-gray-900 whitespace-pre-wrap">{crop.notes}</div>
                     </div>
                   )}
 

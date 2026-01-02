@@ -81,6 +81,9 @@ export interface Planting {
   /** Actual dates for variance tracking */
   actuals?: PlantingActuals;
 
+  /** User notes about this planting */
+  notes?: string;
+
   // ---- Metadata ----
 
   /** Timestamp of last modification */
@@ -139,6 +142,8 @@ export interface CreatePlantingInput {
   overrides?: PlantingOverrides;
   /** Optional: actual dates */
   actuals?: PlantingActuals;
+  /** Optional: user notes */
+  notes?: string;
 }
 
 /**
@@ -155,6 +160,7 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     followOffset: input.followOffset,
     overrides: input.overrides,
     actuals: input.actuals,
+    notes: input.notes,
     lastModified: Date.now(),
   };
 }

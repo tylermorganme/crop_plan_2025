@@ -74,6 +74,7 @@ export default function TimelinePlanPage() {
   // Update crop config action from store
   const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
   const addPlanting = usePlanStore((state) => state.addPlanting);
+  const updatePlanting = usePlanStore((state) => state.updatePlanting);
 
   // Helper to get crop config from plan's catalog (falls back to master)
   const getCropByIdentifier = useCallback((identifier: string) => {
@@ -206,6 +207,19 @@ export default function TimelinePlanPage() {
       throw e;
     }
   }, [addPlanting]);
+
+  const handleUpdatePlanting = useCallback(async (plantingId: string, updates: {
+    bedFeet?: number;
+    overrides?: { additionalDaysOfHarvest?: number; additionalDaysInField?: number; additionalDaysInCells?: number };
+    notes?: string;
+  }) => {
+    try {
+      await updatePlanting(plantingId, updates);
+      // Silent success - the UI updates immediately via state
+    } catch (e) {
+      setToast({ message: `Failed to update: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
+    }
+  }, [updatePlanting]);
 
   const handleEditCropConfig = useCallback((plantingId: string) => {
     // Find the planting to get the configId
@@ -404,6 +418,7 @@ export default function TimelinePlanPage() {
           cropCatalog={currentPlan.cropCatalog}
           planYear={currentPlan.metadata.year}
           onAddPlanting={handleAddPlanting}
+          onUpdatePlanting={handleUpdatePlanting}
         />
       </div>
 

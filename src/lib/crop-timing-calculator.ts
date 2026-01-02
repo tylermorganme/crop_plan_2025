@@ -27,9 +27,10 @@ export interface CropTimingInputs {
   followOffset?: number;          // Days after followed crop ends
 
   // User adjustments (extend/modify defaults)
+  // Note: These are applied via resolveEffectiveTiming() before calling this function
   additionalDaysOfHarvest?: number;
-  additionalDaysInField?: number;  // (not used in main calc, but tracked)
-  additionalDaysInCells?: number;  // (not used in main calc, but tracked)
+  additionalDaysInField?: number;
+  additionalDaysInCells?: number;
 
   // Actual dates (override planned)
   actualGreenhouseDate?: Date;
@@ -152,9 +153,12 @@ export function calculateCropTiming(inputs: CropTimingInputs): CropTimingOutput 
 
   // [31] Expected End of Harvest
   // = Expected Begin + Harvest Window + Additional Days of Harvest
+  // Note: harvestWindow should already be clamped by resolveEffectiveTiming,
+  // but we add a safety clamp here for direct callers
+  const effectiveHarvestDays = Math.max(0, harvestWindow + additionalDaysOfHarvest);
   const expectedEndOfHarvest = addDays(
     expectedBeginningOfHarvest,
-    harvestWindow + additionalDaysOfHarvest
+    effectiveHarvestDays
   );
 
   // [36] End of Harvest
