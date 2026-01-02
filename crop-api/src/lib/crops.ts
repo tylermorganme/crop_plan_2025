@@ -5,7 +5,7 @@ import {
   calculateSTH,
   calculatePlantingMethod,
   calculateHarvestWindow,
-} from './crop-calculations';
+} from './entities/crop-config';
 
 // Re-export CropConfig as Crop for backwards compatibility
 export type Crop = CropConfig;

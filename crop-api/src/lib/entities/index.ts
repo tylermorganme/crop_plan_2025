@@ -60,8 +60,7 @@ export {
   CURRENT_SCHEMA_VERSION,
   PlanValidationError,
   validatePlan,
-  isNewFormatPlan,
-  isLegacyPlan,
+  isValidPlan,
   getResources,
   getGroups,
 } from './plan';

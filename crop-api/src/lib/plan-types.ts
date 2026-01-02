@@ -24,8 +24,7 @@ export {
   CURRENT_SCHEMA_VERSION,
   PlanValidationError,
   validatePlan,
-  isNewFormatPlan,
-  isLegacyPlan,
+  isValidPlan,
   getResources,
   getGroups,
 } from './entities/plan';
@@ -116,7 +115,7 @@ export interface PlanActions {
 export type PlanStore = PlanState & PlanActions;
 
 // =============================================================================
-// LEGACY HELPERS
+// HELPERS
 // =============================================================================
 
 /**
@@ -136,32 +135,6 @@ export function generateCropId(plantingId: string, bedIndex: number | 'unassigne
 export function getBasePlantingId(plantingId: string): string {
   const match = plantingId.match(/^(.+?)(?:_\d+)?$/);
   return match ? match[1] : plantingId;
-}
-
-// Legacy ID counter (for backward compat)
-let nextId = 1;
-
-/**
- * Generate a short unique planting ID.
- * @deprecated Use generatePlantingId from entities instead
- */
-export function generateLegacyPlantingId(): string {
-  return `P${nextId++}`;
-}
-
-/**
- * Initialize the ID counter based on existing plantings.
- * @deprecated Use initializePlantingIdCounter from entities instead
- */
-export function initializeIdCounter(existingIds: string[]): void {
-  let maxId = 0;
-  for (const id of existingIds) {
-    const match = id.match(/^P(\d+)$/);
-    if (match) {
-      maxId = Math.max(maxId, parseInt(match[1], 10));
-    }
-  }
-  nextId = maxId + 1;
 }
 
 /** Required fields for creating a TimelineCrop */

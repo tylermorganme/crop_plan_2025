@@ -13,9 +13,6 @@ await withTransaction(async () => {
 }); // Single undo entry
 ```
 
-### Remove duplicate code between crop-calculations.ts and entities/crop-config.ts
-jscpd found ~100 duplicate lines. After migration is complete, delete `crop-calculations.ts` and use `entities/crop-config.ts` as the single source.
-
 ### Add jscpd to CI
 ```bash
 npx jscpd src/lib --min-lines 10 --threshold 3
@@ -43,6 +40,6 @@ See `.claude/plans/state-migration.md` for full plan.
 - [x] Centralize `getBedLengthFromId` (removed duplicates from timeline-data, CropTimeline)
 - [x] Clean up re-exports
 
-### Future cleanup
-- [ ] Remove `crops` field from Plan type after all old plans are migrated
-- [ ] Delete `crop-calculations.ts` (use `entities/crop-config.ts` as single source)
+### Final cleanup ✅
+- [x] Remove `crops` field from Plan type (old plans deleted)
+- [x] Delete `crop-calculations.ts` (use `entities/crop-config.ts` as single source)

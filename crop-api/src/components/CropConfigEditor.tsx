@@ -8,7 +8,7 @@ import {
   calculateSTH,
   calculatePlantingMethod,
   calculateHarvestWindow,
-} from '@/lib/crop-calculations';
+} from '@/lib/entities/crop-config';
 
 /** Standard tray sizes (cells per tray) */
 const TRAY_SIZES = [9, 18, 21, 50, 72, 128, 400] as const;

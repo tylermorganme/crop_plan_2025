@@ -8,7 +8,6 @@ import {
   getPlanList,
   importPlanFromFile,
   deletePlanFromLibrary,
-  migrateOldStorageFormat,
   type PlanSummary,
 } from '@/lib/plan-store';
 import { getTimelineCrops, collapseToPlantings } from '@/lib/timeline-data';
@@ -50,10 +49,9 @@ export default function PlansPage() {
   const createNewPlan = usePlanStore((state) => state.createNewPlan);
   const currentPlan = usePlanStore((state) => state.currentPlan);
 
-  // Migrate old storage format and load plan list
+  // Load plan list
   useEffect(() => {
     async function init() {
-      await migrateOldStorageFormat();
       const planList = await getPlanList();
       setPlans(planList);
       setLoading(false);

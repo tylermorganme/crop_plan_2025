@@ -27,16 +27,17 @@ import type {
 } from './plan-types';
 import {
   CURRENT_SCHEMA_VERSION,
-  generatePlantingId,
-  initializeIdCounter,
   validatePlan,
   createBedsFromTemplate,
 } from './plan-types';
+import {
+  generatePlantingId,
+  initializePlantingIdCounter,
+} from './entities/planting';
 import { storage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
-import { collapseToPlantings } from './slim-planting';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
-import type { CropConfig } from './crop-calculations';
+import type { CropConfig } from './entities/crop-config';
 
 // Re-export types for consumers
 export type { PlanSummary, PlanSnapshot, PlanData };
@@ -243,46 +244,6 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
   await savePlanToLibrary(newPlan);
 
   return newId;
-}
-
-/**
- * Migrate plans from old storage format to new library format.
- * Call this once on app initialization.
- */
-export async function migrateOldStorageFormat(): Promise<void> {
-  const OLD_STORAGE_KEY = 'crop-plan-storage';
-  const MIGRATION_FLAG_KEY = 'crop-plan-migrated';
-
-  // Check if already migrated
-  const migrated = await storage.getFlag(MIGRATION_FLAG_KEY);
-  if (migrated) {
-    return;
-  }
-
-  try {
-    // Read old data directly from localStorage (one-time migration)
-    const oldData = localStorage.getItem(OLD_STORAGE_KEY);
-    if (!oldData) {
-      await storage.setFlag(MIGRATION_FLAG_KEY, 'true');
-      return;
-    }
-
-    const parsed = JSON.parse(oldData);
-    const oldPlan = parsed?.state?.currentPlan;
-
-    if (oldPlan && oldPlan.id && oldPlan.metadata) {
-      // Migrate the old plan to the new library
-      await savePlanToLibrary(oldPlan);
-      console.log('[Migration] Migrated plan from old storage:', oldPlan.metadata.name);
-    }
-
-    // Mark as migrated (but keep old data as backup)
-    await storage.setFlag(MIGRATION_FLAG_KEY, 'true');
-  } catch (e) {
-    console.error('[Migration] Failed to migrate old storage:', e);
-    // Still mark as migrated to avoid repeated failures
-    await storage.setFlag(MIGRATION_FLAG_KEY, 'true');
-  }
 }
 
 // ============================================
@@ -497,9 +458,9 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   deleteCrop: (groupId: string) => Promise<void>;
   addPlanting: (planting: Planting) => Promise<void>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
-  recalculateCrops: (configIdentifier: string, catalog: import('./crop-calculations').CropConfig[]) => Promise<number>;
+  recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
   /** Update a crop config in the plan's catalog and recalculate affected crops */
-  updateCropConfig: (config: import('./crop-calculations').CropConfig) => Promise<number>;
+  updateCropConfig: (config: import('./entities/crop-config').CropConfig) => Promise<number>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -557,13 +518,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         data.plan.beds = createBedsFromTemplate(bedGroups);
       }
 
-      // Migrate old crops[] to plantings[] if needed
-      const legacyCrops = (data.plan as { crops?: TimelineCrop[] }).crops;
-      if ((!data.plan.plantings || data.plan.plantings.length === 0) && legacyCrops && legacyCrops.length > 0) {
-        console.log('[loadPlanById] Migrating crops[] to plantings[]');
-        data.plan.plantings = collapseToPlantings(legacyCrops);
-      }
-
       // Validate plan on load
       try {
         validatePlan(data.plan);
@@ -574,7 +528,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       // Initialize ID counter based on existing plantings to avoid collisions
       const existingIds = (data.plan.plantings ?? []).map(p => p.id);
-      initializeIdCounter(existingIds);
+      initializePlantingIdCounter(existingIds);
 
       set((state) => {
         state.currentPlan = data.plan;

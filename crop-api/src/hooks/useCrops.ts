@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { CropConfig } from '@/lib/crop-calculations';
+import type { CropConfig } from '@/lib/entities/crop-config';
 
 interface CropsState {
   crops: CropConfig[];

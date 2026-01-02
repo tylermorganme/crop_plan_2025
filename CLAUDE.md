@@ -4,10 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **crop planning system** for a small organic farm (1.5 acres, 92 beds). The project has two main components:
+This is a prototype **crop planning system** for a small organic farm (1.5 acres, 92 beds). The project has two main components: 
 
 1. **Excel Workbook** (`Crop Plan 2025 V20.xlsm`) - A comprehensive farm management tool with VBA macros, containing ~340 planting configurations, seed ordering, task scheduling, and revenue projections
 2. **Google Sheets Add-on** (`google-sheets-addon/`) - A Gantt-style visual planner that syncs bidirectionally with spreadsheet data
+
+
 
 ## Architecture
 

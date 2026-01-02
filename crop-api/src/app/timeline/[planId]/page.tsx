@@ -7,7 +7,7 @@ import CropTimeline from '@/components/CropTimeline';
 import HistoryPanel from '@/components/HistoryPanel';
 import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal';
 import CropConfigEditor from '@/components/CropConfigEditor';
-import { type CropConfig } from '@/lib/crop-calculations';
+import { type CropConfig } from '@/lib/entities/crop-config';
 import { useCrossTabSync } from '@/hooks/useCrossTabSync';
 import { getTimelineCrops, calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';

@@ -15,7 +15,7 @@ import {
   calculatePlantingMethod,
   calculateHarvestWindow,
   type CropConfig,
-} from './crop-calculations';
+} from './entities/crop-config';
 
 // =============================================================================
 // SLIM PLANTING TYPES
@@ -95,7 +95,7 @@ export interface PlantingConfigLookup {
 
 /**
  * Raw crop entry from crops.json catalog.
- * This matches the CropConfig type from crop-calculations.ts
+ * This matches the CropConfig type from entities/crop-config.ts
  */
 export type CropCatalogEntry = CropConfig;
 
@@ -436,7 +436,7 @@ export function extractConfigLookup(assignment: {
 
 /**
  * Collapse TimelineCrop[] (one per bed) to Planting[] (one per decision).
- * Used to migrate from legacy storage format to new slim format.
+ * Used to convert TimelineCrop[] (from bed-plan.json import) to Planting[].
  *
  * @param crops - Array of TimelineCrop entries (multiple per planting)
  * @returns Array of Planting entries (one per planting decision)

@@ -15,7 +15,7 @@ import {
   calculatePlantingMethod,
   calculateHarvestWindow,
   type CropConfig,
-} from './crop-calculations';
+} from './entities/crop-config';
 
 // Get Excel export path from command line
 const excelExportPath = process.argv[2];

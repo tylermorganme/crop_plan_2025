@@ -14,7 +14,7 @@ import {
   calculateHarvestWindow,
   calculateCropFields,
   type CropConfig,
-} from '../src/lib/crop-calculations';
+} from '../src/lib/entities/crop-config';
 
 // Load both datasets
 const dataDir = path.join(__dirname, '../src/data');
