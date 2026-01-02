@@ -53,6 +53,12 @@ const cleanCrops = crops.map((c) => {
   // Check if this is a perennial (Planting Method = PE)
   const isPerennial = c['Planting Method'] === 'PE';
 
+  // Extract targetFieldDate as MM-DD from ISO date like "2025-04-01T00:00:00"
+  const rawTargetDate = c['Target Field Date'];
+  const targetFieldDate = rawTargetDate && typeof rawTargetDate === 'string'
+    ? rawTargetDate.slice(5, 10)  // "04-01"
+    : undefined;
+
   const crop = {
     id,
     identifier: c.Identifier,
@@ -78,6 +84,9 @@ const cleanCrops = crops.map((c) => {
     harvestBufferDays: 7, // Default buffer for harvest window (how long crop is harvestable)
     yieldPerHarvest: c['Units Per Harvest'] || undefined,
     yieldUnit: c['Unit'] || undefined,
+
+    // Scheduling - target field date for default planting schedule
+    targetFieldDate,
   };
 
   // Detect postHarvestFieldDays from harvest window formula overrides

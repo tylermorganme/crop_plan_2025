@@ -121,6 +121,14 @@ export interface CropConfig {
    * Default: 7 days.
    */
   harvestBufferDays?: number;
+
+  // ---- Scheduling ----
+
+  /**
+   * Target field date as month-day (format: "MM-DD") for default scheduling.
+   * When adding a planting, this is combined with the plan year to set fieldStartDate.
+   */
+  targetFieldDate?: string;
 }
 
 /** Calculated crop values (derived at runtime) */

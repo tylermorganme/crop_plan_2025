@@ -8,8 +8,9 @@ import HistoryPanel from '@/components/HistoryPanel';
 import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal';
 import CropConfigEditor from '@/components/CropConfigEditor';
 import { type CropConfig } from '@/lib/entities/crop-config';
-import { getTimelineCrops, calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';
+import { createPlanting } from '@/lib/entities/planting';
 import {
   usePlanStore,
   useSaveState,
@@ -72,6 +73,7 @@ export default function TimelinePlanPage() {
 
   // Update crop config action from store
   const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
+  const addPlanting = usePlanStore((state) => state.addPlanting);
 
   // Helper to get crop config from plan's catalog (falls back to master)
   const getCropByIdentifier = useCallback((identifier: string) => {
@@ -186,6 +188,24 @@ export default function TimelinePlanPage() {
       setToast({ message: `Failed to delete: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
     }
   }, [deleteCrop]);
+
+  const handleAddPlanting = useCallback(async (configId: string, fieldStartDate: string, bedId: string): Promise<string> => {
+    const newPlanting = createPlanting({
+      configId,
+      fieldStartDate,
+      startBed: bedId,
+      bedFeet: 50, // Default to standard bed length
+    });
+
+    try {
+      await addPlanting(newPlanting);
+      setToast({ message: `Added ${configId} to ${bedId}`, type: 'success' });
+      return newPlanting.id; // Return the ID so timeline can select it
+    } catch (e) {
+      setToast({ message: `Failed to add: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
+      throw e;
+    }
+  }, [addPlanting]);
 
   const handleEditCropConfig = useCallback((plantingId: string) => {
     // Find the planting to get the configId
@@ -381,6 +401,9 @@ export default function TimelinePlanPage() {
           onDuplicateCrop={handleDuplicateCrop}
           onDeleteCrop={handleDeleteCrop}
           onEditCropConfig={handleEditCropConfig}
+          cropCatalog={currentPlan.cropCatalog}
+          planYear={currentPlan.metadata.year}
+          onAddPlanting={handleAddPlanting}
         />
       </div>
 

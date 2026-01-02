@@ -3,6 +3,9 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { getBedGroup, getBedNumber, getBedLengthFromId } from '@/lib/plan-types';
+import type { CropConfig } from '@/lib/entities/crop-config';
+import { calculateCropFields } from '@/lib/entities/crop-config';
+import AddToBedPanel from './AddToBedPanel';
 
 // =============================================================================
 // Types
@@ -37,6 +40,8 @@ interface TimelineCrop {
   harvestStartDate?: string;
   /** Planting method: DS (Direct Seed), TP (Transplant), PE (Perennial) */
   plantingMethod?: 'DS' | 'TP' | 'PE';
+  /** Preview ghost - not a real crop, just for hover preview */
+  isPreview?: boolean;
 }
 
 interface ResourceGroup {
@@ -56,6 +61,12 @@ interface CropTimelineProps {
   onDeleteCrop?: (groupIds: string[]) => void;
   /** Callback when user wants to edit the crop config. Receives the planting identifier. */
   onEditCropConfig?: (identifier: string) => void;
+  /** Crop catalog for adding new plantings */
+  cropCatalog?: Record<string, CropConfig>;
+  /** Plan year for computing target dates */
+  planYear?: number;
+  /** Callback when user adds a planting from timeline */
+  onAddPlanting?: (configId: string, fieldStartDate: string, bedId: string) => Promise<string | void>;
 }
 
 // =============================================================================
@@ -305,6 +316,9 @@ export default function CropTimeline({
   onDuplicateCrop,
   onDeleteCrop,
   onEditCropConfig,
+  cropCatalog,
+  planYear,
+  onAddPlanting,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -327,6 +341,14 @@ export default function CropTimeline({
   const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null);
   const [dragOverResource, setDragOverResource] = useState<string | null>(null);
   const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
+  // State for "Add to Bed" panel - which bed's + button was clicked
+  const [addToBedId, setAddToBedId] = useState<string | null>(null);
+  const addToBedPanelRef = useRef<HTMLDivElement>(null);
+  // State for hover preview when browsing crops in AddToBedPanel
+  const [hoverPreview, setHoverPreview] = useState<{
+    config: CropConfig;
+    fieldStartDate: string;
+  } | null>(null);
   const [unassignedHeight, setUnassignedHeight] = useState(
     savedState.current.unassignedHeight ?? 150
   );
@@ -553,6 +575,20 @@ export default function CropTimeline({
       plannerScrollRef.current.scrollLeft = Math.max(0, daysFromStart * pixelsPerDay);
     }
   }, [timelineStart, pixelsPerDay]);
+
+  // Close "Add to Bed" panel when clicking outside
+  useEffect(() => {
+    if (!addToBedId) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (addToBedPanelRef.current && !addToBedPanelRef.current.contains(e.target as Node)) {
+        setAddToBedId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [addToBedId]);
 
   // Save UI state when it changes
   useEffect(() => {
@@ -867,6 +903,41 @@ export default function CropTimeline({
   // Render a crop box
   const renderCropBox = (crop: TimelineCrop, stackRow: number = 0, laneHeight: number = 50) => {
     const pos = getTimelinePosition(crop.startDate, crop.endDate);
+    const colors = crop.bgColor
+      ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
+      : getColorForCategory(crop.category);
+
+    const topPos = viewMode === 'stacked'
+      ? CROP_TOP_PADDING + stackRow * (CROP_HEIGHT + CROP_SPACING)
+      : 8;
+
+    // Preview ghost - simplified rendering with dashed border
+    if (crop.isPreview) {
+      return (
+        <div
+          key={crop.id}
+          className="absolute rounded border-2 border-dashed pointer-events-none z-40"
+          style={{
+            left: pos.left,
+            width: pos.width,
+            top: topPos,
+            height: CROP_HEIGHT,
+            borderColor: colors.bg,
+            backgroundColor: `${colors.bg}40`, // 25% opacity
+          }}
+        >
+          <div className="px-2 py-1 flex items-center h-full">
+            <span
+              className="text-xs font-semibold truncate"
+              style={{ color: colors.bg }}
+            >
+              {crop.name}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
     const isOverlapping = viewMode === 'overlap' && overlappingIds.has(crop.id);
     const isMultiBed = crop.totalBeds > 1;
     const isFirstBed = crop.bedIndex === 1;
@@ -886,14 +957,6 @@ export default function CropTimeline({
     const isPartialBed = crop.feetUsed !== undefined &&
                          crop.bedCapacityFt !== undefined &&
                          crop.feetUsed < crop.bedCapacityFt;
-
-    const colors = crop.bgColor
-      ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
-      : getColorForCategory(crop.category);
-
-    const topPos = viewMode === 'stacked'
-      ? CROP_TOP_PADDING + stackRow * (CROP_HEIGHT + CROP_SPACING)
-      : 8;
 
     // Build tooltip
     let tooltip = `${crop.name}\n${formatDate(crop.startDate)} - ${formatDate(crop.endDate)}`;
@@ -1125,7 +1188,11 @@ export default function CropTimeline({
     groupName: string | null,
     groupIndex: number
   ) => {
-    const laneCrops = cropsByResource[resource] || [];
+    // Include preview crop in lane if it matches this resource
+    const baseLaneCrops = cropsByResource[resource] || [];
+    const laneCrops = previewCrop && previewCrop.resource === resource
+      ? [...baseLaneCrops, previewCrop]
+      : baseLaneCrops;
     const stacking = calculateStacking(laneCrops);
     const laneHeight = viewMode === 'stacked' && laneCrops.length > 0
       ? CROP_TOP_PADDING * 2 + stacking.maxRow * CROP_HEIGHT + (stacking.maxRow - 1) * CROP_SPACING
@@ -1173,7 +1240,7 @@ export default function CropTimeline({
             />
           )}
 
-          {/* Crop boxes */}
+          {/* Crop boxes (includes preview ghost if present) */}
           {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0, laneHeight))}
         </div>
       </div>
@@ -1229,6 +1296,47 @@ export default function CropTimeline({
     const endDate = parseDate(end);
     return Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
   };
+
+  // Handle hover changes from AddToBedPanel for preview
+  const handleHoverChange = useCallback((config: CropConfig | null, fieldStartDate: string | null) => {
+    if (config && fieldStartDate) {
+      setHoverPreview({ config, fieldStartDate });
+    } else {
+      setHoverPreview(null);
+    }
+  }, []);
+
+  // Compute preview crop as a proper TimelineCrop for stacking integration
+  const previewCrop: TimelineCrop | null = useMemo(() => {
+    if (!hoverPreview || !addToBedId) return null;
+
+    const { config, fieldStartDate } = hoverPreview;
+    const calculated = calculateCropFields(config);
+
+    // Calculate dates
+    const fieldStart = parseDate(fieldStartDate);
+    const endDate = new Date(fieldStart);
+    endDate.setDate(endDate.getDate() + calculated.sth + calculated.harvestWindow - calculated.daysInCells);
+
+    // Build display name
+    const name = config.product && config.product !== 'General'
+      ? `${config.crop} (${config.product})`
+      : config.crop;
+
+    return {
+      id: '__preview__',
+      name,
+      startDate: fieldStartDate,
+      endDate: endDate.toISOString().slice(0, 10),
+      resource: addToBedId,
+      category: config.category,
+      totalBeds: 1,
+      bedIndex: 1,
+      groupId: '__preview__',
+      plantingMethod: calculated.plantingMethod,
+      isPreview: true,
+    };
+  }, [hoverPreview, addToBedId]);
 
   return (
     <div className="flex h-full bg-gray-100">
@@ -1530,7 +1638,11 @@ export default function CropTimeline({
                 );
               }
 
-              const laneCrops = cropsByResource[resource] || [];
+              // Include preview crop in lane if it matches this resource
+              const baseLaneCrops = cropsByResource[resource] || [];
+              const laneCrops = previewCrop && previewCrop.resource === resource
+                ? [...baseLaneCrops, previewCrop]
+                : baseLaneCrops;
               const stacking = calculateStacking(laneCrops);
               const laneHeight = viewMode === 'stacked' && laneCrops.length > 0
                 ? CROP_TOP_PADDING * 2 + stacking.maxRow * CROP_HEIGHT + (stacking.maxRow - 1) * CROP_SPACING
@@ -1564,6 +1676,22 @@ export default function CropTimeline({
                       )}
                       <span className="truncate text-gray-900">{resource}</span>
                       <span className="text-xs text-gray-600 ml-1">({getBedLengthFromId(resource)}&apos;)</span>
+                      {/* Add planting button */}
+                      {onAddPlanting && cropCatalog && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAddToBedId(resource);
+                            setSelectedGroupIds(new Set()); // Clear selection to hide inspector
+                          }}
+                          className="ml-auto p-1 text-gray-300 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                          title={`Add planting to ${resource}`}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   </td>
                   {/* Timeline lane - spans all month columns */}
@@ -1678,7 +1806,7 @@ export default function CropTimeline({
                         style={{ left: todayPosition, zIndex: 5 }}
                       />
                     )}
-                    {/* Crop boxes */}
+                    {/* Crop boxes (includes preview ghost if present) */}
                     {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0, laneHeight))}
                   </td>
                 </tr>
@@ -1689,8 +1817,30 @@ export default function CropTimeline({
       </div>
       </div>
 
-      {/* Inspector Panel */}
-      {selectedCropsData && selectedCropsData.length > 0 && (
+      {/* Right Panel - AddToBed or Inspector */}
+      {addToBedId && cropCatalog && onAddPlanting ? (
+        <div ref={addToBedPanelRef}>
+          <AddToBedPanel
+            bedId={addToBedId}
+            cropCatalog={cropCatalog}
+            planYear={planYear || new Date().getFullYear()}
+            onAddPlanting={async (configId, fieldStartDate, bedId) => {
+              const result = await onAddPlanting(configId, fieldStartDate, bedId);
+              setAddToBedId(null);
+              setHoverPreview(null);
+              // If the callback returns a groupId, select it to show inspector
+              if (result) {
+                setSelectedGroupIds(new Set([result]));
+              }
+            }}
+            onClose={() => {
+              setAddToBedId(null);
+              setHoverPreview(null);
+            }}
+            onHoverChange={handleHoverChange}
+          />
+        </div>
+      ) : selectedCropsData && selectedCropsData.length > 0 ? (
         <div className="w-80 bg-white border-l flex flex-col shrink-0">
           {/* Inspector Header */}
           <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
@@ -1924,7 +2074,7 @@ export default function CropTimeline({
             })()}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

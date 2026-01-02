@@ -10,7 +10,8 @@
       "dtm": 180,
       "deprecated": true,
       "harvestBufferDays": 7,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_67f7c411",
@@ -27,7 +28,8 @@
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-06"
     },
     {
       "id": "crop_51398223",
@@ -45,6 +47,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 112.5,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-16",
       "trayStages": [
         {
           "days": 35,
@@ -68,6 +71,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 133.33333333333331,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 45,
@@ -87,7 +91,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_043d38ec",
@@ -104,7 +109,8 @@
       "numberOfHarvests": 2.1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10.714285714285714,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-11"
     },
     {
       "id": "crop_a1df6515",
@@ -121,7 +127,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 11.25,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "03-27"
     },
     {
       "id": "crop_b50d222d",
@@ -138,7 +145,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 5.625,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "06-25"
     },
     {
       "id": "crop_99e232ed",
@@ -156,6 +164,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 5.625,
       "yieldUnit": "Lb",
+      "targetFieldDate": "08-17",
       "trayStages": [
         {
           "days": 18,
@@ -177,6 +186,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666666,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-29",
       "trayStages": [
         {
           "days": 28,
@@ -197,7 +207,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 25,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_17095df8",
@@ -215,6 +226,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 44.44444444444444,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "08-05",
       "trayStages": [
         {
           "days": 21,
@@ -237,7 +249,8 @@
       "numberOfHarvests": 5,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-06"
     },
     {
       "id": "crop_9f6d7be0",
@@ -255,6 +268,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 250,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-14",
       "trayStages": [
         {
           "days": 28,
@@ -277,7 +291,8 @@
       "numberOfHarvests": 9,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 55.55555555555556,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "03-27"
     },
     {
       "id": "crop_2be95ed1",
@@ -296,6 +311,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 6.25,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-11",
       "trayStages": [
         {
           "days": 40,
@@ -320,6 +336,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 25,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-11",
       "trayStages": [
         {
           "days": 40,
@@ -344,6 +361,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-11",
       "trayStages": [
         {
           "days": 40,
@@ -366,7 +384,8 @@
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "05-11"
     },
     {
       "id": "crop_6e477156",
@@ -385,6 +404,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 25,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-21",
       "trayStages": [
         {
           "days": 40,
@@ -409,6 +429,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-21",
       "trayStages": [
         {
           "days": 40,
@@ -432,6 +453,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 32.5,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-07",
       "trayStages": [
         {
           "days": 21,
@@ -455,6 +477,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-20",
       "trayStages": [
         {
           "days": 14,
@@ -479,6 +502,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-11",
       "trayStages": [
         {
           "days": 30,
@@ -503,6 +527,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-19",
       "trayStages": [
         {
           "days": 18,
@@ -526,7 +551,8 @@
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "05-06"
     },
     {
       "id": "crop_f214efcf",
@@ -545,6 +571,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-22",
       "trayStages": [
         {
           "days": 21,
@@ -566,6 +593,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 30,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-26",
       "trayStages": [
         {
           "days": 35,
@@ -586,7 +614,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 60,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_869a00a2",
@@ -602,6 +631,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-26",
       "trayStages": [
         {
           "days": 35,
@@ -623,6 +653,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-05",
       "trayStages": [
         {
           "days": 35,
@@ -645,6 +676,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-26",
       "trayStages": [
         {
           "days": 35,
@@ -667,6 +699,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-05",
       "trayStages": [
         {
           "days": 35,
@@ -689,6 +722,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "08-24",
       "trayStages": [
         {
           "days": 35,
@@ -710,6 +744,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 133.33333333333331,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-29",
       "trayStages": [
         {
           "days": 28,
@@ -733,7 +768,8 @@
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 600,
-      "yieldUnit": "Bloom"
+      "yieldUnit": "Bloom",
+      "targetFieldDate": "04-06"
     },
     {
       "id": "crop_92840734",
@@ -751,7 +787,8 @@
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-06"
     },
     {
       "id": "crop_16ef3d00",
@@ -769,7 +806,8 @@
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 600,
-      "yieldUnit": "Bloom"
+      "yieldUnit": "Bloom",
+      "targetFieldDate": "04-06"
     },
     {
       "id": "crop_74599b19",
@@ -787,7 +825,8 @@
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-06"
     },
     {
       "id": "crop_94d0e2d4",
@@ -802,7 +841,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_e485cb55",
@@ -820,6 +860,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-08",
       "trayStages": [
         {
           "days": 28,
@@ -842,6 +883,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 7.8125,
       "yieldUnit": "Lb",
+      "targetFieldDate": "06-07",
       "trayStages": [
         {
           "days": 14,
@@ -872,6 +914,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 7.8125,
       "yieldUnit": "Lb",
+      "targetFieldDate": "06-07",
       "trayStages": [
         {
           "days": 14,
@@ -902,7 +945,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 800,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-21"
     },
     {
       "id": "crop_dff6d064",
@@ -919,7 +963,8 @@
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 450,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_d3dcc7f3",
@@ -937,6 +982,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-16",
       "trayStages": [
         {
           "days": 60,
@@ -959,6 +1005,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
       "yieldUnit": "Head",
+      "targetFieldDate": "05-26",
       "trayStages": [
         {
           "days": 7,
@@ -986,6 +1033,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 40,
       "yieldUnit": "Head",
+      "targetFieldDate": "06-28",
       "trayStages": [
         {
           "days": 7,
@@ -1013,6 +1061,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
       "yieldUnit": "Head",
+      "targetFieldDate": "06-28",
       "trayStages": [
         {
           "days": 7,
@@ -1040,6 +1089,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-01",
       "trayStages": [
         {
           "days": 7,
@@ -1067,6 +1117,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-01",
       "trayStages": [
         {
           "days": 7,
@@ -1094,6 +1145,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-21",
       "trayStages": [
         {
           "days": 7,
@@ -1121,6 +1173,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-21",
       "trayStages": [
         {
           "days": 7,
@@ -1148,6 +1201,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
       "yieldUnit": "Head",
+      "targetFieldDate": "08-09",
       "trayStages": [
         {
           "days": 7,
@@ -1175,6 +1229,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 13.333333333333332,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "08-09",
       "trayStages": [
         {
           "days": 7,
@@ -1202,6 +1257,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 80,
       "yieldUnit": "Head",
+      "targetFieldDate": "05-01",
       "trayStages": [
         {
           "days": 7,
@@ -1229,6 +1285,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 22.222222222222218,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-05",
       "trayStages": [
         {
           "days": 7,
@@ -1256,6 +1313,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 16.666666666666668,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-05",
       "trayStages": [
         {
           "days": 7,
@@ -1283,6 +1341,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 22.222222222222218,
       "yieldUnit": "Head",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 7,
@@ -1310,6 +1369,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-05",
       "trayStages": [
         {
           "days": 7,
@@ -1336,7 +1396,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 85.71428571428571,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "03-27"
     },
     {
       "id": "crop_9c18dede",
@@ -1353,7 +1414,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 85.71428571428571,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "05-21"
     },
     {
       "id": "crop_bb36edb9",
@@ -1370,7 +1432,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 90,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "05-31"
     },
     {
       "id": "crop_26d62969",
@@ -1386,7 +1449,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 120,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_f8d0a38b",
@@ -1404,6 +1468,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 63,
@@ -1426,6 +1491,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 28.57142857142857,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-05",
       "trayStages": [
         {
           "days": 7,
@@ -1452,6 +1518,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 28.57142857142857,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-25",
       "trayStages": [
         {
           "days": 7,
@@ -1478,6 +1545,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 28.57142857142857,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-16",
       "trayStages": [
         {
           "days": 7,
@@ -1505,6 +1573,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 28.57142857142857,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-05",
       "trayStages": [
         {
           "days": 7,
@@ -1531,6 +1600,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 85.71428571428571,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-30",
       "trayStages": [
         {
           "days": 21,
@@ -1555,7 +1625,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
-      "yieldUnit": "Root"
+      "yieldUnit": "Root",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_9912465c",
@@ -1570,7 +1641,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
-      "yieldUnit": "Root"
+      "yieldUnit": "Root",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_c2787896",
@@ -1587,7 +1659,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 525,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-26"
     },
     {
       "id": "crop_c70c733a",
@@ -1605,6 +1678,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 262.5,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-11",
       "trayStages": [
         {
           "days": 50,
@@ -1628,6 +1702,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-07",
       "trayStages": [
         {
           "days": 56,
@@ -1647,7 +1722,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_ca4eee32",
@@ -1661,7 +1737,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_cb45c195",
@@ -1676,6 +1753,7 @@
       "deprecated": false,
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-13",
       "trayStages": [
         {
           "days": 28,
@@ -1698,6 +1776,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "03-22",
       "trayStages": [
         {
           "days": 30,
@@ -1720,6 +1799,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 25,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "03-22",
       "trayStages": [
         {
           "days": 30,
@@ -1741,7 +1821,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "03-27"
     },
     {
       "id": "crop_1ced2589",
@@ -1757,7 +1838,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "03-27"
     },
     {
       "id": "crop_faffd1f8",
@@ -1773,7 +1855,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "08-09"
     },
     {
       "id": "crop_cd64ab16",
@@ -1789,7 +1872,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "06-30"
     },
     {
       "id": "crop_e37f24db",
@@ -1805,7 +1889,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "03-12"
     },
     {
       "id": "crop_02fc94cf",
@@ -1822,6 +1907,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-30",
       "trayStages": [
         {
           "days": 30,
@@ -1844,6 +1930,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-11",
       "trayStages": [
         {
           "days": 30,
@@ -1866,6 +1953,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-11",
       "trayStages": [
         {
           "days": 30,
@@ -1883,7 +1971,8 @@
       "dtm": 365,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_a99036b2",
@@ -1895,7 +1984,8 @@
       "dtm": 0,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_a4a0e5a4",
@@ -1906,7 +1996,8 @@
       "normalMethod": "TP",
       "dtm": 0,
       "deprecated": false,
-      "harvestBufferDays": 7
+      "harvestBufferDays": 7,
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_6745de5b",
@@ -1924,6 +2015,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Cobs",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 28,
@@ -1947,6 +2039,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Cobs",
+      "targetFieldDate": "05-24",
       "trayStages": [
         {
           "days": 28,
@@ -1969,7 +2062,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
-      "yieldUnit": "Cobs"
+      "yieldUnit": "Cobs",
+      "targetFieldDate": "05-16"
     },
     {
       "id": "crop_6aeee63d",
@@ -1985,7 +2079,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 23.4375,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "07-10"
     },
     {
       "id": "crop_3044de48",
@@ -2001,7 +2096,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 11.71875,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "07-20"
     },
     {
       "id": "crop_e89034dd",
@@ -2019,6 +2115,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
       "yieldUnit": "Lb",
+      "targetFieldDate": "08-09",
       "trayStages": [
         {
           "days": 30,
@@ -2041,6 +2138,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 11.71875,
       "yieldUnit": "Lb",
+      "targetFieldDate": "08-19",
       "trayStages": [
         {
           "days": 30,
@@ -2064,6 +2162,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 45,
@@ -2087,6 +2186,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 23.4375,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-01",
       "trayStages": [
         {
           "days": 30,
@@ -2109,7 +2209,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 37.5,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "01-26"
     },
     {
       "id": "crop_dad699a5",
@@ -2126,7 +2227,8 @@
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_7309374d",
@@ -2137,7 +2239,8 @@
       "normalMethod": "DS",
       "dtm": 180,
       "deprecated": false,
-      "harvestBufferDays": 7
+      "harvestBufferDays": 7,
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_a6bc7714",
@@ -2155,7 +2258,8 @@
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 2000,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_3dabc5c3",
@@ -2174,6 +2278,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 2000,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 28,
@@ -2197,6 +2302,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 19.047619047619044,
       "yieldUnit": "Fruit",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 35,
@@ -2220,6 +2326,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-16",
       "trayStages": [
         {
           "days": 35,
@@ -2243,6 +2350,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 8,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-16",
       "trayStages": [
         {
           "days": 35,
@@ -2265,6 +2373,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 57.14285714285714,
       "yieldUnit": "Fruit",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 35,
@@ -2287,6 +2396,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 19.047619047619044,
       "yieldUnit": "Fruit",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 35,
@@ -2310,6 +2420,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-16",
       "trayStages": [
         {
           "days": 35,
@@ -2327,7 +2438,8 @@
       "dtm": 83,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_f40458ef",
@@ -2344,7 +2456,8 @@
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_93ced1b0",
@@ -2363,6 +2476,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Stem",
+      "targetFieldDate": "03-22",
       "postHarvestFieldDays": 28
     },
     {
@@ -2381,6 +2495,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 40,
@@ -2402,7 +2517,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "03-12"
     },
     {
       "id": "crop_0ccbe239",
@@ -2419,6 +2535,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 320,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-07",
       "trayStages": [
         {
           "days": 26,
@@ -2441,6 +2558,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 320,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-07",
       "trayStages": [
         {
           "days": 26,
@@ -2464,7 +2582,8 @@
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_8341390b",
@@ -2483,6 +2602,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-21",
       "trayStages": [
         {
           "days": 30,
@@ -2506,6 +2626,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666666,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-01",
       "trayStages": [
         {
           "days": 40,
@@ -2528,7 +2649,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666666,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "01-26"
     },
     {
       "id": "crop_5b7b0f1e",
@@ -2545,6 +2667,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 15,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-12",
       "trayStages": [
         {
           "days": 21,
@@ -2576,6 +2699,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-29",
       "trayStages": [
         {
           "days": 28,
@@ -2599,6 +2723,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-26",
       "trayStages": [
         {
           "days": 35,
@@ -2620,7 +2745,8 @@
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "01-31"
     },
     {
       "id": "crop_999f9fbe",
@@ -2636,7 +2762,8 @@
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "09-03"
     },
     {
       "id": "crop_ebed4f0c",
@@ -2651,7 +2778,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Bulb"
+      "yieldUnit": "Bulb",
+      "targetFieldDate": "03-07"
     },
     {
       "id": "crop_0ab162b4",
@@ -2667,6 +2795,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bulb",
+      "targetFieldDate": "07-15",
       "trayStages": [
         {
           "days": 30,
@@ -2690,6 +2819,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bulb",
+      "targetFieldDate": "07-15",
       "trayStages": [
         {
           "days": 30,
@@ -2713,6 +2843,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bulb",
+      "targetFieldDate": "04-06",
       "trayStages": [
         {
           "days": 30,
@@ -2735,7 +2866,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 800,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-06"
     },
     {
       "id": "crop_66a5c9af",
@@ -2750,7 +2882,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 22.5,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_3c9bb882",
@@ -2763,7 +2896,8 @@
       "deprecated": false,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_a9ed64f8",
@@ -2779,7 +2913,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 128.57142857142858,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "08-19"
     },
     {
       "id": "crop_9cb81c1e",
@@ -2796,7 +2931,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 42.857142857142854,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "08-19"
     },
     {
       "id": "crop_9f2cb1e5",
@@ -2813,7 +2949,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 42.857142857142854,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "08-19"
     },
     {
       "id": "crop_ed5f8966",
@@ -2825,7 +2962,8 @@
       "dtm": 180,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_1d3af19b",
@@ -2838,7 +2976,8 @@
       "dtm": 0,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "lb"
+      "yieldUnit": "lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_19c9e8ee",
@@ -2855,6 +2994,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 11.428571428571429,
       "yieldUnit": "Pint",
+      "targetFieldDate": "05-24",
       "trayStages": [
         {
           "days": 21,
@@ -2887,6 +3027,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 150,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-29",
       "trayStages": [
         {
           "days": 38.5,
@@ -2909,6 +3050,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 4.761904761904761,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-27",
       "trayStages": [
         {
           "days": 21,
@@ -2941,6 +3083,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 111.11111111111109,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-16",
       "trayStages": [
         {
           "days": 50,
@@ -2958,7 +3101,8 @@
       "dtm": 180,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_baeb0324",
@@ -2970,7 +3114,8 @@
       "dtm": 80,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_ffd6737c",
@@ -2982,7 +3127,8 @@
       "dtm": 120,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_2b8460ec",
@@ -2995,7 +3141,8 @@
       "dtm": 365,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_42e1c145",
@@ -3008,7 +3155,8 @@
       "dtm": 365,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_b84af18f",
@@ -3021,7 +3169,8 @@
       "dtm": 365,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_c4e31f31",
@@ -3033,7 +3182,8 @@
       "dtm": 120,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_b0e2847e",
@@ -3050,6 +3200,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 7,
@@ -3071,7 +3222,8 @@
       "dtm": 28,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_b747f2af",
@@ -3088,6 +3240,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "06-30",
       "trayStages": [
         {
           "days": 35,
@@ -3110,6 +3263,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 8.333333333333332,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-10",
       "trayStages": [
         {
           "days": 35,
@@ -3132,6 +3286,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-26",
       "trayStages": [
         {
           "days": 35,
@@ -3155,6 +3310,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Bulb",
+      "targetFieldDate": "07-10",
       "trayStages": [
         {
           "days": 25,
@@ -3178,6 +3334,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 150,
       "yieldUnit": "Bulb",
+      "targetFieldDate": "07-10",
       "trayStages": [
         {
           "days": 25,
@@ -3200,6 +3357,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 150,
       "yieldUnit": "Bulb",
+      "targetFieldDate": "03-27",
       "trayStages": [
         {
           "days": 25,
@@ -3221,6 +3379,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 44.44444444444444,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "08-05",
       "trayStages": [
         {
           "days": 21,
@@ -3242,6 +3401,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 44.44444444444444,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "08-05",
       "trayStages": [
         {
           "days": 21,
@@ -3263,6 +3423,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "08-05",
       "trayStages": [
         {
           "days": 21,
@@ -3286,6 +3447,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Lb",
+      "targetFieldDate": "03-28",
       "trayStages": [
         {
           "days": 21,
@@ -3308,7 +3470,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "03-07"
     },
     {
       "id": "crop_47bf49f0",
@@ -3322,7 +3485,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 85.71428571428571,
-      "yieldUnit": "Stalk"
+      "yieldUnit": "Stalk",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_ee79c07f",
@@ -3336,7 +3500,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
-      "yieldUnit": "Stalk"
+      "yieldUnit": "Stalk",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_872c1585",
@@ -3350,7 +3515,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 85.71428571428571,
-      "yieldUnit": "Stalk"
+      "yieldUnit": "Stalk",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_c7eeb30f",
@@ -3366,7 +3532,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666666,
-      "yieldUnit": "Stalk"
+      "yieldUnit": "Stalk",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_61f99c74",
@@ -3383,6 +3550,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "06-30",
       "trayStages": [
         {
           "days": 90,
@@ -3404,6 +3572,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666666,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-31",
       "trayStages": [
         {
           "days": 60,
@@ -3427,6 +3596,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-05",
       "trayStages": [
         {
           "days": 49,
@@ -3450,6 +3620,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 160,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-01",
       "trayStages": [
         {
           "days": 40,
@@ -3467,7 +3638,8 @@
       "dtm": 0,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_0a512e95",
@@ -3481,7 +3653,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_21977f71",
@@ -3499,6 +3672,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 133.33333333333331,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-11",
       "trayStages": [
         {
           "days": 30,
@@ -3522,6 +3696,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 133.33333333333331,
       "yieldUnit": "Head",
+      "targetFieldDate": "05-16",
       "trayStages": [
         {
           "days": 30,
@@ -3545,6 +3720,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 133.33333333333331,
       "yieldUnit": "Head",
+      "targetFieldDate": "03-27",
       "trayStages": [
         {
           "days": 30,
@@ -3565,7 +3741,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_b09c0ff6",
@@ -3580,7 +3757,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "04-16"
     },
     {
       "id": "crop_fb0c83af",
@@ -3597,6 +3775,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-30",
       "trayStages": [
         {
           "days": 30,
@@ -3620,6 +3799,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-21",
       "trayStages": [
         {
           "days": 30,
@@ -3643,6 +3823,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Head",
+      "targetFieldDate": "05-16",
       "trayStages": [
         {
           "days": 30,
@@ -3666,6 +3847,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-06",
       "trayStages": [
         {
           "days": 30,
@@ -3689,6 +3871,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Head",
+      "targetFieldDate": "08-24",
       "trayStages": [
         {
           "days": 30,
@@ -3709,7 +3892,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_f66d6564",
@@ -3724,7 +3908,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Head"
+      "yieldUnit": "Head",
+      "targetFieldDate": "04-16"
     },
     {
       "id": "crop_eac18ae1",
@@ -3741,6 +3926,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Head",
+      "targetFieldDate": "07-30",
       "trayStages": [
         {
           "days": 30,
@@ -3764,6 +3950,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-21",
       "trayStages": [
         {
           "days": 30,
@@ -3787,6 +3974,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Head",
+      "targetFieldDate": "05-16",
       "trayStages": [
         {
           "days": 30,
@@ -3810,6 +3998,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Head",
+      "targetFieldDate": "04-06",
       "trayStages": [
         {
           "days": 30,
@@ -3833,6 +4022,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Head",
+      "targetFieldDate": "08-24",
       "trayStages": [
         {
           "days": 30,
@@ -3855,6 +4045,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 44.61111111111111,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-11",
       "trayStages": [
         {
           "days": 30,
@@ -3877,6 +4068,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 44.694444444444436,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-01",
       "trayStages": [
         {
           "days": 30,
@@ -3899,6 +4091,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 53.43333333333332,
       "yieldUnit": "Lb",
+      "targetFieldDate": "03-27",
       "trayStages": [
         {
           "days": 30,
@@ -3917,7 +4110,8 @@
       "dtm": 90,
       "deprecated": true,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_153bcb76",
@@ -3935,6 +4129,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-01",
       "trayStages": [
         {
           "days": 30,
@@ -3961,7 +4156,8 @@
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "01-26"
     },
     {
       "id": "crop_824f0476",
@@ -3976,7 +4172,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "03-27"
     },
     {
       "id": "crop_1e16ea43",
@@ -3993,6 +4190,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-14",
       "trayStages": [
         {
           "days": 28,
@@ -4014,7 +4212,8 @@
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 150,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "03-17"
     },
     {
       "id": "crop_6e70d50b",
@@ -4029,7 +4228,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 12.5,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_86059077",
@@ -4046,6 +4246,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 12.5,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-01",
       "trayStages": [
         {
           "days": 40,
@@ -4069,6 +4270,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-11",
       "trayStages": [
         {
           "days": 40,
@@ -4092,7 +4294,8 @@
       "numberOfHarvests": 5,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 133.33333333333331,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-21"
     },
     {
       "id": "crop_0c4b0e31",
@@ -4111,6 +4314,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 133.33333333333331,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-04",
       "trayStages": [
         {
           "days": 28,
@@ -4134,7 +4338,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-21"
     },
     {
       "id": "crop_2eb08034",
@@ -4153,6 +4358,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-04",
       "trayStages": [
         {
           "days": 28,
@@ -4176,7 +4382,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-21"
     },
     {
       "id": "crop_b9dc7995",
@@ -4195,6 +4402,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-04",
       "trayStages": [
         {
           "days": 28,
@@ -4218,6 +4426,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 63,
@@ -4241,6 +4450,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-07",
       "trayStages": [
         {
           "days": 21,
@@ -4263,6 +4473,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 53.333333333333336,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-17",
       "trayStages": [
         {
           "days": 21,
@@ -4280,7 +4491,8 @@
       "dtm": 17,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Ounce"
+      "yieldUnit": "Ounce",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_0ed99ad3",
@@ -4298,6 +4510,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666666,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-27",
       "trayStages": [
         {
           "days": 28,
@@ -4322,6 +4535,7 @@
       "deprecated": false,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-27",
       "trayStages": [
         {
           "days": 56,
@@ -4339,7 +4553,8 @@
       "dtm": 365,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_855a9a48",
@@ -4351,7 +4566,8 @@
       "dtm": 28,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_07e29e72",
@@ -4369,6 +4585,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
       "yieldUnit": "Bloom",
+      "targetFieldDate": "04-21",
       "trayStages": [
         {
           "days": 40,
@@ -4386,7 +4603,8 @@
       "dtm": 85,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_a629f250",
@@ -4403,7 +4621,8 @@
       "numberOfHarvests": 5,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_89c76c8f",
@@ -4421,6 +4640,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 500,
       "yieldUnit": "Stem",
+      "targetFieldDate": "08-31",
       "trayStages": [
         {
           "days": 42,
@@ -4442,7 +4662,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 103.125,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "07-15"
     },
     {
       "id": "crop_335a8b1a",
@@ -4459,6 +4680,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 103.125,
       "yieldUnit": "Lb",
+      "targetFieldDate": "08-12",
       "trayStages": [
         {
           "days": 28,
@@ -4481,6 +4703,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 103.125,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-13",
       "trayStages": [
         {
           "days": 42,
@@ -4504,6 +4727,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 18.75,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "03-25",
       "trayStages": [
         {
           "days": 28,
@@ -4527,6 +4751,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 18.75,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-19",
       "trayStages": [
         {
           "days": 28,
@@ -4550,6 +4775,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 63,
@@ -4573,6 +4799,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 600,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-01",
       "trayStages": [
         {
           "days": 40,
@@ -4596,6 +4823,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 420,
       "yieldUnit": "Stem",
+      "targetFieldDate": "08-24",
       "trayStages": [
         {
           "days": 40,
@@ -4618,7 +4846,8 @@
       "numberOfHarvests": 21,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 1000,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "01-26"
     },
     {
       "id": "crop_93098373",
@@ -4636,6 +4865,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-26",
       "trayStages": [
         {
           "days": 35,
@@ -4659,6 +4889,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "06-25",
       "trayStages": [
         {
           "days": 35,
@@ -4681,7 +4912,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 60,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "05-21"
     },
     {
       "id": "crop_4b5ac7d6",
@@ -4698,7 +4930,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "05-21"
     },
     {
       "id": "crop_57e02fbc",
@@ -4714,7 +4947,8 @@
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 1.7857142857142858,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_501347b0",
@@ -4732,6 +4966,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 1.7857142857142858,
       "yieldUnit": "Lb",
+      "targetFieldDate": "03-23",
       "trayStages": [
         {
           "days": 21,
@@ -4755,6 +4990,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 1.7857142857142858,
       "yieldUnit": "Lb",
+      "targetFieldDate": "03-23",
       "trayStages": [
         {
           "days": 21,
@@ -4776,7 +5012,8 @@
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 1.7857142857142858,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_ec5bfeac",
@@ -4793,6 +5030,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 1.7857142857142858,
       "yieldUnit": "Lb",
+      "targetFieldDate": "03-23",
       "trayStages": [
         {
           "days": 21,
@@ -4814,7 +5052,8 @@
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 1.7857142857142858,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_e3c24c1d",
@@ -4829,7 +5068,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 83.33333333333331,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_aa11b861",
@@ -4847,6 +5087,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 28.125,
       "yieldUnit": "Lb",
+      "targetFieldDate": "06-05",
       "trayStages": [
         {
           "days": 28,
@@ -4874,6 +5115,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 56.25,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-21",
       "trayStages": [
         {
           "days": 28,
@@ -4901,6 +5143,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 14.0625,
       "yieldUnit": "Lb",
+      "targetFieldDate": "06-05",
       "trayStages": [
         {
           "days": 28,
@@ -4928,6 +5171,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 14.0625,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-21",
       "trayStages": [
         {
           "days": 28,
@@ -4955,6 +5199,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-16",
       "trayStages": [
         {
           "days": 30,
@@ -4977,7 +5222,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 93.33333333333331,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_72c704d6",
@@ -4994,7 +5240,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 87.5,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-21"
     },
     {
       "id": "crop_2e89aaf1",
@@ -5011,7 +5258,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 93.33333333333331,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-11"
     },
     {
       "id": "crop_30ec9c48",
@@ -5028,7 +5276,8 @@
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 800,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_9a165b91",
@@ -5046,6 +5295,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
       "yieldUnit": "Head",
+      "targetFieldDate": "06-30",
       "trayStages": [
         {
           "days": 30,
@@ -5069,6 +5319,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
       "yieldUnit": "Head",
+      "targetFieldDate": "06-30",
       "trayStages": [
         {
           "days": 30,
@@ -5092,6 +5343,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666667,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01",
       "trayStages": [
         {
           "days": 25,
@@ -5115,7 +5367,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 62.5,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_3bba629f",
@@ -5133,7 +5386,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 62.5,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_561c3612",
@@ -5151,7 +5405,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 62.5,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "05-01"
     },
     {
       "id": "crop_3fb91792",
@@ -5170,6 +5425,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-01",
       "trayStages": [
         {
           "days": 21,
@@ -5193,7 +5449,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 450,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "06-20"
     },
     {
       "id": "crop_05bf3b11",
@@ -5212,6 +5469,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
       "yieldUnit": "Lb",
+      "targetFieldDate": "07-15",
       "trayStages": [
         {
           "days": 25,
@@ -5234,7 +5492,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 85.71428571428571,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "06-30"
     },
     {
       "id": "crop_ed838265",
@@ -5246,7 +5505,8 @@
       "dtm": 180,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_5afa0aae",
@@ -5263,7 +5523,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 31.25,
-      "yieldUnit": "1/2 Pint"
+      "yieldUnit": "1/2 Pint",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_2a22c974",
@@ -5280,7 +5541,8 @@
       "numberOfHarvests": 21,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 11.904761904761905,
-      "yieldUnit": "1/2 Pint"
+      "yieldUnit": "1/2 Pint",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_7fe90afc",
@@ -5297,7 +5559,8 @@
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 22.321428571428573,
-      "yieldUnit": "1/2 Pint"
+      "yieldUnit": "1/2 Pint",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_836c7f1b",
@@ -5315,6 +5578,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 5.999999999999998,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-06",
       "trayStages": [
         {
           "days": 30,
@@ -5333,7 +5597,8 @@
       "dtm": 365,
       "deprecated": true,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_94979a80",
@@ -5351,6 +5616,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 3,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-11",
       "trayStages": [
         {
           "days": 30,
@@ -5371,6 +5637,7 @@
       "deprecated": false,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-25",
       "trayStages": [
         {
           "days": 180,
@@ -5395,6 +5662,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 60,
@@ -5418,7 +5686,8 @@
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "01-26"
     },
     {
       "id": "crop_eab3ca32",
@@ -5434,6 +5703,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
       "yieldUnit": "Root",
+      "targetFieldDate": "06-18",
       "trayStages": [
         {
           "days": 28,
@@ -5456,6 +5726,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 112.5,
       "yieldUnit": "Root",
+      "targetFieldDate": "06-18",
       "trayStages": [
         {
           "days": 28,
@@ -5476,6 +5747,7 @@
       "deprecated": false,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-31",
       "trayStages": [
         {
           "days": 90,
@@ -5499,7 +5771,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 6.25,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_383bd374",
@@ -5517,7 +5790,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 6.249999999999999,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "03-22"
     },
     {
       "id": "crop_2794b064",
@@ -5536,6 +5810,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 6.249999999999999,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-19",
       "trayStages": [
         {
           "days": 28,
@@ -5557,7 +5832,8 @@
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 187.5,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-21"
     },
     {
       "id": "crop_f927e90d",
@@ -5574,7 +5850,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666667,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "06-25"
     },
     {
       "id": "crop_82041d60",
@@ -5591,7 +5868,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666667,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "07-20"
     },
     {
       "id": "crop_4286f6da",
@@ -5608,7 +5886,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666667,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "03-27"
     },
     {
       "id": "crop_50367d9e",
@@ -5626,6 +5905,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666667,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-17",
       "trayStages": [
         {
           "days": 42,
@@ -5649,6 +5929,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666667,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "08-31",
       "trayStages": [
         {
           "days": 42,
@@ -5672,6 +5953,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-13",
       "trayStages": [
         {
           "days": 42,
@@ -5696,6 +5978,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-13",
       "trayStages": [
         {
           "days": 42,
@@ -5718,6 +6001,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 37.5,
       "yieldUnit": "Lb",
+      "targetFieldDate": "08-26",
       "trayStages": [
         {
           "days": 42,
@@ -5740,6 +6024,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 37.5,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-13",
       "trayStages": [
         {
           "days": 42,
@@ -5761,7 +6046,8 @@
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 25,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "08-29"
     },
     {
       "id": "crop_61da1133",
@@ -5777,7 +6063,8 @@
       "numberOfHarvests": 16,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 20,
-      "yieldUnit": "bunch"
+      "yieldUnit": "bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_302ff764",
@@ -5795,6 +6082,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 600,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-18",
       "trayStages": [
         {
           "days": 42,
@@ -5818,6 +6106,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 342.85714285714283,
       "yieldUnit": "Stem",
+      "targetFieldDate": "09-06",
       "trayStages": [
         {
           "days": 63,
@@ -5838,7 +6127,8 @@
       "numberOfHarvests": 32,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 21.428571428571427,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_13b185ba",
@@ -5855,6 +6145,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 21.428571428571427,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-29",
       "trayStages": [
         {
           "days": 28,
@@ -5875,7 +6166,8 @@
       "numberOfHarvests": 36,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 21.428571428571427,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "08-24"
     },
     {
       "id": "crop_42495dcc",
@@ -5891,6 +6183,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 21.428571428571427,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "09-21",
       "trayStages": [
         {
           "days": 28,
@@ -5911,7 +6204,8 @@
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_3d9628e5",
@@ -5927,7 +6221,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 40,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "06-20"
     },
     {
       "id": "crop_0c91dc12",
@@ -5945,6 +6240,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 40,
       "yieldUnit": "Lb",
+      "targetFieldDate": "07-11",
       "trayStages": [
         {
           "days": 21,
@@ -5968,6 +6264,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 40,
       "yieldUnit": "Lb",
+      "targetFieldDate": "07-11",
       "trayStages": [
         {
           "days": 21,
@@ -5990,6 +6287,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
       "yieldUnit": "Lb",
+      "targetFieldDate": "02-21",
       "trayStages": [
         {
           "days": 21,
@@ -6013,6 +6311,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 149.99999999999997,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 28,
@@ -6036,6 +6335,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 28,
@@ -6059,6 +6359,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 149.99999999999997,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-09",
       "trayStages": [
         {
           "days": 28,
@@ -6083,6 +6384,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 250,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-14",
       "trayStages": [
         {
           "days": 38,
@@ -6104,7 +6406,8 @@
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 7,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-11"
     },
     {
       "id": "crop_4f06c2f6",
@@ -6120,7 +6423,8 @@
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 10,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-11"
     },
     {
       "id": "crop_d14989b3",
@@ -6132,7 +6436,8 @@
       "dtm": 50,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_1b03ab76",
@@ -6150,6 +6455,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 187.5,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-06",
       "trayStages": [
         {
           "days": 35,
@@ -6168,7 +6474,8 @@
       "dtm": 90,
       "daysToGermination": 10,
       "deprecated": false,
-      "harvestBufferDays": 7
+      "harvestBufferDays": 7,
+      "targetFieldDate": "06-10"
     },
     {
       "id": "crop_23d52672",
@@ -6185,7 +6492,8 @@
       "numberOfHarvests": 45,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 7.142857142857143,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-21"
     },
     {
       "id": "crop_1d9a87d5",
@@ -6203,6 +6511,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 7.142857142857143,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-29",
       "trayStages": [
         {
           "days": 28,
@@ -6225,7 +6534,8 @@
       "numberOfHarvests": 42,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 5,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-21"
     },
     {
       "id": "crop_333b83d6",
@@ -6243,6 +6553,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 8.928571428571429,
       "yieldUnit": "Lb",
+      "targetFieldDate": "04-29",
       "trayStages": [
         {
           "days": 28,
@@ -6264,7 +6575,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 81.4814814814815,
-      "yieldUnit": "Lb"
+      "yieldUnit": "Lb",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_37d61cc3",
@@ -6276,7 +6588,8 @@
       "dtm": 100,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_05dcd19f",
@@ -6292,7 +6605,8 @@
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_8761adf1",
@@ -6310,7 +6624,8 @@
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_46b2c7e6",
@@ -6326,7 +6641,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 450,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_d3539c5e",
@@ -6343,6 +6659,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 16.666666666666664,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "07-09",
       "trayStages": [
         {
           "days": 24,
@@ -6365,6 +6682,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 16.666666666666664,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "05-15",
       "trayStages": [
         {
           "days": 24,
@@ -6388,6 +6706,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 350,
       "yieldUnit": "Stem",
+      "targetFieldDate": "05-29",
       "trayStages": [
         {
           "days": 38,
@@ -6406,7 +6725,8 @@
       "dtm": 0,
       "deprecated": false,
       "harvestBufferDays": 7,
-      "yieldUnit": "None"
+      "yieldUnit": "None",
+      "targetFieldDate": "01-31"
     },
     {
       "id": "crop_abec9c7c",
@@ -6421,6 +6741,7 @@
       "deprecated": false,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "04-07",
       "trayStages": [
         {
           "days": 56,
@@ -6444,6 +6765,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-17",
       "trayStages": [
         {
           "days": 21,
@@ -6475,6 +6797,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 41.666666666666664,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-12",
       "trayStages": [
         {
           "days": 21,
@@ -6506,6 +6829,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 41.666666666666664,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-12",
       "trayStages": [
         {
           "days": 21,
@@ -6537,6 +6861,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 41.666666666666664,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-02",
       "trayStages": [
         {
           "days": 21,
@@ -6568,6 +6893,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 41.666666666666664,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-02",
       "trayStages": [
         {
           "days": 21,
@@ -6599,6 +6925,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 20.833333333333336,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-12",
       "trayStages": [
         {
           "days": 21,
@@ -6630,6 +6957,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 20.833333333333336,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-12",
       "trayStages": [
         {
           "days": 21,
@@ -6661,6 +6989,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 20.833333333333332,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-02",
       "trayStages": [
         {
           "days": 21,
@@ -6692,6 +7021,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-12",
       "trayStages": [
         {
           "days": 21,
@@ -6723,6 +7053,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-12",
       "trayStages": [
         {
           "days": 21,
@@ -6754,6 +7085,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.333333333333336,
       "yieldUnit": "Lb",
+      "targetFieldDate": "05-02",
       "trayStages": [
         {
           "days": 21,
@@ -6785,6 +7117,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
       "yieldUnit": "Bunch",
+      "targetFieldDate": "03-23",
       "trayStages": [
         {
           "days": 21,
@@ -6806,7 +7139,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_ad95c1f7",
@@ -6823,7 +7157,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_293c2581",
@@ -6840,7 +7175,8 @@
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 50,
-      "yieldUnit": "Bunch"
+      "yieldUnit": "Bunch",
+      "targetFieldDate": "07-05"
     },
     {
       "id": "crop_9636bdb3",
@@ -6852,7 +7188,8 @@
       "dtm": 365,
       "deprecated": true,
       "harvestBufferDays": 7,
-      "yieldUnit": "stem"
+      "yieldUnit": "stem",
+      "targetFieldDate": "04-01"
     },
     {
       "id": "crop_dcb0428b",
@@ -6870,6 +7207,7 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 250,
       "yieldUnit": "Stem",
+      "targetFieldDate": "04-24",
       "trayStages": [
         {
           "days": 63,
@@ -6892,7 +7230,8 @@
       "numberOfHarvests": 7,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 171.42857142857142,
-      "yieldUnit": "Stem"
+      "yieldUnit": "Stem",
+      "targetFieldDate": "04-26"
     }
   ]
 }

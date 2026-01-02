@@ -52,6 +52,14 @@ CropTimeline Component
 | `TimelineCrop` | Display format: one per bed with computed dates |
 | `CropConfig` | Static config from catalog (DTM, spacing, seasons) |
 
+## Data Pipeline
+
+crops.json is generated from Excel via:
+1. extract-crops.py → crops_from_excel.json (raw dump)
+2. src/data/build-minimal-crops.js → crops.json (normalized)
+
+When adding new fields to CropConfig, update build-minimal-crops.js.
+
 ### Key Files
 
 | File | Purpose |
