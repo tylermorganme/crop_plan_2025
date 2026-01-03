@@ -68,7 +68,7 @@ interface CropTimelineProps {
   groups?: ResourceGroup[] | null;
   onCropMove?: (cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => void;
   onCropDateChange?: (groupId: string, startDate: string, endDate: string) => void;
-  onDuplicateCrop?: (groupId: string) => void;
+  onDuplicateCrop?: (groupId: string) => Promise<string | void>;
   onDeleteCrop?: (groupIds: string[]) => void;
   /** Callback when user wants to edit the crop config. Receives the planting identifier. */
   onEditCropConfig?: (identifier: string) => void;
@@ -445,12 +445,6 @@ export default function CropTimeline({
     return Math.max(1, viewportWidth / targetDays);
   }, [zoomIndex]);
 
-  // Calculate timeline width
-  const timelineWidth = useMemo(() => {
-    const days = Math.ceil((timelineEnd.getTime() - timelineStart.getTime()) / (1000 * 60 * 60 * 24));
-    return days * pixelsPerDay;
-  }, [timelineStart, timelineEnd, pixelsPerDay]);
-
   // Get position for a crop on the timeline
   const getTimelinePosition = useCallback((startDate: string, endDate: string) => {
     const startMs = parseDate(startDate).getTime() - timelineStart.getTime();
@@ -705,6 +699,12 @@ export default function CropTimeline({
     e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.setData('text/plain', effectiveCrop.id); // Fallback for compatibility
     e.dataTransfer.effectAllowed = 'move';
+
+    // Hide the default browser drag image (we show our own ghost preview)
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(emptyImg, 0, 0);
+
     setDraggedCropId(effectiveCrop.id);
     setDraggedGroupId(effectiveCrop.groupId);
 
@@ -718,14 +718,16 @@ export default function CropTimeline({
     const originalPos = getTimelinePosition(effectiveCrop.startDate, effectiveCrop.endDate);
 
     // Initialize drag preview with original position
+    // Normalize empty resource to 'Unassigned' so it matches how handleDragOver sets targetResource
+    const normalizedResource = effectiveCrop.resource || 'Unassigned';
     setDragPreview({
       groupId: effectiveCrop.groupId,
       deltaX: 0,
       deltaDays: 0,
-      targetResource: effectiveCrop.resource,
+      targetResource: normalizedResource,
       originalLeft: originalPos.left,
       originalWidth: originalPos.width,
-      originalResource: effectiveCrop.resource,
+      originalResource: normalizedResource,
       cropName: effectiveCrop.name,
       feetNeeded: effectiveCrop.feetNeeded || 50,
       category: effectiveCrop.category,
@@ -808,17 +810,27 @@ export default function CropTimeline({
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
 
+      // Determine which groups to move: if dragged item is in selection, move all selected
+      // Otherwise just move the dragged item
+      const groupsToMove = selectedGroupIds.has(data.groupId)
+        ? Array.from(selectedGroupIds)
+        : [data.groupId];
+
       // Apply timing changes if enabled and there was horizontal movement
-      let datesChanged = false;
       if (timingEditEnabled && dragStartX.current !== null && dragOriginalDates.current) {
         const deltaX = e.clientX - dragStartX.current;
         const deltaDays = pixelsToDays(deltaX);
 
         if (deltaDays !== 0 && onCropDateChange) {
-          const newStart = offsetDate(dragOriginalDates.current.start, deltaDays);
-          const newEnd = offsetDate(dragOriginalDates.current.end, deltaDays);
-          onCropDateChange(data.groupId, newStart, newEnd);
-          datesChanged = true;
+          // Apply date offset to all selected/dragged groups
+          for (const groupId of groupsToMove) {
+            const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
+            if (groupCrop) {
+              const newStart = offsetDate(groupCrop.startDate, deltaDays);
+              const newEnd = offsetDate(groupCrop.endDate, deltaDays);
+              onCropDateChange(groupId, newStart, newEnd);
+            }
+          }
         }
       }
 
@@ -827,6 +839,9 @@ export default function CropTimeline({
       const targetResource = resource === 'Unassigned' ? '' : resource;
       const resourceChanged = data.originalResource !== targetResource;
       if (data.cropId && onCropMove && resourceChanged) {
+        // For multi-select moves, move each selected item
+        // Note: currently onCropMove only handles one at a time
+        // For now, just move the dragged one (multi-move is complex with bed spans)
         onCropMove(
           data.cropId,
           targetResource,
@@ -919,7 +934,7 @@ export default function CropTimeline({
   }, [resources, groups, collapsedGroups]);
 
   // Render a crop box
-  const renderCropBox = (crop: TimelineCrop, stackRow: number = 0, laneHeight: number = 50) => {
+  const renderCropBox = (crop: TimelineCrop, stackRow: number = 0) => {
     const pos = getTimelinePosition(crop.startDate, crop.endDate);
     const colors = crop.bgColor
       ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
@@ -965,12 +980,6 @@ export default function CropTimeline({
     const isSelected = selectedGroupIds.has(crop.groupId);
     // All beds are draggable - dragging a secondary bed acts like dragging the first bed
 
-    // Check if this crop group has an active timing preview (only show on same row)
-    const hasTimingPreview = timingEditEnabled &&
-                              dragPreview?.groupId === crop.groupId &&
-                              dragPreview.deltaDays !== 0 &&
-                              dragPreview.targetResource === dragPreview.originalResource;
-
     // Check if this is a partial bed (doesn't use full capacity)
     const isPartialBed = crop.feetUsed !== undefined &&
                          crop.bedCapacityFt !== undefined &&
@@ -989,60 +998,21 @@ export default function CropTimeline({
       tooltip += `\n${methodNames[crop.plantingMethod] || crop.plantingMethod}`;
     }
 
-    // Calculate preview dates if in timing mode
-    const previewDates = hasTimingPreview ? {
-      start: offsetDate(crop.startDate, dragPreview!.deltaDays),
-      end: offsetDate(crop.endDate, dragPreview!.deltaDays),
-    } : null;
-    const previewPos = previewDates ? getTimelinePosition(previewDates.start, previewDates.end) : null;
-
-    // Calculate cursor-aware vertical position for timing preview (same logic as cross-row ghost)
-    let previewTopPos = topPos;
-    if (hasTimingPreview && dragPreview?.laneOffsetY !== undefined) {
-      if (viewMode === 'stacked') {
-        // Snap to nearest row slot
-        const rowHeight = CROP_HEIGHT + CROP_SPACING;
-        const row = Math.max(0, Math.floor((dragPreview.laneOffsetY - CROP_TOP_PADDING) / rowHeight));
-        previewTopPos = CROP_TOP_PADDING + row * rowHeight;
-        // Clamp to lane bounds
-        previewTopPos = Math.max(CROP_TOP_PADDING, Math.min(previewTopPos, laneHeight - CROP_HEIGHT - CROP_TOP_PADDING));
-      } else {
-        // In overlap mode, center on cursor with some constraints
-        previewTopPos = Math.max(CROP_TOP_PADDING, Math.min(dragPreview.laneOffsetY - CROP_HEIGHT / 2, laneHeight - CROP_HEIGHT - CROP_TOP_PADDING));
-      }
-    }
-
     return (
       <React.Fragment key={crop.id}>
-        {/* Ghost preview for timing mode - shows where crop will move to */}
-        {hasTimingPreview && previewPos && (
+        {/* Animated gradient border for selected items - rendered as sibling to avoid overflow clip */}
+        {isSelected && (
           <div
-            className="absolute rounded border-2 border-dashed pointer-events-none"
+            className="absolute pointer-events-none rounded-md animate-border"
             style={{
-              left: previewPos.left,
-              width: previewPos.width,
-              top: previewTopPos,
-              height: CROP_HEIGHT,
-              borderColor: colors.bg,
-              backgroundColor: `${colors.bg}33`, // 20% opacity
-              zIndex: 50,
+              left: pos.left - 3,
+              width: pos.width + 6,
+              top: topPos - 3,
+              height: CROP_HEIGHT + 6,
+              zIndex: 20,
+              background: `conic-gradient(from var(--border-angle), #f59e0b, #ef4444, #ec4899, #8b5cf6, #3b82f6, #10b981, #f59e0b)`,
             }}
-          >
-            {/* Date offset badge */}
-            <div
-              className="absolute -top-6 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap"
-              style={{
-                backgroundColor: dragPreview!.deltaDays > 0 ? '#22c55e' : '#ef4444',
-                color: 'white',
-              }}
-            >
-              {dragPreview!.deltaDays > 0 ? '+' : ''}{dragPreview!.deltaDays} days
-            </div>
-            {/* New dates preview */}
-            <div className="px-2 py-1 text-xs" style={{ color: colors.bg }}>
-              <div className="font-semibold">{formatDate(previewDates!.start)} - {formatDate(previewDates!.end)}</div>
-            </div>
-          </div>
+          />
         )}
 
         {/* Actual crop box */}
@@ -1051,21 +1021,21 @@ export default function CropTimeline({
           onDragStart={(e) => handleDragStart(e, crop)}
           onDragEnd={handleDragEnd}
           onClick={(e) => handleCropClick(e, crop)}
-          className={`absolute rounded select-none overflow-hidden hover:z-10 cursor-grab ${
+          className={`absolute rounded select-none overflow-hidden cursor-grab ${
             isDragging ? 'opacity-50 cursor-grabbing' : ''
           } ${isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
-          } ${isSelected ? 'ring-2 ring-blue-600 ring-offset-1 z-20' : ''} ${
+          } ${isSelected ? 'z-[21]' : 'hover:z-10'} ${
             isOverlapping ? 'bg-transparent border-2' : ''
           }`}
           style={{
             left: pos.left,
             width: pos.width,
             top: topPos,
+            boxShadow: isOverlapping ? 'none' : '0 2px 4px rgba(0,0,0,0.2)',
             height: CROP_HEIGHT,
             backgroundColor: isOverlapping ? 'transparent' : colors.bg,
             borderColor: colors.bg,
             color: isOverlapping ? '#333' : colors.text,
-            boxShadow: isOverlapping ? 'none' : '0 2px 4px rgba(0,0,0,0.2)',
             // Add left border accent for secondary beds to show they're linked
             borderLeftWidth: isMultiBed && !isFirstBed ? 3 : undefined,
             borderLeftColor: isMultiBed && !isFirstBed ? `${colors.text}60` : undefined,
@@ -1197,71 +1167,6 @@ export default function CropTimeline({
           })()}
         </div>
       </React.Fragment>
-    );
-  };
-
-  // Render resource lane
-  const renderResourceLane = (
-    resource: string,
-    groupName: string | null,
-    groupIndex: number
-  ) => {
-    // Include preview crop in lane if it matches this resource
-    const baseLaneCrops = cropsByResource[resource] || [];
-    const laneCrops = previewCrop && previewCrop.resource === resource
-      ? [...baseLaneCrops, previewCrop]
-      : baseLaneCrops;
-    const stacking = calculateStacking(laneCrops);
-    const laneHeight = viewMode === 'stacked' && laneCrops.length > 0
-      ? CROP_TOP_PADDING * 2 + stacking.maxRow * CROP_HEIGHT + (stacking.maxRow - 1) * CROP_SPACING
-      : 50;
-
-    const isEvenGroup = groupIndex % 2 === 1;
-    const isDragOver = dragOverResource === resource;
-
-    return (
-      <div key={resource} className="flex">
-        {/* Lane label */}
-        <div
-          className={`shrink-0 border-r border-b border-gray-200 px-2 flex items-center text-xs font-medium ${
-            isEvenGroup ? 'bg-blue-50' : 'bg-gray-50'
-          }`}
-          style={{ width: LANE_LABEL_WIDTH, minWidth: LANE_LABEL_WIDTH, height: laneHeight }}
-        >
-          {groupName && (
-            <span
-              className="text-[9px] text-gray-600 mr-1 cursor-pointer hover:text-gray-700"
-              onClick={() => toggleGroup(groupName)}
-            >
-              <span className="mr-1">▲</span>
-              {groupName}:
-            </span>
-          )}
-          <span className="truncate">{resource}</span>
-        </div>
-
-        {/* Lane timeline */}
-        <div
-          className={`relative border-b border-gray-100 flex-1 ${
-            isEvenGroup ? 'bg-blue-50/30' : ''
-          } ${isDragOver ? 'bg-blue-100' : ''}`}
-          style={{ height: laneHeight, width: timelineWidth }}
-          onDragOver={(e) => handleDragOver(e, resource)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, resource)}
-        >
-          {/* Today line */}
-          {todayPosition !== null && (
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-5"
-              style={{ left: todayPosition }}
-            />
-          )}
-
-          {/* Crop boxes (includes preview ghost if present) */}
-          {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0, laneHeight))}
-        </div>
-      </div>
     );
   };
 
@@ -1522,8 +1427,10 @@ export default function CropTimeline({
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, 'Unassigned')}
                   >
-                    {/* Ghost preview for moving to Unassigned */}
-                    {isDragOverUnassigned && dragPreview && dragPreview.originalResource !== '' && (() => {
+                    {/* Unified ghost preview for Unassigned - shows for cross-resource moves OR when timing edit enabled */}
+                    {isDragOverUnassigned && dragPreview && (dragPreview.originalResource !== 'Unassigned' || timingEditEnabled) && (() => {
+                      const isMovingToUnassigned = dragPreview.originalResource !== 'Unassigned' && dragPreview.originalResource !== '';
+
                       // Get crop colors (same logic as renderCropBox)
                       const colors = dragPreview.bgColor
                         ? { bg: dragPreview.bgColor, text: dragPreview.textColor || '#fff' }
@@ -1557,10 +1464,16 @@ export default function CropTimeline({
                         }
                       }
 
-                      // Add time offset to label if applicable
-                      const timeLabel = hasTimeOffset
-                        ? ` (${dragPreview.deltaDays > 0 ? '+' : ''}${dragPreview.deltaDays} days)`
+                      // Build label parts
+                      const bedPart = isMovingToUnassigned ? '→ Unassigned' : 'Unassigned';
+                      const timePart = hasTimeOffset
+                        ? ` ${dragPreview.deltaDays > 0 ? '+' : ''}${dragPreview.deltaDays}d`
                         : '';
+
+                      // Badge color: green if positive time, red if negative, crop color otherwise
+                      const badgeColor = hasTimeOffset
+                        ? (dragPreview.deltaDays > 0 ? '#22c55e' : '#ef4444')
+                        : colors.bg;
 
                       return (
                         <div
@@ -1575,14 +1488,14 @@ export default function CropTimeline({
                             zIndex: 50,
                           }}
                         >
-                          {/* Badge showing destination */}
+                          {/* Badge showing destination + timing */}
                           <div
                             className="absolute -top-6 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap text-white"
-                            style={{ backgroundColor: colors.bg }}
+                            style={{ backgroundColor: badgeColor }}
                           >
-                            → Unassigned{timeLabel}
+                            {bedPart}{timePart}
                           </div>
-                          {/* Crop name and dates (matching timing preview style) */}
+                          {/* Crop name and dates */}
                           <div className="px-2 py-1 text-xs" style={{ color: colors.bg }}>
                             <div className="font-semibold truncate">{dragPreview.cropName}</div>
                             <div className="text-[10px] opacity-80">{formatDate(displayStartDate)} - {formatDate(displayEndDate)}</div>
@@ -1598,7 +1511,7 @@ export default function CropTimeline({
                       />
                     )}
                     {/* Unassigned crop boxes */}
-                    {unassignedCrops.map(crop => renderCropBox(crop, unassignedStacking.rows[crop.id] || 0, effectiveHeight))}
+                    {unassignedCrops.map(crop => renderCropBox(crop, unassignedStacking.rows[crop.id] || 0))}
                   </td>
                 </tr>
               );
@@ -1725,8 +1638,10 @@ export default function CropTimeline({
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, resource)}
                   >
-                    {/* Ghost preview for move (vertical and/or horizontal) */}
-                    {isDragOver && dragPreview && dragPreview.targetResource !== dragPreview.originalResource && (() => {
+                    {/* Unified ghost preview for all drags - shows target position with bed + timing info */}
+                    {/* Show when: hovering over this lane OR this is the original lane and timing mode is on */}
+                    {(isDragOver || (dragPreview?.originalResource === resource && timingEditEnabled)) && dragPreview && (() => {
+                      const isMovingToNewResource = dragPreview.targetResource !== dragPreview.originalResource;
                       const isComplete = dragPreview.targetIsComplete !== false;
                       const spanBeds = dragPreview.targetSpanBeds || [resource];
                       const feetNeeded = dragPreview.targetFeetNeeded || 50;
@@ -1766,19 +1681,21 @@ export default function CropTimeline({
                         }
                       }
 
-                      // Build the label: single bed, range, or error with footage info
-                      let bedLabel: string;
+                      // Build the label parts
+                      // 1. Bed destination (always show)
+                      let bedPart: string;
                       if (!isComplete) {
-                        bedLabel = `Need ${feetNeeded}' but only ${feetAvailable}' available`;
-                      } else if (spanBeds.length === 1) {
-                        bedLabel = `→ ${spanBeds[0]}`;
+                        bedPart = `Need ${feetNeeded}' but only ${feetAvailable}' available`;
+                      } else if (isMovingToNewResource) {
+                        bedPart = spanBeds.length === 1 ? `→ ${spanBeds[0]}` : `→ ${spanBeds[0]} - ${spanBeds[spanBeds.length - 1]}`;
                       } else {
-                        bedLabel = `→ ${spanBeds[0]} - ${spanBeds[spanBeds.length - 1]}`;
+                        // Same resource - just show the bed name
+                        bedPart = spanBeds.length === 1 ? spanBeds[0] : `${spanBeds[0]} - ${spanBeds[spanBeds.length - 1]}`;
                       }
 
-                      // Add time offset to label if applicable
-                      const timeLabel = hasTimeOffset
-                        ? ` (${dragPreview.deltaDays > 0 ? '+' : ''}${dragPreview.deltaDays} days)`
+                      // 2. Time offset (if any)
+                      const timePart = hasTimeOffset
+                        ? ` ${dragPreview.deltaDays > 0 ? '+' : ''}${dragPreview.deltaDays}d`
                         : '';
 
                       // Check if the last bed is partial (uses less than full capacity)
@@ -1786,9 +1703,14 @@ export default function CropTimeline({
                       const lastBed = bedSpanInfoArr[bedSpanInfoArr.length - 1];
                       const isPartialBed = lastBed && lastBed.feetUsed < lastBed.bedCapacityFt;
 
+                      // Badge color: red if incomplete/negative time, green if positive time, crop color otherwise
+                      const badgeColor = !isComplete ? '#ef4444'
+                        : hasTimeOffset ? (dragPreview.deltaDays > 0 ? '#22c55e' : '#ef4444')
+                        : colors.bg;
+
                       return (
                         <div
-                          className="absolute rounded border-2 border-dashed pointer-events-none overflow-hidden"
+                          className="absolute rounded border-2 border-dashed pointer-events-none"
                           style={{
                             left: adjustedPos.left,
                             width: adjustedPos.width,
@@ -1799,17 +1721,15 @@ export default function CropTimeline({
                             zIndex: 50,
                           }}
                         >
-                          {/* Badge showing destination */}
+                          {/* Badge showing destination bed + timing */}
                           <div
                             className="absolute -top-6 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap text-white"
-                            style={{
-                              backgroundColor: isComplete ? colors.bg : '#ef4444',
-                            }}
+                            style={{ backgroundColor: badgeColor }}
                           >
-                            {bedLabel}{timeLabel}
-                            {isPartialBed && ` (${lastBed.feetUsed}' of ${lastBed.bedCapacityFt}')`}
+                            {bedPart}{timePart}
+                            {isPartialBed && ` (${lastBed.feetUsed}')`}
                           </div>
-                          {/* Crop name and dates (matching timing preview style) */}
+                          {/* Crop name and dates */}
                           <div className="px-2 py-1 text-xs" style={{ color: isComplete ? colors.bg : '#ef4444' }}>
                             <div className="font-semibold truncate">{dragPreview.cropName}</div>
                             <div className="text-[10px] opacity-80">{formatDate(displayStartDate)} - {formatDate(displayEndDate)}</div>
@@ -1825,7 +1745,7 @@ export default function CropTimeline({
                       />
                     )}
                     {/* Crop boxes (includes preview ghost if present) */}
-                    {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0, laneHeight))}
+                    {laneCrops.map(crop => renderCropBox(crop, stacking.rows[crop.id] || 0))}
                   </td>
                 </tr>
               );
@@ -2291,9 +2211,12 @@ export default function CropTimeline({
                     )}
                     {onDuplicateCrop && (
                       <button
-                        onClick={() => {
-                          onDuplicateCrop(crop.groupId);
-                          setSelectedGroupIds(new Set());
+                        onClick={async () => {
+                          const newId = await onDuplicateCrop(crop.groupId);
+                          if (newId) {
+                            // Select the new planting so user can duplicate again
+                            setSelectedGroupIds(new Set([newId]));
+                          }
                         }}
                         className="w-full px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                       >

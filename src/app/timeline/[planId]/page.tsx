@@ -169,10 +169,11 @@ export default function TimelinePlanPage() {
   const duplicatePlanting = usePlanStore((state) => state.duplicatePlanting);
   const deleteCrop = usePlanStore((state) => state.deleteCrop);
 
-  const handleDuplicateCrop = useCallback(async (groupId: string) => {
+  const handleDuplicateCrop = useCallback(async (groupId: string): Promise<string | void> => {
     try {
-      await duplicatePlanting(groupId);
+      const newId = await duplicatePlanting(groupId);
       setToast({ message: 'Planting duplicated - find it in Unassigned', type: 'success' });
+      return newId;
     } catch (e) {
       setToast({ message: `Failed to duplicate: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
     }
