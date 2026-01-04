@@ -78,13 +78,13 @@ export default function GroupHeader({
   }
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-t-lg border-b group">
+    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-t-lg border-b">
       {/* Drag handle - only this element triggers group dragging */}
       <div
         ref={handleRef}
         {...(dragHandle?.attributes ?? {})}
         {...(dragHandle?.listeners ?? {})}
-        className="text-gray-300 group-hover:text-gray-400 cursor-grab active:cursor-grabbing p-1 -m-1 rounded hover:bg-gray-200"
+        className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing p-1 -m-1 rounded hover:bg-gray-200"
         title="Drag to reorder group"
       >
         <svg width="14" height="22" viewBox="0 0 12 20" fill="currentColor">
@@ -105,14 +105,14 @@ export default function GroupHeader({
         </span>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Actions - always visible */}
+      <div className="flex items-center gap-2">
         <button
           onClick={(e) => {
             e.stopPropagation();
             onAddBed();
           }}
-          className="px-2 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm"
+          className="px-2.5 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm font-medium"
           title="Add bed to this group"
         >
           + Add Bed
@@ -122,7 +122,7 @@ export default function GroupHeader({
             e.stopPropagation();
             onStartEdit();
           }}
-          className="p-1.5 text-gray-400 hover:text-blue-600 rounded"
+          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-gray-100 rounded"
           title="Rename group"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -138,7 +138,7 @@ export default function GroupHeader({
           disabled={!canDelete}
           className={`p-1.5 rounded ${
             canDelete
-              ? 'text-gray-400 hover:text-red-600'
+              ? 'text-gray-400 hover:text-red-600 hover:bg-gray-100'
               : 'text-gray-300 cursor-not-allowed'
           }`}
           title={canDelete ? 'Delete group' : 'Remove all beds first'}
