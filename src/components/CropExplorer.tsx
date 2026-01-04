@@ -6,7 +6,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import type { Crop } from '@/lib/crops';
 import type { Planting } from '@/lib/plan-types';
-import { generatePlantingId } from '@/lib/plan-types';
+import { createPlanting } from '@/lib/entities/planting';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
 import { type CropConfig } from '@/lib/entities/crop-config';
 import CropConfigCreator from './CropConfigCreator';
@@ -147,22 +147,16 @@ function getNumericRange(crops: Crop[], col: string): { min: number; max: number
   return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 100 : max };
 }
 
-// Helper to create a Planting from a Crop config
+// Helper to create a Planting from a Crop config using CRUD function
 function createPlantingFromConfig(crop: Crop): Planting {
-  const id = generatePlantingId();
-  const now = Date.now();
-
-  // Default to today as start date
   const startDate = format(new Date(), 'yyyy-MM-dd');
 
-  return {
-    id,
+  return createPlanting({
     configId: crop.identifier,
     fieldStartDate: startDate,
     startBed: null, // Unassigned
     bedFeet: 50, // Default 1 bed
-    lastModified: now,
-  };
+  });
 }
 
 export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {

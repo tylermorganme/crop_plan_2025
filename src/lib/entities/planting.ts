@@ -164,3 +164,25 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     lastModified: Date.now(),
   };
 }
+
+/**
+ * Clone a planting with a new ID.
+ * Use this for duplicating plantings within a plan.
+ */
+export function clonePlanting(
+  source: Planting,
+  overrides?: Partial<CreatePlantingInput>
+): Planting {
+  return createPlanting({
+    configId: source.configId,
+    fieldStartDate: source.fieldStartDate,
+    startBed: overrides?.startBed !== undefined ? overrides.startBed : source.startBed,
+    bedFeet: source.bedFeet,
+    followsPlantingId: source.followsPlantingId,
+    followOffset: source.followOffset,
+    overrides: source.overrides,
+    actuals: source.actuals,
+    notes: source.notes,
+    ...overrides,
+  });
+}

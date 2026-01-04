@@ -21,7 +21,7 @@ import {
 } from './slim-planting';
 
 // Import plan types
-import type { Plan, Planting, Bed } from './plan-types';
+import type { Plan, Planting, Bed, BedGroup } from './plan-types';
 import { getBedGroup, getBedNumber, getBedLengthFromId } from './plan-types';
 
 // Re-export for consumers
@@ -360,35 +360,65 @@ export function getTimelineStats() {
 // =============================================================================
 
 /**
- * Convert beds map to bedGroups format expected by calculateRowSpan.
+ * Build mappings for bed UUID <-> name conversion.
+ * Returns:
+ * - nameGroups: group name -> bed names (for legacy span calculation)
+ * - uuidToName: bed UUID -> bed name
+ * - nameToUuid: bed name -> bed UUID
  */
-function deriveBedGroups(beds: Record<string, Bed>): Record<string, string[]> {
-  const groups: Record<string, string[]> = {};
+function buildBedMappings(
+  beds: Record<string, Bed>,
+  bedGroups: Record<string, BedGroup>
+): {
+  nameGroups: Record<string, string[]>;
+  uuidToName: Record<string, string>;
+  nameToUuid: Record<string, string>;
+  bedLengths: Record<string, number>;
+} {
+  const nameGroups: Record<string, string[]> = {};
+  const uuidToName: Record<string, string> = {};
+  const nameToUuid: Record<string, string> = {};
+  const bedLengths: Record<string, number> = {};
+
+  // Group beds by their group's name, sorted by displayOrder
+  const groupedBeds = new Map<string, Bed[]>();
   for (const bed of Object.values(beds)) {
-    if (!groups[bed.group]) {
-      groups[bed.group] = [];
+    const groupName = bedGroups[bed.groupId]?.name ?? 'Unknown';
+    if (!groupedBeds.has(groupName)) {
+      groupedBeds.set(groupName, []);
     }
-    groups[bed.group].push(bed.id);
+    groupedBeds.get(groupName)!.push(bed);
   }
-  // Sort beds within each group numerically
-  for (const group of Object.keys(groups)) {
-    groups[group].sort((a, b) => {
-      const numA = parseInt(a.replace(/\D/g, '')) || 0;
-      const numB = parseInt(b.replace(/\D/g, '')) || 0;
-      return numA - numB;
-    });
+
+  // Sort and build mappings
+  for (const [groupName, bedsInGroup] of groupedBeds) {
+    // Sort by displayOrder
+    bedsInGroup.sort((a, b) => a.displayOrder - b.displayOrder);
+
+    nameGroups[groupName] = bedsInGroup.map(bed => bed.name);
+
+    for (const bed of bedsInGroup) {
+      uuidToName[bed.id] = bed.name;
+      nameToUuid[bed.name] = bed.id;
+      bedLengths[bed.name] = bed.lengthFt;
+    }
   }
-  return groups;
+
+  return { nameGroups, uuidToName, nameToUuid, bedLengths };
 }
 
 /**
  * Convert Planting entity to SlimPlanting for computeTimelineCrop.
+ * Converts bed UUID to bed name for span calculation.
  */
-function plantingToSlim(planting: Planting): SlimPlanting {
+function plantingToSlim(planting: Planting, uuidToName: Record<string, string>): SlimPlanting {
+  // Convert bed UUID to name for legacy span calculation
+  const bedName = planting.startBed ? uuidToName[planting.startBed] ?? null : null;
+
   return {
     id: planting.id,
     cropConfigId: planting.configId,
-    bed: planting.startBed,
+    bed: bedName,
     bedsCount: planting.bedFeet / STANDARD_BED_FT,
     fixedFieldStartDate: planting.fieldStartDate,
     followsCrop: planting.followsPlantingId,
@@ -401,15 +431,24 @@ function plantingToSlim(planting: Planting): SlimPlanting {
 /**
  * Expand Planting[] to TimelineCrop[] for display.
  * Uses the existing computeTimelineCrop function.
+ *
+ * @param plantings - Array of plantings to expand
+ * @param beds - Bed definitions keyed by UUID
+ * @param catalog - Crop catalog for config lookup
+ * @param bedGroups - Bed group definitions keyed by UUID
  */
 export function expandPlantingsToTimelineCrops(
   plantings: Planting[],
   beds: Record<string, Bed>,
-  catalog: Record<string, CropCatalogEntry>
+  catalog: Record<string, CropCatalogEntry>,
+  bedGroups?: Record<string, BedGroup>
 ): TimelineCrop[] {
-  const bedGroups = deriveBedGroups(beds);
-  const catalogArray = Object.values(catalog);
+  // Build bed mappings for UUID <-> name conversion
+  const mappings = bedGroups
+    ? buildBedMappings(beds, bedGroups)
+    : { nameGroups: {}, uuidToName: {}, nameToUuid: {}, bedLengths: {} };
 
+  const catalogArray = Object.values(catalog);
   const result: TimelineCrop[] = [];
 
   for (const planting of plantings) {
@@ -423,10 +462,12 @@ export function expandPlantingsToTimelineCrops(
       continue;
     }
 
-    const slim = plantingToSlim(planting);
-    const crops = computeTimelineCrop(slim, config, bedGroups);
+    const slim = plantingToSlim(planting, mappings.uuidToName);
+    const crops = computeTimelineCrop(slim, config, mappings.nameGroups);
 
     // Add planting fields for inspector editing
+    // NOTE: crop.resource remains a bed NAME for display matching.
+    // The store converts names to UUIDs when mutating.
     for (const crop of crops) {
       crop.lastModified = planting.lastModified;
       crop.overrides = planting.overrides;
@@ -453,7 +494,8 @@ export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
   return expandPlantingsToTimelineCrops(
     plan.plantings,
     plan.beds,
-    plan.cropCatalog
+    plan.cropCatalog,
+    plan.bedGroups
   );
 }
 

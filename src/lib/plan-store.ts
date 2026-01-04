@@ -29,15 +29,20 @@ import {
   CURRENT_SCHEMA_VERSION,
   validatePlan,
   createBedsFromTemplate,
+  migratePlan,
 } from './plan-types';
+import type { BedGroup } from './plan-types';
 import {
   generatePlantingId,
   initializePlantingIdCounter,
+  clonePlanting,
 } from './entities/planting';
+import { cloneBeds, cloneBedGroups } from './entities/bed';
 import { storage, onSyncMessage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
 import type { CropConfig } from './entities/crop-config';
+import { cloneCropConfig, cloneCropCatalog } from './entities/crop-config';
 
 // Re-export types for consumers
 export type { PlanSummary, PlanSnapshot, PlanData };
@@ -187,15 +192,14 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     return format(shifted, 'yyyy-MM-dd');
   }
 
-  // Deep clone and transform plantings
+  // Clone plantings using CRUD function
   const sourcePlantings = state.currentPlan.plantings ?? [];
-  const newPlantings: Planting[] = sourcePlantings.map((p) => ({
-    ...p,
-    id: generatePlantingId(),
-    fieldStartDate: shiftDate(p.fieldStartDate),
-    startBed: options.unassignAll ? null : p.startBed,
-    lastModified: now,
-  }));
+  const newPlantings: Planting[] = sourcePlantings.map((p) =>
+    clonePlanting(p, {
+      fieldStartDate: shiftDate(p.fieldStartDate),
+      startBed: options.unassignAll ? null : p.startBed,
+    })
+  );
 
   // Calculate the new plan year based on shift
   let newYear = state.currentPlan.metadata.year ?? new Date().getFullYear();
@@ -209,13 +213,22 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
 
   const uniqueName = await getUniquePlanName(options.newName);
 
-  // Copy beds and catalog
-  const beds = state.currentPlan.beds
-    ? JSON.parse(JSON.stringify(state.currentPlan.beds))
-    : createBedsFromTemplate((bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups);
+  // Clone beds, groups, and catalog using CRUD functions
+  let beds: Record<string, Bed>;
+  let bedGroups: Record<string, BedGroup>;
+
+  if (state.currentPlan.beds && state.currentPlan.bedGroups) {
+    beds = cloneBeds(state.currentPlan.beds);
+    bedGroups = cloneBedGroups(state.currentPlan.bedGroups);
+  } else {
+    const bedGroupsTemplate = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+    const result = createBedsFromTemplate(bedGroupsTemplate);
+    beds = result.beds;
+    bedGroups = result.groups;
+  }
 
   const cropCatalog = state.currentPlan.cropCatalog
-    ? JSON.parse(JSON.stringify(state.currentPlan.cropCatalog))
+    ? cloneCropCatalog(Object.values(state.currentPlan.cropCatalog))
     : {};
 
   const newPlan: Plan = {
@@ -233,6 +246,7 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     },
     plantings: newPlantings,
     beds,
+    bedGroups,
     cropCatalog,
     changeLog: [],
   };
@@ -255,6 +269,28 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Build a name-to-UUID lookup for beds.
+ * Used to convert display names from timeline to UUIDs for storage.
+ */
+function buildBedNameToUuidMap(beds: Record<string, Bed>): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const bed of Object.values(beds)) {
+    map[bed.name] = bed.id;
+  }
+  return map;
+}
+
+/**
+ * Convert a bed name to its UUID.
+ * Returns null if bed not found (e.g., for "Unassigned").
+ */
+function bedNameToUuid(name: string, beds: Record<string, Bed>): string | null {
+  if (!name || name === 'Unassigned') return null;
+  const map = buildBedNameToUuidMap(beds);
+  return map[name] ?? null;
 }
 
 function createChangeEntry(
@@ -530,10 +566,15 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`Plan not found: ${planId}`);
       }
 
-      // Ensure beds exist
-      if (!data.plan.beds) {
-        const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
-        data.plan.beds = createBedsFromTemplate(bedGroups);
+      // Migrate plan to current schema version
+      data.plan = migratePlan(data.plan);
+
+      // Ensure beds and groups exist (for brand new plans without any beds)
+      if (!data.plan.beds || !data.plan.bedGroups) {
+        const bedGroupsTemplate = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+        const { beds, groups } = createBedsFromTemplate(bedGroupsTemplate);
+        data.plan.beds = beds;
+        data.plan.bedGroups = groups;
       }
 
       // Validate plan on load
@@ -603,17 +644,22 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       // Ensure unique plan name
       const uniqueName = await getUniquePlanName(name);
 
-      // Build crop catalog map from master (deep copy for plan-specific edits)
+      // Build crop catalog map from master using CRUD function
       const masterCrops = getAllCrops();
-      const cropCatalog: Record<string, CropConfig> = {};
-      for (const crop of masterCrops) {
-        // Deep copy to avoid mutations affecting master
-        cropCatalog[crop.identifier] = JSON.parse(JSON.stringify(crop));
-      }
+      const cropCatalog = cloneCropCatalog(masterCrops);
 
-      // Build beds from template
-      const bedGroups = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
-      const beds: Record<string, Bed> = createBedsFromTemplate(bedGroups);
+      // Build beds and groups from template
+      const bedGroupsTemplate = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+      const { beds, groups: bedGroups, nameToIdMap } = createBedsFromTemplate(bedGroupsTemplate);
+
+      // Convert imported plantings' bed names to UUIDs
+      // (plantings from collapseToPlantings have bed names like "A1", not UUIDs)
+      const convertedPlantings = (plantings ?? []).map(p => {
+        if (p.startBed && nameToIdMap[p.startBed]) {
+          return { ...p, startBed: nameToIdMap[p.startBed] };
+        }
+        return p;
+      });
 
       const plan: Plan = {
         id,
@@ -625,8 +671,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           lastModified: now,
           year: defaultYear,
         },
-        plantings: plantings ?? [],
+        plantings: convertedPlantings,
         beds,
+        bedGroups,
         cropCatalog,
         changeLog: [],
       };
@@ -672,9 +719,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     },
 
     // Crop mutations - all push to undo stack and save
+    // NOTE: newResource is a bed NAME from the timeline, not a UUID.
+    // We convert to UUID for storage.
     moveCrop: async (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => {
       set((state) => {
-        if (!state.currentPlan?.plantings) return;
+        if (!state.currentPlan?.plantings || !state.currentPlan.beds) return;
 
         // Snapshot for undo before any mutations
         snapshotForUndo(state);
@@ -685,13 +734,18 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         const now = Date.now();
 
-        if (newResource === '' || !bedSpanInfo || bedSpanInfo.length === 0) {
+        if (newResource === '' || newResource === 'Unassigned' || !bedSpanInfo || bedSpanInfo.length === 0) {
           // Moving to Unassigned
           planting.startBed = null;
           // Keep existing bedFeet
         } else {
-          // Moving to specific bed - update startBed and bedFeet
-          planting.startBed = newResource;
+          // Convert bed name to UUID for storage
+          const bedUuid = bedNameToUuid(newResource, state.currentPlan.beds!);
+          if (!bedUuid) {
+            console.warn(`[moveCrop] Bed not found: ${newResource}`);
+            return;
+          }
+          planting.startBed = bedUuid;
           planting.bedFeet = bedSpanInfo.reduce((sum, b) => sum + b.feetUsed, 0);
         }
         planting.lastModified = now;
@@ -807,17 +861,33 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
+    // NOTE: planting.startBed may be a bed NAME from the timeline.
+    // We convert to UUID for storage.
     addPlanting: async (planting: Planting) => {
       set((state) => {
-        if (!state.currentPlan?.plantings) return;
+        if (!state.currentPlan?.plantings || !state.currentPlan.beds) return;
 
         // Snapshot for undo before any mutations
         snapshotForUndo(state);
+
+        // Convert bed name to UUID if needed
+        let startBedUuid = planting.startBed;
+        if (startBedUuid && startBedUuid !== 'Unassigned') {
+          // Check if it's already a UUID (exists as key in beds)
+          if (!state.currentPlan.beds[startBedUuid]) {
+            // It's a name, convert to UUID
+            const uuid = bedNameToUuid(startBedUuid, state.currentPlan.beds);
+            startBedUuid = uuid;
+          }
+        } else {
+          startBedUuid = null;
+        }
 
         // Add the new planting
         const now = Date.now();
         const newPlanting: Planting = {
           ...planting,
+          startBed: startBedUuid,
           lastModified: now,
         };
         state.currentPlan.plantings.push(newPlanting);
@@ -861,21 +931,12 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`No planting found with id: ${plantingId}`);
       }
 
-      // Generate a new ID
-      const newId = generatePlantingId();
-      const now = Date.now();
-
-      // Create unassigned copy
-      const newPlanting: Planting = {
-        ...original,
-        id: newId,
-        startBed: null, // Unassigned
-        lastModified: now,
-      };
+      // Clone using CRUD function (generates new ID, sets startBed to null)
+      const newPlanting = clonePlanting(original, { startBed: null });
 
       await get().addPlanting(newPlanting);
 
-      return newId;
+      return newPlanting.id;
     },
 
     updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes'>>) => {
@@ -996,8 +1057,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         // Snapshot for undo
         snapshotForUndo(storeState);
 
-        // Update catalog - display will recompute automatically
-        storeState.currentPlan.cropCatalog[config.identifier] = JSON.parse(JSON.stringify(config));
+        // Update catalog using CRUD function - display will recompute automatically
+        storeState.currentPlan.cropCatalog[config.identifier] = cloneCropConfig(config);
         storeState.currentPlan.metadata.lastModified = Date.now();
         storeState.currentPlan.changeLog.push(
           createChangeEntry('batch', `Updated config "${config.identifier}"`, affectedPlantingIds)
@@ -1054,8 +1115,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         // Snapshot for undo
         snapshotForUndo(storeState);
 
-        // Add new config to catalog
-        storeState.currentPlan.cropCatalog[config.identifier] = JSON.parse(JSON.stringify(config));
+        // Add new config to catalog using CRUD function
+        storeState.currentPlan.cropCatalog[config.identifier] = cloneCropConfig(config);
         storeState.currentPlan.metadata.lastModified = Date.now();
         storeState.currentPlan.changeLog.push(
           createChangeEntry('batch', `Added new config "${config.identifier}"`, [])

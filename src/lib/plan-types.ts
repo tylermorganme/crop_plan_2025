@@ -27,15 +27,17 @@ export {
   isValidPlan,
   getResources,
   getGroups,
+  migratePlan,
 } from './entities/plan';
 
-export type { Bed, ResourceGroup } from './entities/bed';
+export type { Bed, BedGroup, ResourceGroup, BedsFromTemplateResult } from './entities/bed';
 export {
   ROW_LENGTHS,
   getBedGroup,
   getBedNumber,
   getBedLength,
   getBedLengthFromId,
+  generateBedUuid,
   createBedsFromTemplate,
   deriveResources,
   deriveGroups,

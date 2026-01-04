@@ -52,6 +52,16 @@ CropTimeline Component
 | `TimelineCrop` | Display format: one per bed with computed dates |
 | `CropConfig` | Static config from catalog (DTM, spacing, seasons) |
 
+## Data Philosophy
+
+**First-class workflows**: Users create their own data or ingest their own data. Import and manual creation are production paths, not dev conveniences.
+
+**Import = shim + ingest**: Raw external data gets transformed into the expected format, then ingested through the same CRUD functions used for manual creation. Never bypass production code for import - this prevents "import-only" bugs.
+
+**No parallel pipelines**: If there's a `createPlanting()` for manual use, import must use it too. Clone functions (`clonePlanting`, `cloneCropConfig`, etc.) compose on top of create functions.
+
+**Current state**: We reimport base data during development. Eventually stock data may ship pre-transformed, but imports still go through production ingestion.
+
 ## Data Pipeline
 
 crops.json is generated from Excel via:
@@ -67,9 +77,24 @@ When adding new fields to CropConfig, update build-minimal-crops.js.
 | `src/lib/plan-store.ts` | Zustand store with all plan mutations |
 | `src/lib/timeline-data.ts` | `getTimelineCropsFromPlan()` - expands Planting[] → TimelineCrop[] |
 | `src/lib/slim-planting.ts` | `computeTimelineCrop()` - timing calculations |
-| `src/lib/entities/` | Core type definitions (plan.ts, planting.ts, crop-config.ts) |
+| `src/lib/entities/` | Entity types and CRUD functions |
 | `src/components/CropTimeline.tsx` | Main timeline visualization |
 | `src/data/crops.json` | Crop catalog (340 configurations) |
+
+### Entity CRUD Pattern
+
+All entity creation flows through functions in `src/lib/entities/`:
+
+| Entity | Create | Clone |
+|--------|--------|-------|
+| Planting | `createPlanting()` | `clonePlanting()` |
+| Bed | `createBed()` | `cloneBed()`, `cloneBeds()` |
+| BedGroup | `createBedGroup()` | `cloneBedGroup()`, `cloneBedGroups()` |
+| CropConfig | `createBlankConfig()` | `cloneCropConfig()`, `cloneCropCatalog()` |
+
+**Flow**: Component → CRUD function → Store method → Persistence
+
+Clone functions compose on create (e.g., `clonePlanting` calls `createPlanting` internally).
 
 ## Key Concepts
 

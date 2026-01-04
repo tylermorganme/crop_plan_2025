@@ -5,7 +5,7 @@
  * Plans own their beds, crop catalog, and plantings - no external dependencies.
  */
 
-import type { Bed, ResourceGroup } from './bed';
+import type { Bed, BedGroup, ResourceGroup } from './bed';
 import type { Planting } from './planting';
 import type { CropConfig } from './crop-config';
 
@@ -14,7 +14,7 @@ import type { CropConfig } from './crop-config';
 // =============================================================================
 
 /** Current schema version for data migrations */
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 /** Metadata about a saved plan */
 export interface PlanMetadata {
@@ -92,8 +92,11 @@ export interface Plan {
   /** Plan metadata */
   metadata: PlanMetadata;
 
-  /** Bed definitions with individual lengths */
+  /** Bed definitions keyed by UUID */
   beds?: Record<string, Bed>;
+
+  /** Bed group definitions keyed by UUID */
+  bedGroups?: Record<string, BedGroup>;
 
   /** Planting instances (one per planting decision) */
   plantings?: Planting[];
@@ -183,49 +186,184 @@ export function validatePlan(plan: Plan): void {
 // =============================================================================
 
 /**
- * Get the ordered list of bed IDs for timeline display.
- * Derives from plan.beds, sorted by group then bed number.
+ * Get the ordered list of bed names for timeline display.
+ * Uses displayOrder from beds and groups for stable ordering.
+ * Returns bed.name (display name like "A1") not bed.id (UUID).
  */
 export function getResources(plan: Plan): string[] {
-  if (!plan.beds) return [];
+  if (!plan.beds || !plan.bedGroups) return [];
 
-  return Object.keys(plan.beds).sort((a, b) => {
-    const groupA = plan.beds![a].group;
-    const groupB = plan.beds![b].group;
-    if (groupA !== groupB) return groupA.localeCompare(groupB);
-
-    const numA = parseInt(a.replace(/\D/g, '')) || 0;
-    const numB = parseInt(b.replace(/\D/g, '')) || 0;
-    return numA - numB;
-  });
+  return Object.values(plan.beds)
+    .sort((a, b) => {
+      const groupA = plan.bedGroups![a.groupId];
+      const groupB = plan.bedGroups![b.groupId];
+      // Sort by group displayOrder first
+      if (groupA?.displayOrder !== groupB?.displayOrder) {
+        return (groupA?.displayOrder ?? 0) - (groupB?.displayOrder ?? 0);
+      }
+      // Then by bed displayOrder within group
+      return a.displayOrder - b.displayOrder;
+    })
+    .map(bed => bed.name);
 }
 
 /**
  * Get bed groups for timeline display.
- * Derives from plan.beds, grouped by bed.group property.
+ * Uses displayOrder for stable ordering.
+ * Returns bed.name (display name) not bed.id (UUID).
  */
 export function getGroups(plan: Plan): ResourceGroup[] {
-  if (!plan.beds) return [];
+  if (!plan.beds || !plan.bedGroups) return [];
 
-  const groupMap = new Map<string, string[]>();
+  // Group beds by groupId
+  const groupMap = new Map<string, Bed[]>();
 
   for (const bed of Object.values(plan.beds)) {
-    if (!groupMap.has(bed.group)) {
-      groupMap.set(bed.group, []);
+    if (!groupMap.has(bed.groupId)) {
+      groupMap.set(bed.groupId, []);
     }
-    groupMap.get(bed.group)!.push(bed.id);
+    groupMap.get(bed.groupId)!.push(bed);
   }
 
+  // Sort groups by displayOrder, then beds within each group
   return Array.from(groupMap.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([group, bedIds]) => ({
-      name: `Row ${group}`,
-      beds: bedIds.sort((a, b) => {
-        const numA = parseInt(a.replace(/\D/g, '')) || 0;
-        const numB = parseInt(b.replace(/\D/g, '')) || 0;
-        return numA - numB;
-      }),
+    .sort(([groupIdA], [groupIdB]) => {
+      const groupA = plan.bedGroups![groupIdA];
+      const groupB = plan.bedGroups![groupIdB];
+      return (groupA?.displayOrder ?? 0) - (groupB?.displayOrder ?? 0);
+    })
+    .map(([groupId, bedsInGroup]) => ({
+      name: plan.bedGroups![groupId]?.name ?? null,
+      beds: bedsInGroup
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map(bed => bed.name),
     }));
+}
+
+// =============================================================================
+// MIGRATIONS
+// =============================================================================
+
+/**
+ * Legacy bed format (schema v2 and earlier).
+ * Used for migration purposes only.
+ */
+interface LegacyBed {
+  id: string;
+  lengthFt: number;
+  group: string;
+}
+
+/**
+ * Migrate a plan from an older schema version to the current version.
+ * This handles:
+ * - v2 -> v3: Convert beds from name-based IDs to UUIDs, create BedGroups
+ */
+export function migratePlan(plan: Plan): Plan {
+  const currentVersion = plan.schemaVersion ?? 1;
+
+  if (currentVersion >= CURRENT_SCHEMA_VERSION) {
+    return plan; // Already up to date
+  }
+
+  let migrated = { ...plan };
+
+  // v2 -> v3: Bed UUID migration
+  if (currentVersion < 3) {
+    migrated = migrateToV3(migrated);
+  }
+
+  migrated.schemaVersion = CURRENT_SCHEMA_VERSION;
+  return migrated;
+}
+
+/**
+ * Migrate from v2 to v3:
+ * - Convert bed IDs from names (e.g., "A1") to UUIDs
+ * - Create BedGroup entities from implicit groups
+ * - Update planting.startBed references to use UUIDs
+ */
+function migrateToV3(plan: Plan): Plan {
+  if (!plan.beds) {
+    return plan;
+  }
+
+  // Cast old beds to legacy format
+  const legacyBeds = plan.beds as unknown as Record<string, LegacyBed>;
+
+  // Build mapping from old bed names to new UUIDs
+  const nameToUuid: Record<string, string> = {};
+  const newBeds: Record<string, Bed> = {};
+  const newGroups: Record<string, BedGroup> = {};
+
+  // Group legacy beds by their group property
+  const groupedBeds = new Map<string, LegacyBed[]>();
+  for (const bed of Object.values(legacyBeds)) {
+    if (!groupedBeds.has(bed.group)) {
+      groupedBeds.set(bed.group, []);
+    }
+    groupedBeds.get(bed.group)!.push(bed);
+  }
+
+  // Sort group names for stable ordering
+  const sortedGroupNames = Array.from(groupedBeds.keys()).sort((a, b) =>
+    a.localeCompare(b)
+  );
+
+  // Create BedGroups and migrate beds
+  for (let groupIndex = 0; groupIndex < sortedGroupNames.length; groupIndex++) {
+    const groupName = sortedGroupNames[groupIndex];
+    const groupId = crypto.randomUUID();
+
+    // Create the group
+    newGroups[groupId] = {
+      id: groupId,
+      name: `Row ${groupName}`,
+      displayOrder: groupIndex,
+    };
+
+    // Sort beds within group by number
+    const bedsInGroup = groupedBeds.get(groupName)!;
+    bedsInGroup.sort((a, b) => {
+      const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
+      return numA - numB;
+    });
+
+    // Create new beds with UUIDs
+    for (let bedIndex = 0; bedIndex < bedsInGroup.length; bedIndex++) {
+      const legacyBed = bedsInGroup[bedIndex];
+      const bedId = crypto.randomUUID();
+
+      nameToUuid[legacyBed.id] = bedId;
+
+      newBeds[bedId] = {
+        id: bedId,
+        name: legacyBed.id, // Old ID becomes the display name
+        lengthFt: legacyBed.lengthFt,
+        groupId,
+        displayOrder: bedIndex,
+      };
+    }
+  }
+
+  // Update planting references
+  const migratedPlantings = plan.plantings?.map(planting => {
+    if (planting.startBed && nameToUuid[planting.startBed]) {
+      return {
+        ...planting,
+        startBed: nameToUuid[planting.startBed],
+      };
+    }
+    return planting;
+  });
+
+  return {
+    ...plan,
+    beds: newBeds,
+    bedGroups: newGroups,
+    plantings: migratedPlantings,
+  };
 }
 
 // =============================================================================

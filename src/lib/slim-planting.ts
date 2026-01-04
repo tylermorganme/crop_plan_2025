@@ -16,6 +16,7 @@ import {
   calculateHarvestWindow,
   type CropConfig,
 } from './entities/crop-config';
+import { createPlanting } from './entities/planting';
 
 // =============================================================================
 // SLIM PLANTING TYPES
@@ -486,6 +487,8 @@ export function extractConfigLookup(assignment: {
  * Collapse TimelineCrop[] (one per bed) to Planting[] (one per decision).
  * Used to convert TimelineCrop[] (from bed-plan.json import) to Planting[].
  *
+ * Uses the createPlanting CRUD function for consistent object creation.
+ *
  * @param crops - Array of TimelineCrop entries (multiple per planting)
  * @returns Array of Planting entries (one per planting decision)
  */
@@ -498,7 +501,7 @@ export function collapseToPlantings(crops: TimelineCrop[]): Planting[] {
     groups.set(crop.groupId, list);
   }
 
-  // Convert each group to a single Planting
+  // Convert each group to a single Planting using CRUD function
   return Array.from(groups.values()).map(beds => {
     const first = beds[0];
 
@@ -509,13 +512,16 @@ export function collapseToPlantings(crops: TimelineCrop[]): Planting[] {
     // Default to 50ft per bed if feetUsed not set
     const totalFeet = beds.reduce((sum, b) => sum + (b.feetUsed || 50), 0);
 
-    return {
+    // Use CRUD function for consistent Planting creation
+    // Pass existing ID to preserve it during import
+    return createPlanting({
       id: first.plantingId || first.groupId,
       configId: first.cropConfigId,
       fieldStartDate: first.startDate,
       startBed: startBedEntry?.resource || null,
       bedFeet: totalFeet,
-      lastModified: first.lastModified || Date.now(),
-    };
+      overrides: first.overrides,
+      notes: first.notes,
+    });
   });
 }

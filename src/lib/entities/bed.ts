@@ -11,15 +11,32 @@
 
 /** A single bed in the farm layout */
 export interface Bed {
-  /** Unique bed identifier (e.g., "A1", "F3", "X2") */
+  /** Stable UUID for references (plantings link here) */
   id: string;
+  /** Display name (e.g., "A1", "West 3") - can be renamed without breaking links */
+  name: string;
   /** Length in feet (50, 20, or 80) */
   lengthFt: number;
-  /** Row/section group (e.g., "A", "F", "X") */
-  group: string;
+  /** Reference to BedGroup.id */
+  groupId: string;
+  /** Order within the group (0-indexed) */
+  displayOrder: number;
 }
 
-/** A group of beds (e.g., row "A" contains beds A1-A8) */
+/** A group of beds (e.g., "Row A", "West Field") */
+export interface BedGroup {
+  /** Stable UUID */
+  id: string;
+  /** Display name (e.g., "Row A", "West Field") */
+  name: string;
+  /** Order of this group in timeline display */
+  displayOrder: number;
+}
+
+/**
+ * Legacy ResourceGroup for timeline display compatibility.
+ * @deprecated Use BedGroup instead - this is computed for timeline rendering
+ */
 export interface ResourceGroup {
   name: string | null;
   beds: string[];
@@ -55,7 +72,45 @@ export const ROW_LENGTHS: Record<string, number> = {
 const DEFAULT_BED_LENGTH = 50;
 
 // =============================================================================
-// FACTORY FUNCTIONS
+// CRUD OPERATIONS
+// =============================================================================
+
+/**
+ * Create a new BedGroup with a generated UUID.
+ * This is the single source of truth for creating bed groups.
+ */
+export function createBedGroup(
+  name: string,
+  displayOrder: number
+): BedGroup {
+  return {
+    id: generateBedUuid(),
+    name,
+    displayOrder,
+  };
+}
+
+/**
+ * Create a new Bed with a generated UUID.
+ * This is the single source of truth for creating beds.
+ */
+export function createBed(
+  name: string,
+  groupId: string,
+  lengthFt: number,
+  displayOrder: number
+): Bed {
+  return {
+    id: generateBedUuid(),
+    name,
+    lengthFt,
+    groupId,
+    displayOrder,
+  };
+}
+
+// =============================================================================
+// HELPER FUNCTIONS
 // =============================================================================
 
 /**
@@ -84,64 +139,121 @@ export function getBedNumber(bedId: string): number {
 }
 
 /**
- * Create beds from a bedGroups template (from bed-plan.json).
+ * Generate a UUID for beds and groups.
+ */
+export function generateBedUuid(): string {
+  return crypto.randomUUID();
+}
+
+/**
+ * Result of creating beds from template - includes both beds and groups.
+ */
+export interface BedsFromTemplateResult {
+  beds: Record<string, Bed>;
+  groups: Record<string, BedGroup>;
+  /** Maps old bed names (e.g., "A1") to new UUIDs for migration */
+  nameToIdMap: Record<string, string>;
+}
+
+/**
+ * Create beds and groups from a bedGroups template (from bed-plan.json).
+ * This is a thin shim that uses the CRUD operations.
  *
- * @param bedGroups - Map of row names to bed IDs (e.g., { "A": ["A1", "A2", ...] })
- * @returns Map of bed IDs to Bed objects
+ * @param bedGroupsTemplate - Map of row names to bed names (e.g., { "A": ["A1", "A2", ...] })
+ * @returns Beds, groups, and a name-to-ID mapping for migration
  */
 export function createBedsFromTemplate(
-  bedGroups: Record<string, string[]>
-): Record<string, Bed> {
+  bedGroupsTemplate: Record<string, string[]>
+): BedsFromTemplateResult {
   const beds: Record<string, Bed> = {};
+  const groups: Record<string, BedGroup> = {};
+  const nameToIdMap: Record<string, string> = {};
 
-  for (const [group, bedIds] of Object.entries(bedGroups)) {
-    const lengthFt = ROW_LENGTHS[group] ?? DEFAULT_BED_LENGTH;
+  // Sort group names to establish display order
+  const sortedGroupNames = Object.keys(bedGroupsTemplate).sort((a, b) =>
+    a.localeCompare(b)
+  );
 
-    for (const bedId of bedIds) {
-      beds[bedId] = {
-        id: bedId,
-        lengthFt,
-        group,
-      };
+  for (let groupIndex = 0; groupIndex < sortedGroupNames.length; groupIndex++) {
+    const groupName = sortedGroupNames[groupIndex];
+    const bedNames = bedGroupsTemplate[groupName];
+    const lengthFt = ROW_LENGTHS[groupName] ?? DEFAULT_BED_LENGTH;
+
+    // Use CRUD operation to create group
+    const group = createBedGroup(`Row ${groupName}`, groupIndex);
+    groups[group.id] = group;
+
+    // Sort bed names by number within group
+    const sortedBedNames = [...bedNames].sort(
+      (a, b) => getBedNumber(a) - getBedNumber(b)
+    );
+
+    // Use CRUD operation to create each bed
+    for (let bedIndex = 0; bedIndex < sortedBedNames.length; bedIndex++) {
+      const bedName = sortedBedNames[bedIndex];
+      const bed = createBed(bedName, group.id, lengthFt, bedIndex);
+      beds[bed.id] = bed;
+      nameToIdMap[bedName] = bed.id;
     }
   }
 
-  return beds;
+  return { beds, groups, nameToIdMap };
 }
 
 /**
- * Derive the ordered list of bed IDs for timeline display.
- * Sorted by group (alphabetically) then by bed number.
+ * Derive the ordered list of bed names for timeline display.
+ * Uses displayOrder from beds and groups for stable ordering.
+ * Returns bed.name (display name) not bed.id (UUID).
  */
-export function deriveResources(beds: Record<string, Bed>): string[] {
-  return Object.keys(beds).sort((a, b) => {
-    const groupA = getBedGroup(a);
-    const groupB = getBedGroup(b);
-    if (groupA !== groupB) return groupA.localeCompare(groupB);
-    return getBedNumber(a) - getBedNumber(b);
-  });
+export function deriveResources(
+  beds: Record<string, Bed>,
+  groups: Record<string, BedGroup>
+): string[] {
+  return Object.values(beds)
+    .sort((a, b) => {
+      const groupA = groups[a.groupId];
+      const groupB = groups[b.groupId];
+      // Sort by group displayOrder first
+      if (groupA?.displayOrder !== groupB?.displayOrder) {
+        return (groupA?.displayOrder ?? 0) - (groupB?.displayOrder ?? 0);
+      }
+      // Then by bed displayOrder within group
+      return a.displayOrder - b.displayOrder;
+    })
+    .map(bed => bed.name);
 }
 
 /**
- * Derive ResourceGroup array from beds map for timeline display.
- * Groups beds by their group property, sorted alphabetically.
+ * Derive ResourceGroup array from beds and groups for timeline display.
+ * Uses displayOrder for stable ordering.
+ * Returns bed.name (display name) not bed.id (UUID).
  */
-export function deriveGroups(beds: Record<string, Bed>): ResourceGroup[] {
-  const groupMap = new Map<string, string[]>();
+export function deriveGroups(
+  beds: Record<string, Bed>,
+  groups: Record<string, BedGroup>
+): ResourceGroup[] {
+  // Group beds by groupId
+  const groupMap = new Map<string, Bed[]>();
 
   for (const bed of Object.values(beds)) {
-    const group = bed.group;
-    if (!groupMap.has(group)) {
-      groupMap.set(group, []);
+    if (!groupMap.has(bed.groupId)) {
+      groupMap.set(bed.groupId, []);
     }
-    groupMap.get(group)!.push(bed.id);
+    groupMap.get(bed.groupId)!.push(bed);
   }
 
+  // Sort groups by displayOrder, then beds within each group
   return Array.from(groupMap.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([group, bedIds]) => ({
-      name: `Row ${group}`,
-      beds: bedIds.sort((a, b) => getBedNumber(a) - getBedNumber(b)),
+    .sort(([groupIdA], [groupIdB]) => {
+      const groupA = groups[groupIdA];
+      const groupB = groups[groupIdB];
+      return (groupA?.displayOrder ?? 0) - (groupB?.displayOrder ?? 0);
+    })
+    .map(([groupId, bedsInGroup]) => ({
+      name: groups[groupId]?.name ?? null,
+      beds: bedsInGroup
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map(bed => bed.name),
     }));
 }
 
@@ -164,4 +276,50 @@ export function getBedLength(beds: Record<string, Bed>, bedId: string): number {
 export function getBedLengthFromId(bedId: string): number {
   const group = getBedGroup(bedId);
   return ROW_LENGTHS[group] ?? DEFAULT_BED_LENGTH;
+}
+
+// =============================================================================
+// CLONE FUNCTIONS
+// =============================================================================
+
+/**
+ * Clone a Bed, preserving all fields including UUID.
+ * Use this when duplicating a plan's beds.
+ */
+export function cloneBed(source: Bed): Bed {
+  return { ...source };
+}
+
+/**
+ * Clone a BedGroup, preserving all fields including UUID.
+ * Use this when duplicating a plan's bed groups.
+ */
+export function cloneBedGroup(source: BedGroup): BedGroup {
+  return { ...source };
+}
+
+/**
+ * Clone all beds from a plan.
+ * Returns a new Record with cloned Bed objects.
+ */
+export function cloneBeds(beds: Record<string, Bed>): Record<string, Bed> {
+  const result: Record<string, Bed> = {};
+  for (const [id, bed] of Object.entries(beds)) {
+    result[id] = cloneBed(bed);
+  }
+  return result;
+}
+
+/**
+ * Clone all bed groups from a plan.
+ * Returns a new Record with cloned BedGroup objects.
+ */
+export function cloneBedGroups(
+  groups: Record<string, BedGroup>
+): Record<string, BedGroup> {
+  const result: Record<string, BedGroup> = {};
+  for (const [id, group] of Object.entries(groups)) {
+    result[id] = cloneBedGroup(group);
+  }
+  return result;
 }

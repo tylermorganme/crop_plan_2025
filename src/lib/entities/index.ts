@@ -9,16 +9,23 @@
  */
 
 // Bed entity
-export type { Bed, ResourceGroup } from './bed';
+export type { Bed, BedGroup, ResourceGroup, BedsFromTemplateResult } from './bed';
 export {
   ROW_LENGTHS,
   getBedGroup,
   getBedNumber,
   getBedLength,
   getBedLengthFromId,
+  generateBedUuid,
+  createBed,
+  createBedGroup,
   createBedsFromTemplate,
   deriveResources,
   deriveGroups,
+  cloneBed,
+  cloneBedGroup,
+  cloneBeds,
+  cloneBedGroups,
 } from './bed';
 
 // Planting entity
@@ -27,6 +34,7 @@ export {
   generatePlantingId,
   initializePlantingIdCounter,
   createPlanting,
+  clonePlanting,
 } from './planting';
 
 // Crop config entity
@@ -43,6 +51,11 @@ export {
   calculateHarvestWindow,
   calculateCropFields,
   getTimelineConfig,
+  generateConfigId,
+  createBlankConfig,
+  copyConfig,
+  cloneCropConfig,
+  cloneCropCatalog,
 } from './crop-config';
 
 // Plan entity
@@ -63,4 +76,5 @@ export {
   isValidPlan,
   getResources,
   getGroups,
+  migratePlan,
 } from './plan';

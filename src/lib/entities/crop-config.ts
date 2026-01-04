@@ -342,3 +342,28 @@ export function copyConfig(source: CropConfig): CropConfig {
     identifier: '', // User must provide a unique identifier
   };
 }
+
+/**
+ * Clone a CropConfig for inclusion in a plan's local catalog.
+ * Creates a deep copy preserving all fields including identifier.
+ *
+ * Use this when importing configs from master catalog to plan-local catalog.
+ */
+export function cloneCropConfig(source: CropConfig): CropConfig {
+  // Deep copy to avoid mutations affecting master catalog
+  return JSON.parse(JSON.stringify(source));
+}
+
+/**
+ * Clone multiple CropConfigs into a catalog keyed by identifier.
+ * Use this for bulk import from master catalog to plan-local catalog.
+ */
+export function cloneCropCatalog(
+  sources: CropConfig[]
+): Record<string, CropConfig> {
+  const catalog: Record<string, CropConfig> = {};
+  for (const source of sources) {
+    catalog[source.identifier] = cloneCropConfig(source);
+  }
+  return catalog;
+}
