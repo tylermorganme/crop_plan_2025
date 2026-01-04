@@ -1,10 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import PlanDropdown from './PlanDropdown';
-import { usePlanStore, useUndoRedo } from '@/lib/plan-store';
+import CopyPlanModal from './CopyPlanModal';
+import HistoryPanel from './HistoryPanel';
+import { usePlanStore, useUndoRedo, createCheckpoint, copyPlan } from '@/lib/plan-store';
+import { Z_INDEX } from '@/lib/z-index';
+import type { CopyPlanOptions } from './CopyPlanModal';
 
 interface AppHeaderProps {
   /** Optional toolbar content to render below the main nav */
@@ -16,9 +20,29 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
 
   // Use centralized store state - automatically syncs across tabs
   const activePlanId = usePlanStore((state) => state.activePlanId);
+  const currentPlanName = usePlanStore((state) => state.currentPlan?.metadata.name ?? 'Untitled');
 
   // Undo/redo from store
   const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
+
+  // Modal/panel state
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Save checkpoint handler
+  const handleSave = useCallback(async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const timestamp = new Date().toLocaleString();
+      await createCheckpoint(`Manual save - ${timestamp}`);
+    } catch (err) {
+      console.error('Failed to save checkpoint:', err);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [isSaving]);
 
   // Global keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -40,11 +64,15 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
         e.preventDefault();
         if (canRedo) redo();
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, canRedo, undo, redo]);
+  }, [canUndo, canRedo, undo, redo, handleSave]);
 
   // Determine which tab is active
   const isExplorerActive = pathname === '/';
@@ -56,7 +84,8 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const bedsHref = activePlanId ? `/beds/${activePlanId}` : '/plans';
 
   return (
-    <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
+    <>
+    <header className="sticky top-0 bg-white border-b border-gray-200" style={{ zIndex: Z_INDEX.APP_HEADER }}>
       {/* Main Navigation Bar */}
       <div className="px-4 py-2 flex items-center gap-6">
         {/* Logo / App Name */}
@@ -134,6 +163,34 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           </div>
         )}
 
+        {/* Save/History buttons - only show when a plan is active */}
+        {activePlanId && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed"
+              title="Save checkpoint - Ctrl+S"
+            >
+              {isSaving ? '...' : '💾'}
+            </button>
+            <button
+              onClick={() => setShowCopyModal(true)}
+              className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+              title="Save As (copy plan)"
+            >
+              📋
+            </button>
+            <button
+              onClick={() => setShowHistory(true)}
+              className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+              title="History"
+            >
+              🕐
+            </button>
+          </div>
+        )}
+
         {/* Plan Dropdown */}
         <PlanDropdown />
       </div>
@@ -145,5 +202,29 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
         </div>
       )}
     </header>
+
+    {/* Modals/Panels - outside header to avoid stacking context issues */}
+    {showCopyModal && (
+      <CopyPlanModal
+        isOpen={showCopyModal}
+        currentPlanName={currentPlanName}
+        onClose={() => setShowCopyModal(false)}
+        onCopy={async (options: CopyPlanOptions) => {
+          await copyPlan(options);
+          setShowCopyModal(false);
+        }}
+      />
+    )}
+
+    {activePlanId && (
+      <HistoryPanel
+        isOpen={showHistory}
+        planId={activePlanId}
+        onClose={() => setShowHistory(false)}
+        onRestore={(msg) => console.log(msg)}
+        onError={(msg) => console.error(msg)}
+      />
+    )}
+  </>
   );
 }

@@ -7,6 +7,7 @@ import {
   deletePlanFromLibrary,
 } from '@/lib/plan-store';
 import { getTimelineCrops, collapseToPlantings } from '@/lib/timeline-data';
+import { Z_INDEX } from '@/lib/z-index';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -18,7 +19,10 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
   const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600';
 
   return (
-    <div className={`fixed bottom-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-up`}>
+    <div
+      className={`fixed bottom-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-slide-up`}
+      style={{ zIndex: Z_INDEX.TOAST }}
+    >
       <span>{message}</span>
       <button onClick={onClose} className="text-white/80 hover:text-white text-lg leading-none">&times;</button>
     </div>

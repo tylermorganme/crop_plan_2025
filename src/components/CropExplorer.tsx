@@ -12,6 +12,7 @@ import { type CropConfig } from '@/lib/entities/crop-config';
 import CropConfigCreator from './CropConfigCreator';
 import CropConfigEditor from './CropConfigEditor';
 import columnAnalysis from '@/data/column-analysis.json';
+import { Z_INDEX } from '@/lib/z-index';
 
 // Build a map of column header -> source type
 const columnSourceTypes: Record<string, 'static' | 'calculated' | 'mixed' | 'empty'> = {};
@@ -1340,7 +1341,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
       {/* Column Manager Modal */}
       {showColumnManager && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
           <div className="bg-white rounded-lg shadow-xl w-[600px] max-h-[80vh] flex flex-col">
             <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <h2 className="font-semibold text-gray-900">Manage Columns</h2>
@@ -1413,7 +1414,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
       {/* Detail panel */}
       {selectedCrop && (
-        <div className="fixed right-4 top-20 w-96 max-h-[calc(100vh-100px)] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-40">
+        <div className="fixed right-4 top-20 w-96 max-h-[calc(100vh-100px)] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden" style={{ zIndex: Z_INDEX.DETAIL_PANEL }}>
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-green-50">
             <div>
               <h2 className="font-semibold text-gray-900">{selectedCrop.crop}</h2>
@@ -1464,7 +1465,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
       {/* Add to Plan Modal */}
       {showAddToPlan && cropsToAdd.length > 0 && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
           <div className="bg-white rounded-lg shadow-xl w-[400px] max-h-[80vh] flex flex-col">
             <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <h2 className="font-semibold text-gray-900">Add to Plan</h2>
@@ -1537,7 +1538,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
       {/* Floating selection action bar */}
       {selectedCropIds.size > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 bg-gray-900 text-white rounded-lg shadow-xl flex items-center gap-4 z-40">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 bg-gray-900 text-white rounded-lg shadow-xl flex items-center gap-4" style={{ zIndex: Z_INDEX.FLOATING_ACTION_BAR }}>
           <span className="text-sm">
             <strong>{selectedCropIds.size}</strong> crop{selectedCropIds.size !== 1 ? 's' : ''} selected
           </span>
@@ -1565,9 +1566,10 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       {/* Toast notification */}
       {addToPlanMessage && (
         <div
-          className={`fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 ${
+          className={`fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
             addToPlanMessage.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
           }`}
+          style={{ zIndex: Z_INDEX.TOAST }}
         >
           <span>{addToPlanMessage.text}</span>
           {addToPlanMessage.type === 'success' && addToPlanMessage.planId && (
@@ -1608,7 +1610,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && configsToDelete.length > 0 && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
           <div className="bg-white rounded-lg shadow-xl w-[400px] max-h-[80vh] flex flex-col">
             <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <h2 className="font-semibold text-gray-900">Confirm Delete</h2>
@@ -1671,7 +1673,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       )}
 
       {/* Resize overlays */}
-      {(resizingColumn || resizingPane) && <div className="fixed inset-0 cursor-col-resize z-50" />}
+      {(resizingColumn || resizingPane) && <div className="fixed inset-0 cursor-col-resize" style={{ zIndex: Z_INDEX.RESIZE_OVERLAY }} />}
     </div>
   );
 }

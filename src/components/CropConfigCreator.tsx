@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import { copyConfig } from '@/lib/entities/crop-config';
 import CropConfigEditor from './CropConfigEditor';
+import { Z_INDEX } from '@/lib/z-index';
 
 interface CropConfigCreatorProps {
   isOpen: boolean;
@@ -103,7 +104,7 @@ export default function CropConfigCreator({
 
   // Step 1: Choose mode
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/30"

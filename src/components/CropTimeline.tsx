@@ -6,6 +6,7 @@ import { getBedGroup, getBedNumber, getBedLengthFromId } from '@/lib/plan-types'
 import type { CropConfig } from '@/lib/entities/crop-config';
 import { calculateCropFields, calculateDaysInCells, calculateSTH, calculateHarvestWindow } from '@/lib/entities/crop-config';
 import { resolveEffectiveTiming } from '@/lib/slim-planting';
+import { Z_INDEX } from '@/lib/z-index';
 import AddToBedPanel from './AddToBedPanel';
 
 // =============================================================================
@@ -949,8 +950,9 @@ export default function CropTimeline({
       return (
         <div
           key={crop.id}
-          className="absolute rounded border-2 border-dashed pointer-events-none z-40"
+          className="absolute rounded border-2 border-dashed pointer-events-none"
           style={{
+            zIndex: Z_INDEX.TIMELINE_DRAG_PREVIEW,
             left: pos.left,
             width: pos.width,
             top: topPos,
@@ -1009,7 +1011,7 @@ export default function CropTimeline({
               width: pos.width + 6,
               top: topPos - 3,
               height: CROP_HEIGHT + 6,
-              zIndex: 20,
+              zIndex: Z_INDEX.TIMELINE_CROP_SELECTED,
               background: `conic-gradient(from var(--border-angle), #f59e0b, #ef4444, #ec4899, #8b5cf6, #3b82f6, #10b981, #f59e0b)`,
             }}
           />
@@ -1024,10 +1026,10 @@ export default function CropTimeline({
           className={`absolute rounded select-none overflow-hidden cursor-grab ${
             isDragging ? 'opacity-50 cursor-grabbing' : ''
           } ${isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
-          } ${isSelected ? 'z-[21]' : 'hover:z-10'} ${
-            isOverlapping ? 'bg-transparent border-2' : ''
+          } ${isOverlapping ? 'bg-transparent border-2' : ''
           }`}
           style={{
+            zIndex: isSelected ? Z_INDEX.TIMELINE_CROP_SELECTED : Z_INDEX.TIMELINE_CROP,
             left: pos.left,
             width: pos.width,
             top: topPos,
@@ -1345,7 +1347,7 @@ export default function CropTimeline({
                   position: 'sticky',
                   top: 0,
                   left: 0,
-                  zIndex: 40,
+                  zIndex: Z_INDEX.TIMELINE_HEADER + 1, // Corner cell above header
                   backgroundColor: '#f9fafb',
                   width: LANE_LABEL_WIDTH,
                   minWidth: LANE_LABEL_WIDTH,
@@ -1362,7 +1364,7 @@ export default function CropTimeline({
                   style={{
                     position: 'sticky',
                     top: 0,
-                    zIndex: 30,
+                    zIndex: Z_INDEX.TIMELINE_HEADER,
                     backgroundColor: '#f9fafb',
                     width: h.width,
                     minWidth: h.width,
@@ -1394,7 +1396,7 @@ export default function CropTimeline({
                       position: 'sticky',
                       top: HEADER_HEIGHT,
                       left: 0,
-                      zIndex: 25, // Above regular sticky labels but below header
+                      zIndex: Z_INDEX.TIMELINE_UNASSIGNED_LABEL,
                       backgroundColor: unassignedCrops.length > 0 ? '#fef3c7' : '#e5e7eb',
                       height: effectiveHeight,
                       borderBottom: 'none',
@@ -1416,7 +1418,7 @@ export default function CropTimeline({
                     style={{
                       position: 'sticky',
                       top: HEADER_HEIGHT,
-                      zIndex: 24,
+                      zIndex: Z_INDEX.TIMELINE_UNASSIGNED_LANE,
                       height: effectiveHeight,
                       overflowY: 'auto',
                       backgroundColor: isDragOverUnassigned ? '#fef3c7' : bgColor,
@@ -1485,7 +1487,7 @@ export default function CropTimeline({
                             height: CROP_HEIGHT,
                             borderColor: colors.bg,
                             backgroundColor: `${colors.bg}33`,
-                            zIndex: 50,
+                            zIndex: Z_INDEX.TIMELINE_DRAG_PREVIEW,
                           }}
                         >
                           {/* Badge showing destination + timing */}
@@ -1507,7 +1509,7 @@ export default function CropTimeline({
                     {todayPosition !== null && (
                       <div
                         className="absolute top-0 bottom-0 w-0.5 bg-red-500"
-                        style={{ left: todayPosition, zIndex: 5 }}
+                        style={{ left: todayPosition, zIndex: Z_INDEX.BASE + 5 }}
                       />
                     )}
                     {/* Unassigned crop boxes */}
@@ -1524,7 +1526,7 @@ export default function CropTimeline({
                 style={{
                   position: 'sticky',
                   top: HEADER_HEIGHT + unassignedHeight, // Header + unassigned height
-                  zIndex: 23,
+                  zIndex: Z_INDEX.TIMELINE_RESIZE_HANDLE,
                   height: 8,
                   backgroundColor: '#9ca3af',
                   cursor: 'ns-resize',
@@ -1548,7 +1550,7 @@ export default function CropTimeline({
                       style={{
                         position: 'sticky',
                         left: 0,
-                        zIndex: 20,
+                        zIndex: Z_INDEX.TIMELINE_STICKY_LABEL,
                         backgroundColor: '#e5e7eb',
                         height: 28,
                       }}
@@ -1590,7 +1592,7 @@ export default function CropTimeline({
                     style={{
                       position: 'sticky',
                       left: 0,
-                      zIndex: 20,
+                      zIndex: Z_INDEX.TIMELINE_STICKY_LABEL,
                       backgroundColor: bgColor,
                       height: laneHeight,
                     }}
@@ -1718,7 +1720,7 @@ export default function CropTimeline({
                             height: CROP_HEIGHT,
                             borderColor: isComplete ? colors.bg : '#ef4444',
                             backgroundColor: isComplete ? `${colors.bg}33` : 'rgba(239, 68, 68, 0.2)',
-                            zIndex: 50,
+                            zIndex: Z_INDEX.TIMELINE_DRAG_PREVIEW,
                           }}
                         >
                           {/* Badge showing destination bed + timing */}
@@ -1741,7 +1743,7 @@ export default function CropTimeline({
                     {todayPosition !== null && (
                       <div
                         className="absolute top-0 bottom-0 w-0.5 bg-red-500"
-                        style={{ left: todayPosition, zIndex: 5 }}
+                        style={{ left: todayPosition, zIndex: Z_INDEX.BASE + 5 }}
                       />
                     )}
                     {/* Crop boxes (includes preview ghost if present) */}

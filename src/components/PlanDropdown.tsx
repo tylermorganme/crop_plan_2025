@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { usePlanStore, ACTIVE_PLAN_KEY } from '@/lib/plan-store';
+import { Z_INDEX } from '@/lib/z-index';
 
 export default function PlanDropdown() {
   const router = useRouter();
@@ -91,7 +92,7 @@ export default function PlanDropdown() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200" style={{ zIndex: Z_INDEX.DROPDOWN }}>
           {/* Current Plan */}
           {activePlan && (
             <div className="px-4 py-3 border-b border-gray-100">

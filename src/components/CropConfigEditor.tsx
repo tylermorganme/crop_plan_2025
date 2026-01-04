@@ -10,6 +10,7 @@ import {
   calculateHarvestWindow,
   createBlankConfig,
 } from '@/lib/entities/crop-config';
+import { Z_INDEX } from '@/lib/z-index';
 
 /** Standard tray sizes (cells per tray) */
 const TRAY_SIZES = [9, 18, 21, 50, 72, 128, 400] as const;
@@ -276,7 +277,7 @@ export default function CropConfigEditor({
   if (mode === 'edit' && !crop) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/30"
@@ -592,7 +593,7 @@ export default function CropConfigEditor({
                         <svg className="w-3.5 h-3.5 text-gray-400 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg z-10">
+                        <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg" style={{ zIndex: Z_INDEX.TOOLTIP }}>
                           <p className="font-medium mb-1">Seed producer&apos;s assumed transplant age</p>
                           <p className="text-gray-300">
                             When a seed catalog says &quot;DTM from transplant&quot;, they measured from transplants of a certain age.
@@ -736,7 +737,7 @@ export default function CropConfigEditor({
 
       {/* Data Removal Confirmation Dialog */}
       {showRemovalConfirm && pendingRemovalInfo && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL_CONFIRM }}>
           <div
             className="absolute inset-0 bg-black/50"
             onClick={handleCancelSave}

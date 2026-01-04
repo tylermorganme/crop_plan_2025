@@ -8,6 +8,7 @@ import {
   deleteCheckpoint,
   restoreFromHistory,
 } from '@/lib/plan-store';
+import { Z_INDEX } from '@/lib/z-index';
 
 interface HistoryPanelProps {
   planId: string;
@@ -132,7 +133,7 @@ export default function HistoryPanel({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 flex justify-end" style={{ zIndex: Z_INDEX.PANEL }}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/20"

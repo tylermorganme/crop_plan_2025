@@ -1,6 +1,7 @@
 'use client';
 
 import type { BedGroup } from '@/lib/entities';
+import { Z_INDEX } from '@/lib/z-index';
 
 interface DeleteGroupModalProps {
   group: BedGroup;
@@ -9,7 +10,7 @@ interface DeleteGroupModalProps {
 
 export default function DeleteGroupModal({ group, onAction }: DeleteGroupModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="px-6 py-4 border-b">
           <h2 className="text-lg font-semibold text-gray-900">Delete Group</h2>

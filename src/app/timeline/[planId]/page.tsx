@@ -1,11 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
-import HistoryPanel from '@/components/HistoryPanel';
-import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal';
 import CropConfigEditor from '@/components/CropConfigEditor';
 import { type CropConfig } from '@/lib/entities/crop-config';
 import { useSnapshotScheduler } from '@/hooks/useSnapshotScheduler';
@@ -14,11 +12,9 @@ import { getResources, getGroups } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import {
   usePlanStore,
-  useSaveState,
   loadPlanFromLibrary,
-  savePlanToLibrary,
-  copyPlan,
 } from '@/lib/plan-store';
+import { Z_INDEX } from '@/lib/z-index';
 import bedPlanData from '@/data/bed-plan.json';
 
 // Toast notification component
@@ -31,7 +27,10 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
   const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600';
 
   return (
-    <div className={`fixed bottom-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-up`}>
+    <div
+      className={`fixed bottom-4 right-4 ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-slide-up`}
+      style={{ zIndex: Z_INDEX.TOAST }}
+    >
       <span>{message}</span>
       <button onClick={onClose} className="text-white/80 hover:text-white text-lg leading-none">&times;</button>
     </div>
@@ -40,14 +39,11 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
 
 export default function TimelinePlanPage() {
   const params = useParams();
-  const router = useRouter();
   const planId = params.planId as string;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
-  const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
-  const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [configEditorOpen, setConfigEditorOpen] = useState(false);
   const [editingCrop, setEditingCrop] = useState<CropConfig | null>(null);
 
@@ -56,9 +52,6 @@ export default function TimelinePlanPage() {
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const moveCrop = usePlanStore((state) => state.moveCrop);
   const updateCropDates = usePlanStore((state) => state.updateCropDates);
-
-  // Save state (for saving indicator and error handling)
-  const { isSaving, saveError, clearSaveError } = useSaveState();
 
   // Note: Cross-tab sync is handled centrally by PlanStoreProvider
 
@@ -75,18 +68,18 @@ export default function TimelinePlanPage() {
     }
     // Fall back to master catalog (shouldn't happen for new plans)
     return null;
-  }, [currentPlan?.cropCatalog]);
+  }, [currentPlan]);
 
   // Load the specific plan by ID
   useEffect(() => {
-    if (!planId) {
-      setError('No plan ID provided');
-      setLoading(false);
-      return;
-    }
-
     // Try to load the plan from library
     async function loadPlan() {
+      if (!planId) {
+        setError('No plan ID provided');
+        setLoading(false);
+        return;
+      }
+
       try {
         const planData = await loadPlanFromLibrary(planId);
         if (planData) {
@@ -111,14 +104,6 @@ export default function TimelinePlanPage() {
     plan: currentPlan,
     enabled: !loading && !error,
   });
-
-  // Show save errors as toasts
-  useEffect(() => {
-    if (saveError) {
-      setToast({ message: `Save failed: ${saveError}`, type: 'error' });
-      clearSaveError();
-    }
-  }, [saveError, clearSaveError]);
 
   // Keyboard shortcuts for undo/redo are now handled in AppHeader
 
@@ -253,20 +238,6 @@ export default function TimelinePlanPage() {
     }
   }, [updateCropConfig]);
 
-  const handleCopyPlan = useCallback(async (options: CopyPlanOptions) => {
-    try {
-      const newPlanId = await copyPlan(options);
-      setCopyModalOpen(false);
-      setToast({ message: `Created "${options.newName}"`, type: 'success' });
-      router.push(`/timeline/${newPlanId}`);
-    } catch (e) {
-      setToast({
-        message: `Failed to copy plan: ${e instanceof Error ? e.message : 'Unknown error'}`,
-        type: 'error',
-      });
-    }
-  }, [router]);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-51px)]">
@@ -296,38 +267,6 @@ export default function TimelinePlanPage() {
 
   return (
     <div className="h-[calc(100vh-51px)] flex flex-col">
-      {/* Toolbar */}
-      <div className="bg-white border-b px-4 py-2 flex items-center gap-4">
-        {/* Save status indicator */}
-        {isSaving ? (
-          <span className="text-sm text-gray-600 flex items-center gap-1">
-            <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            Saving...
-          </span>
-        ) : (
-          <span className="text-sm text-gray-600">Saved</span>
-        )}
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Undo/Redo buttons are now in AppHeader */}
-
-        {/* History button */}
-        <div className="border-l pl-4 ml-2">
-          <button
-            onClick={() => setHistoryPanelOpen(true)}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-            title="View history and checkpoints"
-          >
-            History
-          </button>
-        </div>
-      </div>
-
       {/* Timeline */}
       <div className="flex-1 min-h-0">
         <CropTimeline
@@ -354,23 +293,6 @@ export default function TimelinePlanPage() {
           onClose={() => setToast(null)}
         />
       )}
-
-      {/* History panel */}
-      <HistoryPanel
-        planId={planId}
-        isOpen={historyPanelOpen}
-        onClose={() => setHistoryPanelOpen(false)}
-        onRestore={(message) => setToast({ message, type: 'success' })}
-        onError={(message) => setToast({ message, type: 'error' })}
-      />
-
-      {/* Copy plan modal */}
-      <CopyPlanModal
-        isOpen={copyModalOpen}
-        currentPlanName={currentPlan?.metadata.name || ''}
-        onClose={() => setCopyModalOpen(false)}
-        onCopy={handleCopyPlan}
-      />
 
       {/* Crop config editor modal */}
       <CropConfigEditor
