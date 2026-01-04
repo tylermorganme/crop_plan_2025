@@ -6,6 +6,8 @@ import {
   DndContext,
   DragOverlay,
   closestCenter,
+  pointerWithin,
+  rectIntersection,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -13,6 +15,7 @@ import {
   DragStartEvent,
   DragEndEvent,
   DragOverEvent,
+  CollisionDetection,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -118,6 +121,30 @@ export default function BedsPage() {
   // Get all bed IDs for sortable context
   const allBedIds = useMemo(() => Object.keys(beds), [beds]);
   const allGroupIds = useMemo(() => Object.keys(bedGroups), [bedGroups]);
+
+  // Custom collision detection: when dragging a group, only detect collisions with other groups
+  const customCollisionDetection: CollisionDetection = (args) => {
+    const { active } = args;
+    const activeIdStr = active.id as string;
+
+    // If dragging a group, only allow collision with other groups
+    if (bedGroups[activeIdStr]) {
+      // Filter droppable containers to only groups
+      const groupContainers = args.droppableContainers.filter(
+        container => bedGroups[container.id as string]
+      );
+      return closestCenter({ ...args, droppableContainers: groupContainers });
+    }
+
+    // For beds, use pointer-based detection (more forgiving)
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+
+    // Fallback to rect intersection
+    return rectIntersection(args);
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -467,7 +494,7 @@ export default function BedsPage() {
 
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={customCollisionDetection}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
