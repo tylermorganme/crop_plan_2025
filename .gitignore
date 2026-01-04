@@ -46,3 +46,6 @@ next-env.d.ts
 
 # python virtual environments
 .venv/
+
+# playwright screenshots
+.playwright-mcp/
