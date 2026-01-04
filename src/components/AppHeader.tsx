@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import PlanDropdown from './PlanDropdown';
-import BedManager from './BedManager';
 import { usePlanStore, useUndoRedo } from '@/lib/plan-store';
 
 interface AppHeaderProps {
@@ -14,7 +13,6 @@ interface AppHeaderProps {
 
 export default function AppHeader({ toolbar }: AppHeaderProps) {
   const pathname = usePathname();
-  const [bedManagerOpen, setBedManagerOpen] = useState(false);
 
   // Use centralized store state - automatically syncs across tabs
   const activePlanId = usePlanStore((state) => state.activePlanId);
@@ -51,9 +49,11 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   // Determine which tab is active
   const isExplorerActive = pathname === '/';
   const isTimelineActive = pathname.startsWith('/timeline/');
+  const isBedsActive = pathname.startsWith('/beds/');
 
-  // Timeline link - goes to active plan's timeline
+  // Links - go to active plan's views
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
+  const bedsHref = activePlanId ? `/beds/${activePlanId}` : '/plans';
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -67,7 +67,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           Crop Planner
         </Link>
 
-        {/* View Tabs - only show Explorer/Timeline when a plan is selected */}
+        {/* View Tabs - only show Explorer/Timeline/Beds when a plan is selected */}
         <nav className="flex items-center gap-1">
           {activePlanId ? (
             <>
@@ -91,12 +91,16 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
               >
                 Timeline
               </Link>
-              <button
-                onClick={() => setBedManagerOpen(true)}
-                className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              <Link
+                href={bedsHref}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  isBedsActive
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
               >
                 Beds
-              </button>
+              </Link>
             </>
           ) : (
             <span className="px-3 py-1.5 text-sm text-gray-500">
@@ -140,12 +144,6 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           {toolbar}
         </div>
       )}
-
-      {/* Bed Manager Modal */}
-      <BedManager
-        isOpen={bedManagerOpen}
-        onClose={() => setBedManagerOpen(false)}
-      />
     </header>
   );
 }

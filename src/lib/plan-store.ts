@@ -524,8 +524,12 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   addBed: (groupId: string, name: string, lengthFt: number) => Promise<string>;
   /** Delete a bed (fails if plantings reference it) */
   deleteBed: (bedId: string) => Promise<void>;
+  /** Delete a bed and handle its plantings */
+  deleteBedWithPlantings: (bedId: string, action: 'unassign') => Promise<void>;
   /** Move a bed to a new position within its group */
   reorderBed: (bedId: string, newDisplayOrder: number) => Promise<void>;
+  /** Move a bed to a different group */
+  moveBedToGroup: (bedId: string, newGroupId: string, newDisplayOrder: number) => Promise<void>;
 
   // ---- Bed Group Management ----
   /** Rename a bed group */
@@ -1515,6 +1519,101 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.currentPlan.metadata.lastModified = Date.now();
         state.currentPlan.changeLog.push(
           createChangeEntry('edit', `Reordered bed "${bed.name}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    deleteBedWithPlantings: async (bedId: string, action: 'unassign') => {
+      set((state) => {
+        if (!state.currentPlan?.beds || !state.currentPlan?.plantings) return;
+        const bed = state.currentPlan.beds[bedId];
+        if (!bed) return;
+
+        snapshotForUndo(state);
+
+        // Unassign all plantings from this bed
+        if (action === 'unassign') {
+          for (const planting of state.currentPlan.plantings) {
+            if (planting.startBed === bedId) {
+              planting.startBed = null;
+            }
+          }
+        }
+
+        const bedName = bed.name;
+        delete state.currentPlan.beds[bedId];
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('delete', `Deleted bed "${bedName}" and unassigned plantings`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    moveBedToGroup: async (bedId: string, newGroupId: string, newDisplayOrder: number) => {
+      set((state) => {
+        if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) return;
+        const bed = state.currentPlan.beds[bedId];
+        if (!bed) return;
+        if (!state.currentPlan.bedGroups[newGroupId]) return;
+
+        snapshotForUndo(state);
+
+        const oldGroupId = bed.groupId;
+
+        // Shift beds in old group (fill the gap)
+        for (const b of Object.values(state.currentPlan.beds)) {
+          if (b.groupId === oldGroupId && b.displayOrder > bed.displayOrder) {
+            b.displayOrder--;
+          }
+        }
+
+        // Shift beds in new group (make room)
+        for (const b of Object.values(state.currentPlan.beds)) {
+          if (b.groupId === newGroupId && b.displayOrder >= newDisplayOrder) {
+            b.displayOrder++;
+          }
+        }
+
+        // Move the bed
+        bed.groupId = newGroupId;
+        bed.displayOrder = newDisplayOrder;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('edit', `Moved bed "${bed.name}" to different group`, [])
         );
         state.isDirty = true;
         state.isSaving = true;
