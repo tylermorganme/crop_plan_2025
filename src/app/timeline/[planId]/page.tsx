@@ -321,7 +321,7 @@ export default function TimelinePlanPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-48px)]">
+      <div className="flex items-center justify-center h-[calc(100vh-51px)]">
         <div className="text-gray-600">Loading plan...</div>
       </div>
     );
@@ -329,7 +329,7 @@ export default function TimelinePlanPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-48px)] gap-4">
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-51px)] gap-4">
         <div className="text-red-600 font-medium">{error}</div>
         <Link href="/plans" className="text-blue-600 hover:text-blue-800">
           ← Back to plan list
@@ -340,14 +340,14 @@ export default function TimelinePlanPage() {
 
   if (!currentPlan) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-48px)]">
+      <div className="flex items-center justify-center h-[calc(100vh-51px)]">
         <div className="text-gray-600">No plan loaded</div>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-48px)] flex flex-col">
+    <div className="h-[calc(100vh-51px)] flex flex-col">
       {/* Toolbar */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-4">
         {/* Save status indicator */}

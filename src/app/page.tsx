@@ -12,7 +12,7 @@ export default function Home() {
   };
 
   return (
-    <main className="h-[calc(100vh-48px)] bg-gray-50">
+    <main className="h-[calc(100vh-51px)] bg-gray-50">
       <CropExplorer crops={crops} filterOptions={filterOptions} />
     </main>
   );

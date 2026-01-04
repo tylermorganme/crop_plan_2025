@@ -56,7 +56,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const bedsHref = activePlanId ? `/beds/${activePlanId}` : '/plans';
 
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
       {/* Main Navigation Bar */}
       <div className="px-4 py-2 flex items-center gap-6">
         {/* Logo / App Name */}

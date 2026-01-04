@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import {
   DndContext,
   DragOverlay,
@@ -33,7 +33,6 @@ import DeleteGroupModal from '@/components/beds/DeleteGroupModal';
 
 export default function BedsPage() {
   const params = useParams();
-  const router = useRouter();
   const planId = params.planId as string;
 
   const {
@@ -341,9 +340,9 @@ export default function BedsPage() {
   const activeGroup = activeId && activeType === 'group' ? bedGroups[activeId] : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sticky subheader */}
-      <div className="sticky top-0 z-10 bg-white border-b shadow-sm">
+    <div className="h-[calc(100vh-51px)] flex flex-col bg-gray-50 overflow-hidden">
+      {/* Page subheader - fixed at top of view area */}
+      <div className="bg-white border-b shadow-sm flex-shrink-0">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
@@ -428,7 +427,8 @@ export default function BedsPage() {
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="flex-1 min-h-0 overflow-y-auto">
+        <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Error display */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center justify-between">
@@ -439,56 +439,6 @@ export default function BedsPage() {
             >
               Dismiss
             </button>
-          </div>
-        )}
-
-        {/* Add bed inline form - shows at top when adding */}
-        {addingBedToGroup && (
-          <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-blue-700 font-medium">
-                Add bed to {bedGroups[addingBedToGroup]?.name}:
-              </span>
-              <input
-                type="text"
-                placeholder="Bed name"
-                value={newBedName}
-                onChange={e => setNewBedName(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleAddBed();
-                  if (e.key === 'Escape') {
-                    setAddingBedToGroup(null);
-                    setNewBedName('');
-                  }
-                }}
-                autoFocus
-                className="px-3 py-2 border rounded-md text-sm flex-1"
-              />
-              <select
-                value={newBedLength}
-                onChange={e => setNewBedLength(Number(e.target.value))}
-                className="px-3 py-2 border rounded-md text-sm"
-              >
-                <option value={20}>20 ft</option>
-                <option value={50}>50 ft</option>
-                <option value={80}>80 ft</option>
-              </select>
-              <button
-                onClick={handleAddBed}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-              >
-                Add Bed
-              </button>
-              <button
-                onClick={() => {
-                  setAddingBedToGroup(null);
-                  setNewBedName('');
-                }}
-                className="px-3 py-2 text-gray-500 hover:text-gray-700 text-sm"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         )}
 
@@ -524,6 +474,57 @@ export default function BedsPage() {
                         onDelete={() => setDeletingGroup(group)}
                         canDelete={bedsInGroup.length === 0}
                       />
+
+                      {/* Inline add bed form */}
+                      {addingBedToGroup === group.id && (
+                        <div className="mx-4 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="text"
+                              placeholder="Bed name"
+                              value={newBedName}
+                              onChange={e => setNewBedName(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' && newBedName.trim()) handleAddBed();
+                                if (e.key === 'Escape') {
+                                  setAddingBedToGroup(null);
+                                  setNewBedName('');
+                                  setNewBedLength(50);
+                                }
+                              }}
+                              autoFocus
+                              className="flex-1 px-3 py-1.5 border rounded-md text-sm"
+                            />
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                value={newBedLength}
+                                onChange={e => setNewBedLength(parseInt(e.target.value) || 50)}
+                                className="w-16 px-2 py-1.5 border rounded-md text-sm text-center"
+                                min={1}
+                              />
+                              <span className="text-sm text-gray-500">ft</span>
+                            </div>
+                            <button
+                              onClick={handleAddBed}
+                              disabled={!newBedName.trim()}
+                              className="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                            >
+                              Add Bed
+                            </button>
+                            <button
+                              onClick={() => {
+                                setAddingBedToGroup(null);
+                                setNewBedName('');
+                                setNewBedLength(50);
+                              }}
+                              className="px-2 py-1.5 text-gray-500 hover:text-gray-700 text-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Beds list */}
                       <SortableContext items={bedIds} strategy={verticalListSortingStrategy}>
@@ -585,6 +586,7 @@ export default function BedsPage() {
             <p className="mb-4">No bed groups yet. Create your first group to get started.</p>
           </div>
         )}
+        </div>
       </main>
 
       {/* Delete bed modal */}
