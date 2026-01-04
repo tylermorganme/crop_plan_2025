@@ -40,3 +40,9 @@ console.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# plan data (user data, not committed)
+/data/plans/
+
+# python virtual environments
+.venv/

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
@@ -8,22 +8,17 @@ import HistoryPanel from '@/components/HistoryPanel';
 import CopyPlanModal, { type CopyPlanOptions } from '@/components/CopyPlanModal';
 import CropConfigEditor from '@/components/CropConfigEditor';
 import { type CropConfig } from '@/lib/entities/crop-config';
+import { useSnapshotScheduler } from '@/hooks/useSnapshotScheduler';
 import { calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import {
   usePlanStore,
   useSaveState,
-  startAutoSave,
-  stopAutoSave,
-  exportPlanToFile,
-  importPlanFromFile,
   loadPlanFromLibrary,
   savePlanToLibrary,
-  getPlanList,
   copyPlan,
 } from '@/lib/plan-store';
-import type { TimelineCrop } from '@/lib/plan-types';
 import bedPlanData from '@/data/bed-plan.json';
 
 // Toast notification component
@@ -53,18 +48,14 @@ export default function TimelinePlanPage() {
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [copyModalOpen, setCopyModalOpen] = useState(false);
-  const [isCopying, setIsCopying] = useState(false);
   const [configEditorOpen, setConfigEditorOpen] = useState(false);
   const [editingCrop, setEditingCrop] = useState<CropConfig | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
-  const isDirty = usePlanStore((state) => state.isDirty);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const moveCrop = usePlanStore((state) => state.moveCrop);
   const updateCropDates = usePlanStore((state) => state.updateCropDates);
-  const markSaved = usePlanStore((state) => state.markSaved);
 
   // Save state (for saving indicator and error handling)
   const { isSaving, saveError, clearSaveError } = useSaveState();
@@ -115,11 +106,11 @@ export default function TimelinePlanPage() {
     loadPlan();
   }, [planId, loadPlanById]);
 
-  // Start auto-save timer (saves snapshot every 15 minutes)
-  useEffect(() => {
-    startAutoSave();
-    return () => stopAutoSave();
-  }, []);
+  // Snapshot scheduler - creates tiered snapshots to file storage (every 15 min)
+  useSnapshotScheduler({
+    plan: currentPlan,
+    enabled: !loading && !error,
+  });
 
   // Show save errors as toasts
   useEffect(() => {
@@ -262,53 +253,11 @@ export default function TimelinePlanPage() {
     }
   }, [updateCropConfig]);
 
-  const handleSave = useCallback(async () => {
-    // Save to library is automatic now, but mark as saved
-    if (currentPlan) {
-      await savePlanToLibrary(currentPlan);
-    }
-    markSaved();
-  }, [currentPlan, markSaved]);
-
-  const handleExport = useCallback(() => {
-    try {
-      exportPlanToFile();
-      setToast({ message: 'Plan saved to file', type: 'success' });
-    } catch (e) {
-      setToast({ message: `Save failed: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
-    }
-  }, []);
-
-  const handleImportClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const plan = await importPlanFromFile(file);
-      setToast({ message: `Loaded "${plan.metadata.name}"`, type: 'success' });
-      // Navigate to the new plan's URL
-      router.push(`/timeline/${plan.id}`);
-    } catch (err) {
-      setToast({ message: `Load failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
-    }
-
-    // Reset file input so same file can be selected again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [router]);
-
   const handleCopyPlan = useCallback(async (options: CopyPlanOptions) => {
-    setIsCopying(true);
     try {
       const newPlanId = await copyPlan(options);
       setCopyModalOpen(false);
       setToast({ message: `Created "${options.newName}"`, type: 'success' });
-      // Navigate to the new plan
       router.push(`/timeline/${newPlanId}`);
     } catch (e) {
       setToast({
@@ -316,7 +265,6 @@ export default function TimelinePlanPage() {
         type: 'error',
       });
     }
-    setIsCopying(false);
   }, [router]);
 
   if (loading) {
@@ -367,31 +315,6 @@ export default function TimelinePlanPage() {
         <div className="flex-1" />
 
         {/* Undo/Redo buttons are now in AppHeader */}
-
-        {/* Save/Load to file buttons */}
-        <div className="flex items-center gap-2 border-l pl-4 ml-2">
-          <button
-            onClick={handleExport}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-            title="Save plan to file"
-          >
-            Save to File
-          </button>
-          <button
-            onClick={handleImportClick}
-            className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-            title="Load plan from file"
-          >
-            Load
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".crop-plan.gz,.gz"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-        </div>
 
         {/* History button */}
         <div className="border-l pl-4 ml-2">

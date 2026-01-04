@@ -8,7 +8,6 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import pako from 'pako';
 import { addYears, addMonths, format, parseISO, isValid } from 'date-fns';
 import type {
   Plan,
@@ -17,13 +16,11 @@ import type {
   PlanActions,
   PlanChange,
   BedSpanInfo,
-  CropPlanFile,
   StashEntry,
   Checkpoint,
   HistoryEntry,
   Bed,
   Planting,
-  TimelineCrop,
 } from './plan-types';
 import {
   CURRENT_SCHEMA_VERSION,
@@ -33,7 +30,6 @@ import {
 } from './plan-types';
 import type { BedGroup } from './plan-types';
 import {
-  generatePlantingId,
   initializePlantingIdCounter,
   clonePlanting,
 } from './entities/planting';
@@ -308,42 +304,8 @@ function createChangeEntry(
 }
 
 // ============================================
-// Snapshot Functions (async, use adapter)
-// ============================================
-
-async function saveSnapshot(plan: Plan): Promise<void> {
-  const snapshot: PlanSnapshot = {
-    id: generateId(),
-    timestamp: Date.now(),
-    plan: JSON.parse(JSON.stringify(plan)), // Deep clone
-  };
-  await storage.saveSnapshot(snapshot);
-}
-
-export async function getAutoSaveSnapshots(): Promise<PlanSnapshot[]> {
-  return storage.getSnapshots();
-}
-
-export async function restoreFromSnapshot(snapshotId: string): Promise<Plan | null> {
-  const snapshots = await storage.getSnapshots();
-  const snapshot = snapshots.find(s => s.id === snapshotId);
-  return snapshot?.plan ?? null;
-}
-
-// ============================================
 // Stash Functions (async, use adapter)
 // ============================================
-
-async function saveToStashInternal(plan: Plan, reason: string): Promise<StashEntry> {
-  const entry: StashEntry = {
-    id: generateId(),
-    timestamp: Date.now(),
-    reason,
-    plan: JSON.parse(JSON.stringify(plan)), // Deep clone
-  };
-  await storage.saveToStash(entry);
-  return entry;
-}
 
 export async function getStash(): Promise<StashEntry[]> {
   return storage.getStash();
@@ -360,11 +322,12 @@ export async function clearStash(): Promise<void> {
 }
 
 // ============================================
-// Checkpoint Functions (async, use adapter)
+// Checkpoint Functions (use file storage API)
 // ============================================
 
 /**
- * Create a named checkpoint for the current plan
+ * Create a named checkpoint for the current plan.
+ * Checkpoints are saved to file storage for durability.
  */
 export async function createCheckpoint(name: string, description?: string): Promise<Checkpoint> {
   const state = usePlanStore.getState();
@@ -381,7 +344,16 @@ export async function createCheckpoint(name: string, description?: string): Prom
     plan: JSON.parse(JSON.stringify(state.currentPlan)), // Deep clone
   };
 
-  await storage.saveCheckpoint(checkpoint);
+  const response = await fetch(`/api/plans/${checkpoint.planId}/checkpoints`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ checkpoint }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to save checkpoint');
+  }
+
   return checkpoint;
 }
 
@@ -391,7 +363,12 @@ export async function createCheckpoint(name: string, description?: string): Prom
 export async function getCheckpoints(planId?: string): Promise<Checkpoint[]> {
   const id = planId ?? usePlanStore.getState().currentPlan?.id;
   if (!id) return [];
-  return storage.getCheckpoints(id);
+
+  const response = await fetch(`/api/plans/${id}/checkpoints`);
+  if (!response.ok) return [];
+
+  const data = await response.json();
+  return data.checkpoints ?? [];
 }
 
 /**
@@ -400,79 +377,35 @@ export async function getCheckpoints(planId?: string): Promise<Checkpoint[]> {
 export async function deleteCheckpoint(checkpointId: string, planId?: string): Promise<void> {
   const id = planId ?? usePlanStore.getState().currentPlan?.id;
   if (!id) return;
-  return storage.deleteCheckpoint(checkpointId, id);
+
+  await fetch(`/api/plans/${id}/checkpoints`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ checkpointId }),
+  });
 }
 
 /**
- * Get unified history combining checkpoints, auto-saves, and stash entries
- * Sorted by timestamp descending (most recent first)
+ * Get unified history combining checkpoints, auto-saves, and stash entries.
+ * Fetched from file storage via API.
  */
 export async function getHistory(planId?: string): Promise<HistoryEntry[]> {
   const id = planId ?? usePlanStore.getState().currentPlan?.id;
   if (!id) return [];
 
-  const [checkpoints, snapshots, stash] = await Promise.all([
-    storage.getCheckpoints(id),
-    storage.getSnapshots(),
-    storage.getStash(),
-  ]);
+  const response = await fetch(`/api/plans/${id}/history`);
+  if (!response.ok) return [];
 
-  const entries: HistoryEntry[] = [];
-
-  // Add checkpoints
-  for (const cp of checkpoints) {
-    entries.push({
-      id: cp.id,
-      type: 'checkpoint',
-      name: cp.name,
-      timestamp: cp.timestamp,
-      plan: cp.plan,
-    });
-  }
-
-  // Add auto-saves (only for current plan)
-  for (const snap of snapshots) {
-    if (snap.plan.id === id) {
-      entries.push({
-        id: snap.id,
-        type: 'auto-save',
-        name: 'Auto-save',
-        timestamp: snap.timestamp,
-        plan: snap.plan,
-      });
-    }
-  }
-
-  // Add stash entries (only for current plan)
-  for (const s of stash) {
-    if (s.plan.id === id) {
-      entries.push({
-        id: s.id,
-        type: 'stash',
-        name: s.reason,
-        timestamp: s.timestamp,
-        plan: s.plan,
-      });
-    }
-  }
-
-  // Sort by timestamp descending (most recent first)
-  entries.sort((a, b) => b.timestamp - a.timestamp);
-
-  return entries;
+  const data = await response.json();
+  return data.history ?? [];
 }
 
 /**
- * Restore from any history entry
- * Stashes current state first for safety (only if there are unsaved changes)
+ * Restore from any history entry.
+ * The entry already contains the full plan data.
  */
 export async function restoreFromHistory(entry: HistoryEntry): Promise<void> {
   const state = usePlanStore.getState();
-
-  // Only stash if there are unsaved changes - no point stashing an unchanged restore
-  if (state.currentPlan && state.isDirty) {
-    await saveToStashInternal(state.currentPlan, `Before restoring "${entry.name}"`);
-  }
 
   // Load the plan from the history entry
   state.loadPlan(entry.plan);
@@ -1897,166 +1830,3 @@ export function useSaveState() {
 
 // ============================================
 // Auto-Save Timer (DISABLED)
-// ============================================
-// Auto-save snapshots are disabled because:
-// 1. Every mutation already saves to the plan library immediately
-// 2. Full Plan snapshots (with beds + cropCatalog) are ~400KB each
-// 3. localStorage has a 5-10MB limit, easily exceeded with a few snapshots
-//
-// If crash recovery is needed, consider:
-// - IndexedDB (larger quota)
-// - Slim snapshots (exclude beds/cropCatalog, rebuild on restore)
-
-let autoSaveInterval: ReturnType<typeof setInterval> | null = null;
-
-export function startAutoSave(): void {
-  // Disabled - mutations save immediately, snapshots would bloat localStorage
-  console.log('[AutoSave] Disabled - mutations save immediately');
-}
-
-export function stopAutoSave(): void {
-  if (autoSaveInterval) {
-    clearInterval(autoSaveInterval);
-    autoSaveInterval = null;
-  }
-}
-
-// ============================================
-// Export/Import Functions
-// ============================================
-
-/**
- * Export the current plan to a gzip-compressed JSON file.
- * Downloads a .crop-plan.gz file to the user's computer.
- */
-export function exportPlanToFile(): void {
-  const state = usePlanStore.getState();
-  if (!state.currentPlan) {
-    throw new Error('No plan to export');
-  }
-
-  // Increment version on export
-  const plan: Plan = {
-    ...state.currentPlan,
-    metadata: {
-      ...state.currentPlan.metadata,
-      version: (state.currentPlan.metadata.version ?? 0) + 1,
-      lastModified: Date.now(),
-    },
-  };
-
-  const fileData: CropPlanFile = {
-    formatVersion: 1,
-    schemaVersion: CURRENT_SCHEMA_VERSION,
-    exportedAt: Date.now(),
-    plan,
-  };
-
-  // Convert to JSON and compress
-  const jsonString = JSON.stringify(fileData, null, 2);
-  const compressed = pako.gzip(jsonString);
-
-  // Create blob and download
-  const blob = new Blob([compressed], { type: 'application/gzip' });
-  const url = URL.createObjectURL(blob);
-
-  const fileName = `${plan.metadata.name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}-v${plan.metadata.version}.crop-plan.gz`;
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  // Update the store with the new version
-  usePlanStore.setState((state) => {
-    if (state.currentPlan) {
-      state.currentPlan.metadata.version = plan.metadata.version;
-    }
-  });
-}
-
-/**
- * Import a plan from a gzip-compressed JSON file.
- * Stashes the current plan before importing.
- * Returns the imported plan or throws on error.
- */
-export async function importPlanFromFile(file: File): Promise<Plan> {
-  const state = usePlanStore.getState();
-
-  // Stash current plan if one exists
-  if (state.currentPlan) {
-    await saveToStashInternal(state.currentPlan, `Before importing ${file.name}`);
-  }
-
-  // Read file
-  const arrayBuffer = await file.arrayBuffer();
-  const compressed = new Uint8Array(arrayBuffer);
-
-  // Decompress
-  let jsonString: string;
-  try {
-    const decompressed = pako.ungzip(compressed);
-    jsonString = new TextDecoder().decode(decompressed);
-  } catch {
-    throw new Error('Failed to decompress file. Is this a valid .crop-plan.gz file?');
-  }
-
-  // Parse JSON
-  let fileData: CropPlanFile;
-  try {
-    fileData = JSON.parse(jsonString);
-  } catch {
-    throw new Error('Failed to parse file. Invalid JSON format.');
-  }
-
-  // Validate format version
-  if (fileData.formatVersion !== 1) {
-    throw new Error(`Unsupported file format version: ${fileData.formatVersion}`);
-  }
-
-  // Validate required fields
-  if (!fileData.plan || !fileData.plan.id || !fileData.plan.metadata) {
-    throw new Error('Invalid file: missing plan data');
-  }
-
-  // TODO: Add schema migration logic here when schemaVersion > 1
-
-  // Load the imported plan
-  const { loadPlan } = usePlanStore.getState();
-  loadPlan(fileData.plan);
-
-  return fileData.plan;
-}
-
-/**
- * Read a .crop-plan.gz file and return the parsed data without importing.
- * Useful for previewing before import.
- */
-export async function previewPlanFile(file: File): Promise<CropPlanFile> {
-  const arrayBuffer = await file.arrayBuffer();
-  const compressed = new Uint8Array(arrayBuffer);
-
-  let jsonString: string;
-  try {
-    const decompressed = pako.ungzip(compressed);
-    jsonString = new TextDecoder().decode(decompressed);
-  } catch {
-    throw new Error('Failed to decompress file. Is this a valid .crop-plan.gz file?');
-  }
-
-  let fileData: CropPlanFile;
-  try {
-    fileData = JSON.parse(jsonString);
-  } catch {
-    throw new Error('Failed to parse file. Invalid JSON format.');
-  }
-
-  if (fileData.formatVersion !== 1) {
-    throw new Error(`Unsupported file format version: ${fileData.formatVersion}`);
-  }
-
-  return fileData;
-}

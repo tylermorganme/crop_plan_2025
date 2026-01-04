@@ -4,9 +4,66 @@
  * Abstracts storage operations behind an interface.
  * Uses IndexedDB via localForage for larger storage capacity (~50MB+)
  * and better performance than localStorage.
+ *
+ * Also syncs to file storage (data/plans/) for durability.
  */
 
 import localforage from 'localforage';
+
+// ============================================
+// File Sync (Background, Throttled)
+// ============================================
+
+/** Minimum interval between file syncs (5 seconds) */
+const SYNC_THROTTLE_MS = 5000;
+
+/** Track last sync time per plan */
+const lastSyncTime = new Map<string, number>();
+
+/** Pending sync data (for coalescing rapid saves) */
+const pendingSync = new Map<string, PlanData>();
+
+/** Active sync timeout */
+let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Sync plan to file storage in background.
+ * Throttled to avoid excessive writes - coalesces rapid saves.
+ */
+function syncToFile(planId: string, data: PlanData): void {
+  // Store latest data (overwrites any pending)
+  pendingSync.set(planId, data);
+
+  // If already scheduled, let it handle this
+  if (syncTimeout) return;
+
+  const lastSync = lastSyncTime.get(planId) ?? 0;
+  const elapsed = Date.now() - lastSync;
+  const delay = Math.max(0, SYNC_THROTTLE_MS - elapsed);
+
+  syncTimeout = setTimeout(async () => {
+    syncTimeout = null;
+
+    // Flush all pending syncs
+    for (const [id, planData] of pendingSync) {
+      try {
+        const response = await fetch('/api/plans/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId: id, data: planData }),
+        });
+        if (response.ok) {
+          lastSyncTime.set(id, Date.now());
+        } else {
+          console.warn('File sync failed:', await response.text());
+        }
+      } catch (e) {
+        console.warn('File sync error:', e);
+      }
+    }
+    pendingSync.clear();
+  }, delay);
+}
 import type {
   Plan,
   TimelineCrop,
@@ -44,33 +101,41 @@ export interface PlanSnapshot {
 }
 
 // ============================================
-// Storage Adapter Interface
+// Storage Adapter Interfaces
 // ============================================
 
-export interface StorageAdapter {
+/**
+ * Core plan storage - used by IndexedDB for fast client-side storage
+ */
+export interface PlanStorageAdapter {
   // Plans
   getPlanList(): Promise<PlanSummary[]>;
   getPlan(id: string): Promise<PlanData | null>;
   savePlan(id: string, data: PlanData): Promise<void>;
   deletePlan(id: string): Promise<void>;
 
-  // Snapshots (auto-saves)
-  getSnapshots(): Promise<PlanSnapshot[]>;
-  saveSnapshot(snapshot: PlanSnapshot): Promise<void>;
-
   // Stash (safety saves before destructive operations)
   getStash(): Promise<StashEntry[]>;
   saveToStash(entry: StashEntry): Promise<void>;
   clearStash(): Promise<void>;
 
+  // Flags (migration markers, settings, etc.)
+  getFlag(key: string): Promise<string | null>;
+  setFlag(key: string, value: string): Promise<void>;
+}
+
+/**
+ * Full storage adapter - used by file storage for durable history
+ */
+export interface StorageAdapter extends PlanStorageAdapter {
+  // Snapshots (auto-saves)
+  getSnapshots(): Promise<PlanSnapshot[]>;
+  saveSnapshot(snapshot: PlanSnapshot): Promise<void>;
+
   // Checkpoints (user-created save points)
   getCheckpoints(planId: string): Promise<Checkpoint[]>;
   saveCheckpoint(checkpoint: Checkpoint): Promise<void>;
   deleteCheckpoint(checkpointId: string, planId: string): Promise<void>;
-
-  // Flags (migration markers, settings, etc.)
-  getFlag(key: string): Promise<string | null>;
-  setFlag(key: string, value: string): Promise<void>;
 }
 
 // ============================================
@@ -79,12 +144,8 @@ export interface StorageAdapter {
 
 const PLAN_LIBRARY_PREFIX = 'crop-plan-lib-';
 const PLAN_REGISTRY_KEY = 'crop-plan-registry';
-const SNAPSHOTS_STORAGE_KEY = 'crop-plan-snapshots';
 const STASH_STORAGE_KEY = 'crop-plan-stash';
-const CHECKPOINTS_PREFIX = 'crop-plan-checkpoints-';
-const MAX_SNAPSHOTS = 32;
 const MAX_STASH_ENTRIES = 10;
-const MAX_CHECKPOINTS_PER_PLAN = 20;
 
 // ============================================
 // Cross-Tab Sync via BroadcastChannel
@@ -140,7 +201,7 @@ localforage.config({
   description: 'Crop planning data storage',
 });
 
-export class IndexedDBAdapter implements StorageAdapter {
+export class IndexedDBAdapter implements PlanStorageAdapter {
   // ----------------------------------------
   // Plans
   // ----------------------------------------
@@ -181,6 +242,9 @@ export class IndexedDBAdapter implements StorageAdapter {
 
     // Notify other tabs
     broadcastSync({ type: 'plan-updated', planId: id });
+
+    // Sync to file storage in background (non-blocking)
+    syncToFile(id, data);
   }
 
   async deletePlan(id: string): Promise<void> {
@@ -234,35 +298,6 @@ export class IndexedDBAdapter implements StorageAdapter {
   }
 
   // ----------------------------------------
-  // Snapshots (auto-saves)
-  // ----------------------------------------
-
-  async getSnapshots(): Promise<PlanSnapshot[]> {
-    try {
-      const data = await localforage.getItem<PlanSnapshot[]>(SNAPSHOTS_STORAGE_KEY);
-      return data ?? [];
-    } catch {
-      return [];
-    }
-  }
-
-  async saveSnapshot(snapshot: PlanSnapshot): Promise<void> {
-    const snapshots = await this.getSnapshots();
-    snapshots.push(snapshot);
-
-    // Keep only the last MAX_SNAPSHOTS
-    while (snapshots.length > MAX_SNAPSHOTS) {
-      snapshots.shift();
-    }
-
-    try {
-      await localforage.setItem(SNAPSHOTS_STORAGE_KEY, snapshots);
-    } catch (e) {
-      console.warn('Failed to save snapshot:', e);
-    }
-  }
-
-  // ----------------------------------------
   // Stash (safety saves)
   // ----------------------------------------
 
@@ -296,52 +331,6 @@ export class IndexedDBAdapter implements StorageAdapter {
       await localforage.removeItem(STASH_STORAGE_KEY);
     } catch (e) {
       console.warn('Failed to clear stash:', e);
-    }
-  }
-
-  // ----------------------------------------
-  // Checkpoints (user-created save points)
-  // ----------------------------------------
-
-  async getCheckpoints(planId: string): Promise<Checkpoint[]> {
-    const key = CHECKPOINTS_PREFIX + planId;
-    try {
-      const data = await localforage.getItem<Checkpoint[]>(key);
-      return data ?? [];
-    } catch {
-      return [];
-    }
-  }
-
-  async saveCheckpoint(checkpoint: Checkpoint): Promise<void> {
-    const key = CHECKPOINTS_PREFIX + checkpoint.planId;
-    const checkpoints = await this.getCheckpoints(checkpoint.planId);
-
-    // Add new checkpoint at the beginning (most recent first)
-    checkpoints.unshift(checkpoint);
-
-    // Keep only the last MAX_CHECKPOINTS_PER_PLAN
-    while (checkpoints.length > MAX_CHECKPOINTS_PER_PLAN) {
-      checkpoints.pop();
-    }
-
-    try {
-      await localforage.setItem(key, checkpoints);
-    } catch (e) {
-      console.error('Failed to save checkpoint:', e);
-      throw new Error('Failed to save checkpoint - storage may be full');
-    }
-  }
-
-  async deleteCheckpoint(checkpointId: string, planId: string): Promise<void> {
-    const key = CHECKPOINTS_PREFIX + planId;
-    const checkpoints = await this.getCheckpoints(planId);
-    const filtered = checkpoints.filter(c => c.id !== checkpointId);
-
-    try {
-      await localforage.setItem(key, filtered);
-    } catch (e) {
-      console.warn('Failed to delete checkpoint:', e);
     }
   }
 

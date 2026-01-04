@@ -9,7 +9,6 @@ export default function PlanDropdown() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use centralized store state - automatically syncs across tabs
   const planList = usePlanStore((state) => state.planList);
@@ -54,32 +53,6 @@ export default function PlanDropdown() {
     setIsOpen(false);
     router.push('/plans');
   }, [router]);
-
-  const handleLoadFromFile = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const { importPlanFromFile } = await import('@/lib/plan-store');
-      const plan = await importPlanFromFile(file);
-      setActivePlanId(plan.id);
-      await refreshPlanList();
-      setIsOpen(false);
-      router.push(`/timeline/${plan.id}`);
-    } catch (err) {
-      console.error('Failed to import plan:', err);
-      alert(`Load failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [router, setActivePlanId, refreshPlanList]);
 
   // Get recent plans (up to 5, excluding current)
   const recentPlans = useMemo(() => {
@@ -159,22 +132,7 @@ export default function PlanDropdown() {
             >
               New Plan...
             </button>
-            <button
-              onClick={handleLoadFromFile}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Load from File...
-            </button>
           </div>
-
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".crop-plan.gz,.gz"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
         </div>
       )}
     </div>

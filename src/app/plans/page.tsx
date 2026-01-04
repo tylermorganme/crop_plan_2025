@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   usePlanStore,
-  importPlanFromFile,
   deletePlanFromLibrary,
 } from '@/lib/plan-store';
 import { getTimelineCrops, collapseToPlantings } from '@/lib/timeline-data';
@@ -39,7 +38,6 @@ function formatDate(timestamp: number): string {
 export default function PlansPage() {
   const router = useRouter();
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Use centralized store state - automatically syncs across tabs
   const plans = usePlanStore((state) => state.planList);
@@ -90,30 +88,6 @@ export default function PlansPage() {
     }
   }, [createNewPlan, router, getDefaultYear, setActivePlanId, refreshPlanList]);
 
-  const handleImportClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const plan = await importPlanFromFile(file);
-      setToast({ message: `Loaded "${plan.metadata.name}"`, type: 'success' });
-      setActivePlanId(plan.id);
-      await refreshPlanList();
-      router.push(`/timeline/${plan.id}`);
-    } catch (err) {
-      setToast({ message: `Load failed: ${err instanceof Error ? err.message : 'Unknown error'}`, type: 'error' });
-    }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [router, setActivePlanId, refreshPlanList]);
-
   const handleDelete = useCallback(async (planId: string, planName: string) => {
     if (!confirm(`Delete "${planName}"? This cannot be undone.`)) return;
 
@@ -135,12 +109,6 @@ export default function PlansPage() {
           <h1 className="text-xl font-semibold text-gray-900">All Plans</h1>
           <div className="flex items-center gap-3">
             <button
-              onClick={handleImportClick}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Load from File
-            </button>
-            <button
               onClick={handleCreateBlank}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
             >
@@ -153,13 +121,6 @@ export default function PlansPage() {
             >
               + From Template
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".crop-plan.gz,.gz"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
           </div>
         </div>
       </div>
@@ -170,14 +131,8 @@ export default function PlansPage() {
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">📋</div>
             <h2 className="text-xl font-medium text-gray-700 mb-2">No plans yet</h2>
-            <p className="text-gray-600 mb-6">Create a new plan or load one from a file.</p>
+            <p className="text-gray-600 mb-6">Create a new plan to get started.</p>
             <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={handleImportClick}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Load from File
-              </button>
               <button
                 onClick={handleCreateBlank}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
