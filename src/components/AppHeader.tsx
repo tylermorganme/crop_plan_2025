@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import PlanDropdown from './PlanDropdown';
+import BedManager from './BedManager';
 import { usePlanStore, useUndoRedo } from '@/lib/plan-store';
 
 interface AppHeaderProps {
@@ -13,6 +14,7 @@ interface AppHeaderProps {
 
 export default function AppHeader({ toolbar }: AppHeaderProps) {
   const pathname = usePathname();
+  const [bedManagerOpen, setBedManagerOpen] = useState(false);
 
   // Use centralized store state - automatically syncs across tabs
   const activePlanId = usePlanStore((state) => state.activePlanId);
@@ -89,6 +91,12 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
               >
                 Timeline
               </Link>
+              <button
+                onClick={() => setBedManagerOpen(true)}
+                className="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              >
+                Beds
+              </button>
             </>
           ) : (
             <span className="px-3 py-1.5 text-sm text-gray-500">
@@ -132,6 +140,12 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           {toolbar}
         </div>
       )}
+
+      {/* Bed Manager Modal */}
+      <BedManager
+        isOpen={bedManagerOpen}
+        onClose={() => setBedManagerOpen(false)}
+      />
     </header>
   );
 }

@@ -37,7 +37,7 @@ import {
   initializePlantingIdCounter,
   clonePlanting,
 } from './entities/planting';
-import { cloneBeds, cloneBedGroups } from './entities/bed';
+import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities/bed';
 import { storage, onSyncMessage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
@@ -516,6 +516,26 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   refreshPlanList: () => Promise<void>;
   /** Set active plan ID (syncs to localStorage) */
   setActivePlanId: (planId: string | null) => void;
+
+  // ---- Bed Management ----
+  /** Rename a bed */
+  renameBed: (bedId: string, newName: string) => Promise<void>;
+  /** Add a new bed to a group */
+  addBed: (groupId: string, name: string, lengthFt: number) => Promise<string>;
+  /** Delete a bed (fails if plantings reference it) */
+  deleteBed: (bedId: string) => Promise<void>;
+  /** Move a bed to a new position within its group */
+  reorderBed: (bedId: string, newDisplayOrder: number) => Promise<void>;
+
+  // ---- Bed Group Management ----
+  /** Rename a bed group */
+  renameBedGroup: (groupId: string, newName: string) => Promise<void>;
+  /** Add a new bed group */
+  addBedGroup: (name: string) => Promise<string>;
+  /** Delete an empty bed group */
+  deleteBedGroup: (groupId: string) => Promise<void>;
+  /** Move a bed group to a new position */
+  reorderBedGroup: (groupId: string, newDisplayOrder: number) => Promise<void>;
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -1332,6 +1352,365 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       } catch { /* ignore */ }
       // Dispatch event for same-tab components that still listen
       window.dispatchEvent(new CustomEvent('plan-list-updated'));
+    },
+
+    // ========================================
+    // Bed Management
+    // ========================================
+
+    renameBed: async (bedId: string, newName: string) => {
+      set((state) => {
+        if (!state.currentPlan?.beds) return;
+        const bed = state.currentPlan.beds[bedId];
+        if (!bed) return;
+
+        snapshotForUndo(state);
+
+        bed.name = newName;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('edit', `Renamed bed to "${newName}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    addBed: async (groupId: string, name: string, lengthFt: number) => {
+      let newBedId = '';
+
+      set((state) => {
+        if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) return;
+        if (!state.currentPlan.bedGroups[groupId]) return;
+
+        snapshotForUndo(state);
+
+        // Find max displayOrder in this group
+        const bedsInGroup = Object.values(state.currentPlan.beds)
+          .filter(b => b.groupId === groupId);
+        const maxOrder = bedsInGroup.reduce((max, b) => Math.max(max, b.displayOrder), -1);
+
+        const newBed = createBed(name, groupId, lengthFt, maxOrder + 1);
+        newBedId = newBed.id;
+        state.currentPlan.beds[newBed.id] = newBed;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('create', `Added bed "${name}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return newBedId;
+    },
+
+    deleteBed: async (bedId: string) => {
+      const state = get();
+      if (!state.currentPlan?.beds || !state.currentPlan?.plantings) {
+        throw new Error('No plan loaded');
+      }
+
+      // Check if any plantings reference this bed
+      const referencingPlantings = state.currentPlan.plantings.filter(
+        p => p.startBed === bedId
+      );
+      if (referencingPlantings.length > 0) {
+        throw new Error(
+          `Cannot delete bed: ${referencingPlantings.length} planting(s) reference it`
+        );
+      }
+
+      set((state) => {
+        if (!state.currentPlan?.beds) return;
+        const bed = state.currentPlan.beds[bedId];
+        if (!bed) return;
+
+        snapshotForUndo(state);
+
+        const bedName = bed.name;
+        delete state.currentPlan.beds[bedId];
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('delete', `Deleted bed "${bedName}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    reorderBed: async (bedId: string, newDisplayOrder: number) => {
+      set((state) => {
+        if (!state.currentPlan?.beds) return;
+        const bed = state.currentPlan.beds[bedId];
+        if (!bed) return;
+
+        snapshotForUndo(state);
+
+        const oldOrder = bed.displayOrder;
+        const groupId = bed.groupId;
+
+        // Shift other beds in the same group
+        for (const b of Object.values(state.currentPlan.beds)) {
+          if (b.groupId !== groupId || b.id === bedId) continue;
+
+          if (oldOrder < newDisplayOrder) {
+            // Moving down: shift beds in between up
+            if (b.displayOrder > oldOrder && b.displayOrder <= newDisplayOrder) {
+              b.displayOrder--;
+            }
+          } else {
+            // Moving up: shift beds in between down
+            if (b.displayOrder >= newDisplayOrder && b.displayOrder < oldOrder) {
+              b.displayOrder++;
+            }
+          }
+        }
+
+        bed.displayOrder = newDisplayOrder;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('edit', `Reordered bed "${bed.name}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    // ========================================
+    // Bed Group Management
+    // ========================================
+
+    renameBedGroup: async (groupId: string, newName: string) => {
+      set((state) => {
+        if (!state.currentPlan?.bedGroups) return;
+        const group = state.currentPlan.bedGroups[groupId];
+        if (!group) return;
+
+        snapshotForUndo(state);
+
+        group.name = newName;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('edit', `Renamed group to "${newName}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    addBedGroup: async (name: string) => {
+      let newGroupId = '';
+
+      set((state) => {
+        if (!state.currentPlan?.bedGroups) return;
+
+        snapshotForUndo(state);
+
+        // Find max displayOrder
+        const maxOrder = Object.values(state.currentPlan.bedGroups)
+          .reduce((max, g) => Math.max(max, g.displayOrder), -1);
+
+        const newGroup = createBedGroup(name, maxOrder + 1);
+        newGroupId = newGroup.id;
+        state.currentPlan.bedGroups[newGroup.id] = newGroup;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('create', `Added group "${name}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return newGroupId;
+    },
+
+    deleteBedGroup: async (groupId: string) => {
+      const state = get();
+      if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) {
+        throw new Error('No plan loaded');
+      }
+
+      // Check if group has any beds
+      const bedsInGroup = Object.values(state.currentPlan.beds).filter(
+        b => b.groupId === groupId
+      );
+      if (bedsInGroup.length > 0) {
+        throw new Error(
+          `Cannot delete group: ${bedsInGroup.length} bed(s) still in group`
+        );
+      }
+
+      set((state) => {
+        if (!state.currentPlan?.bedGroups) return;
+        const group = state.currentPlan.bedGroups[groupId];
+        if (!group) return;
+
+        snapshotForUndo(state);
+
+        const groupName = group.name;
+        delete state.currentPlan.bedGroups[groupId];
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('delete', `Deleted group "${groupName}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    reorderBedGroup: async (groupId: string, newDisplayOrder: number) => {
+      set((state) => {
+        if (!state.currentPlan?.bedGroups) return;
+        const group = state.currentPlan.bedGroups[groupId];
+        if (!group) return;
+
+        snapshotForUndo(state);
+
+        const oldOrder = group.displayOrder;
+
+        // Shift other groups
+        for (const g of Object.values(state.currentPlan.bedGroups)) {
+          if (g.id === groupId) continue;
+
+          if (oldOrder < newDisplayOrder) {
+            // Moving down: shift groups in between up
+            if (g.displayOrder > oldOrder && g.displayOrder <= newDisplayOrder) {
+              g.displayOrder--;
+            }
+          } else {
+            // Moving up: shift groups in between down
+            if (g.displayOrder >= newDisplayOrder && g.displayOrder < oldOrder) {
+              g.displayOrder++;
+            }
+          }
+        }
+
+        group.displayOrder = newDisplayOrder;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry('edit', `Reordered group "${group.name}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
     },
   }))
 );
