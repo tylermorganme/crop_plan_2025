@@ -363,6 +363,10 @@ export default function CropTimeline({
   // State for "Add to Bed" panel - which bed's + button was clicked
   const [addToBedId, setAddToBedId] = useState<string | null>(null);
   const addToBedPanelRef = useRef<HTMLDivElement>(null);
+
+  // Search filter
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
   // State for hover preview when browsing crops in AddToBedPanel
   const [hoverPreview, setHoverPreview] = useState<{
     config: CropConfig;
@@ -460,16 +464,38 @@ export default function CropTimeline({
     return { left: Math.max(0, left), width: Math.max(30, width) };
   }, [timelineStart, pixelsPerDay]);
 
-  // Group crops by resource
+  // Filter crops by search query
+  const filteredCrops = useMemo(() => {
+    if (!searchQuery.trim()) return crops;
+    const query = searchQuery.toLowerCase().trim();
+    return crops.filter(crop =>
+      crop.name.toLowerCase().includes(query) ||
+      crop.category?.toLowerCase().includes(query) ||
+      crop.cropConfigId?.toLowerCase().includes(query) ||
+      crop.resource?.toLowerCase().includes(query)
+    );
+  }, [crops, searchQuery]);
+
+  // Set of resources that have matching crops (for filtering rows)
+  const matchingResources = useMemo(() => {
+    if (!searchQuery.trim()) return null; // null means show all
+    const resources = new Set<string>();
+    for (const crop of filteredCrops) {
+      resources.add(crop.resource || 'Unassigned');
+    }
+    return resources;
+  }, [filteredCrops, searchQuery]);
+
+  // Group crops by resource (using filtered crops)
   const cropsByResource = useMemo(() => {
     const result: Record<string, TimelineCrop[]> = {};
-    for (const crop of crops) {
+    for (const crop of filteredCrops) {
       const resource = crop.resource || 'Unassigned';
       if (!result[resource]) result[resource] = [];
       result[resource].push(crop);
     }
     return result;
-  }, [crops]);
+  }, [filteredCrops]);
 
   // Calculate stacking for crops in a lane
   const calculateStacking = useCallback((laneCrops: TimelineCrop[]) => {
@@ -602,6 +628,26 @@ export default function CropTimeline({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [addToBedId]);
+
+  // Keyboard shortcuts for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+F to focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+      // Escape to clear search (when search input is focused)
+      if (e.key === 'Escape' && document.activeElement === searchInputRef.current) {
+        setSearchQuery('');
+        searchInputRef.current?.blur();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Save UI state when it changes
   useEffect(() => {
@@ -902,7 +948,7 @@ export default function CropTimeline({
     document.addEventListener('mouseup', handleMouseUp);
   }, [unassignedHeight]);
 
-  // Build resources list for rendering
+  // Build resources list for rendering (filtered by search when active)
   const resourcesForRendering = useMemo(() => {
     if (groups && groups.length > 0) {
       const result: { resource: string; groupName: string | null; groupIndex: number; resourceIndex: number }[] = [];
@@ -912,12 +958,24 @@ export default function CropTimeline({
       for (const group of groups) {
         const isCollapsed = group.name && collapsedGroups.has(group.name);
         if (isCollapsed) {
+          // When filtering, only show collapsed group if it has matching beds
+          if (matchingResources) {
+            const hasMatch = group.beds.some(bed => matchingResources.has(bed));
+            if (!hasMatch) {
+              groupIndex++;
+              continue;
+            }
+          }
           // Show collapsed placeholder
           result.push({ resource: `__collapsed__${group.name}`, groupName: group.name, groupIndex, resourceIndex });
           resourceIndex++;
         } else {
           for (const bed of group.beds) {
             if (bed !== 'Unassigned') {
+              // When filtering, only show beds with matching crops
+              if (matchingResources && !matchingResources.has(bed)) {
+                continue;
+              }
               result.push({ resource: bed, groupName: group.name, groupIndex, resourceIndex });
               resourceIndex++;
             }
@@ -931,8 +989,9 @@ export default function CropTimeline({
 
     return resources
       .filter(r => r !== 'Unassigned')
+      .filter(r => !matchingResources || matchingResources.has(r))
       .map((r, i) => ({ resource: r, groupName: null, groupIndex: 0, resourceIndex: i }));
-  }, [resources, groups, collapsedGroups]);
+  }, [resources, groups, collapsedGroups, matchingResources]);
 
   // Render a crop box
   const renderCropBox = (crop: TimelineCrop, stackRow: number = 0) => {
@@ -1331,6 +1390,44 @@ export default function CropTimeline({
         >
           Timing Edit: {timingEditEnabled ? 'ON' : 'OFF'}
         </button>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Search filter */}
+        <div className="relative">
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Filter crops..."
+            className={`w-48 px-3 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              searchQuery
+                ? 'border-blue-400 bg-blue-50 text-gray-900'
+                : 'border-gray-300 text-gray-900'
+            }`}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                searchInputRef.current?.focus();
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              title="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
+
+        {/* Filter status */}
+        {searchQuery && (
+          <span className="text-xs text-blue-600">
+            {filteredCrops.length} of {crops.length} crops
+          </span>
+        )}
 
       </div>
 
