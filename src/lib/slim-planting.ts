@@ -184,7 +184,13 @@ export function resolveEffectiveTiming(
 // COMPUTATION
 // =============================================================================
 
-const STANDARD_BED_FT = 50;
+/**
+ * Standard bed length used for bedsCount conversion in legacy import data.
+ * The SlimPlanting.bedsCount field stores bed fractions based on 50ft beds
+ * (e.g., 0.4 = 20ft, 1.0 = 50ft). This constant is ONLY for converting
+ * that legacy format - actual bed lengths come from Bed.lengthFt.
+ */
+const LEGACY_IMPORT_BED_FT = 50;
 
 /**
  * Compute TimelineCrop objects from a slim planting and config lookup.
@@ -237,8 +243,8 @@ export function computeTimelineCrop(
   const endDate = format(timing.endDate, "yyyy-MM-dd'T'HH:mm:ss");
   const harvestStartDate = format(timing.beginningOfHarvest, "yyyy-MM-dd'T'HH:mm:ss");
 
-  // Calculate feet needed
-  const feetNeeded = planting.bedsCount * STANDARD_BED_FT;
+  // Calculate feet needed from legacy bedsCount format
+  const feetNeeded = planting.bedsCount * LEGACY_IMPORT_BED_FT;
 
   // Build display name
   const name = config.product && config.product !== 'General'
@@ -338,11 +344,12 @@ export function recalculateCropsForConfig(
     }
 
     // Extract slim planting from existing timeline crop
+    // Convert feet back to legacy bedsCount format for recalculation
     const slim: SlimPlanting = {
       id: firstCrop.plantingId || groupId,
       cropConfigId: configIdentifier,
       bed: firstCrop.resource || null,
-      bedsCount: (firstCrop.feetNeeded || 50) / STANDARD_BED_FT,
+      bedsCount: (firstCrop.feetNeeded || 50) / LEGACY_IMPORT_BED_FT,
       fixedFieldStartDate: firstCrop.startDate, // Use current start as fixed date
     };
 

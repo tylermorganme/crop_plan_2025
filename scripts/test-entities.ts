@@ -7,6 +7,7 @@
 
 import {
   type Bed,
+  type BedGroup,
   type Planting,
   type CropConfig,
   type Plan,
@@ -78,34 +79,51 @@ test('ROW_LENGTHS has correct value for X (greenhouse)', () => {
 });
 
 test('createBedsFromTemplate creates beds with correct lengths', () => {
-  const bedGroups = {
+  const bedGroupsTemplate = {
     'A': ['A1', 'A2'],
     'F': ['F1', 'F2'],
     'X': ['X1'],
   };
-  const beds = createBedsFromTemplate(bedGroups);
+  const { beds, groups, nameToIdMap } = createBedsFromTemplate(bedGroupsTemplate);
 
-  assertEqual(beds['A1'].lengthFt, 50, 'A1 should be 50ft');
-  assertEqual(beds['F1'].lengthFt, 20, 'F1 should be 20ft');
-  assertEqual(beds['X1'].lengthFt, 80, 'X1 should be 80ft');
+  // Look up by name via mapping
+  const a1Id = nameToIdMap['A1'];
+  const f1Id = nameToIdMap['F1'];
+  const x1Id = nameToIdMap['X1'];
+
+  assertEqual(beds[a1Id].lengthFt, 50, 'A1 should be 50ft');
+  assertEqual(beds[f1Id].lengthFt, 20, 'F1 should be 20ft');
+  assertEqual(beds[x1Id].lengthFt, 80, 'X1 should be 80ft');
+
+  // Verify group count
+  assertEqual(Object.keys(groups).length, 3, 'Should have 3 groups');
 });
 
 test('deriveResources returns sorted bed IDs', () => {
-  const beds: Record<string, Bed> = {
-    'A2': { id: 'A2', lengthFt: 50, group: 'A' },
-    'A1': { id: 'A1', lengthFt: 50, group: 'A' },
-    'B1': { id: 'B1', lengthFt: 50, group: 'B' },
-  };
-  const resources = deriveResources(beds);
+  const groupAId = 'group-a-uuid';
+  const groupBId = 'group-b-uuid';
 
-  assertEqual(resources[0], 'A1', 'First should be A1');
-  assertEqual(resources[1], 'A2', 'Second should be A2');
-  assertEqual(resources[2], 'B1', 'Third should be B1');
+  const beds: Record<string, Bed> = {
+    'uuid-a2': { id: 'uuid-a2', name: 'A2', lengthFt: 50, groupId: groupAId, displayOrder: 1 },
+    'uuid-a1': { id: 'uuid-a1', name: 'A1', lengthFt: 50, groupId: groupAId, displayOrder: 0 },
+    'uuid-b1': { id: 'uuid-b1', name: 'B1', lengthFt: 50, groupId: groupBId, displayOrder: 0 },
+  };
+
+  const groups: Record<string, BedGroup> = {
+    [groupAId]: { id: groupAId, name: 'Row A', displayOrder: 0 },
+    [groupBId]: { id: groupBId, name: 'Row B', displayOrder: 1 },
+  };
+
+  const resources = deriveResources(beds, groups);
+
+  assertEqual(resources[0], 'uuid-a1', 'First should be uuid-a1');
+  assertEqual(resources[1], 'uuid-a2', 'Second should be uuid-a2');
+  assertEqual(resources[2], 'uuid-b1', 'Third should be uuid-b1');
 });
 
 test('getBedLength throws for missing bed', () => {
   const beds: Record<string, Bed> = {
-    'A1': { id: 'A1', lengthFt: 50, group: 'A' },
+    'uuid-a1': { id: 'uuid-a1', name: 'A1', lengthFt: 50, groupId: 'group-a', displayOrder: 0 },
   };
   assertThrows(() => getBedLength(beds, 'Z99'));
 });
@@ -144,9 +162,15 @@ test('createPlanting uses provided ID', () => {
 console.log('\n=== Validation Tests ===\n');
 
 function createTestPlan(): Plan {
+  const groupAId = 'group-a-uuid';
+
   const beds: Record<string, Bed> = {
-    'A1': { id: 'A1', lengthFt: 50, group: 'A' },
-    'A2': { id: 'A2', lengthFt: 50, group: 'A' },
+    'uuid-a1': { id: 'uuid-a1', name: 'A1', lengthFt: 50, groupId: groupAId, displayOrder: 0 },
+    'uuid-a2': { id: 'uuid-a2', name: 'A2', lengthFt: 50, groupId: groupAId, displayOrder: 1 },
+  };
+
+  const bedGroups: Record<string, BedGroup> = {
+    [groupAId]: { id: groupAId, name: 'Row A', displayOrder: 0 },
   };
 
   const cropCatalog: Record<string, CropConfig> = {
@@ -164,7 +188,7 @@ function createTestPlan(): Plan {
       id: 'P1',
       configId: 'arugula-baby-leaf',
       fieldStartDate: '2025-05-01',
-      startBed: 'A1',
+      startBed: 'uuid-a1', // Now using UUID
       bedFeet: 50,
       lastModified: Date.now(),
     },
@@ -180,9 +204,10 @@ function createTestPlan(): Plan {
 
   return {
     id: 'test-plan',
-    schemaVersion: 2,
+    schemaVersion: 3,
     metadata,
     beds,
+    bedGroups,
     cropCatalog,
     plantings,
     changeLog: [],

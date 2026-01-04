@@ -71,7 +71,13 @@ interface BedPlanData {
   bedGroups: Record<string, string[]>;
 }
 
-const STANDARD_BED_FT = 50;
+/**
+ * Standard bed length used for bedsCount conversion in legacy import data.
+ * bed-plan.json stores bedsCount as fractions of 50ft beds (e.g., 0.4 = 20ft).
+ * This constant is ONLY for converting that legacy format - actual bed lengths
+ * come from the Bed entity's lengthFt property.
+ */
+const LEGACY_IMPORT_BED_FT = 50;
 
 /**
  * Calculate how many beds a crop spans based on feetNeeded and the starting bed.
@@ -218,7 +224,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
     const displayName = allAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
 
     // Calculate feet needed
-    const feetNeeded = (assignment.bedsCount ?? 1) * STANDARD_BED_FT;
+    const feetNeeded = (assignment.bedsCount ?? 1) * LEGACY_IMPORT_BED_FT;
 
     // If we can compute dates from config, do so
     if (baseConfig && assignment.fixedFieldStartDate) {
@@ -419,7 +425,7 @@ function plantingToSlim(planting: Planting, uuidToName: Record<string, string>):
     id: planting.id,
     cropConfigId: planting.configId,
     bed: bedName,
-    bedsCount: planting.bedFeet / STANDARD_BED_FT,
+    bedsCount: planting.bedFeet / LEGACY_IMPORT_BED_FT,
     fixedFieldStartDate: planting.fieldStartDate,
     followsCrop: planting.followsPlantingId,
     followOffset: planting.followOffset,
