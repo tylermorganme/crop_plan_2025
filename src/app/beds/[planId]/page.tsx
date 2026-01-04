@@ -19,7 +19,6 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import AppHeader from '@/components/AppHeader';
 import { usePlanStore } from '@/lib/plan-store';
 import type { Bed, BedGroup } from '@/lib/entities';
 import SortableBedItem from '@/components/beds/SortableBedItem';
@@ -290,7 +289,6 @@ export default function BedsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppHeader />
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Loading...</div>
         </div>
@@ -301,7 +299,6 @@ export default function BedsPage() {
   if (!currentPlan) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppHeader />
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Plan not found</div>
         </div>
@@ -314,8 +311,6 @@ export default function BedsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader />
-
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
