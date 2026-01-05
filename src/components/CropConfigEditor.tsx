@@ -129,6 +129,49 @@ interface FormulaTemplate {
   ratePosition: { prefix: string; suffix: string };
 }
 
+/** Available formula variables with descriptions */
+const FORMULA_VARIABLES = [
+  { name: 'plantingsPerBed', description: 'Plants per bed (rows × spacing × bedFeet)' },
+  { name: 'bedFeet', description: 'Bed length in feet (default: 50)' },
+  { name: 'harvests', description: 'Number of harvests' },
+  { name: 'seeds', description: 'Seeds per bed' },
+  { name: 'daysBetweenHarvest', description: 'Days between harvests' },
+  { name: 'rows', description: 'Number of rows' },
+  { name: 'spacing', description: 'In-row spacing (inches)' },
+] as const;
+
+const VALID_VARIABLE_NAMES = FORMULA_VARIABLES.map(v => v.name);
+
+/**
+ * Find similar variable name suggestions for typos.
+ * Uses simple lowercase prefix/substring matching.
+ */
+function findSimilarVariables(typo: string): string[] {
+  const lower = typo.toLowerCase();
+  const suggestions: string[] = [];
+
+  for (const name of VALID_VARIABLE_NAMES) {
+    const nameLower = name.toLowerCase();
+    // Check if it's a prefix match or substring match
+    if (nameLower.startsWith(lower) || lower.startsWith(nameLower.slice(0, 3))) {
+      suggestions.push(name);
+    } else if (nameLower.includes(lower) || lower.includes(nameLower.slice(0, 4))) {
+      suggestions.push(name);
+    }
+  }
+
+  return suggestions;
+}
+
+/**
+ * Extract unknown variable name from error message.
+ */
+function extractUnknownVariable(error: string): string | null {
+  // Match patterns like "Unknown variable: plantingPerBed" or "Variable plantingPerBed is not defined"
+  const match = error.match(/(?:Unknown variable|Variable)\W+(\w+)/i);
+  return match ? match[1] : null;
+}
+
 const FORMULA_TEMPLATES: FormulaTemplate[] = [
   {
     label: 'Per plant',
@@ -176,6 +219,27 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
   const yieldResult = evaluateYieldForDisplay(formData as CropConfig);
   const harvests = formData.numberOfHarvests ?? 1;
   const perHarvestYield = yieldResult.value !== null ? yieldResult.value / harvests : null;
+
+  // Insert a variable at cursor position
+  const insertVariable = (varName: string) => {
+    const input = formulaInputRef.current;
+    if (!input) return;
+
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? 0;
+    const currentValue = formData.yieldFormula || '';
+
+    // Replace selection (or insert at cursor) with variable name
+    const newValue = currentValue.slice(0, start) + varName + currentValue.slice(end);
+    updateField('yieldFormula', newValue);
+
+    // Focus and position cursor after inserted variable
+    setTimeout(() => {
+      input.focus();
+      const newPos = start + varName.length;
+      input.setSelectionRange(newPos, newPos);
+    }, 0);
+  };
 
   // Insert a template and select the rate placeholder
   const insertTemplate = (template: FormulaTemplate) => {
@@ -239,13 +303,34 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
           </div>
         </div>
 
-        {/* Variables reference */}
-        <p className="text-xs text-gray-500">
-          Variables: <code className="bg-gray-100 px-1 rounded">plantsPerBed</code>{' '}
-          <code className="bg-gray-100 px-1 rounded">bedFeet</code>{' '}
-          <code className="bg-gray-100 px-1 rounded">harvests</code>{' '}
-          <code className="bg-gray-100 px-1 rounded">seeds</code>
-        </p>
+        {/* Clickable Variables with current values */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+            Variables <span className="font-normal text-gray-400">(click to insert)</span>:
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {FORMULA_VARIABLES.map((v) => {
+              // Get current value from context
+              const value = yieldResult.context[v.name as keyof typeof yieldResult.context];
+              const displayValue = typeof value === 'number'
+                ? (Number.isInteger(value) ? value : value.toFixed(2))
+                : value;
+              return (
+                <button
+                  key={v.name}
+                  type="button"
+                  onClick={() => insertVariable(v.name)}
+                  title={v.description}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 hover:border-blue-300 transition-colors cursor-pointer"
+                >
+                  <span>{v.name}</span>
+                  <span className="text-blue-400">=</span>
+                  <span className="text-blue-600 font-semibold">{displayValue}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Yield Unit */}
         <div className="w-1/3">
@@ -306,11 +391,45 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
             </p>
           )}
 
-          {/* Error display */}
+          {/* Error display with suggestions */}
           {yieldResult.error && (
-            <p className="text-xs text-red-600 mt-1">
-              Error: {yieldResult.error}
-            </p>
+            <div className="mt-1">
+              <p className="text-xs text-red-600">
+                Error: {yieldResult.error}
+              </p>
+              {(() => {
+                const unknownVar = extractUnknownVariable(yieldResult.error);
+                if (!unknownVar) return null;
+                const suggestions = findSimilarVariables(unknownVar);
+                if (suggestions.length === 0) return null;
+                return (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Did you mean{' '}
+                    {suggestions.map((s, i) => (
+                      <span key={s}>
+                        {i > 0 && ' or '}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Replace the typo with the suggestion
+                            const formula = formData.yieldFormula || '';
+                            const newFormula = formula.replace(
+                              new RegExp(`\\b${unknownVar}\\b`, 'g'),
+                              s
+                            );
+                            updateField('yieldFormula', newFormula);
+                          }}
+                          className="font-mono font-semibold text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {s}
+                        </button>
+                      </span>
+                    ))}
+                    ?
+                  </p>
+                );
+              })()}
+            </div>
           )}
 
           {/* Warnings */}
