@@ -9,6 +9,7 @@ import {
   calculatePlantingMethod,
   calculateHarvestWindow,
   createBlankConfig,
+  evaluateYieldForDisplay,
 } from '@/lib/entities/crop-config';
 import { Z_INDEX } from '@/lib/z-index';
 
@@ -108,6 +109,230 @@ function formatRemovalDescription(info: DataRemovalInfo): string[] {
 
   return items;
 }
+
+// =============================================================================
+// YIELD SECTION COMPONENT
+// =============================================================================
+
+interface YieldSectionProps {
+  formData: Partial<CropConfig>;
+  updateField: <K extends keyof CropConfig>(field: K, value: CropConfig[K] | undefined) => void;
+}
+
+/** Template definition for common yield formula patterns */
+interface FormulaTemplate {
+  label: string;
+  description: string;
+  /** Formula with ___ as placeholder for rate */
+  template: string;
+  /** Character positions for selection [start, end] relative to where rate goes */
+  ratePosition: { prefix: string; suffix: string };
+}
+
+const FORMULA_TEMPLATES: FormulaTemplate[] = [
+  {
+    label: 'Per plant',
+    description: 'Yield based on plants per bed',
+    template: 'plantsPerBed * ___ * harvests',
+    ratePosition: { prefix: 'plantsPerBed * ', suffix: ' * harvests' },
+  },
+  {
+    label: 'Per 100ft',
+    description: 'Area-based (greens, microgreens)',
+    template: '(bedFeet / 100) * ___ * harvests',
+    ratePosition: { prefix: '(bedFeet / 100) * ', suffix: ' * harvests' },
+  },
+  {
+    label: 'Per foot',
+    description: 'Linear foot of bed',
+    template: 'bedFeet * ___ * harvests',
+    ratePosition: { prefix: 'bedFeet * ', suffix: ' * harvests' },
+  },
+  {
+    label: 'Per seed',
+    description: 'Seed-based (shallots, garlic)',
+    template: 'seeds * ___',
+    ratePosition: { prefix: 'seeds * ', suffix: '' },
+  },
+  {
+    label: 'None',
+    description: 'Cover crop, no production',
+    template: '0',
+    ratePosition: { prefix: '', suffix: '' },
+  },
+];
+
+/**
+ * Template-based yield formula editor.
+ *
+ * - Formula field is always editable
+ * - Template buttons insert common patterns
+ * - Clicking a template auto-selects the rate portion for immediate typing
+ */
+function YieldSection({ formData, updateField }: YieldSectionProps) {
+  const formulaInputRef = useRef<HTMLInputElement>(null);
+
+  // Evaluate current formula for preview
+  const yieldResult = evaluateYieldForDisplay(formData as CropConfig);
+  const harvests = formData.numberOfHarvests ?? 1;
+  const perHarvestYield = yieldResult.value !== null ? yieldResult.value / harvests : null;
+
+  // Insert a template and select the rate placeholder
+  const insertTemplate = (template: FormulaTemplate) => {
+    if (template.template === '0') {
+      // Special case: "None" template just sets 0
+      updateField('yieldFormula', '0');
+      return;
+    }
+
+    // Insert the template with a placeholder rate
+    const formula = template.template.replace('___', '0');
+    updateField('yieldFormula', formula);
+
+    // Focus the input and select the rate portion
+    setTimeout(() => {
+      if (formulaInputRef.current) {
+        formulaInputRef.current.focus();
+        const start = template.ratePosition.prefix.length;
+        const end = formula.length - template.ratePosition.suffix.length;
+        formulaInputRef.current.setSelectionRange(start, end);
+      }
+    }, 0);
+  };
+
+  return (
+    <section>
+      <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Yield</h3>
+      <div className="space-y-3">
+        {/* Formula Input - Always visible and editable */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Yield Formula
+          </label>
+          <input
+            ref={formulaInputRef}
+            type="text"
+            value={formData.yieldFormula || ''}
+            onChange={(e) => updateField('yieldFormula', e.target.value || undefined)}
+            placeholder="e.g., PPB * 0.125 * harvests"
+            className="w-full px-3 py-2 text-sm font-mono text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Template Buttons */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+            Quick templates:
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {FORMULA_TEMPLATES.map((template) => (
+              <button
+                key={template.label}
+                type="button"
+                onClick={() => insertTemplate(template)}
+                title={template.description}
+                className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 hover:border-gray-300 transition-colors"
+              >
+                {template.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Variables reference */}
+        <p className="text-xs text-gray-500">
+          Variables: <code className="bg-gray-100 px-1 rounded">plantsPerBed</code>{' '}
+          <code className="bg-gray-100 px-1 rounded">bedFeet</code>{' '}
+          <code className="bg-gray-100 px-1 rounded">harvests</code>{' '}
+          <code className="bg-gray-100 px-1 rounded">seeds</code>
+        </p>
+
+        {/* Yield Unit */}
+        <div className="w-1/3">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Yield Unit</label>
+          <input
+            type="text"
+            value={formData.yieldUnit || ''}
+            onChange={(e) => updateField('yieldUnit', e.target.value || undefined)}
+            placeholder="lb, bunch, head, stem..."
+            className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Preview / Result */}
+        <div className="bg-gray-50 rounded-md p-3 border border-gray-200">
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs font-medium text-gray-600">Preview (50ft bed):</span>
+            {yieldResult.value !== null ? (
+              yieldResult.value === 0 ? (
+                <span className="text-sm text-gray-500 italic">No production (cover crop)</span>
+              ) : (
+                <span className="text-sm font-semibold text-gray-900">
+                  {yieldResult.value.toFixed(1)} {formData.yieldUnit || 'units'}
+                </span>
+              )
+            ) : (
+              <span className="text-sm text-gray-400">No yield data</span>
+            )}
+          </div>
+
+          {/* Per harvest breakdown */}
+          {yieldResult.value !== null && yieldResult.value > 0 && harvests > 1 && (
+            <p className="text-xs text-gray-500 mt-1">
+              {perHarvestYield?.toFixed(1)} per harvest × {harvests} harvests
+            </p>
+          )}
+
+          {/* Context values - show vars that appear in formula */}
+          {yieldResult.value !== null && yieldResult.value > 0 && (
+            <p className="text-xs text-gray-400 mt-1">
+              {(() => {
+                const formula = formData.yieldFormula || '';
+                const parts: string[] = [];
+                // Check for both PPB and plantsPerBed
+                if (formula.includes('plantsPerBed') || formula.includes('PPB')) {
+                  parts.push(`plantsPerBed=${yieldResult.context.plantsPerBed.toFixed(0)}`);
+                }
+                if (formula.includes('bedFeet')) parts.push(`bedFeet=${yieldResult.context.bedFeet}`);
+                if (formula.includes('harvests')) parts.push(`harvests=${yieldResult.context.harvests}`);
+                if (formula.includes('DBH')) parts.push(`DBH=${yieldResult.context.DBH}`);
+                if (formula.includes('seeds')) parts.push(`seeds=${yieldResult.context.seeds}`);
+                // Always show at least plantsPerBed and bedFeet if nothing specific
+                if (parts.length === 0) {
+                  parts.push(`plantsPerBed=${yieldResult.context.plantsPerBed.toFixed(0)}`);
+                  parts.push(`bedFeet=${yieldResult.context.bedFeet}`);
+                }
+                return parts.join(', ');
+              })()}
+            </p>
+          )}
+
+          {/* Error display */}
+          {yieldResult.error && (
+            <p className="text-xs text-red-600 mt-1">
+              Error: {yieldResult.error}
+            </p>
+          )}
+
+          {/* Warnings */}
+          {yieldResult.warnings.length > 0 && (
+            <div className="mt-1">
+              {yieldResult.warnings.map((warning, i) => (
+                <p key={i} className="text-xs text-amber-600">
+                  Warning: {warning}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
 
 /**
  * Modal editor for CropConfig data.
@@ -249,7 +474,7 @@ export default function CropConfigEditor({
     }
   };
 
-  const updateField = <K extends keyof CropConfig>(field: K, value: CropConfig[K]) => {
+  const updateField = <K extends keyof CropConfig>(field: K, value: CropConfig[K] | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -513,31 +738,10 @@ export default function CropConfigEditor({
             </section>
 
             {/* Yield Section */}
-            <section>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Yield</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Yield Per Harvest</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={formData.yieldPerHarvest ?? ''}
-                    onChange={(e) => updateNumberField('yieldPerHarvest', e.target.value)}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Yield Unit</label>
-                  <input
-                    type="text"
-                    value={formData.yieldUnit || ''}
-                    onChange={(e) => updateField('yieldUnit', e.target.value || undefined)}
-                    placeholder="lb, bunch, head, stem..."
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </section>
+            <YieldSection
+              formData={formData}
+              updateField={updateField}
+            />
 
             {/* ========== METHOD-SPECIFIC FIELDS ========== */}
 

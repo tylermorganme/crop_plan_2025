@@ -103,11 +103,47 @@ export interface CropConfig {
   /** Number of harvests over the production period */
   numberOfHarvests?: number;
 
-  /** Yield per harvest in yieldUnit */
-  yieldPerHarvest?: number;
+  // ---- Yield Model ----
+  // Formula-based yield calculation with arbitrary expressions.
+  // See docs/yield-calculation-design.md for full explanation.
+
+  /**
+   * Yield formula as an expression string.
+   *
+   * Available variables:
+   * - PPB: Plants per bed (calculated from spacing × rows × bedFeet)
+   * - bedFeet: Bed length in feet
+   * - harvests: Number of harvests (H)
+   * - DBH: Days between harvest
+   * - rows: Number of rows
+   * - spacing: In-row spacing (inches)
+   * - seeds: Seeds per bed (if applicable)
+   *
+   * Examples:
+   * - "PPB * 0.125 * harvests" (basil: 0.125 bunches/plant/harvest)
+   * - "PPB * 8" (zinnia: 8 stems/plant total)
+   * - "(bedFeet / 100) * 65 * harvests" (beans: 65 lbs/100ft/harvest)
+   * - "PPB * 2 * (DBH / 7)" (cucumber: 2 fruits/plant/week)
+   *
+   * The formula calculates TOTAL yield for the given bed length.
+   */
+  yieldFormula?: string;
 
   /** Unit of measure for yield (lb, bunch, head, etc.) */
   yieldUnit?: string;
+
+  // ---- Seed-based yield (for shallots, etc.) ----
+
+  /** Seeds per bed for seed-based yield calculations */
+  seedsPerBed?: number;
+
+  // ---- Legacy yield field (for backwards compatibility during migration) ----
+
+  /**
+   * @deprecated Use yieldFormula instead.
+   * Pre-calculated yield per harvest for a standard 50ft bed.
+   */
+  yieldPerHarvest?: number;
 
   /**
    * Days crop occupies bed after last harvest (e.g., tuber curing).
@@ -225,6 +261,501 @@ export function calculatePlantingMethod(crop: CropConfig): PlantingMethod {
   }
   const daysInCells = calculateDaysInCells(crop);
   return daysInCells === 0 ? 'DS' : 'TP';
+}
+
+// =============================================================================
+// YIELD FORMULA EVALUATION
+// =============================================================================
+
+/** Standard bed length for yield comparisons */
+const STANDARD_BED_LENGTH = 50;
+
+/** Available variables for yield formulas */
+export interface YieldFormulaContext {
+  /** Plants per bed (calculated from spacing × rows × bedFeet) */
+  PPB: number;
+  /** Plants per bed - human-readable alias for PPB */
+  plantsPerBed: number;
+  /** Bed length in feet */
+  bedFeet: number;
+  /** Number of harvests */
+  harvests: number;
+  /** Days between harvest */
+  DBH: number;
+  /** Number of rows */
+  rows: number;
+  /** In-row spacing (inches) */
+  spacing: number;
+  /** Seeds per bed (for seed-based crops) */
+  seeds: number;
+}
+
+/** Result of formula evaluation */
+export interface YieldFormulaResult {
+  /** Calculated value, or null if formula is invalid/missing */
+  value: number | null;
+  /** Error message if evaluation failed */
+  error?: string;
+  /** Warning messages (non-fatal issues) */
+  warnings: string[];
+}
+
+/**
+ * Calculate Plants Per Bed for a given bed length.
+ *
+ * Formula: (12 / inRowSpacing) * rows * bedFeet
+ * The 12 converts inches to feet (12 inches/foot).
+ */
+export function calculatePlantsPerBed(
+  inRowSpacing: number,
+  rows: number,
+  bedFeet: number
+): number {
+  if (!inRowSpacing || inRowSpacing <= 0 || !rows || rows <= 0) {
+    return 0;
+  }
+  return (12 / inRowSpacing) * rows * bedFeet;
+}
+
+/**
+ * Tokenize a yield formula string.
+ * Returns tokens: numbers, variables, operators, parentheses.
+ */
+function tokenize(formula: string): string[] {
+  const tokens: string[] = [];
+  let i = 0;
+
+  while (i < formula.length) {
+    const char = formula[i];
+
+    // Skip whitespace
+    if (/\s/.test(char)) {
+      i++;
+      continue;
+    }
+
+    // Number (including decimals)
+    if (/[0-9.]/.test(char)) {
+      let num = '';
+      while (i < formula.length && /[0-9.]/.test(formula[i])) {
+        num += formula[i];
+        i++;
+      }
+      tokens.push(num);
+      continue;
+    }
+
+    // Variable (letters)
+    if (/[a-zA-Z_]/.test(char)) {
+      let varName = '';
+      while (i < formula.length && /[a-zA-Z0-9_]/.test(formula[i])) {
+        varName += formula[i];
+        i++;
+      }
+      tokens.push(varName);
+      continue;
+    }
+
+    // Operators and parentheses
+    if (/[+\-*/()]/.test(char)) {
+      tokens.push(char);
+      i++;
+      continue;
+    }
+
+    // Unknown character - skip it
+    i++;
+  }
+
+  return tokens;
+}
+
+/**
+ * Parse and evaluate a yield formula safely.
+ *
+ * Supports: numbers, variables, +, -, *, /, parentheses
+ * Does NOT support: function calls, assignments, or any other operations
+ *
+ * Uses a simple recursive descent parser for safety.
+ */
+export function evaluateYieldFormula(
+  formula: string,
+  context: YieldFormulaContext
+): YieldFormulaResult {
+  const warnings: string[] = [];
+
+  if (!formula || formula.trim() === '') {
+    return { value: null, warnings };
+  }
+
+  const tokens = tokenize(formula);
+  if (tokens.length === 0) {
+    return { value: null, error: 'Empty formula', warnings };
+  }
+
+  let pos = 0;
+  const usedVariables = new Set<string>();
+
+  // Helper to get current token
+  const peek = (): string | undefined => tokens[pos];
+  const consume = (): string => tokens[pos++];
+
+  // Recursive descent parser
+  function parseExpression(): number {
+    let left = parseTerm();
+
+    while (peek() === '+' || peek() === '-') {
+      const op = consume();
+      const right = parseTerm();
+      left = op === '+' ? left + right : left - right;
+    }
+
+    return left;
+  }
+
+  function parseTerm(): number {
+    let left = parseFactor();
+
+    while (peek() === '*' || peek() === '/') {
+      const op = consume();
+      const right = parseFactor();
+      if (op === '/') {
+        if (right === 0) {
+          throw new Error('Division by zero');
+        }
+        left = left / right;
+      } else {
+        left = left * right;
+      }
+    }
+
+    return left;
+  }
+
+  function parseFactor(): number {
+    const token = peek();
+
+    if (token === undefined) {
+      throw new Error('Unexpected end of formula');
+    }
+
+    // Parentheses
+    if (token === '(') {
+      consume(); // consume '('
+      const result = parseExpression();
+      if (peek() !== ')') {
+        throw new Error('Missing closing parenthesis');
+      }
+      consume(); // consume ')'
+      return result;
+    }
+
+    // Unary minus
+    if (token === '-') {
+      consume();
+      return -parseFactor();
+    }
+
+    // Number
+    if (/^[0-9.]/.test(token)) {
+      consume();
+      const num = parseFloat(token);
+      if (isNaN(num)) {
+        throw new Error(`Invalid number: ${token}`);
+      }
+      return num;
+    }
+
+    // Variable
+    if (/^[a-zA-Z_]/.test(token)) {
+      consume();
+      usedVariables.add(token);
+
+      // Check if it's a known variable
+      if (!(token in context)) {
+        throw new Error(`Unknown variable: ${token}`);
+      }
+
+      const value = context[token as keyof YieldFormulaContext];
+      if (typeof value !== 'number') {
+        throw new Error(`Variable ${token} is not a number`);
+      }
+      return value;
+    }
+
+    throw new Error(`Unexpected token: ${token}`);
+  }
+
+  try {
+    const result = parseExpression();
+
+    // Check for leftover tokens
+    if (pos < tokens.length) {
+      return {
+        value: null,
+        error: `Unexpected token: ${tokens[pos]}`,
+        warnings,
+      };
+    }
+
+    // Generate warnings
+    if (!usedVariables.has('harvests') && context.harvests > 1) {
+      warnings.push(
+        "Formula doesn't use 'harvests' - yield will be the same regardless of harvest count"
+      );
+    }
+
+    if (result < 0) {
+      warnings.push('Formula produces negative yield');
+    }
+
+    if (!isFinite(result)) {
+      return { value: null, error: 'Formula produces infinite result', warnings };
+    }
+
+    return { value: result, warnings };
+  } catch (e) {
+    return {
+      value: null,
+      error: e instanceof Error ? e.message : 'Unknown error',
+      warnings,
+    };
+  }
+}
+
+/**
+ * Build a YieldFormulaContext from a CropConfig and bed length.
+ */
+export function buildYieldContext(
+  crop: CropConfig,
+  bedFeet: number,
+  rowsOverride?: number,
+  spacingOverride?: number
+): YieldFormulaContext {
+  const rows = rowsOverride ?? 1;
+  const spacing = spacingOverride ?? 12;
+  const PPB = calculatePlantsPerBed(spacing, rows, bedFeet);
+
+  return {
+    PPB,
+    plantsPerBed: PPB, // Human-readable alias
+    bedFeet,
+    harvests: crop.numberOfHarvests ?? 1,
+    DBH: crop.daysBetweenHarvest ?? 7,
+    rows,
+    spacing,
+    seeds: crop.seedsPerBed ?? 0,
+  };
+}
+
+/**
+ * Calculate total yield for a crop config at a given bed length.
+ *
+ * Priority order:
+ * 1. yieldFormula - expression-based calculation
+ * 2. yieldPerHarvest (legacy) - old per-harvest value × harvests
+ *
+ * Returns null if no yield data is available.
+ */
+export function calculateTotalYield(
+  crop: CropConfig,
+  bedFeet: number,
+  rows?: number,
+  inRowSpacing?: number
+): number | null {
+  // 1. Try formula-based yield
+  if (crop.yieldFormula) {
+    const context = buildYieldContext(crop, bedFeet, rows, inRowSpacing);
+    const result = evaluateYieldFormula(crop.yieldFormula, context);
+    if (result.value !== null) {
+      return result.value;
+    }
+  }
+
+  // 2. Fall back to legacy yieldPerHarvest
+  // Legacy field is yield per harvest for 50ft bed, scale and multiply by harvests
+  if (crop.yieldPerHarvest !== undefined) {
+    const scaleFactor = bedFeet / STANDARD_BED_LENGTH;
+    const harvests = crop.numberOfHarvests ?? 1;
+    return crop.yieldPerHarvest * harvests * scaleFactor;
+  }
+
+  return null;
+}
+
+/**
+ * Calculate yield per harvest for a crop config at a given bed length.
+ */
+export function calculateYieldPerHarvest(
+  crop: CropConfig,
+  bedFeet: number,
+  rows?: number,
+  inRowSpacing?: number
+): number | null {
+  const total = calculateTotalYield(crop, bedFeet, rows, inRowSpacing);
+  if (total === null) return null;
+
+  const harvests = crop.numberOfHarvests ?? 1;
+  return total / harvests;
+}
+
+/**
+ * Calculate standardized total yield for a 50ft bed.
+ * Used for comparing configs in Explorer.
+ */
+export function calculateStandardYield(
+  crop: CropConfig,
+  rows?: number,
+  inRowSpacing?: number
+): number | null {
+  return calculateTotalYield(crop, STANDARD_BED_LENGTH, rows, inRowSpacing);
+}
+
+/**
+ * Evaluate a yield formula and return detailed result for UI display.
+ * Includes the calculated value, any errors, and warnings.
+ */
+export function evaluateYieldForDisplay(
+  crop: CropConfig,
+  rows?: number,
+  inRowSpacing?: number
+): YieldFormulaResult & { context: YieldFormulaContext } {
+  const context = buildYieldContext(
+    crop,
+    STANDARD_BED_LENGTH,
+    rows,
+    inRowSpacing
+  );
+
+  if (!crop.yieldFormula) {
+    // Check for legacy field
+    if (crop.yieldPerHarvest !== undefined) {
+      const harvests = crop.numberOfHarvests ?? 1;
+      return {
+        value: crop.yieldPerHarvest * harvests,
+        warnings: ['Using legacy yieldPerHarvest field'],
+        context,
+      };
+    }
+    return { value: null, warnings: [], context };
+  }
+
+  const result = evaluateYieldFormula(crop.yieldFormula, context);
+  return { ...result, context };
+}
+
+// =============================================================================
+// SIMPLE MODE FORMULA BUILDERS
+// =============================================================================
+
+/** Yield basis options for simple mode */
+export type YieldBasis = 'plant' | 'foot' | '100ft' | 'seed';
+
+/**
+ * Build a yield formula from simple mode inputs.
+ *
+ * @param basis - What the yield rate is based on (plant, foot, 100ft, seed)
+ * @param rate - The yield rate value
+ * @param perHarvest - If true, rate is per harvest (multiply by harvests)
+ */
+export function buildYieldFormula(
+  basis: YieldBasis,
+  rate: number,
+  perHarvest: boolean
+): string {
+  let baseExpr: string;
+
+  switch (basis) {
+    case 'plant':
+      baseExpr = `PPB * ${rate}`;
+      break;
+    case 'foot':
+      baseExpr = `bedFeet * ${rate}`;
+      break;
+    case '100ft':
+      baseExpr = `(bedFeet / 100) * ${rate}`;
+      break;
+    case 'seed':
+      baseExpr = `seeds * ${rate}`;
+      break;
+  }
+
+  if (perHarvest) {
+    return `${baseExpr} * harvests`;
+  } else {
+    return baseExpr;
+  }
+}
+
+/**
+ * Try to parse a formula back into simple mode inputs.
+ * Returns null if the formula doesn't match a simple pattern.
+ */
+export function parseSimpleFormula(
+  formula: string
+): { basis: YieldBasis; rate: number; perHarvest: boolean } | null {
+  if (!formula) return null;
+
+  // Normalize whitespace
+  const f = formula.replace(/\s+/g, ' ').trim();
+
+  // Pattern: PPB * rate [* harvests]
+  let match = f.match(/^PPB \* ([\d.]+)(?: \* harvests)?$/);
+  if (match) {
+    return {
+      basis: 'plant',
+      rate: parseFloat(match[1]),
+      perHarvest: f.includes('* harvests'),
+    };
+  }
+
+  // Pattern: bedFeet * rate [* harvests]
+  match = f.match(/^bedFeet \* ([\d.]+)(?: \* harvests)?$/);
+  if (match) {
+    return {
+      basis: 'foot',
+      rate: parseFloat(match[1]),
+      perHarvest: f.includes('* harvests'),
+    };
+  }
+
+  // Pattern: (bedFeet / 100) * rate [* harvests]
+  match = f.match(/^\(bedFeet \/ 100\) \* ([\d.]+)(?: \* harvests)?$/);
+  if (match) {
+    return {
+      basis: '100ft',
+      rate: parseFloat(match[1]),
+      perHarvest: f.includes('* harvests'),
+    };
+  }
+
+  // Pattern: seeds * rate [* harvests]
+  match = f.match(/^seeds \* ([\d.]+)(?: \* harvests)?$/);
+  if (match) {
+    return {
+      basis: 'seed',
+      rate: parseFloat(match[1]),
+      perHarvest: f.includes('* harvests'),
+    };
+  }
+
+  return null; // Doesn't match a simple pattern
+}
+
+/**
+ * Get display-friendly name for a yield basis.
+ */
+export function getYieldBasisLabel(basis: YieldBasis): string {
+  switch (basis) {
+    case 'plant':
+      return 'per plant';
+    case 'foot':
+      return 'per foot';
+    case '100ft':
+      return 'per 100ft';
+    case 'seed':
+      return 'per seed';
+  }
 }
 
 /**
