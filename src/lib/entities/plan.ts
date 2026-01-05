@@ -71,7 +71,7 @@ export interface TimelineCrop {
   feetUsed?: number;
   bedCapacityFt?: number;
   harvestStartDate?: string;
-  plantingMethod?: 'DS' | 'TP' | 'PE';
+  plantingMethod?: 'direct-seed' | 'transplant' | 'perennial';
   lastModified?: number;
   /** Planting-level timing overrides (for editing in inspector) */
   overrides?: import('./planting').PlantingOverrides;

@@ -11,7 +11,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import {
   calculateDaysInCells,
-  calculateSTH,
+  calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
   type CropConfig,
@@ -122,12 +122,12 @@ const daysInCellsResult = testField(
 );
 printResult(daysInCellsResult);
 
-// Test: STH
+// Test: Seed To Harvest
 const sthResult = testField(
-  'STH (Seed To Harvest)',
+  'Seed To Harvest',
   (crop) => {
     const dic = calculateDaysInCells(crop);
-    return calculateSTH(crop, dic);
+    return calculateSeedToHarvest(crop, dic);
   },
   (excel) => excel.STH
 );

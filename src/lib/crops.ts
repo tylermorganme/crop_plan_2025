@@ -2,7 +2,7 @@ import cropsData from '@/data/crops.json';
 import {
   type CropConfig,
   calculateDaysInCells,
-  calculateSTH,
+  calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
 } from './entities/crop-config';
@@ -63,7 +63,7 @@ export function filterCrops(filters: {
   crop?: string;
   category?: string;
   growingStructure?: string;
-  plantingMethod?: 'DS' | 'TP' | 'PE';
+  plantingMethod?: 'direct-seed' | 'transplant' | 'perennial';
   deprecated?: boolean;
 }): Crop[] {
   return data.crops.filter(c => {
@@ -81,7 +81,7 @@ export function getCropCalculations(crop: Crop) {
   const daysInCells = calculateDaysInCells(crop);
   return {
     daysInCells,
-    sth: calculateSTH(crop, daysInCells),
+    seedToHarvest: calculateSeedToHarvest(crop, daysInCells),
     plantingMethod: calculatePlantingMethod(crop),
     harvestWindow: calculateHarvestWindow(crop),
   };

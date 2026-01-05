@@ -122,8 +122,12 @@ function runCatalogParityTest() {
       mismatches.push({ field: 'growingStructure', bedPlan: assignment.growingStructure, catalog: config.growingStructure });
     }
 
-    // Planting Method
-    if (assignment.dsTp != null && assignment.dsTp !== config.plantingMethod) {
+    // Planting Method - map old values to new naming convention for comparison
+    const plantingMethodMap: Record<string, string> = {
+      'DS': 'direct-seed', 'TP': 'transplant', 'PE': 'perennial'
+    };
+    const mappedMethod = assignment.dsTp ? plantingMethodMap[assignment.dsTp] : null;
+    if (mappedMethod != null && mappedMethod !== config.plantingMethod) {
       mismatches.push({ field: 'plantingMethod', bedPlan: assignment.dsTp, catalog: config.plantingMethod });
     }
 

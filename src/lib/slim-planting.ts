@@ -11,7 +11,7 @@ import { calculateRowSpan } from './timeline-data';
 import type { TimelineCrop, BedSpanInfo, Planting } from './plan-types';
 import {
   calculateDaysInCells,
-  calculateSTH,
+  calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
   type CropConfig,
@@ -78,11 +78,11 @@ export interface PlantingConfigLookup {
   /** Category for color coding, e.g., "Green" */
   category: string;
 
-  /** Growing structure: "Field", "GH", "HT" */
+  /** Growing structure: "field", "greenhouse", "high-tunnel" */
   growingStructure: string;
 
   /** Planting method */
-  plantingMethod: 'DS' | 'TP' | 'PE';
+  plantingMethod: 'direct-seed' | 'transplant' | 'perennial';
 
   /** Days to maturity */
   dtm: number;
@@ -118,7 +118,7 @@ export function lookupConfigFromCatalog(
 
   // Calculate derived fields from the minimal crop config
   const daysInCells = calculateDaysInCells(entry);
-  const sth = calculateSTH(entry, daysInCells);
+  const seedToHarvest = calculateSeedToHarvest(entry, daysInCells);
   const plantingMethod = calculatePlantingMethod(entry);
   const harvestWindow = calculateHarvestWindow(entry);
 
@@ -126,9 +126,9 @@ export function lookupConfigFromCatalog(
     crop: entry.crop,
     product: entry.product || 'General',
     category: entry.category ?? '',
-    growingStructure: entry.growingStructure || 'Field',
+    growingStructure: entry.growingStructure || 'field',
     plantingMethod,
-    dtm: sth, // Use STH for timeline calculations
+    dtm: seedToHarvest, // Use seedToHarvest for timeline calculations
     harvestWindow,
     daysInCells,
   };
@@ -478,12 +478,24 @@ export function extractConfigLookup(assignment: {
     ? ''
     : (assignment.category ?? '');
 
+  // Map old values to new naming convention
+  const growingStructureMap: Record<string, string> = {
+    'Field': 'field', 'Greenhouse': 'greenhouse', 'GH': 'greenhouse',
+    'Tunnel': 'high-tunnel', 'HT': 'high-tunnel',
+  };
+  const plantingMethodMap: Record<string, 'direct-seed' | 'transplant' | 'perennial'> = {
+    'DS': 'direct-seed', 'TP': 'transplant', 'PE': 'perennial',
+  };
+
+  const gs = assignment.growingStructure ?? 'Field';
+  const pm = assignment.dsTp ?? 'DS';
+
   return {
     crop: cropName,
     product,
     category,
-    growingStructure: assignment.growingStructure ?? 'Field',
-    plantingMethod: assignment.dsTp ?? 'DS',
+    growingStructure: growingStructureMap[gs] ?? gs,
+    plantingMethod: plantingMethodMap[pm] ?? 'direct-seed',
     dtm: assignment.dtm ?? 0,
     harvestWindow,
     daysInCells: assignment.daysInCells ?? 0,

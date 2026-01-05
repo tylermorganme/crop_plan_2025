@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { getBedGroup, getBedNumber, getBedLengthFromId } from '@/lib/plan-types';
 import type { CropConfig } from '@/lib/entities/crop-config';
-import { calculateCropFields, calculateDaysInCells, calculateSTH, calculateHarvestWindow } from '@/lib/entities/crop-config';
+import { calculateCropFields, calculateDaysInCells, calculateSeedToHarvest, calculateHarvestWindow } from '@/lib/entities/crop-config';
 import { resolveEffectiveTiming } from '@/lib/slim-planting';
 import { Z_INDEX } from '@/lib/z-index';
 import AddToBedPanel from './AddToBedPanel';
@@ -46,8 +46,8 @@ interface TimelineCrop {
   cropConfigId?: string;
   /** Harvest start date (ISO date) - when harvest window begins */
   harvestStartDate?: string;
-  /** Planting method: DS (Direct Seed), TP (Transplant), PE (Perennial) */
-  plantingMethod?: 'DS' | 'TP' | 'PE';
+  /** Planting method: direct-seed, transplant, or perennial */
+  plantingMethod?: 'direct-seed' | 'transplant' | 'perennial';
   /** Preview ghost - not a real crop, just for hover preview */
   isPreview?: boolean;
   /** Planting-level timing overrides (for editing in inspector) */
@@ -1055,7 +1055,9 @@ export default function CropTimeline({
       tooltip += `\n${crop.feetUsed}' of ${crop.bedCapacityFt}' used`;
     }
     if (crop.plantingMethod) {
-      const methodNames = { DS: 'Direct Seed', TP: 'Transplant', PE: 'Perennial' };
+      const methodNames: Record<string, string> = {
+        'direct-seed': 'Direct Seed', 'transplant': 'Transplant', 'perennial': 'Perennial'
+      };
       tooltip += `\n${methodNames[crop.plantingMethod] || crop.plantingMethod}`;
     }
 
@@ -1151,9 +1153,9 @@ export default function CropTimeline({
 
             // Planting method colors - defined outside JSX for cleaner code
             const methodStyles: Record<string, { bg: string; text: string; label: string }> = {
-              DS: { bg: '#854d0e', text: '#fef3c7', label: 'DS' }, // Warm brown - seeds go in soil
-              TP: { bg: '#166534', text: '#dcfce7', label: 'TP' }, // Green - transplants
-              PE: { bg: '#7e22ce', text: '#f3e8ff', label: 'PE' }, // Purple - perennials
+              'direct-seed': { bg: '#854d0e', text: '#fef3c7', label: 'DS' }, // Warm brown - seeds go in soil
+              'transplant': { bg: '#166534', text: '#dcfce7', label: 'TP' }, // Green - transplants
+              'perennial': { bg: '#7e22ce', text: '#f3e8ff', label: 'PE' }, // Purple - perennials
             };
             const methodStyle = crop.plantingMethod ? methodStyles[crop.plantingMethod] : null;
 
@@ -1177,7 +1179,7 @@ export default function CropTimeline({
                       textOrientation: 'mixed',
                       transform: 'rotate(180deg)',
                     }}
-                    title={crop.plantingMethod === 'DS' ? 'Direct Seed' : crop.plantingMethod === 'TP' ? 'Transplant' : 'Perennial'}
+                    title={crop.plantingMethod === 'direct-seed' ? 'Direct Seed' : crop.plantingMethod === 'transplant' ? 'Transplant' : 'Perennial'}
                   >
                     {methodStyle.label}
                   </div>
@@ -1300,7 +1302,7 @@ export default function CropTimeline({
     // Calculate dates
     const fieldStart = parseDate(fieldStartDate);
     const endDate = new Date(fieldStart);
-    endDate.setDate(endDate.getDate() + calculated.sth + calculated.harvestWindow - calculated.daysInCells);
+    endDate.setDate(endDate.getDate() + calculated.seedToHarvest + calculated.harvestWindow - calculated.daysInCells);
 
     // Build display name
     const name = config.product && config.product !== 'General'
@@ -1981,7 +1983,7 @@ export default function CropTimeline({
               const configId = crop.cropConfigId;
               const baseConfig = configId && cropCatalog ? cropCatalog[configId] : undefined;
               const baseValues = baseConfig ? {
-                dtm: calculateSTH(baseConfig, calculateDaysInCells(baseConfig)),
+                dtm: calculateSeedToHarvest(baseConfig, calculateDaysInCells(baseConfig)),
                 harvestWindow: calculateHarvestWindow(baseConfig),
                 daysInCells: calculateDaysInCells(baseConfig),
               } : null;

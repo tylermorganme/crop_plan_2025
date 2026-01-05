@@ -4,8 +4,14 @@
  * Based on notes from DAG reconciliation:
  * - Tray Size -> cellsPerTray (better name for tray size enum)
  * - Category should eventually be product-level (for now keep on config)
- * - Normal Method describes what DTM means: DS (from direct seed), TP (from transplant), X (total time)
+ * - Normal Method describes what DTM means: from-seeding, from-transplant, or total-time
  * - Variety might be better named "variant" to not conflate with actual crop varieties
+ *
+ * NAMING CONVENTIONS:
+ * Excel values are mapped to self-documenting names at import time:
+ * - normalMethod: DS → 'from-seeding', TP → 'from-transplant', X → 'total-time'
+ * - growingStructure: Field → 'field', Greenhouse → 'greenhouse', Tunnel → 'high-tunnel'
+ * - plantingMethod: DS → 'direct-seed', TP → 'transplant', PE → 'perennial'
  *
  * DATA FIXES APPLIED (audit trail):
  * See DATA_FIXES below for specific corrections made during import.
@@ -13,6 +19,29 @@
 
 const fs = require('fs');
 const crops = JSON.parse(fs.readFileSync('./crops.json.old', 'utf8')).crops;
+
+// =============================================================================
+// NAMING CONVENTION MAPPINGS - Convert Excel abbreviations to self-documenting names
+// =============================================================================
+const NORMAL_METHOD_MAP = {
+  'DS': 'from-seeding',      // DTM measured from direct seeding (emergence)
+  'TP': 'from-transplant',   // DTM measured from transplant in field
+  'X': 'total-time',         // DTM is total time from seed to harvest
+};
+
+const GROWING_STRUCTURE_MAP = {
+  'Field': 'field',
+  'Greenhouse': 'greenhouse',
+  'GH': 'greenhouse',        // Alias
+  'Tunnel': 'high-tunnel',
+  'HT': 'high-tunnel',       // Alias
+};
+
+const PLANTING_METHOD_MAP = {
+  'DS': 'direct-seed',
+  'TP': 'transplant',
+  'PE': 'perennial',
+};
 
 // =============================================================================
 // DATA FIXES - Corrections applied during import with explanations
@@ -51,7 +80,8 @@ const cleanCrops = crops.map((c) => {
   seenIds.add(id);
 
   // Check if this is a perennial (Planting Method = PE)
-  const isPerennial = c['Planting Method'] === 'PE';
+  const plantingMethod = PLANTING_METHOD_MAP[c['Planting Method']] || c['Planting Method'];
+  const isPerennial = plantingMethod === 'perennial';
 
   // Extract targetFieldDate as MM-DD from ISO date like "2025-04-01T00:00:00"
   const rawTargetDate = c['Target Field Date'];
@@ -68,9 +98,9 @@ const cleanCrops = crops.map((c) => {
     product: c.Product,
     // Category should eventually be product-level
     category: c.Category || undefined,
-    growingStructure: c['Growing Structure'] || 'Field',
+    growingStructure: GROWING_STRUCTURE_MAP[c['Growing Structure']] || 'field',
     // normalMethod describes what DTM means, not how it's planted
-    normalMethod: c['Normal Method'] || 'X',
+    normalMethod: NORMAL_METHOD_MAP[c['Normal Method']] || 'total-time',
     dtm: c.DTM,
     daysToGermination: c['Days to Germination'] || undefined,
     deprecated: c.Deprecated || false,

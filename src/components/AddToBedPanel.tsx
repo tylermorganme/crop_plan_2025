@@ -232,7 +232,7 @@ export default function AddToBedPanel({
                     </div>
                     <div className="flex justify-between gap-2">
                       <span className="text-gray-600 shrink-0">Seed to Harvest</span>
-                      <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredDetails.sth)} days</span>
+                      <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredDetails.seedToHarvest)} days</span>
                     </div>
                     {hoveredDetails.daysInCells > 0 && (
                       <div className="flex justify-between gap-2">

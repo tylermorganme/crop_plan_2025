@@ -5,7 +5,7 @@ import {
   type CropConfig,
   type TrayStage,
   calculateDaysInCells,
-  calculateSTH,
+  calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
   createBlankConfig,
@@ -100,9 +100,9 @@ function formatRemovalDescription(info: DataRemovalInfo): string[] {
   }
   if (info.normalMethod) {
     const methodLabels: Record<string, string> = {
-      'DS': 'DTM measurement basis (from seeding)',
-      'TP': 'DTM measurement basis (from transplant)',
-      'X': 'DTM measurement basis (full seed-to-harvest)',
+      'from-seeding': 'DTM measurement basis (from seeding)',
+      'from-transplant': 'DTM measurement basis (from transplant)',
+      'total-time': 'DTM measurement basis (full seed-to-harvest)',
     };
     items.push(methodLabels[info.normalMethod] || info.normalMethod);
   }
@@ -214,7 +214,7 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
             type="text"
             value={formData.yieldFormula || ''}
             onChange={(e) => updateField('yieldFormula', e.target.value || undefined)}
-            placeholder="e.g., PPB * 0.125 * harvests"
+            placeholder="e.g., plantingsPerBed * 0.125 * harvests"
             className="w-full px-3 py-2 text-sm font-mono text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -289,17 +289,16 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
               {(() => {
                 const formula = formData.yieldFormula || '';
                 const parts: string[] = [];
-                // Check for both PPB and plantsPerBed
-                if (formula.includes('plantsPerBed') || formula.includes('PPB')) {
-                  parts.push(`plantsPerBed=${yieldResult.context.plantsPerBed.toFixed(0)}`);
+                if (formula.includes('plantingsPerBed')) {
+                  parts.push(`plantingsPerBed=${yieldResult.context.plantingsPerBed.toFixed(0)}`);
                 }
                 if (formula.includes('bedFeet')) parts.push(`bedFeet=${yieldResult.context.bedFeet}`);
                 if (formula.includes('harvests')) parts.push(`harvests=${yieldResult.context.harvests}`);
-                if (formula.includes('DBH')) parts.push(`DBH=${yieldResult.context.DBH}`);
+                if (formula.includes('daysBetweenHarvest')) parts.push(`daysBetweenHarvest=${yieldResult.context.daysBetweenHarvest}`);
                 if (formula.includes('seeds')) parts.push(`seeds=${yieldResult.context.seeds}`);
-                // Always show at least plantsPerBed and bedFeet if nothing specific
+                // Always show at least plantingsPerBed and bedFeet if nothing specific
                 if (parts.length === 0) {
-                  parts.push(`plantsPerBed=${yieldResult.context.plantsPerBed.toFixed(0)}`);
+                  parts.push(`plantingsPerBed=${yieldResult.context.plantingsPerBed.toFixed(0)}`);
                   parts.push(`bedFeet=${yieldResult.context.bedFeet}`);
                 }
                 return parts.join(', ');
@@ -424,7 +423,7 @@ export default function CropConfigEditor({
   // Calculate derived values for preview - use the final crop shape
   const previewCrop = buildFinalCrop();
   const daysInCells = calculateDaysInCells(previewCrop);
-  const sth = calculateSTH(previewCrop, daysInCells);
+  const seedToHarvest = calculateSeedToHarvest(previewCrop, daysInCells);
   const plantingMethod = calculatePlantingMethod(previewCrop);
   const harvestWindow = calculateHarvestWindow(previewCrop);
 
@@ -539,8 +538,8 @@ export default function CropConfigEditor({
                   <div className="text-sm font-semibold text-blue-900">{daysInCells}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-blue-600">STH</div>
-                  <div className="text-sm font-semibold text-blue-900">{sth}</div>
+                  <div className="text-xs text-blue-600">Seed to Harvest</div>
+                  <div className="text-sm font-semibold text-blue-900">{seedToHarvest}</div>
                 </div>
                 <div>
                   <div className="text-xs text-blue-600">Method</div>
@@ -669,14 +668,13 @@ export default function CropConfigEditor({
                   <label className="block text-xs font-medium text-gray-600 mb-1">Growing Structure</label>
                   <select
                     value={formData.growingStructure || ''}
-                    onChange={(e) => updateField('growingStructure', e.target.value || undefined)}
+                    onChange={(e) => updateField('growingStructure', (e.target.value || undefined) as 'field' | 'greenhouse' | 'high-tunnel' | undefined)}
                     className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select...</option>
-                    <option value="Field">Field</option>
-                    <option value="Caterpillar">Caterpillar</option>
-                    <option value="High Tunnel">High Tunnel</option>
-                    <option value="Greenhouse">Greenhouse</option>
+                    <option value="field">Field</option>
+                    <option value="greenhouse">Greenhouse</option>
+                    <option value="high-tunnel">High Tunnel</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-4">
@@ -754,17 +752,17 @@ export default function CropConfigEditor({
                     <label className="block text-xs font-medium text-gray-600 mb-1">DTM Measured From</label>
                     <select
                       value={formData.normalMethod || ''}
-                      onChange={(e) => updateField('normalMethod', e.target.value as 'DS' | 'TP' | 'X' | undefined)}
+                      onChange={(e) => updateField('normalMethod', e.target.value as 'from-seeding' | 'from-transplant' | 'total-time' | undefined)}
                       className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select...</option>
-                      <option value="DS">From seeding (seed packet)</option>
-                      <option value="TP">From transplant date (seed packet)</option>
-                      <option value="X">Full seed-to-harvest (grower/book)</option>
+                      <option value="from-seeding">From seeding (seed packet)</option>
+                      <option value="from-transplant">From transplant date (seed packet)</option>
+                      <option value="total-time">Full seed-to-harvest (grower/book)</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
                       {growingMethod === 'direct-seed'
-                        ? 'Usually DS for direct-seeded crops'
+                        ? 'Usually "from seeding" for direct-seeded crops'
                         : 'How the DTM source measured timing'}
                     </p>
                   </div>
@@ -788,8 +786,8 @@ export default function CropConfigEditor({
                   </div>
                 </div>
 
-                {/* Assumed Transplant Days - only relevant for TP normalMethod */}
-                {formData.normalMethod === 'TP' && (
+                {/* Assumed Transplant Days - only relevant for from-transplant normalMethod */}
+                {formData.normalMethod === 'from-transplant' && (
                   <div className="mt-4">
                     <div className="flex items-center gap-1 mb-1">
                       <label className="block text-xs font-medium text-gray-600">Assumed Transplant Age</label>

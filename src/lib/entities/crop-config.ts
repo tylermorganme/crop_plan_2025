@@ -7,17 +7,17 @@
  * KEY CONCEPT: normalMethod vs plantingMethod
  *
  * normalMethod (input) = How DTM is defined for this crop variety:
- *   - "DS": DTM is from direct seeding in field (seed packet says "60 days from sowing")
- *   - "TP": DTM is from transplant in field (seed packet says "60 days from transplant")
- *   - "X":  DTM is total time from seeding a TRANSPLANT to harvest (from growers/books,
+ *   - "from-seeding": DTM is from direct seeding in field (seed packet says "60 days from sowing")
+ *   - "from-transplant": DTM is from transplant in field (seed packet says "60 days from transplant")
+ *   - "total-time": DTM is total time from seeding a TRANSPLANT to harvest (from growers/books,
  *          includes greenhouse time and transplant shock in the total)
  *
  * plantingMethod (calculated) = How you're actually growing it:
- *   - "DS": Direct seeding (no tray stages)
- *   - "TP": Transplanting (has tray stages)
- *   - "PE": Perennial (persists across seasons)
+ *   - "direct-seed": Direct seeding (no tray stages)
+ *   - "transplant": Transplanting (has tray stages)
+ *   - "perennial": Perennial (persists across seasons)
  *
- * These are independent! A crop with normalMethod "DS" can still be grown as
+ * These are independent! A crop with normalMethod "from-seeding" can still be grown as
  * transplants if you add tray stages.
  */
 
@@ -34,7 +34,7 @@ export interface TrayStage {
 }
 
 /** Planting method - how the crop is actually grown */
-export type PlantingMethod = 'DS' | 'TP' | 'PE';
+export type PlantingMethod = 'direct-seed' | 'transplant' | 'perennial';
 
 /**
  * Crop configuration - what we store in crops.json and plan.cropCatalog.
@@ -61,11 +61,11 @@ export interface CropConfig {
   /** Category for color coding (e.g., "Green", "Brassica") */
   category?: string;
 
-  /** Growing structure: "Field", "GH", "HT" */
-  growingStructure?: string;
+  /** Growing structure: "field", "greenhouse", "high-tunnel" */
+  growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
 
-  /** How DTM is measured: DS, TP, or X */
-  normalMethod?: 'DS' | 'TP' | 'X';
+  /** How DTM is measured: from-seeding, from-transplant, or total-time */
+  normalMethod?: 'from-seeding' | 'from-transplant' | 'total-time';
 
   // ---- Timing Inputs ----
 
@@ -111,19 +111,19 @@ export interface CropConfig {
    * Yield formula as an expression string.
    *
    * Available variables:
-   * - PPB: Plants per bed (calculated from spacing × rows × bedFeet)
+   * - plantingsPerBed: Plants per bed (calculated from spacing × rows × bedFeet)
    * - bedFeet: Bed length in feet
-   * - harvests: Number of harvests (H)
-   * - DBH: Days between harvest
+   * - harvests: Number of harvests
+   * - daysBetweenHarvest: Days between harvest
    * - rows: Number of rows
    * - spacing: In-row spacing (inches)
    * - seeds: Seeds per bed (if applicable)
    *
    * Examples:
-   * - "PPB * 0.125 * harvests" (basil: 0.125 bunches/plant/harvest)
-   * - "PPB * 8" (zinnia: 8 stems/plant total)
+   * - "plantingsPerBed * 0.125 * harvests" (basil: 0.125 bunches/plant/harvest)
+   * - "plantingsPerBed * 8" (zinnia: 8 stems/plant total)
    * - "(bedFeet / 100) * 65 * harvests" (beans: 65 lbs/100ft/harvest)
-   * - "PPB * 2 * (DBH / 7)" (cucumber: 2 fruits/plant/week)
+   * - "plantingsPerBed * 2 * (daysBetweenHarvest / 7)" (cucumber: 2 fruits/plant/week)
    *
    * The formula calculates TOTAL yield for the given bed length.
    */
@@ -172,8 +172,8 @@ export interface CropCalculated {
   /** Days spent in greenhouse trays (sum of all tray stage days) */
   daysInCells: number;
   /** Seed To Harvest - total days from seeding to first harvest */
-  sth: number;
-  /** How the crop is actually grown: DS, TP, or PE */
+  seedToHarvest: number;
+  /** How the crop is actually grown: direct-seed, transplant, or perennial */
   plantingMethod: PlantingMethod;
   /** Duration of harvest period in days */
   harvestWindow: number;
@@ -213,38 +213,38 @@ export function calculateDaysInCells(crop: CropConfig): number {
 }
 
 /**
- * Calculate STH (Seed To Harvest) based on normalMethod.
+ * Calculate Seed To Harvest based on normalMethod.
  *
  * Converts the user-entered DTM into total time from seeding to harvest,
  * accounting for how DTM was measured vs how the crop is being grown.
  */
-export function calculateSTH(crop: CropConfig, daysInCells: number): number {
-  const method = crop.normalMethod ?? 'X';
+export function calculateSeedToHarvest(crop: CropConfig, daysInCells: number): number {
+  const method = crop.normalMethod ?? 'total-time';
   const dtm = crop.dtm ?? 0;
   const dtg = crop.daysToGermination ?? 0;
   const isTransplant = daysInCells > 0;
 
   switch (method) {
-    case 'DS':
+    case 'from-seeding':
       // DTM is measured from emergence (germination)
-      // DS direct: dtg + dtm
-      // DS transplant: dtg + dtm + shock
+      // direct: dtg + dtm
+      // transplant: dtg + dtm + shock
       return dtg + dtm + (isTransplant ? PLANTING_METHOD_DELTA_DAYS : 0);
 
-    case 'TP': {
+    case 'from-transplant': {
       // DTM is measured from transplant date (in-field time only)
-      // TP transplant: daysInCells + dtm
-      // TP direct: assumedDays + dtm - delta
+      // transplant: daysInCells + dtm
+      // direct: assumedDays + dtm - delta
       const assumedDays = crop.assumedTransplantDays ?? DEFAULT_ASSUMED_TRANSPLANT_DAYS;
       return isTransplant
         ? daysInCells + dtm
         : assumedDays + dtm - PLANTING_METHOD_DELTA_DAYS;
     }
 
-    case 'X':
+    case 'total-time':
       // DTM is total time from seeding a transplant to harvest
-      // X transplant: dtm (use as-is)
-      // X direct: dtm - delta (no shock = faster)
+      // transplant: dtm (use as-is)
+      // direct: dtm - delta (no shock = faster)
       return dtm - (isTransplant ? 0 : PLANTING_METHOD_DELTA_DAYS);
 
     default:
@@ -257,10 +257,10 @@ export function calculateSTH(crop: CropConfig, daysInCells: number): number {
  */
 export function calculatePlantingMethod(crop: CropConfig): PlantingMethod {
   if (crop.perennial) {
-    return 'PE';
+    return 'perennial';
   }
   const daysInCells = calculateDaysInCells(crop);
-  return daysInCells === 0 ? 'DS' : 'TP';
+  return daysInCells === 0 ? 'direct-seed' : 'transplant';
 }
 
 // =============================================================================
@@ -272,22 +272,28 @@ const STANDARD_BED_LENGTH = 50;
 
 /** Available variables for yield formulas */
 export interface YieldFormulaContext {
-  /** Plants per bed (calculated from spacing × rows × bedFeet) */
-  PPB: number;
-  /** Plants per bed - human-readable alias for PPB */
-  plantsPerBed: number;
+  /** Plantings per bed (calculated from spacing × rows × bedFeet) */
+  plantingsPerBed: number;
   /** Bed length in feet */
   bedFeet: number;
   /** Number of harvests */
   harvests: number;
   /** Days between harvest */
-  DBH: number;
+  daysBetweenHarvest: number;
   /** Number of rows */
   rows: number;
   /** In-row spacing (inches) */
   spacing: number;
   /** Seeds per bed (for seed-based crops) */
   seeds: number;
+  /** Seed to harvest days (for time-based formulas) */
+  seedToHarvest: number;
+  /** Days to maturity */
+  daysToMaturity: number;
+  /** Days in greenhouse (tray stages) */
+  daysInCells: number;
+  /** Harvest window in days */
+  harvestWindow: number;
 }
 
 /** Result of formula evaluation */
@@ -534,17 +540,23 @@ export function buildYieldContext(
 ): YieldFormulaContext {
   const rows = rowsOverride ?? 1;
   const spacing = spacingOverride ?? 12;
-  const PPB = calculatePlantsPerBed(spacing, rows, bedFeet);
+  const plantingsPerBed = calculatePlantsPerBed(spacing, rows, bedFeet);
+  const daysInCells = calculateDaysInCells(crop);
+  const seedToHarvest = calculateSeedToHarvest(crop, daysInCells);
+  const harvestWindow = calculateHarvestWindow(crop);
 
   return {
-    PPB,
-    plantsPerBed: PPB, // Human-readable alias
+    plantingsPerBed,
     bedFeet,
     harvests: crop.numberOfHarvests ?? 1,
-    DBH: crop.daysBetweenHarvest ?? 7,
+    daysBetweenHarvest: crop.daysBetweenHarvest ?? 7,
     rows,
     spacing,
     seeds: crop.seedsPerBed ?? 0,
+    seedToHarvest,
+    daysToMaturity: crop.dtm ?? 0,
+    daysInCells,
+    harvestWindow,
   };
 }
 
@@ -667,7 +679,7 @@ export function buildYieldFormula(
 
   switch (basis) {
     case 'plant':
-      baseExpr = `PPB * ${rate}`;
+      baseExpr = `plantingsPerBed * ${rate}`;
       break;
     case 'foot':
       baseExpr = `bedFeet * ${rate}`;
@@ -699,8 +711,8 @@ export function parseSimpleFormula(
   // Normalize whitespace
   const f = formula.replace(/\s+/g, ' ').trim();
 
-  // Pattern: PPB * rate [* harvests]
-  let match = f.match(/^PPB \* ([\d.]+)(?: \* harvests)?$/);
+  // Pattern: plantingsPerBed * rate [* harvests]
+  let match = f.match(/^plantingsPerBed \* ([\d.]+)(?: \* harvests)?$/);
   if (match) {
     return {
       basis: 'plant',
@@ -782,13 +794,13 @@ export function calculateHarvestWindow(crop: CropConfig): number {
  */
 export function calculateCropFields(crop: CropConfig): CropCalculated {
   const daysInCells = calculateDaysInCells(crop);
-  const sth = calculateSTH(crop, daysInCells);
+  const seedToHarvest = calculateSeedToHarvest(crop, daysInCells);
   const plantingMethod = calculatePlantingMethod(crop);
   const harvestWindow = calculateHarvestWindow(crop);
 
   return {
     daysInCells,
-    sth,
+    seedToHarvest,
     plantingMethod,
     harvestWindow,
   };
@@ -804,7 +816,7 @@ export function getTimelineConfig(crop: CropConfig): {
   category: string;
   growingStructure: string;
   plantingMethod: PlantingMethod;
-  dtm: number; // For timeline, this is STH (total seed-to-harvest)
+  seedToHarvest: number; // Total seed-to-harvest days
   harvestWindow: number;
   daysInCells: number;
 } {
@@ -814,9 +826,9 @@ export function getTimelineConfig(crop: CropConfig): {
     crop: crop.crop,
     product: crop.product ?? 'General',
     category: crop.category ?? '',
-    growingStructure: crop.growingStructure ?? 'Field',
+    growingStructure: crop.growingStructure ?? 'field',
     plantingMethod: calculated.plantingMethod,
-    dtm: calculated.sth,
+    seedToHarvest: calculated.seedToHarvest,
     harvestWindow: crop.harvestWindow ?? 0,
     daysInCells: calculated.daysInCells,
   };
@@ -848,8 +860,8 @@ export function createBlankConfig(): CropConfig {
     variant: '',
     product: '',
     category: '',
-    growingStructure: 'Field',
-    normalMethod: 'DS',
+    growingStructure: 'field',
+    normalMethod: 'from-seeding',
     dtm: 60,
     daysToGermination: 7,
     harvestWindow: 7,

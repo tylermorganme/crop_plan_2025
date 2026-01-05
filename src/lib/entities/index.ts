@@ -46,7 +46,7 @@ export type {
 } from './crop-config';
 export {
   calculateDaysInCells,
-  calculateSTH,
+  calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
   calculateCropFields,

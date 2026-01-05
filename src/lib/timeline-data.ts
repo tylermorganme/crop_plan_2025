@@ -264,7 +264,12 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
         ? (baseConfig?.category || undefined)
         : (assignment.category || baseConfig?.category || undefined);
       const structure = assignment.growingStructure || baseConfig?.growingStructure || 'Field';
-      const plantingMethod = assignment.dsTp || baseConfig?.plantingMethod || undefined;
+      // Map old dsTp values to new naming convention
+      const dsTpMap: Record<string, 'direct-seed' | 'transplant' | 'perennial'> = {
+        'DS': 'direct-seed', 'TP': 'transplant', 'PE': 'perennial',
+      };
+      const rawMethod = assignment.dsTp;
+      const plantingMethod = rawMethod ? dsTpMap[rawMethod] : baseConfig?.plantingMethod ?? undefined;
 
       bedSpanInfo.forEach((info, index) => {
         timelineCrops.push({

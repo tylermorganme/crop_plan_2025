@@ -3,10 +3,10 @@
  */
 
 import * as fs from 'fs';
-import { evaluateYieldFormula, calculatePlantsPerBed } from '../src/lib/entities/crop-config';
+import { evaluateYieldFormula, buildYieldContext, type CropConfig } from '../src/lib/entities/crop-config';
 
 const cropsData = JSON.parse(fs.readFileSync('./src/data/crops.json', 'utf8'));
-const crops = cropsData.crops;
+const crops = cropsData.crops as CropConfig[];
 
 console.log('Testing yield formula evaluation...');
 console.log();
@@ -25,18 +25,7 @@ for (const crop of crops) {
   const spacing = 12;  // inches
   const rows = 2;
   const bedFeet = 50;
-  const PPB = calculatePlantsPerBed(spacing, rows, bedFeet);
-
-  const context = {
-    PPB,
-    plantsPerBed: PPB,
-    bedFeet,
-    harvests: crop.numberOfHarvests ?? 1,
-    DBH: crop.daysBetweenHarvest ?? 7,
-    rows,
-    spacing,
-    seeds: crop.seedsPerBed ?? 0,
-  };
+  const context = buildYieldContext(crop, bedFeet, rows, spacing);
 
   const result = evaluateYieldFormula(crop.yieldFormula, context);
 

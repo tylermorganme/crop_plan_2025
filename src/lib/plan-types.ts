@@ -53,7 +53,7 @@ export {
 export type { CropConfig, CropCalculated, TrayStage, PlantingMethod } from './entities/crop-config';
 export {
   calculateDaysInCells,
-  calculateSTH,
+  calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
   calculateCropFields,
@@ -158,7 +158,7 @@ export interface CreateTimelineCropInput {
   feetUsed?: number;
   bedCapacityFt?: number;
   harvestStartDate?: string;
-  plantingMethod?: 'DS' | 'TP' | 'PE';
+  plantingMethod?: 'direct-seed' | 'transplant' | 'perennial';
   lastModified?: number;
 }
 
