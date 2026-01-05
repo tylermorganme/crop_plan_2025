@@ -268,22 +268,7 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
     <section>
       <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Yield</h3>
       <div className="space-y-3">
-        {/* Formula Input - Always visible and editable */}
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">
-            Yield Formula
-          </label>
-          <input
-            ref={formulaInputRef}
-            type="text"
-            value={formData.yieldFormula || ''}
-            onChange={(e) => updateField('yieldFormula', e.target.value || undefined)}
-            placeholder="e.g., plantingsPerBed * 0.125 * harvests"
-            className="w-full px-3 py-2 text-sm font-mono text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Template Buttons */}
+        {/* Template Buttons - at top for quick starts */}
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1.5">
             Quick templates:
@@ -303,61 +288,50 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
           </div>
         </div>
 
-        {/* Clickable Variables with current values */}
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">
-            Variables <span className="font-normal text-gray-400">(click to insert)</span>:
-          </label>
-          <div className="flex flex-wrap gap-1.5">
-            {FORMULA_VARIABLES.map((v) => {
-              // Get current value from context
-              const value = yieldResult.context[v.name as keyof typeof yieldResult.context];
-              const displayValue = typeof value === 'number'
-                ? (Number.isInteger(value) ? value : value.toFixed(2))
-                : value;
-              return (
-                <button
-                  key={v.name}
-                  type="button"
-                  onClick={() => insertVariable(v.name)}
-                  title={v.description}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 hover:border-blue-300 transition-colors cursor-pointer"
-                >
-                  <span>{v.name}</span>
-                  <span className="text-blue-400">=</span>
-                  <span className="text-blue-600 font-semibold">{displayValue}</span>
-                </button>
-              );
-            })}
+        {/* Formula Input + Unit side by side */}
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Yield Formula
+            </label>
+            <input
+              ref={formulaInputRef}
+              type="text"
+              value={formData.yieldFormula || ''}
+              onChange={(e) => updateField('yieldFormula', e.target.value || undefined)}
+              placeholder="e.g., plantingsPerBed * 0.125 * harvests"
+              className="w-full px-3 py-2 text-sm font-mono text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="w-28">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+            <input
+              type="text"
+              value={formData.yieldUnit || ''}
+              onChange={(e) => updateField('yieldUnit', e.target.value || undefined)}
+              placeholder="lb, bunch..."
+              className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
 
-        {/* Yield Unit */}
-        <div className="w-1/3">
-          <label className="block text-xs font-medium text-gray-600 mb-1">Yield Unit</label>
-          <input
-            type="text"
-            value={formData.yieldUnit || ''}
-            onChange={(e) => updateField('yieldUnit', e.target.value || undefined)}
-            placeholder="lb, bunch, head, stem..."
-            className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Preview / Result */}
+        {/* Preview / Result - right below formula */}
         <div className="bg-gray-50 rounded-md p-3 border border-gray-200">
+          {/* Main result line with context */}
           <div className="flex items-baseline justify-between">
-            <span className="text-xs font-medium text-gray-600">Preview (50ft bed):</span>
+            <span className="text-xs text-gray-500">
+              {yieldResult.context.rows} row{yieldResult.context.rows !== 1 ? 's' : ''} @ {yieldResult.context.spacing}" spacing → {Math.round(yieldResult.context.plantingsPerBed)} plants/50ft
+            </span>
             {yieldResult.value !== null ? (
               yieldResult.value === 0 ? (
-                <span className="text-sm text-gray-500 italic">No production (cover crop)</span>
+                <span className="text-sm text-gray-500 italic">No production</span>
               ) : (
                 <span className="text-sm font-semibold text-gray-900">
                   {yieldResult.value.toFixed(1)} {formData.yieldUnit || 'units'}
                 </span>
               )
             ) : (
-              <span className="text-sm text-gray-400">No yield data</span>
+              <span className="text-sm text-gray-400">—</span>
             )}
           </div>
 
@@ -365,29 +339,6 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
           {yieldResult.value !== null && yieldResult.value > 0 && harvests > 1 && (
             <p className="text-xs text-gray-500 mt-1">
               {perHarvestYield?.toFixed(1)} per harvest × {harvests} harvests
-            </p>
-          )}
-
-          {/* Context values - show vars that appear in formula */}
-          {yieldResult.value !== null && yieldResult.value > 0 && (
-            <p className="text-xs text-gray-400 mt-1">
-              {(() => {
-                const formula = formData.yieldFormula || '';
-                const parts: string[] = [];
-                if (formula.includes('plantingsPerBed')) {
-                  parts.push(`plantingsPerBed=${yieldResult.context.plantingsPerBed.toFixed(0)}`);
-                }
-                if (formula.includes('bedFeet')) parts.push(`bedFeet=${yieldResult.context.bedFeet}`);
-                if (formula.includes('harvests')) parts.push(`harvests=${yieldResult.context.harvests}`);
-                if (formula.includes('daysBetweenHarvest')) parts.push(`daysBetweenHarvest=${yieldResult.context.daysBetweenHarvest}`);
-                if (formula.includes('seeds')) parts.push(`seeds=${yieldResult.context.seeds}`);
-                // Always show at least plantingsPerBed and bedFeet if nothing specific
-                if (parts.length === 0) {
-                  parts.push(`plantingsPerBed=${yieldResult.context.plantingsPerBed.toFixed(0)}`);
-                  parts.push(`bedFeet=${yieldResult.context.bedFeet}`);
-                }
-                return parts.join(', ');
-              })()}
             </p>
           )}
 
@@ -442,6 +393,35 @@ function YieldSection({ formData, updateField }: YieldSectionProps) {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Clickable Variables with current values */}
+        <div>
+          <label className="block text-xs font-medium text-gray-500 mb-1.5">
+            Variables <span className="font-normal text-gray-400">(click to insert)</span>:
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {FORMULA_VARIABLES.map((v) => {
+              // Get current value from context
+              const value = yieldResult.context[v.name as keyof typeof yieldResult.context];
+              const displayValue = typeof value === 'number'
+                ? (Number.isInteger(value) ? value : value.toFixed(2))
+                : value;
+              return (
+                <button
+                  key={v.name}
+                  type="button"
+                  onClick={() => insertVariable(v.name)}
+                  title={v.description}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 hover:border-blue-300 transition-colors cursor-pointer"
+                >
+                  <span>{v.name}</span>
+                  <span className="text-blue-400">=</span>
+                  <span className="text-blue-600 font-semibold">{displayValue}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
@@ -635,7 +615,9 @@ export default function CropConfigEditor({
         {/* Header */}
         <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
-            {mode === 'create' ? 'Create Crop Configuration' : 'Edit Crop Configuration'}
+            {mode === 'create'
+              ? 'Create Crop Configuration'
+              : `Edit Crop Configuration${formData.identifier ? ` for ${formData.identifier}` : ''}`}
           </h2>
           <button
             onClick={onClose}
