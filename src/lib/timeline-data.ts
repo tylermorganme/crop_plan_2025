@@ -483,6 +483,14 @@ export function expandPlantingsToTimelineCrops(
       crop.lastModified = planting.lastModified;
       crop.overrides = planting.overrides;
       crop.notes = planting.notes;
+      crop.seedSource = planting.seedSource;
+
+      // Calculate seeds needed based on CropConfig.seedsPerBed
+      if (config.seedsPerBed && planting.bedFeet) {
+        // seedsPerBed is per 50ft bed, scale to actual feet
+        const bedsEquivalent = planting.bedFeet / 50;
+        crop.seedsNeeded = Math.ceil(config.seedsPerBed * bedsEquivalent);
+      }
     }
 
     result.push(...crops);

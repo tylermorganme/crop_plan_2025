@@ -41,6 +41,17 @@ export interface PlantingActuals {
 }
 
 /**
+ * Reference to a specific seed variety or mix.
+ * Links a planting to the actual seeds used.
+ */
+export interface SeedSource {
+  /** Whether this is a single variety or a mix */
+  type: 'variety' | 'mix';
+  /** Reference to Variety.id or SeedMix.id */
+  id: string;
+}
+
+/**
  * A planting instance in a plan.
  *
  * Design: Store one Planting per planting decision.
@@ -72,6 +83,11 @@ export interface Planting {
 
   /** Total feet needed for this planting */
   bedFeet: number;
+
+  // ---- Seed Source ----
+
+  /** Reference to the actual seed variety or mix used */
+  seedSource?: SeedSource;
 
   // ---- Adjustments ----
 
@@ -138,6 +154,8 @@ export interface CreatePlantingInput {
   followsPlantingId?: string;
   /** Optional: days after followed crop */
   followOffset?: number;
+  /** Optional: seed variety or mix reference */
+  seedSource?: SeedSource;
   /** Optional: timing overrides */
   overrides?: PlantingOverrides;
   /** Optional: actual dates */
@@ -158,6 +176,7 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     bedFeet: input.bedFeet,
     followsPlantingId: input.followsPlantingId,
     followOffset: input.followOffset,
+    seedSource: input.seedSource,
     overrides: input.overrides,
     actuals: input.actuals,
     notes: input.notes,
@@ -180,6 +199,7 @@ export function clonePlanting(
     bedFeet: source.bedFeet,
     followsPlantingId: source.followsPlantingId,
     followOffset: source.followOffset,
+    seedSource: source.seedSource,
     overrides: source.overrides,
     actuals: source.actuals,
     notes: source.notes,

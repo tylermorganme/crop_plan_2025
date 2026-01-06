@@ -77,6 +77,10 @@ export interface TimelineCrop {
   overrides?: import('./planting').PlantingOverrides;
   /** User notes about this planting */
   notes?: string;
+  /** Reference to the seed variety or mix used */
+  seedSource?: import('./planting').SeedSource;
+  /** Calculated seeds needed for this planting (based on CropConfig.seedsPerBed) */
+  seedsNeeded?: number;
 }
 
 /**

@@ -92,6 +92,9 @@ export interface PlantingConfigLookup {
 
   /** Days in greenhouse cells (0 = direct seed) */
   daysInCells: number;
+
+  /** Seeds needed per 50ft bed (for ordering calculations) */
+  seedsPerBed?: number;
 }
 
 /**
@@ -131,6 +134,7 @@ export function lookupConfigFromCatalog(
     dtm: seedToHarvest, // Use seedToHarvest for timeline calculations
     harvestWindow,
     daysInCells,
+    seedsPerBed: entry.seedsPerBed,
   };
 }
 
