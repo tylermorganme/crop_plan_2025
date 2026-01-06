@@ -49,3 +49,9 @@ next-env.d.ts
 
 # playwright screenshots
 .playwright-mcp/
+
+# temporary working files
+/tmp/
+
+# Excel temp/lock files
+~$*.xls*
