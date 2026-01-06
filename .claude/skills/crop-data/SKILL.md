@@ -7,55 +7,36 @@ description: Crop planning data model and architecture. Use when working with cr
 
 This skill provides essential context for working with the crop planning data model.
 
-## CRITICAL: Data Analysis Caveats
+## CRITICAL: Stock Data vs Live Plan Data
 
-**The extracted analysis files have known gaps:**
+**There are TWO independent data systems:**
 
-| File | Issue |
-|------|-------|
-| `column-analysis.json` | Misclassifies array formulas as "static" or "mixed" |
-| `formula-analysis.json` | Missing ~20+ formulas using SWITCH, complex XLOOKUP |
+1. **Stock data** (`src/data/crops.json`)
+   - Template for new plans (~339 crop configs)
+   - Generated from Excel via build pipeline
+   - Changes ONLY affect newly created plans
 
-**Always verify against the actual workbook** using:
-```bash
-python scripts/inspect-column.py "STH"           # Inspect specific column
-python scripts/inspect-column.py --list          # List all columns
-python scripts/inspect-column.py "DTM" --sheet "Bed Plan"
+2. **Live plan data** (`data/plans/*.json` + IndexedDB)
+   - Each plan has its own `cropCatalog` snapshot
+   - Created by cloning stock data at plan creation time
+   - Independent after creation - edits don't affect stock or other plans
+
+```
+src/data/crops.json (STOCK - template for new plans)
+    │
+    ▼ cloneCropCatalog() at plan creation
+plan.cropCatalog (LIVE - per-plan snapshot, editable)
 ```
 
-**Authoritative reference**: `vba/workbook-structure.md` has table schemas extracted directly from Excel.
-
-## Key Timing Formulas (FROM WORKBOOK)
-
-**STH (Seed To Harvest)** - NOT static, despite what analysis files say:
-```
-SWITCH(Normal Method,
-  "DS": Days to Germination + DTM + IF(Days in Cells > 0, 15, 0)
-  "TP": DTM + Days in Cells + IF(Days in Cells <= 0, 20, 0)
-  "X":  DTM
-)
-```
-
-**DTM** - Calculated from range:
-```
-=FLOOR.MATH(AVERAGE(DTM Lower, DTM Upper))
-```
-
-**Days in Cells** - Sum of tray stages:
-```
-=SUM(Tray 1 Days, Tray 2 Days, Tray 3 Days)
-```
-
-**Target dates**:
-- `Target Sewing Date = LastFrostDate - 5 * Sewing Rel Last Frost`
-- `Target Field Date = Target Sewing Date + Days in Cells`
-- `Target Harvest Data = Target Sewing Date + STH`
-- `Target End of Harvest = Target Harvest Data + Harvest window`
+**When to update what:**
+- Adding new field to stock data → update `build-minimal-crops.js`
+- Editing existing plan → use the UI or store methods
+- Fixing crop config data → decide if it's stock fix or needs plan migration
 
 ## Entity Model
 
 ```
-GLOBAL CONSTANTS (farm settings: LastFrostDate, BedLength, LaborRate)
+GLOBAL CONSTANTS (farm settings: LastFrostDate, BedLength)
        │
        ▼
 CROP (~100 unique) ─────────────────────────────────────────────────┐
@@ -64,137 +45,157 @@ CROP (~100 unique) ────────────────────�
        │                                                            │
        │ one crop → many configurations                             │
        ▼                                                            │
-PLANTING CONFIGURATION (340 total)                                  │
-│ structure (Field/Hoop/Greenhouse)                                 │
-│ method (DS/TP), season (Sp/Su/Fa/Wi/Ow)                          │
+CROP CONFIG (339 total in stock)                                    │
+│ structure (field/greenhouse/high-tunnel)                          │
+│ normalMethod (from-seeding/from-transplant/total-time)           │
 │ product type, DTM, spacing, rows                                  │
-│ Identifier: "Arugula - Baby Leaf | Field DS Sp"                  │
+│ Identifier: "Arugula - Baby Leaf 1X | Field DS Sp"               │
        │                                    │                       │
        │ one config → many plantings        │ references            │
        ▼                                    ▼                       │
 PLANTING (per-plan instance)          PRODUCT (processing info) ◄──┘
-│ bed, bedsCount, startDate           │ Unit, Price, Yield
-│ per-planting overrides              │ Wash type, labor times
-│ actual vs planned dates (future)    │ Holding period
+│ bed, bedFeet, fieldStartDate        │ Unit, Price, Yield
+│ per-planting overrides              │ labor times
+│ references configId                 │
+```
+
+## Key Types and Fields
+
+### CropConfig (stored inputs)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `identifier` | string | Unique key: "Crop - Product XH \| Structure Method Season" |
+| `crop` | string | Crop name (e.g., "Tomato") |
+| `variant` | string | Variety (e.g., "Cherry") |
+| `product` | string | Product type (e.g., "Slicing") |
+| `normalMethod` | enum | How DTM is measured: `from-seeding`, `from-transplant`, `total-time` |
+| `growingStructure` | enum | Where grown: `field`, `greenhouse`, `high-tunnel` |
+| `dtm` | number | Days to maturity (interpretation depends on normalMethod) |
+| `daysToGermination` | number | Days from seeding to emergence |
+| `trayStages` | array | Greenhouse stages: `[{days, cellsPerTray}]` |
+| `rows` | number | Rows per bed |
+| `spacing` | number | In-row spacing (inches) |
+| `numberOfHarvests` | number | Total harvests |
+| `daysBetweenHarvest` | number | Days between harvests |
+| `harvestBufferDays` | number | Buffer after last harvest (default 7) |
+| `seedsPerBed` | number | Seeds needed per bed |
+| `seedsPerPlanting` | number | Seeds per cell/hole |
+| `safetyFactor` | number | Extra cells started (1.1 = 10% extra) |
+| `seedingFactor` | number | Multi-seeding per cell (usually 1, sometimes 2) |
+| `yieldFormula` | string | e.g., `plantingsPerBed * 0.5 * harvests` |
+| `yieldPerHarvest` | number | **LEGACY** - use yieldFormula instead |
+
+### Calculated Fields (derived at runtime)
+
+| Field | Calculation |
+|-------|-------------|
+| `daysInCells` | Sum of tray stage days |
+| `plantingMethod` | `perennial` if flag set, else `transplant` if daysInCells > 0, else `direct-seed` |
+| `seedToHarvest` | Total days from seeding to first harvest (accounts for normalMethod) |
+| `harvestWindow` | Duration of harvest period |
+| `plantingsPerBed` | `(12 / spacing) * rows * bedFeet` |
+
+### seedToHarvest Calculation (by normalMethod)
+
+```typescript
+switch (normalMethod) {
+  case 'from-seeding':
+    // DTM measured from emergence
+    return daysToGermination + dtm + (isTransplant ? 15 : 0);
+
+  case 'from-transplant':
+    // DTM measured from transplant date
+    return isTransplant ? daysInCells + dtm : 20 + dtm - 15;
+
+  case 'total-time':
+    // DTM is total time (use as-is for transplants)
+    return isTransplant ? dtm : dtm - 15;
+}
 ```
 
 ## Data Source Files
 
-| File | Size | Contents | Notes |
-|------|------|----------|-------|
-| `src/data/crops.json` | 1.7 MB | 340 configs × ~155 fields | Fat export, includes calculated |
-| `src/data/bed-plan.json` | 170 KB | ~138 plantings | Current plan assignments |
-| `src/data/products.json` | 213 KB | Product processing data | Labor times, packaging |
-| `column-analysis.json` | 46 KB | Field classification | **Has gaps - verify!** |
-| `formula-analysis.json` | 29 KB | Formula DAG | **Missing array formulas!** |
-| `vba/workbook-structure.md` | - | Table schemas | **Authoritative reference** |
+| File | Purpose | Used by App? |
+|------|---------|--------------|
+| `src/data/crops.json` | Stock crop catalog (339 configs) | YES |
+| `src/data/bed-plan.json` | Default bed layout | YES |
+| `src/data/column-analysis.json` | Display column metadata | YES |
+| `src/data/crops_from_excel.json` | Raw Excel dump | NO (pipeline artifact) |
+| `src/data/crops.json.old` | Backup | NO (pipeline artifact) |
+| `data/plans/*.json` | Saved plans (file backup) | YES (via API) |
 
-## Planting Override Fields
+## Yield Formula System
 
-These bed-plan fields modify catalog values per-planting:
+Formulas use these variables:
 
-| Override Field | Modifies | Purpose |
-|----------------|----------|---------|
-| `additionalDaysInField` | STH/DTM | Weather, conditions adjustment |
-| `additionalDaysOfHarvest` | Harvest window | Extended/shortened season |
-| `additionalDaysInCells` | Days in Cells | Greenhouse timing adjustment |
+| Variable | Description |
+|----------|-------------|
+| `plantingsPerBed` | Plants per bed (calculated from rows × spacing × bedFeet) |
+| `bedFeet` | Bed length (default 50) |
+| `harvests` | Number of harvests |
+| `daysBetweenHarvest` | Days between harvests |
+| `rows` | Number of rows |
+| `spacing` | In-row spacing (inches) |
+| `seeds` | Seeds per bed |
 
-**Computation pattern**:
-```typescript
-const effectiveDTM = catalog.STH + planting.additionalDaysInField;
-const effectiveHarvestWindow = catalog.harvestWindow + planting.additionalDaysOfHarvest;
-```
+Common patterns:
+- Per-plant: `plantingsPerBed * 0.5 * harvests`
+- Per-100ft: `(bedFeet / 100) * 45`
+- Seed-based: `seeds * 0.0568 * harvests`
 
-## Timeline Date Computation
+**Fallback**: If no `yieldFormula`, uses legacy `yieldPerHarvest * harvests * (bedFeet / 50)`
 
-The timeline uses these inputs to compute dates:
+## Pipeline Commands
 
-**From Catalog (crops.json)**:
-- `STH` - Total days from seeding to first harvest
-- `Harvest window` - Days of harvest period
-- `Days in Cells` - Greenhouse time (0 = direct seed)
+```bash
+# Regenerate crops.json from Excel
+python scripts/extract-crops.py           # Step 1: raw dump
+node src/data/build-minimal-crops.js      # Step 2: normalize
 
-**From Planting (bed-plan.json)**:
-- `fixedFieldStartDate` - The target transplant/direct-seed date
-- `additionalDays*` - Per-planting adjustments
+# Verify data
+node scripts/audit-seed-data.js           # Check seed field parity with Excel
 
-**Computed**:
-```
-startDate = fixedFieldStartDate (the TP/DS date)
-harvestStartDate = startDate + (STH - daysInCells) = startDate + DTM
-endDate = harvestStartDate + harvestWindow
+# Test calculations
+npx tsx scripts/test-entities.ts          # Entity validation
+npx tsx scripts/test-slim-planting.ts     # Date computation
+npx tsx scripts/test-crop-calculations.ts # Crop calc vs Excel
 ```
 
 ## Finding Things
 
-Run from `crop-api/` directory. Use patterns (not file paths) to locate code:
-
 ```bash
-# Entity types (new canonical location)
-node scripts/ast-query.js "Plan"           # What does Plan contain?
-node scripts/ast-query.js "Planting"       # What does Planting contain?
-node scripts/ast-query.js "CropConfig"     # What does CropConfig contain?
-
-# Find type definitions
+# Entity types
 grep -r "^export interface" src/lib/entities/
 
-# Find calculation functions
+# Calculation functions
 grep -r "^export function calculate" src/lib
 
-# Find what uses entities
-grep -r "from.*entities" src/lib --include="*.ts"
+# Store actions
+grep -n "async.*=>" src/lib/plan-store.ts | head -20
 
-# Find bed length logic
-grep -r "lengthFt\|ROW_LENGTHS" src/lib
-
-# Find plan store actions
-grep -r "^  [a-z]*:" src/lib/plan-store.ts | head -30
-```
-
-## Data Extraction
-
-Re-extract from Excel when workbook changes (run from `crop-api/`):
-
-```bash
-python scripts/extract-products.py
-```
-
-## Testing & Verification
-
-Run from `crop-api/`:
-
-```bash
-npx tsx scripts/test-entities.ts        # Entity validation
-npx tsx scripts/test-slim-planting.ts   # Date computation parity
-npx tsx scripts/test-catalog-parity.ts  # Catalog lookup parity
-npx tsx scripts/test-crop-calculations.ts  # Crop calc vs Excel
-
-# Inspect actual Excel formulas
-python scripts/inspect-column.py "STH"
-python scripts/inspect-column.py --list
+# Data imports
+grep -rh "from '@/data" src/lib src/app src/components
 ```
 
 ## Architecture
 
-**New canonical types** live in `lib/entities/`:
-- `Bed` - bed with `lengthFt` (F/J=20, A-E/G-I/U=50, X=80)
-- `Planting` - one per planting, references `configId`
+**Canonical types** live in `src/lib/entities/`:
+- `Bed` - bed with `lengthFt` (default 50)
+- `Planting` - one per planting decision, references `configId`
 - `CropConfig` - planting configuration with calculations
 - `Plan` - self-contained: owns `beds`, `cropCatalog`, `plantings`
 
 **Key principle**: Plans own their data. No external references.
 
 ```typescript
-// What we store
 interface Plan {
-  beds: Record<string, Bed>;           // Plan's bed layout
-  cropCatalog: Record<string, CropConfig>;  // Plan's crop configs
-  plantings: Planting[];               // One per planting decision
+  beds: Record<string, Bed>;
+  cropCatalog: Record<string, CropConfig>;  // Snapshot at creation
+  plantings: Planting[];
 }
 
 // Computed at render time
-const timing = calculateCropTiming(planting, config);
-const bedSpan = calculateBedSpan(planting.bedFeet, planting.startBed, plan.beds);
+const calculated = calculateCropFields(config);
+const timing = computeTimelineCrop(planting, config, beds);
 ```
-
-See `.claude/plans/state-migration.md` for full migration plan.

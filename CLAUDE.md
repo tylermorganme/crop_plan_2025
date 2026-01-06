@@ -64,11 +64,51 @@ CropTimeline Component
 
 ## Data Pipeline
 
+### Stock Data vs Live Plan Data
+
+**IMPORTANT**: There are TWO independent data systems:
+
+1. **Stock data** (`src/data/crops.json`)
+   - Template for new plans
+   - Generated from Excel via build pipeline
+   - Changes ONLY affect newly created plans
+
+2. **Live plan data** (`data/plans/*.json` + IndexedDB)
+   - Each plan has its own `cropCatalog` snapshot
+   - Created by cloning stock data at plan creation time
+   - Independent after creation - edits don't affect stock or other plans
+
+```
+src/data/crops.json (STOCK - template for new plans)
+    │
+    ▼ cloneCropCatalog() at plan creation
+plan.cropCatalog (LIVE - per-plan snapshot, editable)
+```
+
+### Excel Import Pipeline
+
 crops.json is generated from Excel via:
-1. extract-crops.py → crops_from_excel.json (raw dump)
-2. src/data/build-minimal-crops.js → crops.json (normalized)
+1. `extract-crops.py` → `crops_from_excel.json` (raw dump, NOT used by app)
+2. `src/data/build-minimal-crops.js` → `crops.json` (normalized, used by app)
 
 When adding new fields to CropConfig, update build-minimal-crops.js.
+
+### Data Directory Map
+
+```
+src/data/
+├── crops.json           # PRODUCTION - stock crop catalog
+├── bed-plan.json        # PRODUCTION - default bed layout
+├── column-analysis.json # PRODUCTION - display metadata
+├── crops_from_excel.json  # Pipeline artifact (can regenerate)
+├── crops.json.old         # Pipeline artifact (backup)
+├── normalized.json        # Pipeline artifact (debugging)
+└── *.json                 # Other files are analysis artifacts
+
+data/plans/              # Saved plan files (backup of IndexedDB)
+tmp/                     # Temporary working files (gitignored)
+scripts/                 # Utility scripts (most are one-time use)
+```
 
 ### Key Files
 

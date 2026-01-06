@@ -107,6 +107,19 @@ const cleanCrops = crops.map((c) => {
     // Perennial flag for crops that don't fit DS/TP model
     perennial: isPerennial || undefined,
 
+    // Spacing data - used for plantingsPerBed calculations
+    rows: c['Rows'] || undefined,
+    spacing: c['Spacing'] || undefined,
+
+    // Seed data - used for seed-based yield formulas
+    // Note: seedsPerBed already has safetyFactor × seedingFactor baked in from Excel
+    // We import these separately so we can understand the components
+    seedsPerBed: c['Seeds Per Bed'] || undefined,
+    seedsPerPlanting: c['Seeds Per Planting'] || undefined,
+    safetyFactor: c['Safety Factor'] || undefined,
+    // seedingFactor: multi-seeding per cell (typically 1, sometimes 2 for crops like spinach)
+    seedingFactor: c['Seeding Factor'] || undefined,
+
     // Harvest/yield data - these are the normalized inputs
     // Frontend can offer different input modes that convert to this format
     daysBetweenHarvest: c['Days Between Harvest'] || undefined,

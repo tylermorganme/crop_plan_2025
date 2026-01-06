@@ -9,7 +9,7 @@
  * Run with: npx tsx src/lib/formula-dag.ts [field]
  */
 
-import formulaData from '../data/formula-analysis.json';
+import formulaData from '../../tools/excel-analysis/formula-analysis.json';
 import columnData from '../data/column-analysis.json';
 
 interface FormulaColumn {

@@ -61,6 +61,14 @@ export interface CropConfig {
   /** Category for color coding (e.g., "Green", "Brassica") */
   category?: string;
 
+  // ---- Spacing ----
+
+  /** Number of rows per bed */
+  rows?: number;
+
+  /** In-row spacing in inches */
+  spacing?: number;
+
   /** Growing structure: "field", "greenhouse", "high-tunnel" */
   growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
 
@@ -136,6 +144,15 @@ export interface CropConfig {
 
   /** Seeds per bed for seed-based yield calculations */
   seedsPerBed?: number;
+
+  /** Seeds per planting/transplant */
+  seedsPerPlanting?: number;
+
+  /** Safety factor for extra cells/trays (typically 1.1-1.3) */
+  safetyFactor?: number;
+
+  /** Seeding factor for multi-seeding per cell (typically 1, sometimes 2) */
+  seedingFactor?: number;
 
   // ---- Legacy yield field (for backwards compatibility during migration) ----
 
@@ -538,8 +555,9 @@ export function buildYieldContext(
   rowsOverride?: number,
   spacingOverride?: number
 ): YieldFormulaContext {
-  const rows = rowsOverride ?? 1;
-  const spacing = spacingOverride ?? 12;
+  // Use overrides, then crop values, then defaults
+  const rows = rowsOverride ?? crop.rows ?? 1;
+  const spacing = spacingOverride ?? crop.spacing ?? 12;
   const plantingsPerBed = calculatePlantsPerBed(spacing, rows, bedFeet);
   const daysInCells = calculateDaysInCells(crop);
   const seedToHarvest = calculateSeedToHarvest(crop, daysInCells);
