@@ -1,0 +1,5843 @@
+{
+  "_generated": "2026-01-09T01:22:54.945Z",
+  "_source": "tmp/varieties_from_excel.json",
+  "varieties": [
+    {
+      "crop": "Amaranth",
+      "name": "Callaloo",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/vegetables/products/amaranth-callaloo-suriname?_pos=1&_sid=8aae837f1&_ss=r"
+    },
+    {
+      "crop": "Amaranth",
+      "name": "Coral Foundain",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/amaranthus/coral-fountain-amaranthus-seed-1701.html"
+    },
+    {
+      "crop": "Amaranth",
+      "name": "Emerald Tassels",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/amaranthus/emerald-tassels-amaranthus-seed-1786.html"
+    },
+    {
+      "crop": "Amaranth",
+      "name": "Hot Biscuits",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/amaranth/products/amaranth-hot-biscuits"
+    },
+    {
+      "crop": "Amaranth",
+      "name": "Love Lies Bleeding",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/amaranth/products/amaranth-love-lies-bleeding"
+    },
+    {
+      "crop": "Amaranth",
+      "name": "Opopeo",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/amaranth/products/amaranth-opopeo"
+    },
+    {
+      "crop": "Amaranth",
+      "name": "Red Spike",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/amaranthus/red-spike-amaranthus-seed-3786.html"
+    },
+    {
+      "crop": "Amaranth",
+      "name": "Velvet Curtains (Johnny's replacement for Red Spike",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/amaranthus/velvet-curtains-amaranthus-seed-4489.html"
+    },
+    {
+      "crop": "Arugula",
+      "name": "Apollo",
+      "supplier": "seed savers",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.seedsavers.org/apollo-arugula"
+    },
+    {
+      "crop": "Arugula",
+      "name": "Astro",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Arugula",
+      "name": "Astro",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-astro-arugula.html"
+    },
+    {
+      "crop": "Arugula",
+      "name": "Esmee",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/arugula-roquette/esmee-organic-salad-arugula-seed-3746G.html"
+    },
+    {
+      "crop": "Atriplex",
+      "name": "Copper Plume",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/atriplex/copper-plume-organic-atriplex-seed-3739G.html"
+    },
+    {
+      "crop": "Atriplex",
+      "name": "Orach, Red Flash",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/orach-red-flash-organic/"
+    },
+    {
+      "crop": "Bachelor's Button",
+      "name": "BASKET FLOWER, 'ALOHA BLANCA'",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/bachelors-button/products/basket-flower-aloha-blanca",
+      "subCategory": "Relative"
+    },
+    {
+      "crop": "Bachelor's Button",
+      "name": "Black Button",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/centaurea-bachelors-button/black-button-centaurea-seed-3435.html"
+    },
+    {
+      "crop": "Bachelor's Button",
+      "name": "Classic Magic (purple, black)",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/centaurea-bachelors-button/classic-magic-centaurea-seed-3306.html"
+    },
+    {
+      "crop": "Bachelor's Button",
+      "name": "Classic Romantic (reds, pinks, white)",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/centaurea-bachelors-button/classic-romantic-centaurea-seed-4678.html"
+    },
+    {
+      "crop": "Bachelor's Button",
+      "name": "Polka dot (mix)",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-polka-dot-bachelor-button.html"
+    },
+    {
+      "crop": "Bachelor's Button",
+      "name": "Tall Boy Blue",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/centaurea-bachelors-button/tall-blue-boy-organic-centaurea-seed-4656G.html"
+    },
+    {
+      "crop": "Bambara",
+      "name": "BAMBARA GROUNDNUTS MIX",
+      "supplier": "True Love Seeds",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://trueloveseeds.com/products/bambara-groundnuts-mix",
+      "subCategory": "Mix"
+    },
+    {
+      "crop": "Basil",
+      "name": "Classico",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=743",
+      "subCategory": "Italian"
+    },
+    {
+      "crop": "Basil",
+      "name": "Deep Purple Basil",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-deep-purple-basil.html",
+      "subCategory": "Purple"
+    },
+    {
+      "crop": "Basil",
+      "name": "Genovese",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-genovese-basil.html",
+      "subCategory": "Italian"
+    },
+    {
+      "crop": "Basil",
+      "name": "Golden Mountain Sweet Thai",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/basil-golden-mountain-sweet-thai-mix-organic/"
+    },
+    {
+      "crop": "Basil",
+      "name": "Holy Basil",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/herbs/products/basil-tulsi-sacred-basil-holy-basil?_pos=1&_sid=cacddacd5&_ss=r"
+    },
+    {
+      "crop": "Basil",
+      "name": "Italian Large Leaf",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/basil-italian-largeleaf?_pos=2&_sid=86892f78d&_ss=r",
+      "subCategory": "Itallian"
+    },
+    {
+      "crop": "Basil",
+      "name": "Lemon",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=58&products_id=608"
+    },
+    {
+      "crop": "Basil",
+      "name": "Prospera",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Italian"
+    },
+    {
+      "crop": "Basil",
+      "name": "Prospera",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/basil/genovese-basil/noga-prospera-active-dmr-organic-basil-seed-5467G.html"
+    },
+    {
+      "crop": "Basil",
+      "name": "Prospera F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-prospera-f1-basil.html"
+    },
+    {
+      "crop": "Basil",
+      "name": "Prospera® Active Thai-Thai F1 Basil",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/basil/asian-basil/thai-thai-prospera-active-dmr-organic-basil-seed-4968G.html"
+    },
+    {
+      "crop": "Basil",
+      "name": "Rutger's Devotion",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Italian"
+    },
+    {
+      "crop": "Basil",
+      "name": "Tulsi",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/herbs/products/basil-tulsi-sacred-basil-holy-basil?_pos=1&_sid=f9868298f&_ss=r"
+    },
+    {
+      "crop": "Basil",
+      "name": "Zanzico",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=744"
+    },
+    {
+      "crop": "Bean",
+      "name": "Affirmed",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Bush"
+    },
+    {
+      "crop": "Bean",
+      "name": "Cupidon",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/beans/bush-snap-bean-cupidon-organic/",
+      "subCategory": "Bush"
+    },
+    {
+      "crop": "Bean",
+      "name": "Dragon Langerie",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-dragon-langerie-bush-bean.html"
+    },
+    {
+      "crop": "Bean",
+      "name": "Empress (mid summer prefered)",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/bush-snap/products/bean-bush-snap-empress",
+      "subCategory": "Bush"
+    },
+    {
+      "crop": "Bean",
+      "name": "Fortex",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/vegetables/products/bean-pole-snap-fortex?_pos=1&_sid=434a3c7d0&_ss=r"
+    },
+    {
+      "crop": "Bean",
+      "name": "Green Yardlong Bean",
+      "supplier": "Everwilde",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.everwilde.com/store/Organic-Yard-Long-Bean-Green-Yard-Long-Bean.html"
+    },
+    {
+      "crop": "Bean",
+      "name": "Jade",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Bush"
+    },
+    {
+      "crop": "Bean",
+      "name": "Marvel of Venice",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/vegetables/products/bean-pole-snap-marvel-of-venice?_pos=1&_sid=db038fdc9&_ss=r"
+    },
+    {
+      "crop": "Bean",
+      "name": "Maxibel",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Bush"
+    },
+    {
+      "crop": "Bean",
+      "name": "Northeaster",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/beans/pole-beans/northeaster-organic-bean-seed-39G.html",
+      "subCategory": "Runner"
+    },
+    {
+      "crop": "Bean",
+      "name": "Provider",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-provider-bush-bean.html",
+      "subCategory": "Bush"
+    },
+    {
+      "crop": "Bean",
+      "name": "Rattlesnake",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-rattlesnake-bean.html"
+    },
+    {
+      "crop": "Bean",
+      "name": "Ruby Moon",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/hyacinth-bean/ruby-moon-hyacinth-bean-seed-1002.html",
+      "subCategory": "Ruby Moon"
+    },
+    {
+      "crop": "Bean",
+      "name": "Scarlet Runner",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/scarlet-runner-bean/scarlet-runner-bean-flower-seed-1000.html",
+      "subCategory": "Scarlet Runner"
+    },
+    {
+      "crop": "Bean",
+      "name": "Winged",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/bean-winged-urizun-japanese",
+      "subCategory": "Winged"
+    },
+    {
+      "crop": "Bean",
+      "name": "Yard Long",
+      "supplier": "Everwilde",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.everwilde.com/store/Yard-Long-Bean-Black-Mix-Yard-Long-Bean.html",
+      "subCategory": "Pole"
+    },
+    {
+      "crop": "Beet",
+      "name": "Badger Flame",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-badger-flame-beet.html"
+    },
+    {
+      "crop": "Beet",
+      "name": "Badger Flame",
+      "supplier": "Row 7",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.row7seeds.com/products/badger-flame-beet",
+      "subCategory": "Yellow"
+    },
+    {
+      "crop": "Beet",
+      "name": "Beet",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Beet",
+      "name": "Blushing Not Bashful",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "White"
+    },
+    {
+      "crop": "Beet",
+      "name": "Boro F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-boro-f1-beet.html",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Beet",
+      "name": "Boro F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/beets/round-beets/boro-organic-f1-beet-seed-3300G.html"
+    },
+    {
+      "crop": "Beet",
+      "name": "Bull's Blood",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-bull-s-blood-beet.html"
+    },
+    {
+      "crop": "Beet",
+      "name": "Burpee's Golden",
+      "supplier": "Seed Savers",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.seedsavers.org/burpees-golden-organic-beet",
+      "subCategory": "Golden"
+    },
+    {
+      "crop": "Beet",
+      "name": "Chiogga",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/beets/beet-chioggia-organic/",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Beet",
+      "name": "Chiogga",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/beet-chioggia?_pos=3&_sid=16f9103e9&_ss=r"
+    },
+    {
+      "crop": "Beet",
+      "name": "Crosby's Egyptian",
+      "supplier": "Everwilde",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.everwilde.com/store/Organic-Crosby's-Egyptian-Beet-Seeds.html",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Beet",
+      "name": "Moving Target",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Zoned"
+    },
+    {
+      "crop": "Beet",
+      "name": "Red Ace",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/beets/round-beets/red-ace-organic-f1-beet-seed-2841.html"
+    },
+    {
+      "crop": "Beet",
+      "name": "Touchstone Gold",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Golden"
+    },
+    {
+      "crop": "Beet",
+      "name": "Touchstone Gold",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-touchstone-gold-beet.html"
+    },
+    {
+      "crop": "Beet",
+      "name": "Touchstone Gold",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/beet-touchstone-gold?_pos=7&_sid=16f9103e9&_ss=r"
+    },
+    {
+      "crop": "Bok Choy",
+      "name": "Bopak",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/pac-choi-bok-choy/bopak-organic-f1-green-seed-4206G.html"
+    },
+    {
+      "crop": "Bok Choy",
+      "name": "Chijimisai",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/store/vegetables/bok-choy/chijimisai"
+    },
+    {
+      "crop": "Borage",
+      "name": "Blue",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/borage-organic/",
+      "subCategory": "Blue"
+    },
+    {
+      "crop": "Borage",
+      "name": "White",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/borage-white",
+      "subCategory": "White"
+    },
+    {
+      "crop": "Borage",
+      "name": "White",
+      "supplier": "Rare Seeds",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/borage-white"
+    },
+    {
+      "crop": "Broccoli",
+      "name": "Burgundy",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/broccoli/mini-broccoli/burgundy-f1-broccoli-seed-3460.html"
+    },
+    {
+      "crop": "Broccoli",
+      "name": "Hypsy",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Head"
+    },
+    {
+      "crop": "Broccoli",
+      "name": "Montebello",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/montebello-f1-untreated-broccoli-seeds?_pos=1&_sid=c13cb6bec&_ss=r"
+    },
+    {
+      "crop": "Broccoli",
+      "name": "Monty",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Head"
+    },
+    {
+      "crop": "Broccoli",
+      "name": "Sweet Stems",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Sprouting"
+    },
+    {
+      "crop": "Buckwheat",
+      "name": "Japanese",
+      "supplier": "Kitazawa",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.trueleafmarket.com/products/organic-japanese-buckwheat"
+    },
+    {
+      "crop": "Buckwheat",
+      "name": "ROSE RED SOBA",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/buckwheat-rose-red-soba",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Buckwheat",
+      "name": "TAKANE RUBY",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/buckwheat-takane-ruby",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Bupleurum",
+      "name": "Green Gold",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/bupleurum/green-gold-bupleurum-seed-1045.html"
+    },
+    {
+      "crop": "Bupleurum",
+      "name": "Thoroughwax",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=601"
+    },
+    {
+      "crop": "Butterfly Flowers",
+      "name": "Blue Queen",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/butterfly-pea-blue-queen"
+    },
+    {
+      "crop": "Butterfly Flowers",
+      "name": "Lavender Queen",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/butterfly-pea-lavender-queen"
+    },
+    {
+      "crop": "Butterfly Flowers",
+      "name": "White Queen",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/butterfly-pea-white-queen"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Bilko F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-bilko-f1-napa-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Bronco F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-bronco-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Caraflex F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-caraflex-f1-cabbage.html",
+      "subCategory": "Conical"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Deadon F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-deadon-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Deadon F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cabbage/fresh-market-cabbage/deadon-organic-f1-cabbage-seed-306G.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Emiko F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-emiko-f1-napa-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Esperanza",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Expect F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-expect-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Famosa F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-famosa-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Farao F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-farao-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "FILDERKRAUT",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/cabbage/products/cabbage-filderkraut"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Integro",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Integro F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-integro-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Integro F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cabbage/fresh-market-cabbage/integro-organic-f1-cabbage-seed-262G.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "January King",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/cabbage/cabbage-january-king-organic/"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Katarina F1",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/katarina-f1-untreated-cabbage-seeds?_pos=1&_psq=katarina&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Klimaro F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/gganic-non-gmo-klimaro-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Merlot",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/chinese-cabbage/merlot-f1-chinese-cabbage-seed-4171.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Michihili",
+      "supplier": "Everwilder",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.everwilde.com/store/Michihili-Chinese-Cabbage-Seeds.html",
+      "subCategory": "Chinese"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Michihili",
+      "supplier": "Garden Hoard",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.gardenhoard.com/napa-chinese-cabbage-michihili-seeds.html",
+      "subCategory": "Chinese"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Michihili",
+      "supplier": "Southern Exposure",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.southernexposure.com/products/michihili-chinese-cabbage/",
+      "subCategory": "Chinese"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Minuet",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/chinese-cabbage/minuet-f1-chinese-cabbage-seed-2901.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Passat F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-passat-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Piccolima F1",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/piccolima-untreated-cabbage-seeds"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Reaction F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-reaction-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Red Express",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-express-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Ruby  Perfection",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Stanton F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-stanton-f1-cabbage.html"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Tiera",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Cabbage",
+      "name": "VERZA MORETTA DI VERONELLA",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/cabbage-verza-moretta-di-veronella?_pos=6&_sid=a67b98f35&_ss=r",
+      "subCategory": "Savoy"
+    },
+    {
+      "crop": "Cabbage",
+      "name": "Wa Wa Tsai F1",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/wa-wa-tsai-f1-untreated-napa-cabbage-seeds?_pos=1&_psq=wa+wa&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Bengala F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-bengala-f1-carrot.html",
+      "subCategory": "Main Crop"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Berlin F1 Berlicum",
+      "supplier": "Park Seed",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://parkseed.com/berlin-f1-berlicum-carrot-seeds/p/52448-PK-P1/",
+      "subCategory": "Main Crop"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Bolero",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Nantes"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Bolero F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/storage-carrots/bolero-f1-carrot-seed-216.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Bolero F1",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/bolero-f1-untreated-seed-raw-carrot-seeds"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Cosmic Purple",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cosmic-purple-carrot.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Deep Purple",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Purple"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Deep Purple F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/main-crop-carrots/deep-purple-f1-carrot-seed-2737.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Dolciva F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-dolciva-carrot.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Dragon",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Dragon",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-dragon-carrot.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Kyoto Red",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/store/vegetables/carrots/kyoto-red-carrot"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Kyoto Red",
+      "supplier": "Kitazawa",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://kitazawaseed.com/products/carrot-seeds-kyoto-red?variant=42229261959402"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Mokum",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/early-carrots/mokum-f1-carrot-seed-2186.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Napoli",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-napoli-f1-carrot.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Napoli F1",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/77169/napoli-f1/pr_77169/cp_/catalog/seed-form/organic/carrot"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Narvik",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-narvik-f1-carrot.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Oxheart",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/carrot-oxheart",
+      "subCategory": "Main Crop"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Purple Haze",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/77181/purple-haze-f1/pr_77181"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Romance",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Storage"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Romance F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/main-crop-carrots/romance-f1-carrot-seed-3116.html"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Romance F1",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/carrot-romance",
+      "subCategory": "Maincrop"
+    },
+    {
+      "crop": "Carrot",
+      "name": "Yellowstone",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/colored-carrots/yellowstone-organic-carrot-seed-3333G.html"
+    },
+    {
+      "crop": "Cauliflower",
+      "name": "All The Year Round",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/cauliflower-all-the-year-round?_pos=2&_sid=9545cef59&_ss=r"
+    },
+    {
+      "crop": "Cauliflower",
+      "name": "Earlisnow",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "White"
+    },
+    {
+      "crop": "Cauliflower",
+      "name": "Mardi F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-mardi-f1-cauliflower.html"
+    },
+    {
+      "crop": "Cauliflower",
+      "name": "Purple Moon F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/purple-moon-f1-cauliflower-seed-4822.html"
+    },
+    {
+      "crop": "Cauliflower",
+      "name": "Skywalker F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/skywalker-organic-f1-cauliflower-seed-2593G.html"
+    },
+    {
+      "crop": "Cauliflower",
+      "name": "Song TJS-65",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/green-stem-cauliflower/song-tjs-65-f1-cauliflower-seed-4131.html"
+    },
+    {
+      "crop": "Cauliflower",
+      "name": "Song TSJ-65 F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/green-stem-cauliflower/song-tjs-65-f1-cauliflower-seed-4131.html"
+    },
+    {
+      "crop": "Cauliflower",
+      "name": "Tessaury F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/tessaury-organic-f1-cauliflower-seed-6042G.html"
+    },
+    {
+      "crop": "Celery",
+      "name": "Chai Thai",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/celeriac-celery/celery-chai-thai-organic/",
+      "subCategory": "Leaf"
+    },
+    {
+      "crop": "Celery",
+      "name": "Merrengo F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-merengo-f1-celery.html"
+    },
+    {
+      "crop": "Celery",
+      "name": "Merrengo F1 - Pelleted",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": true,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-merengo-f1-celery.html"
+    },
+    {
+      "crop": "Celery",
+      "name": "Tango",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-tango-celery.html"
+    },
+    {
+      "crop": "Celery",
+      "name": "Tango",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/celery-and-celeriac/celery/tango-organic-celery-seed-647G.html"
+    },
+    {
+      "crop": "Celery",
+      "name": "Ventura",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/celeriac-celery/celery-ventura-organic/",
+      "subCategory": "Utah"
+    },
+    {
+      "crop": "Celery",
+      "name": "Victoria (pelleted)",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/77241/victoria-f1/pr_77241/cp_/catalog/seed-form/pelleted/celery"
+    },
+    {
+      "crop": "Celosia",
+      "name": "Flamingo Purple",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/celosia/flamingo-purple-celosia-seed-4780.html"
+    },
+    {
+      "crop": "Celosia",
+      "name": "Pampas Plume",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=435"
+    },
+    {
+      "crop": "Celosia",
+      "name": "Sunday Mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/celosia/sunday-mix-celosia-seed-4310.html"
+    },
+    {
+      "crop": "Chijimisai",
+      "name": "Chijimisai",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/chijimisai"
+    },
+    {
+      "crop": "Chijimisai",
+      "name": "Misome",
+      "supplier": "Kitazawa",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://kitazawaseed.com/products/mustard-seeds-misome-hybrid"
+    },
+    {
+      "crop": "Choi Sum",
+      "name": "Choi Sum",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/choy-sum-50-day"
+    },
+    {
+      "crop": "Choi Sum",
+      "name": "Green 70 D",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/green-70-d-improved-asian-green-seed-4031.html"
+    },
+    {
+      "crop": "Chrysanthemum",
+      "name": "Shungiku",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/shungiku-asian-green-seed-514.html"
+    },
+    {
+      "crop": "Chrysanthemum Greens",
+      "name": "Shungiku",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/shungiku-asian-green-seed-514.html"
+    },
+    {
+      "crop": "Chrysanthemum Greens",
+      "name": "Shungiku, Komi",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/shungiku-komi-organic/"
+    },
+    {
+      "crop": "Cilantro",
+      "name": "Calypso",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/cilantro-coriander/calypso-cilantro-coriander-seed-3803.html"
+    },
+    {
+      "crop": "Cilantro",
+      "name": "Cruiser",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cruiser-cilantro.html"
+    },
+    {
+      "crop": "Cilantro",
+      "name": "Pokey Joe",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/herbs/products/cilantro-pokey-joe?_pos=1&_sid=1dfa0d036&_ss=r"
+    },
+    {
+      "crop": "Cilantro",
+      "name": "Rak Tamachat",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/cilantro-rak-tamachat-organic/"
+    },
+    {
+      "crop": "Corn",
+      "name": "Allure F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-allure-f1-sweet-corn.html"
+    },
+    {
+      "crop": "Corn",
+      "name": "Double Red",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/corn/sweet-corn-double-red-organic/"
+    },
+    {
+      "crop": "Corn",
+      "name": "Enchanted F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-enchanted-f1-corn.html"
+    },
+    {
+      "crop": "Corn",
+      "name": "Natural Bright XR F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-natural-bright-xr-f1-sweet-corn.html"
+    },
+    {
+      "crop": "Corn",
+      "name": "Natural Sweet",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/corn/sweet-corn/natural-sweet-1r-organic-f1-corn-seed-3590RG.html"
+    },
+    {
+      "crop": "Corn",
+      "name": "New Mama Super Sweet",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/corn/sweet-corn-new-mama-super-sweet-organic/",
+      "subCategory": "Sweet"
+    },
+    {
+      "crop": "Corn",
+      "name": "Tuxana",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/corn-tuxana?_pos=1&_sid=69bbb5274&_ss=r",
+      "subCategory": "Sweet"
+    },
+    {
+      "crop": "Corn Salad",
+      "name": "Gelber Nüssler",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/corn-salad-gelber-nussler/"
+    },
+    {
+      "crop": "Corn Salad",
+      "name": "Piedmont",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/corn-salad-piedmont-organic/"
+    },
+    {
+      "crop": "Corn Salad",
+      "name": "Vit Mache",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-vit-mache.html"
+    },
+    {
+      "crop": "Cosmos",
+      "name": "Apricotta",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=753"
+    },
+    {
+      "crop": "Cosmos",
+      "name": "Bicolor Violet",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=720"
+    },
+    {
+      "crop": "Cosmos",
+      "name": "Daydream",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/flowers/cosmos-daydream-organic/"
+    },
+    {
+      "crop": "Cosmos",
+      "name": "Double click mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/cosmos/double-click-bicolor-violet-cosmos-seed-3311.html"
+    },
+    {
+      "crop": "Cosmos",
+      "name": "Double click Snowpuff",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=532"
+    },
+    {
+      "crop": "Cress",
+      "name": "Persian Broadleaf",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=62"
+    },
+    {
+      "crop": "Cress",
+      "name": "Persian Cress",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/cress-ornamental/persian-cress-organic-cress-seed-3399G.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Cengelkoy",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/vegetables/products/cucumber-cengelkoy?_pos=1&_sid=5413b124b&_ss=r"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "ÇENGELKÖY'",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/cucumbers/products/cucumber-cengelkoy"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Corinto",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cucumbers/slicing-cucumbers/corinto-organic-f1-cucumber-seed-2562G.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Diva",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cucumbers/seedless-and-thin-skinned-cucumbers/diva-cucumber-seed-2198.html",
+      "subCategory": "Snacking"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Katrina",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/katrina-f1-organic-cucumber-seeds?_pos=1&_sid=cf2f1279b&_ss=r"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Katrina F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cucumbers/seedless-and-thin-skinned-cucumbers/katrina-organic-f1-cucumber-seed-47G.html",
+      "subCategory": "Snacking"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Manny",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Beit Alpha"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Manny",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-manny-f1-cucumber.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Marketmore",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-marketmore-76-cucumber.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Marketmore 76",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Slider"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Mideast Peace",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Mini"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Poniente",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cucumbers/seedless-and-thin-skinned-cucumbers/poniente-organic-f1-cucumber-seed-4379G.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Sashimi",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cucumbers/specialty-cucumbers/sashimi-f1-cucumber-seed-4728.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Shintokiwa",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-shintokiwa-cucumber.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "socrates F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-socrates-f1-cucumber.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Sooyow Nishiki",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Asian"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Sooyow Nishiki",
+      "supplier": "Whitman Organics",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://whitwamorganics.com/products/sooyow-nishiki-cucumber-seeds-1?_pos=1&_sid=6169e0576&_ss=r"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Suyo Long",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-suyo-long-cucumber.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Tasty Green",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-tasty-green-f1-cucumber.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Tasty Green F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-tasty-green-f1-cucumber.html"
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Tasty Jade",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Cucumber",
+      "name": "Unagi",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/cucumbers/seedless-and-thin-skinned-cucumbers/unagi-f1-cucumber-seed-4552.html",
+      "subCategory": "Asian"
+    },
+    {
+      "crop": "Dahlias",
+      "name": "Cafe, and others",
+      "supplier": "Zephyros",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://app.barn2door.com/zephyrosfarmandgarden/all",
+      "subCategory": "Tuber"
+    },
+    {
+      "crop": "Dianthus",
+      "name": "Hollandia Purple Crown Mix",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/flowers/sweet-william-hollandia-purple-crown-mix-organic/"
+    },
+    {
+      "crop": "Dianthus",
+      "name": "SPOOKY MIX DIANTHUS",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/dianthus-spooky-mix"
+    },
+    {
+      "crop": "Dianthus",
+      "name": "Velvet 'n Lace'",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_123&products_id=447"
+    },
+    {
+      "crop": "Dianthus",
+      "name": "Volcano Mix",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/dianthus-sweet-william/volcano-mix-organic-dianthus-seed-1988G.html"
+    },
+    {
+      "crop": "Dill",
+      "name": "Ambrosia",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/dill-ambrosia-organic/"
+    },
+    {
+      "crop": "Dill",
+      "name": "Bouquet OG",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/dill-bouquet-organic-herb-seeds?_pos=2&_psq=bouquet+dill&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Dill",
+      "name": "Ella Organic",
+      "supplier": "West Coast",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.westcoastseeds.com/products/ella-organic"
+    },
+    {
+      "crop": "Dill",
+      "name": "GoldKrone",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/herbs/products/dill-goldkrone?_pos=1&_sid=5ae0d082c&_ss=r"
+    },
+    {
+      "crop": "Dill",
+      "name": "Green Mist",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_168&products_id=607",
+      "subCategory": "White/Ammi Cut Flower"
+    },
+    {
+      "crop": "Dill",
+      "name": "Green Sleeves",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-greensleeves-dill.html"
+    },
+    {
+      "crop": "Dill",
+      "name": "Thalia OG",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/dill/thalia-organic-dill-seed-4010G.html"
+    },
+    {
+      "crop": "Dill",
+      "name": "White Dill",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_168&products_id=606",
+      "subCategory": "White/Ammi Cut Flower"
+    },
+    {
+      "crop": "Dropmore",
+      "name": "Dropmore",
+      "supplier": "Swallowtail Garden",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.swallowtailgardenseeds.com/perennials/anchusa.html"
+    },
+    {
+      "crop": "Eggplant",
+      "name": "Annina F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-annina-f1-eggplant.html"
+    },
+    {
+      "crop": "Eggplant",
+      "name": "Diamond",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/eggplant-diamond"
+    },
+    {
+      "crop": "Eggplant",
+      "name": "Millionaire",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/eggplant-millionaire",
+      "subCategory": "Asian"
+    },
+    {
+      "crop": "Eggplant",
+      "name": "Petch Siam",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/eggplant/eggplant-petch-siam-organic/",
+      "subCategory": "Thai"
+    },
+    {
+      "crop": "Eggplant",
+      "name": "Poamoho Dark Long",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/eggplant/eggplant-poamoho-dark-long-organic/",
+      "subCategory": "Asian"
+    },
+    {
+      "crop": "Eggplant",
+      "name": "Purple Pickling",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Eggplant",
+      "name": "SHIKOU F1 EGGPLANT",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-shikou-f1-eggplant.html",
+      "subCategory": "Asian"
+    },
+    {
+      "crop": "Eggplant",
+      "name": "Traviata F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/eggplant/italian-eggplants/traviata-organic-f1-eggplant-seed-2575G.html"
+    },
+    {
+      "crop": "Everlasting",
+      "name": "Winged Everlasting",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/flowers/winged-everlasting-organic/"
+    },
+    {
+      "crop": "Fava Beans",
+      "name": "Aquadulce",
+      "supplier": "Sustainable Seed Company",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.trueleafmarket.com/products/bean-seeds-fava-aquadulce-organic"
+    },
+    {
+      "crop": "Fava Beans",
+      "name": "AQUADULCE",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/fava-aquadulce"
+    },
+    {
+      "crop": "Fava Beans",
+      "name": "Diana",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/77554/bean-fava-diana/pr_77554"
+    },
+    {
+      "crop": "Fava Beans",
+      "name": "FROG ISLAND NATION",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/fava-frog-island-nation",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Fava Beans",
+      "name": "MASTERPIECE",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/fava-masterpiece"
+    },
+    {
+      "crop": "Fava Beans",
+      "name": "Windsor",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-windsor-fava-bean.html"
+    },
+    {
+      "crop": "Fennel",
+      "name": "Finale",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/fennel-finale"
+    },
+    {
+      "crop": "Fennel",
+      "name": "Perfection",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=37&products_id=68"
+    },
+    {
+      "crop": "Fennel",
+      "name": "Selma Fino",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/fennel/fennel-selma-fino-organic/"
+    },
+    {
+      "crop": "Fennel",
+      "name": "Solaris F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-solaris-f1-fennel.html"
+    },
+    {
+      "crop": "Flax",
+      "name": "Foster",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/grains/flax-foster-organic/"
+    },
+    {
+      "crop": "Garlic",
+      "name": "Bangkok",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/garlic-shallots/hardneck-seed-garlic/bangkok-seed-garlic-organic/"
+    },
+    {
+      "crop": "Garlic",
+      "name": "Polish White",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/garlic-shallots/polish-white-seed-garlic-organic/"
+    },
+    {
+      "crop": "Gooseberry",
+      "name": "Peruvian Ground Cherry",
+      "supplier": "Garden Hoard",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.gardenhoard.com/peruvian-ground-cherry-seeds-certified-organic.html"
+    },
+    {
+      "crop": "Grass",
+      "name": "Frosted Explosion Grass",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/grasses-ornamental/frosted-explosion-ornamental-grass-seed-1855.html"
+    },
+    {
+      "crop": "Green Onion",
+      "name": "Ishikura Long Winter",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/scallion-ishikura-long-winter?_pos=1&_sid=04d2ed212&_ss=r"
+    },
+    {
+      "crop": "Green Onion",
+      "name": "Ramrod",
+      "supplier": "West Coast",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.westcoastseeds.com/products/ramrod"
+    },
+    {
+      "crop": "Green Onion",
+      "name": "White Spear",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/onions/green-onions-white-spear-organic/"
+    },
+    {
+      "crop": "Green Onion",
+      "name": "White Tokyo Long",
+      "supplier": "Everwilde",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.everwilde.com/store/Organic-White-Tokyo-Long-Onion-Seeds.html"
+    },
+    {
+      "crop": "Ground Cherry",
+      "name": "AUNT MOLLY'S",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/ground-cherry-aunt-mollys?_pos=1&_sid=fd6489ca0&_ss=r"
+    },
+    {
+      "crop": "Ground Cherry",
+      "name": "Peruvian",
+      "supplier": "Garden Hoard",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.gardenhoard.com/peruvian-ground-cherry-seeds-certified-organic.html"
+    },
+    {
+      "crop": "Hibiscus",
+      "name": "Mahogany Splendor",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/hibiscus/mahogany-splendor-hibiscus-seed-4013.html"
+    },
+    {
+      "crop": "Huauzontle",
+      "name": "Red Aztec Spinach",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/index.php?cPath=39"
+    },
+    {
+      "crop": "Jelly Melon",
+      "name": "Jelly Melon",
+      "supplier": "Seed Savers",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.seedsavers.org/jelly-melon-organic-cucumber?custcol_sca_sizeweightqty=6"
+    },
+    {
+      "crop": "Johnny's",
+      "name": "Cipolla's Pride",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/heirloom-tomatoes/cipollas-pride-organic-tomato-seed-4180G.html"
+    },
+    {
+      "crop": "Kaibroc",
+      "name": "Apollo",
+      "supplier": "Territorial",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/broccoli-apollo"
+    },
+    {
+      "crop": "Kaibroc",
+      "name": "Blue Star Gai Lan",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/broccoli-cauliflower/broccoli-blue-star-gai-lan-organic/"
+    },
+    {
+      "crop": "Kale",
+      "name": "Arun F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-arun-f1-kale.html"
+    },
+    {
+      "crop": "Kale",
+      "name": "Black Jack F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-black-jack-f1-kale.html"
+    },
+    {
+      "crop": "Kale",
+      "name": "Darkibor",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Kale",
+      "name": "Darkibor",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-darkibor-f1-kale.html"
+    },
+    {
+      "crop": "Kale",
+      "name": "Dazzling Blue",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Kale",
+      "name": "Dazzling Blue",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/dazzling-blue-kale.html"
+    },
+    {
+      "crop": "Kale",
+      "name": "Lark's Tongue",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Scotch"
+    },
+    {
+      "crop": "Kale",
+      "name": "Pentland Brig",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Kale",
+      "name": "Red Russian",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-russian-kale.html"
+    },
+    {
+      "crop": "Kale",
+      "name": "White Russian",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-white-russian-kale.html"
+    },
+    {
+      "crop": "Kale",
+      "name": "Wild Red",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Kale",
+      "name": "Winter Rainbow",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Lacatino"
+    },
+    {
+      "crop": "Kohlrabi",
+      "name": "Kolibri F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/fresh-market-kohlrabi/kolibri-organic-f1-kohlrabi-seed-320G.html"
+    },
+    {
+      "crop": "Kohlrabi",
+      "name": "Konan F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/fresh-market-kohlrabi/konan-organic-f1-kohlrabi-seed-4431G.html"
+    },
+    {
+      "crop": "Kohlrabi",
+      "name": "Kossak F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/storage-kohlrabi/kossak-organic-f1-kohlrabi-seed-237G.html"
+    },
+    {
+      "crop": "Komatsuna",
+      "name": "Carlton F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/carlton-f1-asian-green-seed-3872.html"
+    },
+    {
+      "crop": "Komatsuna",
+      "name": "Komatsuna",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-komatsuna-asian-greens.html"
+    },
+    {
+      "crop": "Komatsuna",
+      "name": "Komatsuna Red",
+      "supplier": "Kitazawa",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://kitazawaseed.com/products/mustard-seeds-red-komatsuna-hybrid"
+    },
+    {
+      "crop": "Komatsuna",
+      "name": "Komatsuna Red",
+      "supplier": "West Coast",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.westcoastseeds.com/products/komatsuna-red"
+    },
+    {
+      "crop": "Komatsuna",
+      "name": "Summer Fest",
+      "supplier": "Kitazawa",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://kitazawaseed.com/collections/komatsuna/products/komatsuna-mustard-seeds-summer-fest-hybrid",
+      "subCategory": "Green"
+    },
+    {
+      "crop": "Leek",
+      "name": "Chinook OG",
+      "supplier": "Territorial",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/leek-chinook"
+    },
+    {
+      "crop": "Leek",
+      "name": "King Richard",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-king-richard-leek.html"
+    },
+    {
+      "crop": "Leek",
+      "name": "King Richard",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/leeks/king-richard-organic-leek-seed-416G.59.html?source=google_johnny_seeds"
+    },
+    {
+      "crop": "Leek",
+      "name": "Lancia",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/lancia-organic-leek-seeds?_pos=1&_psq=lancia&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Lemon Grass",
+      "name": "East Indian",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/lemon-grass/lemon-grass-east-indian-cleaned-seed-lemon-grass-seed-4074.html"
+    },
+    {
+      "crop": "Lemongrass",
+      "name": "East Indian Lemongrass",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/lemon-grass/lemon-grass-east-indian-cleaned-seed-lemon-grass-seed-4074.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Barnwood Gem",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/lettuce-barnwood-gem?_pos=17&_sid=2d27fa62a&_ss=r",
+      "subCategory": "Sucrine"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Bauer",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/oakleaf-lettuce/bauer-organic-lettuce-seed-4245G.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "BAUER LETTUCE - Pelleted",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/91240/bauer/pr_91240/cp_/catalog/vegetables/lettuce/oak-leaf",
+      "subCategory": "Sucrine"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Black Seeded Simpson",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-black-seeded-simp-lettuce.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Brown Goldring",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_72&products_id=84"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Dubya Dapple Density",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=243"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Eruption",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/lettuce-eruption?_pos=1&_sid=2d27fa62a&_ss=r",
+      "subCategory": "Sucrine"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "EZPark",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Florence",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Fristina",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/lettuce/lettuce-fristina-organic/"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Green Incised",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": true,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-green-incised-pelleted-lettuce-seed-3052JP.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Green Sweet Crisp",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": true,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-green-sweet-crisp-pelleted-lettuce-seed-3054JP.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Hampton",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Hampton",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Hampton - Pelleted",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Intercut",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": true,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/one-cut-lettuce/intercut-pelleted-lettuce-seed-4460JP.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Jester",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_74&products_id=251"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Little Gem",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/lettuce-little-gem?_pos=3&_sid=e22e3439d&_ss=r",
+      "subCategory": "Sucrine"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Lovelock",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Lovelock",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-lovelock-lettuce.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Melox Red Oak",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red Oak Leaf"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Merlot",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/vegetables/products/lettuce-merlot?_pos=1&_sid=43c5c95ee&_ss=r"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Merlox Red Oak",
+      "supplier": "Fedco",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://fedcoseeds.com/seeds/merlox-red-oak-organic-oakleaf-lettuce-2781"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "MERVEILLE DES QUATRE SAISONS",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/lettuce-merveille-des-quatre-saisons"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Muir",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/summer-crisp-lettuce-batavia/muir-organic-lettuce-seed-3881G.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Muir - Pelleted",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/summer-crisp-lettuce-batavia/muir-organic-pelleted-lettuce-seed-3881GP.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "MUIR LETTUCE - PELLETED",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": true,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-muir-lettuce-pelleted.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "N.P. TRUCHAS - Pelleted",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/88923/truchas/pr_88923/cp_/catalog/seed-form/pelleted/lettuce",
+      "subCategory": "Sucrine"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Newham",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Romaine (Mini)"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Outredgeous",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_72&products_id=105"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Red Sweet Crisp",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": true,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-red-sweet-crisp-pelleted-lettuce-seed-3055JP.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "RICTUS LETTUCE - Pelleted",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/88932/rictus/pr_88932/cp_/catalog/seed-form/untreated/lettuce",
+      "subCategory": "Romaine"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Rouge d'hiver",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-rouge-d-hiver-lettuce.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Salanova Red Oak Leaf",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": true,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-red-oakleaf-pelleted-lettuce-seed-3059JP.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Summertime",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/vegetables/products/lettuce-summertime?_pos=1&_sid=cb387c0e7&_ss=r"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Truchas",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/romaine-lettuce-cos/truchas-organic-lettuce-seed-3880G.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Truchas - Pelleted",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": true,
+      "pelletedApproved": true,
+      "website": "https://www.osborneseed.com/products/truchas-organic-nop-compliant-pellet-lettuce-seeds?_pos=1&_sid=5be874f6b&_ss=r&variant=40616662171714"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Winter Density",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Xalbadora",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/romaine-lettuce-cos/xalbadora-organic-lettuce-seed-4195G.html"
+    },
+    {
+      "crop": "Lettuce",
+      "name": "Yedikule",
+      "supplier": "Baker Creek",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/store/vegetables/new-items-2019/yedikule-lettuce"
+    },
+    {
+      "crop": "Lovage",
+      "name": "Lovage",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/lovage-organic/"
+    },
+    {
+      "crop": "Lovage",
+      "name": "Magnus",
+      "supplier": "Seed Savers",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.seedsavers.org/lovage-magnus-organic-herb"
+    },
+    {
+      "crop": "Magenta Spreen",
+      "name": "Magenta Spreen",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/lambsquarter-magenta-spreen-organic/"
+    },
+    {
+      "crop": "Malabar Spinach",
+      "name": "Big Round Leaf",
+      "supplier": "Kitazawa",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.trueleafmarket.com/products/malbar-spinach-seeds-big-round-leaf"
+    },
+    {
+      "crop": "Malabar Spinach",
+      "name": "Green Vines Supreme",
+      "supplier": "Kitazawa",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.trueleafmarket.com/products/malabar-spinach-seeds-green-vines-supreme"
+    },
+    {
+      "crop": "Malabar Spinach",
+      "name": "Red",
+      "supplier": "Strictly Medicinal",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://strictlymedicinalseeds.com/product/spinach-malabar-red-basella-rubra-packet-of-10-seeds/"
+    },
+    {
+      "crop": "Malabar Spinach",
+      "name": "Red Malabar Spinach",
+      "supplier": "Strictly Medicinal",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://strictlymedicinalseeds.com/product/spinach-malabar-red-basella-rubra-packet-of-10-seeds/"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Coco",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/marigold/white-swan-f1-marigold-seed-4641.html"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Coco Gold F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/marigold/coco-gold-f1-marigold-seed-4097.html"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Crackerjack",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/78968/crackerjack-giant-mix/pr_78968/cp_/catalog/flowers/edible-flowers"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Giant Orange",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/marigold/giant-orange-marigold-seed-1883.html"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Giant Yellow",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/marigold/giant-yellow-marigold-seed-1884.html"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Ildkongen",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/flowers/marigold-ildkongen-organic/"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Lemon Gem",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/marigold/lemon-gem-marigold-seed-1410.html"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Lemon Gem",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/marigold-lemon-gem"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Red Gem",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/marigold/red-gem-marigold-seed-1857.html"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Shades of Gold Mix",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_134&products_id=376"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "Tangerine Gem",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/flowers/marigold-tangerine-gem-organic/"
+    },
+    {
+      "crop": "Marigolds",
+      "name": "White Swan",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/marigold/white-swan-f1-marigold-seed-4641.html"
+    },
+    {
+      "crop": "Melon",
+      "name": "Blacktail Mountain",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-blacktail-mtn-watermelon.html"
+    },
+    {
+      "crop": "Melon",
+      "name": "Divergent F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/melons/cantaloupe-muskmelon/divergent-organic-f1-melon-seed-3760G.html",
+      "subCategory": "Cantaloupe"
+    },
+    {
+      "crop": "Melon",
+      "name": "Divergent F1",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/divergent-f1-organic-melon-seeds?_pos=1&_psq=divergent&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Melon",
+      "name": "Farthest North Mix",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/melons/melon-farthest-north-mix-organic/",
+      "subCategory": "Mix"
+    },
+    {
+      "crop": "Melon",
+      "name": "Kajari Melon",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/kajari-melon"
+    },
+    {
+      "crop": "Melon",
+      "name": "Mini Love",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/watermelons/diploid-watermelons/mini-love-f1-watermelon-seed-3457.html"
+    },
+    {
+      "crop": "Melon",
+      "name": "Minnesota Midget",
+      "supplier": "Prairie Road Organic",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.prairieroadorganic.co/products/melon-minnesota-midget-muskmelon",
+      "subCategory": "Cantaloupe"
+    },
+    {
+      "crop": "Melon",
+      "name": "Mt. Honey",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Cantaloupe"
+    },
+    {
+      "crop": "Melon",
+      "name": "Prescott Fond Blanc",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/melon/products/melon-prescott-fond-blanc"
+    },
+    {
+      "crop": "Melon",
+      "name": "Triton",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Melon",
+      "name": "Triton",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/melons/cantaloupe-muskmelon/triton-f1-melon-seed-4182.html"
+    },
+    {
+      "crop": "Melon",
+      "name": "True Love",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Cantaloupe"
+    },
+    {
+      "crop": "Melon",
+      "name": "True Love",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-true-love-f1-melon.html"
+    },
+    {
+      "crop": "Milkweed",
+      "name": "Heavenly Blue",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=576"
+    },
+    {
+      "crop": "Milkweed",
+      "name": "Native Northwest",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=636"
+    },
+    {
+      "crop": "Milkweed",
+      "name": "Silky Gold",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=424"
+    },
+    {
+      "crop": "Milkweed",
+      "name": "Silky Red",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=425"
+    },
+    {
+      "crop": "Milkweed",
+      "name": "Swamp Milkweed",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/asclepias-butterfly-weed/swamp-milkweed-asclepias-seed-990.html"
+    },
+    {
+      "crop": "Mizuna",
+      "name": "Mizuna",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/mizuna-organic-asian-green-seed-2883.html"
+    },
+    {
+      "crop": "Mustard",
+      "name": "Byrd",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Mustard",
+      "name": "Green in Snow",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Mustard",
+      "name": "Green Wave",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Variegated"
+    },
+    {
+      "crop": "Nausturtium",
+      "name": "Empress of India",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/nasturtium/empress-of-india-organic-nasturtium-seed-1824G.html"
+    },
+    {
+      "crop": "Nausturtium",
+      "name": "Orchid Cream",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/orchid-cream-nasturtium"
+    },
+    {
+      "crop": "Nausturtium",
+      "name": "Salmon Baby",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/88847/salmon-baby/pr_88847/cp_/catalog/flowers/nasturtiums"
+    },
+    {
+      "crop": "Nausturtium",
+      "name": "Tip Top Rose Nasturtium",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/tip-top-rose-nasturtium"
+    },
+    {
+      "crop": "Nigella",
+      "name": "Blue",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-nigella.html"
+    },
+    {
+      "crop": "Nigella",
+      "name": "Cramer's Plum",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cramers-plum-nigella.html"
+    },
+    {
+      "crop": "Nigella",
+      "name": "Love-in-a-Mist",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/flowers/nigella-exotic-love-in-a-mist-organic/"
+    },
+    {
+      "crop": "Okra",
+      "name": "Clemson Spineless",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Green"
+    },
+    {
+      "crop": "Onion",
+      "name": "Ailsa Craig",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-ailsa-craig-onion.html"
+    },
+    {
+      "crop": "Onion",
+      "name": "Amber",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-amber-onion.html"
+    },
+    {
+      "crop": "Onion",
+      "name": "Cortland",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Yellow"
+    },
+    {
+      "crop": "Onion",
+      "name": "Cortland F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cortland-f1-onion.html"
+    },
+    {
+      "crop": "Onion",
+      "name": "New York Early",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Yellow"
+    },
+    {
+      "crop": "Onion",
+      "name": "NEW YORK EARLY",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/storage-onion-new-york-early",
+      "subCategory": "Storage"
+    },
+    {
+      "crop": "Onion",
+      "name": "Red Carpet",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Onion",
+      "name": "Red Carpet  F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-carpet-f1-onion.html"
+    },
+    {
+      "crop": "Onion",
+      "name": "Red Long of Florence",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-long-of-florence-onion.html"
+    },
+    {
+      "crop": "Onion",
+      "name": "Red Spring",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/onions/full-size-onions/red-spring-f1-onion-seed-4815.html"
+    },
+    {
+      "crop": "Onion",
+      "name": "Rose de Roscoff",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/onions/onion-rose-de-roscoff-keravel-organic/"
+    },
+    {
+      "crop": "Onion",
+      "name": "Rose de Roscoff Keravel",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/onions/onion-rose-de-roscoff-keravel-organic/",
+      "subCategory": "Storage"
+    },
+    {
+      "crop": "Onion",
+      "name": "Rossa Di Milano",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Onion",
+      "name": "Sedona F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-sedona-f1-onion.html"
+    },
+    {
+      "crop": "Onion",
+      "name": "SISKIYOU SWEET",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/sweet-onion-siskiyou-sweet",
+      "subCategory": "Sweet"
+    },
+    {
+      "crop": "Onion",
+      "name": "STUTTGARTER RIESEN",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/storage-onion-stuttgarter-riesen",
+      "subCategory": "Storage"
+    },
+    {
+      "crop": "Onion",
+      "name": "Talon",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Yellow"
+    },
+    {
+      "crop": "Onion",
+      "name": "Talon F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-talon-f1-onion.html"
+    },
+    {
+      "crop": "Onion",
+      "name": "Walla Wallla",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-walla-walla-onion.html"
+    },
+    {
+      "crop": "Pak Choi",
+      "name": "Bopak",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/88824/bopak-f1/pr_88824/cp_/catalog/organic/pak-choi"
+    },
+    {
+      "crop": "Pak Choi",
+      "name": "Komatsuna",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-komatsuna-asian-greens.html"
+    },
+    {
+      "crop": "Pak Choi",
+      "name": "Shanghai Green",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-shanghai-green-pac-choy.html"
+    },
+    {
+      "crop": "Pansy And Violas",
+      "name": "Black Devil Pansy",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/viola-black-devil-pansy"
+    },
+    {
+      "crop": "Pansy And Violas",
+      "name": "Brush Strokes",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/brush-strokes-viola-seed-4562.html"
+    },
+    {
+      "crop": "Pansy And Violas",
+      "name": "Celestial Blue Pansy",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/viola-celestial-blue-pansy"
+    },
+    {
+      "crop": "Pansy And Violas",
+      "name": "Frizzle Sizzle Lemonberry",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/frizzle-sizzle-lemonberry-untreated-pansy-seeds?_pos=1&_psq=frizzle%20sizzzle%20lem&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Pansy And Violas",
+      "name": "Frizzle Sizzle Mini tapestry",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/frizzle-sizzle-mini-tapestry-viola-seed-4645.html"
+    },
+    {
+      "crop": "Pansy And Violas",
+      "name": "Frizzle Sizzle Yellow Blue Swirl",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/frizzle-sizzle-yellow-blue-swirl-viola-seed-4453.html"
+    },
+    {
+      "crop": "Pansy And Violas",
+      "name": "Sorbet Formula Mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/sorbet-formula-mix-f1-viola-seed-1413.html"
+    },
+    {
+      "crop": "Pansy And Violas",
+      "name": "Tiger Laeta",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/viola-tiger-laeta"
+    },
+    {
+      "crop": "Pansy And Violsa",
+      "name": "Brush Strokes",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/butterfly-pea-blue-queen"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Cicilian",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/parsley-cilician-organic/",
+      "subCategory": "Flat leaf"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Cilician",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/parsley-cilician-organic/"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Einfache Schnitt 3",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/parsley-einfache-schnitt-3-organic/",
+      "subCategory": "Flat leaf"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Forest Green",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/herbs/parsley-forest-green-organic/"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Giant of Italy",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/parsley/leaf-parsley/giant-of-italy-organic-parsley-seed-2390G.html"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Laica",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-laica-parsley.html"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Lisette",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://parkseed.com/lisette-parsley-seeds/p/05635-PK-P1/",
+      "subCategory": "Curly"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Mersin",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/parsley-mersin?_pos=1&_sid=cc116f37d&_ss=r",
+      "subCategory": "Flat Leaf"
+    },
+    {
+      "crop": "Parsley",
+      "name": "Moss Curled",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=131"
+    },
+    {
+      "crop": "Parsnip",
+      "name": "Halblange",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-halblange-parsnip.html"
+    },
+    {
+      "crop": "Parsnip",
+      "name": "Panorama F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-panorama-f1-parsnip.html"
+    },
+    {
+      "crop": "Passion Flower",
+      "name": "Passionflower",
+      "supplier": "Strictly Medicinal",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://strictlymedicinalseeds.com/product/passionflower-official-passiflora-incarnata-seeds-organic/"
+    },
+    {
+      "crop": "Pea",
+      "name": "Amish Snap",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Pea",
+      "name": "Austrian Winter Pea",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/77543/austrian-winter-pea/pr_77543",
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Pea",
+      "name": "Slocan",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Snow"
+    },
+    {
+      "crop": "Pea",
+      "name": "Tendril Pea",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/shoots/tendril-pea-organic-shoot-seed-3165SG.html",
+      "subCategory": "Tendril"
+    },
+    {
+      "crop": "Pear",
+      "name": "Cascadia",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Peas",
+      "name": "Cascadia OG",
+      "supplier": "Territorial",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/pea-cascadia"
+    },
+    {
+      "crop": "Peas",
+      "name": "SS 141",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/pea-snap-ss-141-untreated?_pos=1&_psq=ss+141&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Peas",
+      "name": "Super Sugar Snap",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/peas/snap-peas/super-sugar-snap-pea-seed-2855.html"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Adaptive Early Thai",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/peppers/hot-pepper-adaptive-early-thai-grex-organic/",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Aji Rico",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Annaheim 118",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Basque",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/hot-pepper-basque?_pos=1&_sid=b9a2ab625&_ss=r",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Bastan",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/bastan-organic-f1-poblano-pepper-seed-3274G.html",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Bastan F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/bastan-organic-f1-poblano-pepper-seed-3274G.html"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Beacon",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Sweet"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Biquinho Red",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/hot-pepper-biquinho-red?_pos=1&_sid=788eb565b&_ss=r",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Biquinho Yellow",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/hot-pepper-biquinho-yellow?_pos=2&_sid=788eb565b&_ss=r",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Black Magic F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/black-magic-organic-f1-jalapeno-pepper-seed-4718G.html"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Carmen",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Sweet"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Carmen F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/sweet-peppers/carmen-organic-f1-corno-di-toro-pepper-seed-2993G.html"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Doe Hill",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Bell"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Dragonfly",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Bell"
+    },
+    {
+      "crop": "Pepper",
+      "name": "El Jefe",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Jalepeno"
+    },
+    {
+      "crop": "Pepper",
+      "name": "ELEPHANT'S EAR",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/sweet-pepper-elephants-ear",
+      "subCategory": "Sweet"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Helios F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/helios-f1-habanero-pepper-seed-3219.html"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Hungarian Hot Wax",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/hungarian-hot-wax-organic-pepper-seed-3092G.html"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Hungarian Hot Wax",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/hungarian-hot-wax-organic-pepper-seeds?_pos=1&_psq=hunga&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Jimmy Nardello",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/sweet-pepper-jimmy-nardello?_pos=7&_sid=b9a2ab625&_ss=r",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "King of the North Circle",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Bell"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Korean",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/peppers/hot-pepper-korean-organic/",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Mariachi",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Olly F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/sweet-bell-peppers/olly-organic-f1-bell-pepper-seed-4761G.html"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Peace Bell",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/peppers/sweet-pepper-peace-bell-organic/",
+      "subCategory": "Bell"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Primero Red F1",
+      "supplier": "High Mowing",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-primero-red-f1-habanero-pepper.html",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Shishito",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/collections/organic-garden-peppers-seed/products/shishito-organic-pepper-seeds",
+      "subCategory": "Hot"
+    },
+    {
+      "crop": "Pepper",
+      "name": "Snackabelle Red",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Bell"
+    },
+    {
+      "crop": "Pepper - Hot",
+      "name": "Shishito",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-shishito-pepper.html"
+    },
+    {
+      "crop": "Petunias",
+      "name": "Superbissima Cerny's Triumph",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/petunia-cernys-triumph-superbissima-mix"
+    },
+    {
+      "crop": "Petunias",
+      "name": "Superbissima Cosmic Cherry",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/petunia-cosmic-cherry-superbissima"
+    },
+    {
+      "crop": "Petunias",
+      "name": "Superbissima Giant Alba",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/petunia-superbissima-giant-alba"
+    },
+    {
+      "crop": "Petunias",
+      "name": "Superbissima Giant Rose",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/petunia-rosea-superbissima"
+    },
+    {
+      "crop": "Potato",
+      "name": "Allred",
+      "supplier": "Irish Eyes",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://irisheyesgardenseeds.com/product/og-all-red-pre-nuclear-potato/",
+      "subCategory": "Mid-Season Pre-Nuclear"
+    },
+    {
+      "crop": "Potato",
+      "name": "Belmonda",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Yellow"
+    },
+    {
+      "crop": "Potato",
+      "name": "Carola",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Potato",
+      "name": "Elba",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-german-butterball-potato.html"
+    },
+    {
+      "crop": "Potato",
+      "name": "French Fingerling",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Fingerling"
+    },
+    {
+      "crop": "Potato",
+      "name": "German Butterball",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-german-butterball-potato.html"
+    },
+    {
+      "crop": "Potato",
+      "name": "Goldrush",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Russet"
+    },
+    {
+      "crop": "Potato",
+      "name": "Mondak Gold",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red?"
+    },
+    {
+      "crop": "Potato",
+      "name": "OG Viking Purple Potato",
+      "supplier": "Irish Eyes",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://irisheyesgardenseeds.com/product/viking-purple-organic/",
+      "subCategory": "Early"
+    },
+    {
+      "crop": "Potato",
+      "name": "Oneida Gold",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Yellow"
+    },
+    {
+      "crop": "Potato",
+      "name": "Peter Wilcox",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Blue"
+    },
+    {
+      "crop": "Potato",
+      "name": "Purple Viking",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/potatoes/purple-viking-organic-seed-potatoes-3424G.html"
+    },
+    {
+      "crop": "Potato",
+      "name": "Red Norland",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/potatoes/dark-red-norland-organic-seed-potatoes-552G.html"
+    },
+    {
+      "crop": "Queen Anne's Lace",
+      "name": "Dara",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_151&products_id=533"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "BEATRICE",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/radicchio-castelfranco-4-20?_pos=7&_sid=e9e99d278&_ss=r",
+      "subCategory": "90 VARIEGATO DI CASTELFRANCO"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "Bornio Tadiva",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Luisa"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "Bottiglione",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Treviso"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "Cecelia",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Castelfranco"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "Costarossa",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Verona"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "Incantadore",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/radicchio-incantatore?_pos=1&_sid=e9e99d278&_ss=r",
+      "subCategory": "100 Incantadore"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "LENTIGGINI",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/radicchio-castelfranco-4-21?_pos=5&_sid=e9e99d278&_ss=r",
+      "subCategory": "110 VARIEGATO DI CASTELFRANCO"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "Lentiginni",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/vegetables/products/radicchio-castelfranco-4-21?_pos=1&_sid=93d8693b4&_ss=r"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "MIRABELLA",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/radicchio-castelfranco-4-18?_pos=3&_sid=e9e99d278&_ss=r",
+      "subCategory": "65 VARIEGATO DI CASTELFRANCO"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "PACIFICO",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/radicchio-treviso-precoce-4-11?_pos=13&_sid=e9e99d278&_ss=r",
+      "subCategory": "110 ROSSO DI TREVISO PRECOCE"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "REGINA ROSSA",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/radicchio-treviso-precoce-4-10?_pos=15&_sid=e9e99d278&_ss=r",
+      "subCategory": "90 ROSSO DI TREVISO PRECOCE"
+    },
+    {
+      "crop": "Radicchio",
+      "name": "Rubro",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Chioggia"
+    },
+    {
+      "crop": "Radish",
+      "name": "Daikon",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-daikon.html"
+    },
+    {
+      "crop": "Radish",
+      "name": "French Breakfast",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Summer"
+    },
+    {
+      "crop": "Radish",
+      "name": "French Breakfast",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-french-breakfast-radish.html"
+    },
+    {
+      "crop": "Radish",
+      "name": "ICICLE RADISH",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-white-icicle-radish.html",
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Radish",
+      "name": "Okhura Winter Queen Daikon",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/radishes/radish-okhura-winter-queen-daikon-organic/"
+    },
+    {
+      "crop": "Radish",
+      "name": "Patricia",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-patricia-radish.html"
+    },
+    {
+      "crop": "Radish",
+      "name": "Pearl",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/radishes/round-radishes/pearl-organic-f1-radish-seed-3456G.html"
+    },
+    {
+      "crop": "Radish",
+      "name": "Rudi",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/radishes/radish-rudi-organic/"
+    },
+    {
+      "crop": "Radish",
+      "name": "Schwarzer Runder",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-schwarzer-runder-radish.html"
+    },
+    {
+      "crop": "Radish",
+      "name": "SCHWARZER RUNDER RADISH",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-schwarzer-runder-radish.html",
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Radish",
+      "name": "Shawo Fruit",
+      "supplier": "Baker Creek",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/radish-chinese-shawo-fruit"
+    },
+    {
+      "crop": "Radish",
+      "name": "Shawo Fruit/ Pusa Gulabi",
+      "supplier": "Baker Creek",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/store/vegetables/new-items-2019/chinese-shawo-fruit-radish",
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Radish",
+      "name": "Sora",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-sora-radish.html"
+    },
+    {
+      "crop": "Rapini",
+      "name": "De Cicco/Santee",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "Johnny's/Territorial"
+    },
+    {
+      "crop": "Rat Tail Radish",
+      "name": "Purple",
+      "supplier": "Seed Savers",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://shop.seedsavers.org/rat-tail-purple-organic-radish"
+    },
+    {
+      "crop": "Rat Tail Radish",
+      "name": "Purple",
+      "supplier": "Wild Garden",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=623"
+    },
+    {
+      "crop": "Rat Tail Radish",
+      "name": "Rat Tail",
+      "supplier": "Seed Savers",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.seedsavers.org/rat-tailed-radish?custcol_sca_sizeweightqty=26"
+    },
+    {
+      "crop": "Rat Tail Radish",
+      "name": "Rat Tail Purple",
+      "supplier": "Seed Savers",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.seedsavers.org/rat-tail-purple-organic-radish",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Rat Tail Radish",
+      "name": "RED RAT'S TAIL RADISH",
+      "supplier": "Baker Creek",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.rareseeds.com/red-rat-s-tail-radish",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Roselle",
+      "name": "Roselle",
+      "supplier": "Kitazawa",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.trueleafmarket.com/products/hibiscus-seeds-asian-sour-leaf-roselle"
+    },
+    {
+      "crop": "Rosemary",
+      "name": "Rosemary",
+      "supplier": "Everwilde",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.everwilde.com/store/Organic-Rosemary-Herb-Seed.html"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Anemones",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_96&products_id=733"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Autum Sunset",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/rudbeckia/products/rudbeckia-autumn-sunset"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Autum Sunset",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_96&products_id=688"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Gloriosa Double Daisy",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_96&products_id=641"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Praire Sun",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_96&products_id=698"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Rudbeckia hirta",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/flowers/organic-non-gmo-rudbeckia.html"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Sahara",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/rudbeckia/products/rudbeckia-sahara"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Tall Triloba",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_96&products_id=747"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Triloba Macau",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/triloba-macau-organic-rudbeckia-seeds"
+    },
+    {
+      "crop": "Rudbeckia",
+      "name": "Triloba Macau",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=477"
+    },
+    {
+      "crop": "Rutabaga",
+      "name": "Helenor",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red Shoulder"
+    },
+    {
+      "crop": "Rutabaga",
+      "name": "Helenor",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-helenor-rutabaga.html"
+    },
+    {
+      "crop": "Rutabaga",
+      "name": "Major Dunne",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/rutabaga-major-dunne-organic/"
+    },
+    {
+      "crop": "Rutabaga",
+      "name": "Nadmorska",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Green Shoulder"
+    },
+    {
+      "crop": "Salsola",
+      "name": "Agretti Roscano Saltwort",
+      "supplier": "Weston",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://westonseeds.com/product/agretti-roscano-saltwort/",
+      "subCategory": "Salsola Soda"
+    },
+    {
+      "crop": "Salsola",
+      "name": "Oka Hijiki",
+      "supplier": "Kitazawa",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://kitazawaseed.com/products/seaweed-mustard-seeds-oka-hijiki"
+    },
+    {
+      "crop": "Salsola",
+      "name": "Salsola komarovii",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/saltwort/saltwort-herb-seed-2677.11.html"
+    },
+    {
+      "crop": "Salsola",
+      "name": "Salsola komarovii",
+      "supplier": "West Coast",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.westcoastseeds.com/products/salsola"
+    },
+    {
+      "crop": "Salsola",
+      "name": "Saltwort",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/herbs/saltwort/saltwort-herb-seed-2677.html"
+    },
+    {
+      "crop": "Scabiosa",
+      "name": "Picotee Pincushion Mix",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=749"
+    },
+    {
+      "crop": "Scabiosa",
+      "name": "Starflower",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=699"
+    },
+    {
+      "crop": "Scallion",
+      "name": "Parade",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-parade-bunching-onion.html"
+    },
+    {
+      "crop": "Shallots",
+      "name": "Conservor F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/shallots/conservor-organic-f1-shallot-seed-2703G.html"
+    },
+    {
+      "crop": "Shallots",
+      "name": "Conservor F1",
+      "supplier": "High Mowing",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-conservor-f1-shallots.html"
+    },
+    {
+      "crop": "Shallots",
+      "name": "Crème Brulee",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/shallots/cre%CC%80me-bru%CC%82le%CC%81e-f1-shallot-seed-4575.html"
+    },
+    {
+      "crop": "Shallots",
+      "name": "French Grey",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/garlic-shallots/french-grey-shallot-seed-organic/",
+      "subCategory": true
+    },
+    {
+      "crop": "Snapdragon",
+      "name": "Chantilly Cream Yellow",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/chantilly-cream-yellow-untreated-snapdragon-seeds?_pos=1&_sid=3d44097cb&_ss=r"
+    },
+    {
+      "crop": "Snapdragons",
+      "name": "LION'S MOUTH BLEND",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-lion-s-mouth-snapdragon.html"
+    },
+    {
+      "crop": "Snapdragons",
+      "name": "Madam Butterfly Mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/snapdragon/madame-butterfly-mix-f1-snapdragon-seed-1930.html"
+    },
+    {
+      "crop": "Snapdragons",
+      "name": "Orange Wonder",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/flowers/snapdragon-orange-wonder-organic/"
+    },
+    {
+      "crop": "Snapdragons",
+      "name": "Royal Bride",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/snapdragon-royal-bride"
+    },
+    {
+      "crop": "Sorghum-sudan Grass",
+      "name": "VIKING 200",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/91503/sorghum-sudan-grass-viking-200/pr_91503/cp_/catalog/seed-form/untreated/cover-crop"
+    },
+    {
+      "crop": "Sorrel",
+      "name": "Garden Sorrel",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=62&products_id=163"
+    },
+    {
+      "crop": "Sorrel",
+      "name": "Red Veined Sorrel",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-veined-sorrel.html"
+    },
+    {
+      "crop": "Spinach",
+      "name": "Banjo",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Spinach",
+      "name": "Giant Winter",
+      "supplier": "West Coast",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.westcoastseeds.com/products/giant-winter-organic?variant=29705096265788"
+    },
+    {
+      "crop": "Spinach",
+      "name": "Regiment F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-regiment-f1-spinach.html"
+    },
+    {
+      "crop": "Spinach",
+      "name": "Space",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Smooth"
+    },
+    {
+      "crop": "Spinach",
+      "name": "Verdil",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/spinach/spinach-verdil-organic/"
+    },
+    {
+      "crop": "Spinach",
+      "name": "Winter Giant",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/spinach/spinach-giant-winter-organic/"
+    },
+    {
+      "crop": "Squash",
+      "name": "Brulee",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Bush Delicata",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-bush-delicata-squash.html"
+    },
+    {
+      "crop": "Squash",
+      "name": "Butterscotch PMR F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-butterscotch-pmr-f1-butternut-squash.html"
+    },
+    {
+      "crop": "Squash",
+      "name": "Candystick Dessert Delicata",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Centercut",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Honey Boat",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-honey-boat-winter-squash.html"
+    },
+    {
+      "crop": "Squash",
+      "name": "Honeynut",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Butternut"
+    },
+    {
+      "crop": "Squash",
+      "name": "Honeynut",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-honeynut-butternut-squash.html",
+      "subCategory": "Butternut"
+    },
+    {
+      "crop": "Squash",
+      "name": "Honeypatch",
+      "supplier": "Row 7",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.row7seeds.com/products/898-squash",
+      "subCategory": "Butternut"
+    },
+    {
+      "crop": "Squash",
+      "name": "Long Island Cheese",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Mambo",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/mambo-organic-f1-kabocha-squash-seed-4304G.html"
+    },
+    {
+      "crop": "Squash",
+      "name": "Musquee De Provence",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Neon",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/pumpkin-neon"
+    },
+    {
+      "crop": "Squash",
+      "name": "Nutterbutter",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Butternut"
+    },
+    {
+      "crop": "Squash",
+      "name": "Nutterbutter",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-nutterbutter-bnut-squash.html"
+    },
+    {
+      "crop": "Squash",
+      "name": "Red Kuri",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-kuri-winter-squash.html",
+      "subCategory": "Hubbard"
+    },
+    {
+      "crop": "Squash",
+      "name": "Robin's Koginut",
+      "supplier": "Row 7",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.row7seeds.com/products/robins-koginut-squash",
+      "subCategory": "Pumpkin"
+    },
+    {
+      "crop": "Squash",
+      "name": "Seppelin",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Stella Blue",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Sugar Dumpling F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-sugar-dumpling-f1-squash.html"
+    },
+    {
+      "crop": "Squash",
+      "name": "Sunshine",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/sunshine-organic-f1-kabocha-squash-seed-2998G.html"
+    },
+    {
+      "crop": "Squash",
+      "name": "Tetsukabuto",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Tetsukabuto",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/tetsukabuto-f1-hubbard-squash-seed-3578.html"
+    },
+    {
+      "crop": "Squash",
+      "name": "Tromboncino",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Uncle David's Dakota Dessert",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Winter"
+    },
+    {
+      "crop": "Squash",
+      "name": "Waltham",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Butternut"
+    },
+    {
+      "crop": "Squash",
+      "name": "Waltham",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-honeynut-butternut-squash.html",
+      "subCategory": "Butternut"
+    },
+    {
+      "crop": "Squash - Summer",
+      "name": "Dunja F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-dunja-f1-zucchini.html"
+    },
+    {
+      "crop": "Stock",
+      "name": "Antique Pink",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/stock/antique-pink-stock-seed-4094.html"
+    },
+    {
+      "crop": "Stock",
+      "name": "Iron Pastel Mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/stock/iron-pastel-mix-stock-seed-4649.html"
+    },
+    {
+      "crop": "Stock",
+      "name": "Katz Formula Mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/stock/katz-formula-mix-stock-seed-3725.html"
+    },
+    {
+      "crop": "Stock",
+      "name": "Katz Formulal Mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false
+    },
+    {
+      "crop": "Strawflower",
+      "name": "Monstrosum Mix",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/flowers/strawflower-monstrosum-mix-organic/"
+    },
+    {
+      "crop": "Strawflower",
+      "name": "Roggli Riesen",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-roggli-riesen-strawflower.html"
+    },
+    {
+      "crop": "Strawflower",
+      "name": "Vintage White",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/strawflower/vintage-white-organic-strawflower-seed-3330G.html"
+    },
+    {
+      "crop": "Strawflower",
+      "name": "White Immortelle",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=739"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Butterfingers",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/butterfingers-organic-f1-yellow-summer-squash-seed-4306G.html"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Centercut",
+      "supplier": "Row 7",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.row7seeds.com/products/centercut-squash",
+      "subCategory": "Tromboncino"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "COCOZELLE",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cocozelle-zucchini.html",
+      "subCategory": "Zucchini"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Costata Romanesco",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/costata-romanesco-zucchini-squash-seed-2053.html"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Costata Romanesco",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Costata Romanesco",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-costata-romanesc-zucchini.html"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "COSTATA ROMANESCO ZUCCHINI",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-costata-romanesc-zucchini.html",
+      "subCategory": "Zucchini"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Dunja F1",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/dunja-organic-f1-zucchini-squash-seed-3843G.html"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Goldini 2",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Goldy F1",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-goldy-f1-zucchini.html",
+      "subCategory": "Yellow"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Sunburst",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/squash-summer-sunburst"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Tempest",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/tempest-organic-f1-yellow-summer-squash-seed-3256G.html"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Y-Star",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/y-star-organic-f1-patty-pan-squash-seed-3855G.html"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Yellow Crookneck",
+      "supplier": "Siskiyou",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.siskiyouseeds.com/collections/squash-croockneck/products/summer-squash-yellow-crookneck"
+    },
+    {
+      "crop": "Summer Squash",
+      "name": "Zephyr",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/zephyr-f1-yellow-summer-squash-seed-2217.html",
+      "subCategory": "Yellow"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Anarchy Mix",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/sunflower/products/sunflower-garden-anarchy-mix",
+      "subCategory": "Branching"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Garden Anarchy Mix",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/sunflower/products/sunflower-garden-anarchy-mix?_pos=1&_sid=4b1e24747&_ss=r"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "GOLDY DOUBLE",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-goldy-double-sunflower.html"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Procut Peach",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/procut-peach-f1-sunflower-seed-4445.html"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Procut White Lite",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/79073/procut--white-lite-f1/pr_79073/cp_/catalog/seed-form/untreated/flowers",
+      "subCategory": "White Procut"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Red Hedge",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/red-hedge-f1-sunflower-seed-1941.html",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Reds",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/sunflower/products/sunflower-reds",
+      "subCategory": "Red"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Shock-O-Lat",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/shock-o-lat-f1-sunflower-seed-4731.html"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Strawberry Blonde",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/strawberry-blonde-f1-sunflower-seed-1744.html"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Summer Breeze Mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/summer-breeze-mix-sunflower-seed-4782.html"
+    },
+    {
+      "crop": "Sunflowers",
+      "name": "Velvet Queen",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-velvet-queen-sunflower.html"
+    },
+    {
+      "crop": "Swiss Chard",
+      "name": "Bright Lights",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/swiss-chard/bright-lights-swiss-chard-seed-703D.html"
+    },
+    {
+      "crop": "Swiss Chard",
+      "name": "Fordhook Giant",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-fordhook-giant-chard.html"
+    },
+    {
+      "crop": "Swiss Chard",
+      "name": "Rhubard Supreme",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-ruby-rhubarb-red-chard.html"
+    },
+    {
+      "crop": "Swiss Chard",
+      "name": "Ruby Red",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-rhubarb-supreme-chard.html"
+    },
+    {
+      "crop": "Swiss Chard",
+      "name": "Sunset Chard",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-sunset-chard.html"
+    },
+    {
+      "crop": "Talinum",
+      "name": "Jewels of Opar",
+      "supplier": "Garden Hoard",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.gardenhoard.com/jewels-of-opar-aka-fame-flower-seeds-certified-organic.html"
+    },
+    {
+      "crop": "Talinum",
+      "name": "Limon",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/talinum/limon-talinum-seed-4411.html"
+    },
+    {
+      "crop": "Tatsoi",
+      "name": "Red Cloud",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/red-cloud-f1-asian-green-seed-3341.html"
+    },
+    {
+      "crop": "Tatsoi",
+      "name": "Red Cloud F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/red-cloud-f1-asian-green-seed-3341.html"
+    },
+    {
+      "crop": "Tatsoi",
+      "name": "Tatsoi",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/tatsoi-organic-asian-green-seed-2897.html"
+    },
+    {
+      "crop": "Tokyo Bekana",
+      "name": "Tokyo Bekana",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/chinese-cabbage/tokyo-bekana-organic-f1-asian-green-seed-2251G.38.html"
+    },
+    {
+      "crop": "Tomatillo",
+      "name": "De Milpa",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatillos/de-milpa-organic-tomatillo-seed-2075.html"
+    },
+    {
+      "crop": "Tomatillo",
+      "name": "Queen of Malinalco",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/tomatillo-queen-of-malinalco"
+    },
+    {
+      "crop": "Tomatillo",
+      "name": "Queen of Mallinalco",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/vegetables/products/tomatillo-queen-of-malinalco?_pos=10&_sid=8b390d579&_ss=r"
+    },
+    {
+      "crop": "Tomatillo",
+      "name": "Queen of Mallinalco",
+      "supplier": "Fedco",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://fedcoseeds.com/seeds/queen-of-malinalco-organic-tomatillo-4010"
+    },
+    {
+      "crop": "Tomatillo",
+      "name": "Toma Verde",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-toma-verde-tomatillo.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "42-Day",
+      "supplier": "A H Whaley",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://awhaley.com/product/42-day/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Antho Pink Panther",
+      "supplier": "Moonglow Gardens",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://growersblend.ca/shop-seeds/ols/products/antho-pink-panther-dwarf-tomato",
+      "subCategory": "Specialty"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Atomic Fusion",
+      "supplier": "Garden Hoard",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.gardenhoard.com/tomato-atomic-fusion-seeds.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Atomic Sunset",
+      "supplier": "Wild Board",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://wildboarfarms.com/product/atomic-sunset/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Banana Legs",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Banana_Legs_p/tf-0039.htm"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Beauty King",
+      "supplier": "A P Whaley",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://awhaley.com/product/beauty-king/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Beefy Purple",
+      "supplier": "A P Whaley",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://awhaley.com/product/cream-of-the-crop-beefy-purple/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Benevento",
+      "supplier": "Bene",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://beneseeds.com/products/benevento-f1"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Black Cherry OG",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/black-cherry-organic-tomato-seed-88G.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Black Sea Man",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Black_Sea_Man_Heirloom_Tomato_Seeds_p/tf-0065a.htm"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Blush",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/blush-organic-tomato-seed-3517G.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Blushing Not Bashful",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Saladette"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Brad's Atomic Grape",
+      "supplier": "Garden Hoard",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.gardenhoard.com/tomato-brad-s-atomic-grape-seeds.html",
+      "subCategory": "Grape"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Brandywine",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-brandywine-tomato.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Brandywine",
+      "supplier": "Seed Savers",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.seedsavers.org/brandywine-red-organic-tomato",
+      "subCategory": "Red Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Cherokee Purple",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Cherokee Purple",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cherokee-purple-tomato.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Cherry Falls",
+      "supplier": "A P Whaley",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://awhaley.com/product/cherry-falls/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Chocolate Sprinkles",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/chocolate-sprinkles-f1-organic-tomato-seeds?_pos=1&_psq=chocolate&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Cipolla's Pride",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Paste"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Cosmic Mountain Sunset",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Cherry"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Cosmic Mountain Sunset",
+      "supplier": "Wild Mountain",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://wildmountainseeds.com/product/cosmic-mountain-sunset/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Cream Sausage",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Cream_Sausage_Tomato_Seeds_p/tf-0128.htm"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Crushed Heart",
+      "supplier": "Wild Board",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://wildboarfarms.com/product/crushed-heart/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Dwarf Purple Heart",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Dwarf_Purple_Heart_Organic_Tomato_Seeds_p/tf-0153d10.htm"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Dynamite Delight",
+      "supplier": "Wild Board Farm",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.wildboarfarms.com/product/dynamite-delight/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Early Cherry",
+      "supplier": "Territorial",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/tomato-early-cherry"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Emerald Flame",
+      "supplier": "Wild Board Farm",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.wildboarfarms.com/product/emerald-flame/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "German Johnson",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/heirloom-tomatoes/german-johnson-organic-tomato-seed-3815G.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Geronimo",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/geronimo-f1-tomato-seed-2794.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Gin Fizz",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/ginfiz-organic-f1-tomato-seed-4605G.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Golden Hour",
+      "supplier": "Wild Board Farm",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.wildboarfarms.com/product/golden-hour/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Green Giant",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Green_Giant_Tomato_Seeds_p/tf-0194.htm",
+      "subCategory": "Green Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Hot Streak",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Slicer"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Hot Streak",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/hot-streak-f1-tomato-seed-4760.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Hugh's",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Hugh_s_p/tf-0247.htm",
+      "subCategory": "Yellow Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Indigo Cherry Drop",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/indigo-cherry-drops-organic-tomato-seed-3233G.html",
+      "subCategory": "Cherry"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Janet's Jacinth Jewel",
+      "supplier": "A P Whaley",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://awhaley.com/product/janets-jacinthe-jewel/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Juliet",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Cheery"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Large Barred Boar",
+      "supplier": "A P Whaley",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://awhaley.com/product/large-barred-boar/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Limelight",
+      "supplier": "Wild Board Farm",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.wildboarfarms.com/product/limelight/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Lucky Cross",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Yellow Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Marbonne",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/marbonne-f1-tomato-seed-3225.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Margold",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/margold-f1-tomato-seed-3177.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Marnero",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/marnero-f1-tomato-seed-3176.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Mary Reynold's",
+      "supplier": "Grow Artisan",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://store.growartisan.com/product/mary-reynolds",
+      "subCategory": "Orange Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Mary Reynold's",
+      "supplier": "True Love",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://trueloveseeds.com/products/mary-reynolds-orange-tomato",
+      "subCategory": "Orange Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Minivento",
+      "supplier": "Bene",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://beneseeds.com/products/minivento?_pos=1&_psq=minivento&_ss=e&_v=1.0"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Mortgage Lifter",
+      "supplier": "Southern Exposure",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.southernexposure.com/products/mortgage-lifter-radiator-charlie-s-tomato/",
+      "subCategory": "Red Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Mortgage Lifter",
+      "supplier": "Territorial",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/tomato-mortgage-lifter"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Mortgage Lifter, Radiator Charlie's",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Mortgage_Lifter_Radiator_Charlie_s_p/tf-0324.htm",
+      "subCategory": "Red Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Nepal",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/heirloom-tomatoes/nepal-organic-tomato-seed-748.html",
+      "subCategory": "Red Medium"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Orange You Glad",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-orange-glad-organic/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Painted Pink",
+      "supplier": "Moonglow Gardens",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://growersblend.ca/shop-seeds/ols/products/painted-pink-tomato",
+      "subCategory": "Cherry"
+    },
+    {
+      "crop": "Tomato",
+      "name": "PIENNOLO ROSSO",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/collections/new-in-2023/products/tomato-piennolo-red",
+      "subCategory": "Cluster"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Pink Berkeley Tie-Dye",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/pink-berkeley-tie-dye-organic-tomato-seed-3636G.html",
+      "subCategory": "Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Pink Jazz",
+      "supplier": "A P Whaley",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://awhaley.com/product/artisan-pink-jazz/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Pinky",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/tomato-pinky?_pos=1&_sid=ad1b65c97&_ss=r",
+      "subCategory": "Pink Clustering"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Polish",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Red Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Pork Chop",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/78810/pork-chop/pr_78810",
+      "subCategory": "Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Red Deuce",
+      "supplier": "Seedway",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.seedway.com/product/red-deuce-tomato-not-treated/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Red Racer",
+      "supplier": "Harris",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.harrisseeds.com/products/12494-tomato-red-racer-f1?variant=39982906638408"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Sakura OG",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/sakura-organic-f1-tomato-seed-3853G.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Salvaterra's Select",
+      "supplier": "Seed Savers",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.seedsavers.org/salvaterras-select-organic-tomato",
+      "subCategory": "Paste"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Sean's Yellow Dwarf",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Sean_s_Yellow_Dwarf_Organic_Tomato_Seeds_p/tf-0447m.htm"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Solar Flare",
+      "supplier": "Osborne",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/catalog/item-content/78813/solar-flare/pr_78813",
+      "subCategory": "Medium"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Spring King",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-spring-king-organic/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Sun Dipper",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Grape"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Sun Dipper",
+      "supplier": "Osborne",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.osborneseed.com/products/sun-dipper-f1-untreated-tomato-seeds"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Sungella",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-sungella-organic/",
+      "subCategory": "Orange Large Cherry"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Sungold F1",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/sun-gold-f1-tomato-seed-770.html",
+      "subCategory": "Orange Cherry"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Sweet Million",
+      "supplier": "Territorial",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://territorialseed.com/products/tomato-sweet-million",
+      "subCategory": "Cherry"
+    },
+    {
+      "crop": "Tomato",
+      "name": "SWEET ORANGE II",
+      "supplier": "Uprising",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://uprisingorganics.com/products/tomato-sweet-orange-ii?_pos=1&_sid=ff9cc92b6&_ss=r",
+      "subCategory": "Orange Cherry"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Tiffen Mennonite",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-tiffen-mennonite-organic/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Umberto",
+      "supplier": "Renaissance Farms",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://renaissancefarms.org/product/umberto-tomato/",
+      "subCategory": "Pear"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Umberto",
+      "supplier": "Totally Tomatoes",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.totallytomato.com/product/T00786/124",
+      "subCategory": "Pear"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Washington Cherry",
+      "supplier": "Johnny's",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/washington-cherry-organic-tomato-seed-764.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "West Virginia '63",
+      "supplier": "Southern Exposure",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.southernexposure.com/products/west-virginia-63-centennial-tomato/"
+    },
+    {
+      "crop": "Tomato",
+      "name": "West Virginia 63",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "Beefsteak"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Woodstock",
+      "supplier": "Johnnys",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/woodstock-organic-f1-tomato-seed-4503G.html"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Yellow Bell",
+      "supplier": "Park Seed",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://parkseed.com/tomato-yellow-pear-organic/p/05385-Pk-P1/",
+      "subCategory": "Yellow Pear"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Yellow Bell",
+      "supplier": "Southern Exposure",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.southernexposure.com/products/yellow-bell-paste-tomato/",
+      "subCategory": "Yellow Pear"
+    },
+    {
+      "crop": "Tomato",
+      "name": "Yellow Bell",
+      "supplier": "Tomato Fest",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.tomatofest.com/Yellow_Pear_Organic_Heirloom_Tomato_Seeds_p/tf-0531.htm",
+      "subCategory": "Yellow Pear"
+    },
+    {
+      "crop": "Turnip",
+      "name": "Aprovecho Hardy",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/turnip-aprovecho-hardy-organic/"
+    },
+    {
+      "crop": "Turnip",
+      "name": "Hakurei",
+      "supplier": "",
+      "organic": false,
+      "pelleted": false,
+      "subCategory": "White"
+    },
+    {
+      "crop": "Turnip",
+      "name": "Hakurei",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/vegetables/turnips/hakurei-f1-turnip-seed-706.html"
+    },
+    {
+      "crop": "Turnip",
+      "name": "Tokyo Market",
+      "supplier": "Adaptive",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/turnip-tokyo-market-organic/"
+    },
+    {
+      "crop": "Turnip",
+      "name": "Tokyo Market",
+      "supplier": "High Mowing",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-tokyo-market-turnip.html"
+    },
+    {
+      "crop": "Yarrow",
+      "name": "Noblessa",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=516"
+    },
+    {
+      "crop": "Yarrow",
+      "name": "Summer Berries",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=413"
+    },
+    {
+      "crop": "Yarrow",
+      "name": "Summer Pastels",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=414"
+    },
+    {
+      "crop": "Zinnia",
+      "name": "Benary's Giant Mix",
+      "supplier": "Johnny's",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://www.johnnyseeds.com/flowers/zinnias/benarys-giant-series/benarys-giant-mix-zinnia-seed-1346.html"
+    },
+    {
+      "crop": "Zinnia",
+      "name": "Benary's Giant Mix",
+      "supplier": "Fedco",
+      "organic": false,
+      "pelleted": false,
+      "website": "https://fedcoseeds.com/seeds/benarys-giant-mix-organic-zinnia-5708"
+    },
+    {
+      "crop": "Zinnia",
+      "name": "UV Bee Mix",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=751"
+    },
+    {
+      "crop": "Zinnia",
+      "name": "Wild Garden Zinnia Mix",
+      "supplier": "Wild Garden",
+      "organic": true,
+      "pelleted": false,
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=583"
+    }
+  ]
+}

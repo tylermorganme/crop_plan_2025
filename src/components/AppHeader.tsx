@@ -78,6 +78,8 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const isExplorerActive = pathname === '/';
   const isTimelineActive = pathname.startsWith('/timeline/');
   const isBedsActive = pathname.startsWith('/beds/');
+  const isVarietiesActive = pathname === '/varieties';
+  const isSeedMixesActive = pathname === '/seed-mixes';
 
   // Links - go to active plan's views
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
@@ -96,7 +98,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           Crop Planner
         </Link>
 
-        {/* View Tabs - only show Explorer/Timeline/Beds when a plan is selected */}
+        {/* View Tabs - plan views when plan selected, global views always */}
         <nav className="flex items-center gap-1">
           {activePlanId ? (
             <>
@@ -136,6 +138,31 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
               Select a plan to get started
             </span>
           )}
+
+          {/* Separator */}
+          <div className="w-px h-5 bg-gray-300 mx-1" />
+
+          {/* Global pages - always visible */}
+          <Link
+            href="/varieties"
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              isVarietiesActive
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            Varieties
+          </Link>
+          <Link
+            href="/seed-mixes"
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              isSeedMixesActive
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            Mixes
+          </Link>
         </nav>
 
         {/* Spacer */}

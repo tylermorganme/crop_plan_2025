@@ -182,6 +182,15 @@ export interface CropConfig {
    * When adding a planting, this is combined with the plan year to set fieldStartDate.
    */
   targetFieldDate?: string;
+
+  // ---- Default Seed Source ----
+
+  /**
+   * Default seed variety or mix for this crop config.
+   * When creating new plantings, this is auto-assigned if set.
+   * Can be overridden per-planting.
+   */
+  defaultSeedSource?: import('./planting').SeedSource;
 }
 
 /** Calculated crop values (derived at runtime) */

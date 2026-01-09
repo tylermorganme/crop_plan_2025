@@ -484,6 +484,8 @@ export function expandPlantingsToTimelineCrops(
       crop.overrides = planting.overrides;
       crop.notes = planting.notes;
       crop.seedSource = planting.seedSource;
+      // Store crop name for filtering varieties/mixes in picker
+      crop.crop = config.crop;
 
       // Calculate seeds needed based on CropConfig.seedsPerBed
       if (config.seedsPerBed && planting.bedFeet) {

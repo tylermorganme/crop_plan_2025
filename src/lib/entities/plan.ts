@@ -8,6 +8,8 @@
 import type { Bed, BedGroup, ResourceGroup } from './bed';
 import type { Planting } from './planting';
 import type { CropConfig } from './crop-config';
+import type { Variety } from './variety';
+import type { SeedMix } from './seed-mix';
 
 // =============================================================================
 // TYPES
@@ -81,6 +83,8 @@ export interface TimelineCrop {
   seedSource?: import('./planting').SeedSource;
   /** Calculated seeds needed for this planting (based on CropConfig.seedsPerBed) */
   seedsNeeded?: number;
+  /** Crop name (for filtering varieties/mixes in picker) */
+  crop?: string;
 }
 
 /**
@@ -107,6 +111,12 @@ export interface Plan {
 
   /** Crop configurations (keyed by identifier) */
   cropCatalog?: Record<string, CropConfig>;
+
+  /** Seed varieties (keyed by ID) */
+  varieties?: Record<string, Variety>;
+
+  /** Seed mixes (keyed by ID) */
+  seedMixes?: Record<string, SeedMix>;
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];

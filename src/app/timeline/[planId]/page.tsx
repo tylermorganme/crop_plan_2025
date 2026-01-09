@@ -189,9 +189,15 @@ export default function TimelinePlanPage() {
     bedFeet?: number;
     overrides?: { additionalDaysOfHarvest?: number; additionalDaysInField?: number; additionalDaysInCells?: number };
     notes?: string;
+    seedSource?: { type: 'variety' | 'mix'; id: string } | null;
   }) => {
     try {
-      await updatePlanting(plantingId, updates);
+      // Convert null to undefined for store compatibility
+      const storeUpdates = {
+        ...updates,
+        seedSource: updates.seedSource === null ? undefined : updates.seedSource,
+      };
+      await updatePlanting(plantingId, storeUpdates);
       // Silent success - the UI updates immediately via state
     } catch (e) {
       setToast({ message: `Failed to update: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
@@ -282,6 +288,8 @@ export default function TimelinePlanPage() {
           planYear={currentPlan.metadata.year}
           onAddPlanting={handleAddPlanting}
           onUpdatePlanting={handleUpdatePlanting}
+          varieties={currentPlan.varieties}
+          seedMixes={currentPlan.seedMixes}
         />
       </div>
 

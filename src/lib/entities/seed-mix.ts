@@ -58,6 +58,22 @@ export function generateSeedMixId(): string {
 }
 
 /**
+ * Generate a content-based key for deduplication.
+ * Two mixes with the same name+crop are considered duplicates.
+ * Used during import to detect existing mixes.
+ */
+export function getSeedMixContentKey(name: string, crop: string): string {
+  return `${name}|${crop}`.toLowerCase().trim();
+}
+
+/**
+ * Get the content key for an existing seed mix.
+ */
+export function getSeedMixKey(mix: SeedMix): string {
+  return getSeedMixContentKey(mix.name, mix.crop);
+}
+
+/**
  * Input for creating a new SeedMix.
  */
 export interface CreateSeedMixInput {

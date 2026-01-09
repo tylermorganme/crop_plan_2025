@@ -37,8 +37,35 @@ import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities
 import { storage, onSyncMessage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
+import { getStockVarieties, getStockSeedMixes } from './stock-data';
 import type { CropConfig } from './entities/crop-config';
 import { cloneCropConfig, cloneCropCatalog } from './entities/crop-config';
+import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput } from './entities/variety';
+import { createSeedMix, getSeedMixKey, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
+
+/**
+ * Raw seed mix component from JSON import.
+ * Contains variety references that get resolved to IDs during import.
+ */
+export interface RawSeedMixComponent {
+  percent: number;
+  varietyId?: string;
+  _varietyCrop?: string;
+  _varietyName?: string;
+  _varietySupplier?: string;
+}
+
+/**
+ * Raw seed mix from JSON import.
+ * May have unresolved variety references in components.
+ */
+export interface RawSeedMixInput {
+  id?: string;
+  name: string;
+  crop: string;
+  components: RawSeedMixComponent[];
+  notes?: string;
+}
 
 // Re-export types for consumers
 export type { PlanSummary, PlanSnapshot, PlanData };
@@ -227,6 +254,10 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     ? cloneCropCatalog(Object.values(state.currentPlan.cropCatalog))
     : {};
 
+  // Copy varieties and seed mixes (shallow copy - IDs are preserved)
+  const varieties = state.currentPlan.varieties ? { ...state.currentPlan.varieties } : undefined;
+  const seedMixes = state.currentPlan.seedMixes ? { ...state.currentPlan.seedMixes } : undefined;
+
   const newPlan: Plan = {
     id: newId,
     schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -244,6 +275,8 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     beds,
     bedGroups,
     cropCatalog,
+    varieties,
+    seedMixes,
     changeLog: [],
   };
 
@@ -475,6 +508,34 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   deleteBedGroup: (groupId: string) => Promise<void>;
   /** Move a bed group to a new position */
   reorderBedGroup: (groupId: string, newDisplayOrder: number) => Promise<void>;
+
+  // ---- Variety Management ----
+  /** Add a variety to the plan */
+  addVariety: (variety: import('./entities/variety').Variety) => Promise<void>;
+  /** Update a variety in the plan */
+  updateVariety: (variety: import('./entities/variety').Variety) => Promise<void>;
+  /** Delete a variety from the plan */
+  deleteVariety: (varietyId: string) => Promise<void>;
+  /** Import varieties with content-based deduplication */
+  importVarieties: (inputs: import('./entities/variety').CreateVarietyInput[]) => Promise<{ added: number; updated: number }>;
+  /** Get variety by ID */
+  getVariety: (varietyId: string) => import('./entities/variety').Variety | undefined;
+  /** Get all varieties for a crop */
+  getVarietiesForCrop: (crop: string) => import('./entities/variety').Variety[];
+
+  // ---- Seed Mix Management ----
+  /** Add a seed mix to the plan */
+  addSeedMix: (mix: import('./entities/seed-mix').SeedMix) => Promise<void>;
+  /** Update a seed mix in the plan */
+  updateSeedMix: (mix: import('./entities/seed-mix').SeedMix) => Promise<void>;
+  /** Delete a seed mix from the plan */
+  deleteSeedMix: (mixId: string) => Promise<void>;
+  /** Import seed mixes with variety reference resolution */
+  importSeedMixes: (inputs: RawSeedMixInput[]) => Promise<{ added: number; updated: number; unresolvedVarieties: number }>;
+  /** Get seed mix by ID */
+  getSeedMix: (mixId: string) => import('./entities/seed-mix').SeedMix | undefined;
+  /** Get all seed mixes for a crop */
+  getSeedMixesForCrop: (crop: string) => import('./entities/seed-mix').SeedMix[];
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -620,6 +681,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         return p;
       });
 
+      // Load stock varieties and seed mixes
+      const varieties = getStockVarieties();
+      const seedMixes = getStockSeedMixes();
+
       const plan: Plan = {
         id,
         schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -634,6 +699,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         beds,
         bedGroups,
         cropCatalog,
+        varieties,
+        seedMixes,
         changeLog: [],
       };
 
@@ -1753,6 +1820,364 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           });
         }
       }
+    },
+
+    // ---- Variety Management ----
+
+    addVariety: async (variety: Variety) => {
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+
+        if (!state.currentPlan.varieties) {
+          state.currentPlan.varieties = {};
+        }
+        state.currentPlan.varieties[variety.id] = variety;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    updateVariety: async (variety: Variety) => {
+      set((state) => {
+        if (!state.currentPlan?.varieties?.[variety.id]) return;
+        snapshotForUndo(state);
+
+        state.currentPlan.varieties[variety.id] = variety;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    deleteVariety: async (varietyId: string) => {
+      set((state) => {
+        if (!state.currentPlan?.varieties?.[varietyId]) return;
+        snapshotForUndo(state);
+
+        delete state.currentPlan.varieties[varietyId];
+
+        // Also remove from any seed mixes that reference this variety
+        if (state.currentPlan.seedMixes) {
+          for (const mix of Object.values(state.currentPlan.seedMixes)) {
+            mix.components = mix.components.filter((c) => c.varietyId !== varietyId);
+          }
+        }
+
+        // Clear seedSource from plantings that referenced this variety
+        if (state.currentPlan.plantings) {
+          for (const planting of state.currentPlan.plantings) {
+            if (planting.seedSource?.type === 'variety' && planting.seedSource.id === varietyId) {
+              planting.seedSource = undefined;
+            }
+          }
+        }
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    importVarieties: async (inputs: CreateVarietyInput[]) => {
+      const existingVarieties = get().currentPlan?.varieties ?? {};
+      const existingByKey = new Map<string, string>();
+      for (const v of Object.values(existingVarieties)) {
+        existingByKey.set(getVarietyKey(v), v.id);
+      }
+
+      let added = 0;
+      let updated = 0;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+
+        if (!state.currentPlan.varieties) {
+          state.currentPlan.varieties = {};
+        }
+
+        for (const input of inputs) {
+          const contentKey = `${input.crop}|${input.name}|${input.supplier}`.toLowerCase().trim();
+          const existingId = existingByKey.get(contentKey);
+
+          if (existingId) {
+            const variety = createVariety({ ...input, id: existingId });
+            state.currentPlan.varieties[existingId] = variety;
+            updated++;
+          } else {
+            const variety = createVariety(input);
+            state.currentPlan.varieties[variety.id] = variety;
+            existingByKey.set(contentKey, variety.id);
+            added++;
+          }
+        }
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return { added, updated };
+    },
+
+    getVariety: (varietyId: string) => {
+      return get().currentPlan?.varieties?.[varietyId];
+    },
+
+    getVarietiesForCrop: (crop: string) => {
+      const varieties = get().currentPlan?.varieties ?? {};
+      return Object.values(varieties).filter((v) => v.crop === crop);
+    },
+
+    // ---- Seed Mix Management ----
+
+    addSeedMix: async (mix: SeedMix) => {
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+
+        if (!state.currentPlan.seedMixes) {
+          state.currentPlan.seedMixes = {};
+        }
+        state.currentPlan.seedMixes[mix.id] = mix;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    updateSeedMix: async (mix: SeedMix) => {
+      set((state) => {
+        if (!state.currentPlan?.seedMixes?.[mix.id]) return;
+        snapshotForUndo(state);
+
+        state.currentPlan.seedMixes[mix.id] = mix;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    deleteSeedMix: async (mixId: string) => {
+      set((state) => {
+        if (!state.currentPlan?.seedMixes?.[mixId]) return;
+        snapshotForUndo(state);
+
+        delete state.currentPlan.seedMixes[mixId];
+
+        // Clear seedSource from plantings that referenced this mix
+        if (state.currentPlan.plantings) {
+          for (const planting of state.currentPlan.plantings) {
+            if (planting.seedSource?.type === 'mix' && planting.seedSource.id === mixId) {
+              planting.seedSource = undefined;
+            }
+          }
+        }
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    importSeedMixes: async (inputs: RawSeedMixInput[]) => {
+      const existingMixes = get().currentPlan?.seedMixes ?? {};
+      const existingVarieties = get().currentPlan?.varieties ?? {};
+
+      const existingMixesByKey = new Map<string, string>();
+      for (const m of Object.values(existingMixes)) {
+        existingMixesByKey.set(getSeedMixKey(m), m.id);
+      }
+
+      const varietyIdByKey = new Map<string, string>();
+      for (const v of Object.values(existingVarieties)) {
+        varietyIdByKey.set(getVarietyKey(v), v.id);
+      }
+
+      let added = 0;
+      let updated = 0;
+      let unresolvedVarieties = 0;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+
+        if (!state.currentPlan.seedMixes) {
+          state.currentPlan.seedMixes = {};
+        }
+
+        for (const rawInput of inputs) {
+          const resolvedComponents = rawInput.components.map((comp) => {
+            if (comp.varietyId) {
+              return { varietyId: comp.varietyId, percent: comp.percent };
+            }
+
+            if (comp._varietyCrop && comp._varietyName) {
+              const varietyKey = `${comp._varietyCrop}|${comp._varietyName}|${comp._varietySupplier || ''}`.toLowerCase().trim();
+              const varietyId = varietyIdByKey.get(varietyKey);
+              if (varietyId) {
+                return { varietyId, percent: comp.percent };
+              }
+            }
+
+            unresolvedVarieties++;
+            return null;
+          }).filter((c): c is { varietyId: string; percent: number } => c !== null);
+
+          const input: CreateSeedMixInput = {
+            id: rawInput.id,
+            name: rawInput.name,
+            crop: rawInput.crop,
+            components: resolvedComponents,
+            notes: rawInput.notes,
+          };
+
+          const contentKey = `${input.name}|${input.crop}`.toLowerCase().trim();
+          const existingId = existingMixesByKey.get(contentKey);
+
+          if (existingId) {
+            const mix = createSeedMix({ ...input, id: existingId });
+            state.currentPlan.seedMixes[existingId] = mix;
+            updated++;
+          } else {
+            const mix = createSeedMix(input);
+            state.currentPlan.seedMixes[mix.id] = mix;
+            existingMixesByKey.set(contentKey, mix.id);
+            added++;
+          }
+        }
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return { added, updated, unresolvedVarieties };
+    },
+
+    getSeedMix: (mixId: string) => {
+      return get().currentPlan?.seedMixes?.[mixId];
+    },
+
+    getSeedMixesForCrop: (crop: string) => {
+      const mixes = get().currentPlan?.seedMixes ?? {};
+      return Object.values(mixes).filter((m) => m.crop === crop);
     },
   }))
 );

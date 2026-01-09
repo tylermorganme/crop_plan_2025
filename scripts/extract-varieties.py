@@ -55,10 +55,10 @@ if "Varieties" not in wb.sheetnames:
 
 ws = wb["Varieties"]
 
-# Get headers from row 1
+# Get headers from row 2 (row 1 is empty in this sheet)
 headers = []
 for col in range(1, ws.max_column + 1):
-    header = ws.cell(row=1, column=col).value
+    header = ws.cell(row=2, column=col).value
     headers.append(header)
 
 print(f"Found {len(headers)} columns: {headers}")
@@ -66,9 +66,9 @@ print(f"Found {len(headers)} columns: {headers}")
 # Expected column mapping (adjust based on actual sheet structure)
 # Common columns: Id, Crop, Sub Category, Variety, DTM, Company, Organic, Pelleted, etc.
 
-# Extract variety data starting from row 2
+# Extract variety data starting from row 3
 varieties = []
-for row in range(2, ws.max_row + 1):
+for row in range(3, ws.max_row + 1):
     row_data = {}
     for col, header in enumerate(headers, start=1):
         if header:

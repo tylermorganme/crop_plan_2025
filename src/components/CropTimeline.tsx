@@ -19,6 +19,12 @@ interface PlantingOverrides {
   additionalDaysInCells?: number;
 }
 
+/** Reference to a seed variety or mix */
+interface SeedSource {
+  type: 'variety' | 'mix';
+  id: string;
+}
+
 interface TimelineCrop {
   id: string;
   name: string;
@@ -54,6 +60,10 @@ interface TimelineCrop {
   overrides?: PlantingOverrides;
   /** User notes about this planting */
   notes?: string;
+  /** Reference to the seed variety or mix used */
+  seedSource?: SeedSource;
+  /** Crop name (for filtering varieties/mixes) */
+  crop?: string;
 }
 
 interface ResourceGroup {
@@ -79,12 +89,132 @@ interface CropTimelineProps {
   planYear?: number;
   /** Callback when user adds a planting from timeline */
   onAddPlanting?: (configId: string, fieldStartDate: string, bedId: string) => Promise<string | void>;
-  /** Callback when user updates planting fields (bedFeet, overrides, notes) */
+  /** Callback when user updates planting fields (bedFeet, overrides, notes, seedSource) */
   onUpdatePlanting?: (plantingId: string, updates: {
     bedFeet?: number;
     overrides?: PlantingOverrides;
     notes?: string;
+    seedSource?: SeedSource | null;
   }) => Promise<void>;
+  /** Varieties available in the plan (for seed source picker) */
+  varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
+  /** Seed mixes available in the plan (for seed source picker) */
+  seedMixes?: Record<string, { id: string; crop: string; name: string }>;
+}
+
+// =============================================================================
+// Seed Source Picker Component
+// =============================================================================
+
+interface SeedSourcePickerProps {
+  crop: string; // Filter varieties/mixes by this crop
+  currentSource?: SeedSource | null;
+  varieties: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
+  seedMixes: Record<string, { id: string; crop: string; name: string }>;
+  /** IDs of varieties/mixes already used in the plan (shown at top) */
+  usedVarietyIds?: Set<string>;
+  usedMixIds?: Set<string>;
+  onChange: (source: SeedSource | null) => void;
+}
+
+function SeedSourcePicker({
+  crop,
+  currentSource,
+  varieties,
+  seedMixes,
+  usedVarietyIds = new Set(),
+  usedMixIds = new Set(),
+  onChange,
+}: SeedSourcePickerProps) {
+  // Filter by crop
+  const cropVarieties = useMemo(() => {
+    return Object.values(varieties)
+      .filter(v => v.crop === crop)
+      .sort((a, b) => {
+        // Used varieties first, then alphabetical
+        const aUsed = usedVarietyIds.has(a.id) ? 0 : 1;
+        const bUsed = usedVarietyIds.has(b.id) ? 0 : 1;
+        if (aUsed !== bUsed) return aUsed - bUsed;
+        return a.name.localeCompare(b.name);
+      });
+  }, [varieties, crop, usedVarietyIds]);
+
+  const cropMixes = useMemo(() => {
+    return Object.values(seedMixes)
+      .filter(m => m.crop === crop)
+      .sort((a, b) => {
+        // Used mixes first, then alphabetical
+        const aUsed = usedMixIds.has(a.id) ? 0 : 1;
+        const bUsed = usedMixIds.has(b.id) ? 0 : 1;
+        if (aUsed !== bUsed) return aUsed - bUsed;
+        return a.name.localeCompare(b.name);
+      });
+  }, [seedMixes, crop, usedMixIds]);
+
+  // Build current value for the select
+  const currentValue = currentSource
+    ? `${currentSource.type}:${currentSource.id}`
+    : '';
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (!val) {
+      onChange(null);
+    } else {
+      const [type, id] = val.split(':') as ['variety' | 'mix', string];
+      onChange({ type, id });
+    }
+  }, [onChange]);
+
+  // Get display name for current selection
+  const currentName = useMemo(() => {
+    if (!currentSource) return null;
+    if (currentSource.type === 'variety') {
+      const v = varieties[currentSource.id];
+      return v ? `${v.name}${v.supplier ? ` (${v.supplier})` : ''}` : 'Unknown variety';
+    } else {
+      const m = seedMixes[currentSource.id];
+      return m ? m.name : 'Unknown mix';
+    }
+  }, [currentSource, varieties, seedMixes]);
+
+  const hasOptions = cropVarieties.length > 0 || cropMixes.length > 0;
+
+  if (!hasOptions) {
+    return (
+      <div className="text-xs text-gray-400 italic">
+        No varieties for {crop}
+      </div>
+    );
+  }
+
+  return (
+    <select
+      value={currentValue}
+      onChange={handleChange}
+      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    >
+      <option value="">None</option>
+      {cropVarieties.length > 0 && (
+        <optgroup label="Varieties">
+          {cropVarieties.map(v => (
+            <option key={v.id} value={`variety:${v.id}`}>
+              {usedVarietyIds.has(v.id) ? '★ ' : ''}{v.name}{v.supplier ? ` (${v.supplier})` : ''}
+            </option>
+          ))}
+        </optgroup>
+      )}
+      {cropMixes.length > 0 && (
+        <optgroup label="Seed Mixes">
+          {cropMixes.map(m => (
+            <option key={m.id} value={`mix:${m.id}`}>
+              {usedMixIds.has(m.id) ? '★ ' : ''}{m.name}
+            </option>
+          ))}
+        </optgroup>
+      )}
+    </select>
+  );
 }
 
 // =============================================================================
@@ -338,6 +468,8 @@ export default function CropTimeline({
   planYear,
   onAddPlanting,
   onUpdatePlanting,
+  varieties,
+  seedMixes,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -367,6 +499,8 @@ export default function CropTimeline({
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // Filter to show only plantings without seed source
+  const [showNoVarietyOnly, setShowNoVarietyOnly] = useState(false);
   // State for hover preview when browsing crops in AddToBedPanel
   const [hoverPreview, setHoverPreview] = useState<{
     config: CropConfig;
@@ -464,27 +598,38 @@ export default function CropTimeline({
     return { left: Math.max(0, left), width: Math.max(30, width) };
   }, [timelineStart, pixelsPerDay]);
 
-  // Filter crops by search query
+  // Filter crops by search query and no-variety filter
   const filteredCrops = useMemo(() => {
-    if (!searchQuery.trim()) return crops;
-    const query = searchQuery.toLowerCase().trim();
-    return crops.filter(crop =>
-      crop.name.toLowerCase().includes(query) ||
-      crop.category?.toLowerCase().includes(query) ||
-      crop.cropConfigId?.toLowerCase().includes(query) ||
-      crop.resource?.toLowerCase().includes(query)
-    );
-  }, [crops, searchQuery]);
+    let result = crops;
+
+    // Apply no-variety filter first
+    if (showNoVarietyOnly) {
+      result = result.filter(crop => !crop.seedSource);
+    }
+
+    // Then apply search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(crop =>
+        crop.name.toLowerCase().includes(query) ||
+        crop.category?.toLowerCase().includes(query) ||
+        crop.cropConfigId?.toLowerCase().includes(query) ||
+        crop.resource?.toLowerCase().includes(query)
+      );
+    }
+
+    return result;
+  }, [crops, searchQuery, showNoVarietyOnly]);
 
   // Set of resources that have matching crops (for filtering rows)
   const matchingResources = useMemo(() => {
-    if (!searchQuery.trim()) return null; // null means show all
+    if (!searchQuery.trim() && !showNoVarietyOnly) return null; // null means show all
     const resources = new Set<string>();
     for (const crop of filteredCrops) {
       resources.add(crop.resource || 'Unassigned');
     }
     return resources;
-  }, [filteredCrops, searchQuery]);
+  }, [filteredCrops, searchQuery, showNoVarietyOnly]);
 
   // Group crops by resource (using filtered crops)
   const cropsByResource = useMemo(() => {
@@ -496,6 +641,37 @@ export default function CropTimeline({
     }
     return result;
   }, [filteredCrops]);
+
+  // Compute variety/mix IDs used in the plan (for sorting in picker)
+  const { usedVarietyIds, usedMixIds } = useMemo(() => {
+    const varietyIds = new Set<string>();
+    const mixIds = new Set<string>();
+    for (const crop of crops) {
+      if (crop.seedSource) {
+        if (crop.seedSource.type === 'variety') {
+          varietyIds.add(crop.seedSource.id);
+        } else {
+          mixIds.add(crop.seedSource.id);
+        }
+      }
+    }
+    return { usedVarietyIds: varietyIds, usedMixIds: mixIds };
+  }, [crops]);
+
+  // Count plantings without seed source (by groupId to avoid counting per-bed)
+  const noVarietyCount = useMemo(() => {
+    const seenGroupIds = new Set<string>();
+    let count = 0;
+    for (const crop of crops) {
+      if (!seenGroupIds.has(crop.groupId)) {
+        seenGroupIds.add(crop.groupId);
+        if (!crop.seedSource) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }, [crops]);
 
   // Calculate stacking for crops in a lane
   const calculateStacking = useCallback((laneCrops: TimelineCrop[]) => {
@@ -1425,10 +1601,26 @@ export default function CropTimeline({
         </div>
 
         {/* Filter status */}
-        {searchQuery && (
+        {(searchQuery || showNoVarietyOnly) && (
           <span className="text-xs text-blue-600">
             {filteredCrops.length} of {crops.length} crops
           </span>
+        )}
+
+        {/* No Variety filter button */}
+        {noVarietyCount > 0 && (
+          <button
+            onClick={() => setShowNoVarietyOnly(!showNoVarietyOnly)}
+            className={`px-2 py-1 text-xs font-medium rounded border flex items-center gap-1 ${
+              showNoVarietyOnly
+                ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600'
+                : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
+            }`}
+            title={showNoVarietyOnly ? 'Show all plantings' : 'Show only plantings without variety'}
+          >
+            <span className="text-amber-500">⚠</span>
+            {noVarietyCount} no variety
+          </button>
         )}
 
       </div>
@@ -2254,6 +2446,25 @@ export default function CropTimeline({
                           </div>
                         )}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Seed Source - Editable */}
+                  {onUpdatePlanting && varieties && seedMixes && crop.crop && (
+                    <div className="pt-3 border-t">
+                      <div className="text-xs text-gray-600 mb-1">
+                        Seed Source
+                        {!crop.seedSource && <span className="text-amber-500 ml-1">⚠</span>}
+                      </div>
+                      <SeedSourcePicker
+                        crop={crop.crop}
+                        currentSource={crop.seedSource}
+                        varieties={varieties}
+                        seedMixes={seedMixes}
+                        usedVarietyIds={usedVarietyIds}
+                        usedMixIds={usedMixIds}
+                        onChange={(source) => onUpdatePlanting(crop.groupId, { seedSource: source })}
+                      />
                     </div>
                   )}
 

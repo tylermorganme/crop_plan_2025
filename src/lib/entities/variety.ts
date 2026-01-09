@@ -70,6 +70,22 @@ export function generateVarietyId(): string {
 }
 
 /**
+ * Generate a content-based key for deduplication.
+ * Two varieties with the same crop+name+supplier are considered duplicates.
+ * Used during import to detect existing varieties.
+ */
+export function getVarietyContentKey(crop: string, name: string, supplier: string): string {
+  return `${crop}|${name}|${supplier}`.toLowerCase().trim();
+}
+
+/**
+ * Get the content key for an existing variety.
+ */
+export function getVarietyKey(variety: Variety): string {
+  return getVarietyContentKey(variety.crop, variety.name, variety.supplier);
+}
+
+/**
  * Input for creating a new Variety.
  */
 export interface CreateVarietyInput {
