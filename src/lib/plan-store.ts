@@ -916,6 +916,15 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           startBed: startBedUuid,
           lastModified: now,
         };
+
+        // Auto-assign defaultSeedSource from CropConfig if planting doesn't have one
+        if (!newPlanting.seedSource && newPlanting.configId && state.currentPlan.cropCatalog) {
+          const config = state.currentPlan.cropCatalog[newPlanting.configId];
+          if (config?.defaultSeedSource) {
+            newPlanting.seedSource = { ...config.defaultSeedSource };
+          }
+        }
+
         state.currentPlan.plantings.push(newPlanting);
 
         state.currentPlan.metadata.lastModified = now;

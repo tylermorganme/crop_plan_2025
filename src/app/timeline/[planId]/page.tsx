@@ -311,6 +311,8 @@ export default function TimelinePlanPage() {
           setEditingCrop(null);
         }}
         onSave={handleSaveCropConfig}
+        varieties={currentPlan?.varieties}
+        seedMixes={currentPlan?.seedMixes}
       />
     </div>
   );

@@ -190,6 +190,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   // Only subscribe to cropCatalog, not the entire plan (avoids re-renders when plantings change)
   const cropCatalog = usePlanStore((state) => state.currentPlan?.cropCatalog);
   const currentPlanId = usePlanStore((state) => state.currentPlan?.id);
+  const varieties = usePlanStore((state) => state.currentPlan?.varieties);
+  const seedMixes = usePlanStore((state) => state.currentPlan?.seedMixes);
   const catalogLoading = usePlanStore((state) => state.isLoading);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const addPlanting = usePlanStore((state) => state.addPlanting);
@@ -1596,6 +1598,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         onSave={handleSaveCustomConfig}
         availableCrops={displayCrops as CropConfig[]}
         existingIdentifiers={existingIdentifiers}
+        varieties={varieties}
+        seedMixes={seedMixes}
       />
 
       {/* Edit Config Modal */}
@@ -1606,6 +1610,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         onSave={handleSaveEditedConfig}
         mode="edit"
         existingIdentifiers={existingIdentifiers}
+        varieties={varieties}
+        seedMixes={seedMixes}
       />
 
       {/* Delete Confirmation Modal */}

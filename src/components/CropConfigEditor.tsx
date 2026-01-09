@@ -11,6 +11,9 @@ import {
   createBlankConfig,
   evaluateYieldForDisplay,
 } from '@/lib/entities/crop-config';
+import type { SeedSource } from '@/lib/entities/planting';
+import type { Variety } from '@/lib/entities/variety';
+import type { SeedMix } from '@/lib/entities/seed-mix';
 import { Z_INDEX } from '@/lib/z-index';
 
 /** Standard tray sizes (cells per tray) */
@@ -29,6 +32,10 @@ interface CropConfigEditorProps {
   mode?: 'edit' | 'create';
   /** Optional validation: check if identifier already exists */
   existingIdentifiers?: string[];
+  /** Varieties available for default seed source selection */
+  varieties?: Record<string, Variety>;
+  /** Seed mixes available for default seed source selection */
+  seedMixes?: Record<string, SeedMix>;
 }
 
 /**
@@ -452,6 +459,8 @@ export default function CropConfigEditor({
   onSave,
   mode = 'edit',
   existingIdentifiers = [],
+  varieties = {},
+  seedMixes = {},
 }: CropConfigEditorProps) {
   // Form state - initialize from crop when opened
   const [formData, setFormData] = useState<Partial<CropConfig>>({});
@@ -791,6 +800,78 @@ export default function CropConfigEditor({
                 </div>
               </div>
             </section>
+
+            {/* Default Seed Source Section */}
+            {(Object.keys(varieties).length > 0 || Object.keys(seedMixes).length > 0) && (
+              <section>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Default Seed Source</h3>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Default Variety/Mix for New Plantings
+                  </label>
+                  <select
+                    value={
+                      formData.defaultSeedSource
+                        ? `${formData.defaultSeedSource.type}:${formData.defaultSeedSource.id}`
+                        : ''
+                    }
+                    onChange={(e) => {
+                      if (!e.target.value) {
+                        updateField('defaultSeedSource', undefined);
+                      } else {
+                        const [type, id] = e.target.value.split(':') as ['variety' | 'mix', string];
+                        updateField('defaultSeedSource', { type, id });
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">None (assign manually)</option>
+                    {(() => {
+                      const cropName = formData.crop?.toLowerCase().trim();
+                      const matchingVarieties = Object.values(varieties).filter(
+                        (v) => v.crop.toLowerCase().trim() === cropName
+                      );
+                      const matchingMixes = Object.values(seedMixes).filter(
+                        (m) => m.crop.toLowerCase().trim() === cropName
+                      );
+
+                      if (matchingVarieties.length === 0 && matchingMixes.length === 0) {
+                        return (
+                          <option disabled>No varieties or mixes for "{formData.crop}"</option>
+                        );
+                      }
+
+                      return (
+                        <>
+                          {matchingVarieties.length > 0 && (
+                            <optgroup label="Varieties">
+                              {matchingVarieties.map((v) => (
+                                <option key={v.id} value={`variety:${v.id}`}>
+                                  {v.name}
+                                  {v.supplier ? ` (${v.supplier})` : ''}
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                          {matchingMixes.length > 0 && (
+                            <optgroup label="Seed Mixes">
+                              {matchingMixes.map((m) => (
+                                <option key={m.id} value={`mix:${m.id}`}>
+                                  {m.name}
+                                </option>
+                              ))}
+                            </optgroup>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    When set, new plantings of this crop will automatically use this variety/mix.
+                  </p>
+                </div>
+              </section>
+            )}
 
             {/* Harvest Section */}
             <section>

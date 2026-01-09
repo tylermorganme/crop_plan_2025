@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import { copyConfig } from '@/lib/entities/crop-config';
+import type { Variety } from '@/lib/entities/variety';
+import type { SeedMix } from '@/lib/entities/seed-mix';
 import CropConfigEditor from './CropConfigEditor';
 import { Z_INDEX } from '@/lib/z-index';
 
@@ -14,6 +16,10 @@ interface CropConfigCreatorProps {
   availableCrops: CropConfig[];
   /** Existing identifiers in the plan's catalog (for uniqueness validation) */
   existingIdentifiers: string[];
+  /** Varieties available for default seed source selection */
+  varieties?: Record<string, Variety>;
+  /** Seed mixes available for default seed source selection */
+  seedMixes?: Record<string, SeedMix>;
 }
 
 type Step = 'choose' | 'edit';
@@ -31,6 +37,8 @@ export default function CropConfigCreator({
   onSave,
   availableCrops,
   existingIdentifiers,
+  varieties,
+  seedMixes,
 }: CropConfigCreatorProps) {
   const [step, setStep] = useState<Step>('choose');
   const [createMode, setCreateMode] = useState<CreateMode>('blank');
@@ -98,6 +106,8 @@ export default function CropConfigCreator({
         onSave={handleSave}
         mode="create"
         existingIdentifiers={existingIdentifiers}
+        varieties={varieties}
+        seedMixes={seedMixes}
       />
     );
   }
