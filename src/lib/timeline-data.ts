@@ -477,7 +477,11 @@ function buildBedMappings(
     // Sort by displayOrder
     bedsInGroup.sort((a, b) => a.displayOrder - b.displayOrder);
 
-    nameGroups[groupName] = bedsInGroup.map(bed => bed.name);
+    // Key nameGroups by the letter extracted from bed names (e.g., "H" from "H1")
+    // This matches the legacy bedPlanData.bedGroups format that calculateRowSpan expects
+    const firstBed = bedsInGroup[0];
+    const groupKey = firstBed ? getBedGroup(firstBed.name) : groupName;
+    nameGroups[groupKey] = bedsInGroup.map(bed => bed.name);
 
     for (const bed of bedsInGroup) {
       uuidToName[bed.id] = bed.name;
