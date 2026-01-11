@@ -53,6 +53,9 @@ export interface Variety {
 
   /** Whether we already own/have this variety in inventory */
   alreadyOwn?: boolean;
+
+  /** Whether this variety is deprecated (hidden from dropdowns unless already in use) */
+  deprecated?: boolean;
 }
 
 // =============================================================================
@@ -60,26 +63,29 @@ export interface Variety {
 // =============================================================================
 
 /**
- * Generate a unique variety ID.
- * Format: V_{timestamp}_{random}
+ * Generate a deterministic variety ID from content.
+ * Format: V_{contentKey} - uses the content key directly for consistency.
+ * This ensures the same variety always gets the same ID across sessions.
+ *
+ * @param crop - Crop name
+ * @param name - Variety name
+ * @param supplier - Supplier/company name
+ * @returns Deterministic ID in format "V_{crop}|{name}|{supplier}"
  */
-export function generateVarietyId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `V_${timestamp}_${random}`;
+export function getVarietyId(crop: string, name: string, supplier: string): string {
+  return `V_${crop.toLowerCase().trim()}|${name.toLowerCase().trim()}|${supplier.toLowerCase().trim()}`;
 }
 
 /**
- * Generate a content-based key for deduplication.
+ * Get the content key for deduplication (without V_ prefix).
  * Two varieties with the same crop+name+supplier are considered duplicates.
- * Used during import to detect existing varieties.
  */
 export function getVarietyContentKey(crop: string, name: string, supplier: string): string {
-  return `${crop}|${name}|${supplier}`.toLowerCase().trim();
+  return `${crop.toLowerCase().trim()}|${name.toLowerCase().trim()}|${supplier.toLowerCase().trim()}`;
 }
 
 /**
- * Get the content key for an existing variety.
+ * Get the content key for an existing variety (without V_ prefix).
  */
 export function getVarietyKey(variety: Variety): string {
   return getVarietyContentKey(variety.crop, variety.name, variety.supplier);
@@ -113,14 +119,17 @@ export interface CreateVarietyInput {
   notes?: string;
   /** Already in inventory */
   alreadyOwn?: boolean;
+  /** Deprecated (hidden from dropdowns) */
+  deprecated?: boolean;
 }
 
 /**
  * Factory function for creating Variety objects.
+ * ID is deterministic based on crop+name+supplier for consistency across sessions.
  */
 export function createVariety(input: CreateVarietyInput): Variety {
   return {
-    id: input.id ?? generateVarietyId(),
+    id: input.id ?? getVarietyId(input.crop, input.name, input.supplier),
     crop: input.crop,
     name: input.name,
     supplier: input.supplier,
@@ -132,6 +141,7 @@ export function createVariety(input: CreateVarietyInput): Variety {
     website: input.website,
     notes: input.notes,
     alreadyOwn: input.alreadyOwn,
+    deprecated: input.deprecated,
   };
 }
 

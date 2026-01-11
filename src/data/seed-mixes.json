@@ -1,5 +1,5 @@
 {
-  "_generated": "2026-01-09T01:22:58.883Z",
+  "_generated": "2026-01-11T11:43:21.214Z",
   "_source": "tmp/seed_mixes_from_excel.json",
   "seedMixes": [
     {
@@ -106,41 +106,41 @@
     },
     {
       "name": "Bachellor's Button Mix",
-      "crop": "Bachelor's Button",
+      "crop": "Bachellor's Button",
       "components": [
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Bachelor's Button",
+          "_varietyCrop": "Bachellor's Button",
           "_varietyName": "Black Button",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Bachelor's Button",
+          "_varietyCrop": "Bachellor's Button",
           "_varietyName": "Blanca",
           "_varietySupplier": "Uprising"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Bachelor's Button",
+          "_varietyCrop": "Bachellor's Button",
           "_varietyName": "Classic Magic (purple, black)",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Bachelor's Button",
+          "_varietyCrop": "Bachellor's Button",
           "_varietyName": "Classic Romantic (reds, pinks, white)",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Bachelor's Button",
+          "_varietyCrop": "Bachellor's Button",
           "_varietyName": "Polka dot (mix)",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Bachelor's Button",
+          "_varietyCrop": "Bachellor's Button",
           "_varietyName": "Tall Boy Blue",
           "_varietySupplier": "Johnny's"
         }
@@ -310,23 +310,23 @@
     },
     {
       "name": "Butterfly Flower Mix",
-      "crop": "Butterfly Flower",
+      "crop": "Butterfly Flowers",
       "components": [
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Butterfly Flower",
+          "_varietyCrop": "Butterfly Flowers",
           "_varietyName": "Blue Queen",
           "_varietySupplier": "Baker Creek"
         },
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Butterfly Flower",
+          "_varietyCrop": "Butterfly Flowers",
           "_varietyName": "Lavender Queen",
           "_varietySupplier": "Baker Creek"
         },
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Butterfly Flower",
+          "_varietyCrop": "Butterfly Flowers",
           "_varietyName": "White Queen",
           "_varietySupplier": "Baker Creek"
         }
@@ -371,6 +371,30 @@
           "_varietyCrop": "Cabbage",
           "_varietyName": "Stanton F1",
           "_varietySupplier": "High Mowing"
+        }
+      ]
+    },
+    {
+      "name": "Chinese Cabbage Mix",
+      "crop": "Cabbage",
+      "components": [
+        {
+          "percent": 0.3333333333333333,
+          "_varietyCrop": "Cabbage",
+          "_varietyName": "Bilko F1",
+          "_varietySupplier": "High Mowing"
+        },
+        {
+          "percent": 0.3333333333333333,
+          "_varietyCrop": "Cabbage",
+          "_varietyName": "Emiko F1",
+          "_varietySupplier": "High Mowing"
+        },
+        {
+          "percent": 0.3333333333333333,
+          "_varietyCrop": "Cabbage",
+          "_varietyName": "Merlot",
+          "_varietySupplier": "Johnny's"
         }
       ]
     },
@@ -443,30 +467,6 @@
           "_varietyCrop": "Cabbage",
           "_varietyName": "Passat F1",
           "_varietySupplier": "High Mowing"
-        }
-      ]
-    },
-    {
-      "name": "Chinese Cabbage Mix",
-      "crop": "Cabbage - Chinese",
-      "components": [
-        {
-          "percent": 0.3333333333333333,
-          "_varietyCrop": "Cabbage - Chinese",
-          "_varietyName": "Bilko F1",
-          "_varietySupplier": "High Mowing"
-        },
-        {
-          "percent": 0.3333333333333333,
-          "_varietyCrop": "Cabbage - Chinese",
-          "_varietyName": "Emiko F1",
-          "_varietySupplier": "High Mowing"
-        },
-        {
-          "percent": 0.3333333333333333,
-          "_varietyCrop": "Cabbage - Chinese",
-          "_varietyName": "Merlot",
-          "_varietySupplier": "Johnny's"
         }
       ]
     },
@@ -622,17 +622,17 @@
     },
     {
       "name": "Corn Mix",
-      "crop": "Corn",
+      "crop": "Corn ",
       "components": [
         {
           "percent": 0.5,
-          "_varietyCrop": "Corn",
+          "_varietyCrop": "Corn ",
           "_varietyName": "Enchanted F1",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.5,
-          "_varietyCrop": "Corn",
+          "_varietyCrop": "Corn ",
           "_varietyName": "New Mama Super Sweet",
           "_varietySupplier": "Adaptive"
         }
@@ -766,11 +766,11 @@
     },
     {
       "name": "Dahlias Mix",
-      "crop": "Dahlias",
+      "crop": "Dahlia",
       "components": [
         {
           "percent": 1,
-          "_varietyCrop": "Dahlias",
+          "_varietyCrop": "Dahlia",
           "_varietyName": "Star Gazer",
           "_varietySupplier": "Wild Garden"
         }
@@ -892,11 +892,11 @@
     },
     {
       "name": "Fava Mix",
-      "crop": "Fava Beans",
+      "crop": "Fava Bean",
       "components": [
         {
           "percent": 1,
-          "_varietyCrop": "Fava Beans",
+          "_varietyCrop": "Fava Bean",
           "_varietyName": "Aquadulce",
           "_varietySupplier": "Sustainable Seed Company"
         }
@@ -1360,23 +1360,23 @@
     },
     {
       "name": "Malabar Spinach Mix",
-      "crop": "Malabar Spinach Mix",
+      "crop": "Malabar Spinach",
       "components": [
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Malabar Spinach Mix",
+          "_varietyCrop": "Malabar Spinach",
           "_varietyName": "Big Round Leaf",
           "_varietySupplier": "Kitazawa"
         },
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Malabar Spinach Mix",
+          "_varietyCrop": "Malabar Spinach",
           "_varietyName": "Green Vines Supreme",
           "_varietySupplier": "Kitazawa"
         },
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Malabar Spinach Mix",
+          "_varietyCrop": "Malabar Spinach",
           "_varietyName": "Red Malabar Spinach",
           "_varietySupplier": "Strictly Medicinal"
         }
@@ -1714,41 +1714,41 @@
     },
     {
       "name": "Overwinter Viola Mix",
-      "crop": "Pansy And Violas",
+      "crop": "Pansy and Violas",
       "components": [
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Brush Strokes",
           "_varietySupplier": "Baker Creek"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Celestial Blue Pansy",
           "_varietySupplier": "Baker Creek"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Frizzle Sizzle Lemonberry",
           "_varietySupplier": "Osborne"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Frizzle Sizzle Mini tapestry",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Sorbet Formula Mix",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.16666666666666666,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Tiger Laeta",
           "_varietySupplier": "Baker Creek"
         }
@@ -1756,11 +1756,11 @@
     },
     {
       "name": "Overwinter Violas",
-      "crop": "Pansy And Violas",
+      "crop": "Pansy and Violas",
       "components": [
         {
           "percent": 1,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Frizzle Sizzle Yellow Blue Swirl",
           "_varietySupplier": "Johnny's"
         }
@@ -1768,47 +1768,47 @@
     },
     {
       "name": "Pansy & Viola Mix",
-      "crop": "Pansy And Violas",
+      "crop": "Pansy and Violas",
       "components": [
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Black Devil Pansy",
           "_varietySupplier": "Baker Creek"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Brush Strokes",
           "_varietySupplier": "Baker Creek"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Celestial Blue Pansy",
           "_varietySupplier": "Baker Creek"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Frizzle Sizzle Lemonberry",
           "_varietySupplier": "Osborne"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Frizzle Sizzle Mini tapestry",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Frizzle Sizzle Yellow Blue Swirl",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Pansy And Violas",
+          "_varietyCrop": "Pansy and Violas",
           "_varietyName": "Tiger Laeta",
           "_varietySupplier": "Baker Creek"
         }
@@ -1870,23 +1870,23 @@
     },
     {
       "name": "Snap Pea Mix",
-      "crop": "Pea",
+      "crop": "Peas",
       "components": [
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Pea",
+          "_varietyCrop": "Peas",
           "_varietyName": "Super Sugar Snap",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Pea",
+          "_varietyCrop": "Peas",
           "_varietyName": "Cascadia OG",
           "_varietySupplier": "Territorial"
         },
         {
           "percent": 0.3333333333333333,
-          "_varietyCrop": "Pea",
+          "_varietyCrop": "Peas",
           "_varietyName": "SS 141",
           "_varietySupplier": "Osborne"
         }
@@ -1894,17 +1894,17 @@
     },
     {
       "name": "Tendril Pea Mix",
-      "crop": "Pea",
+      "crop": "Peas",
       "components": [
         {
           "percent": 0.5,
-          "_varietyCrop": "Pea",
+          "_varietyCrop": "Peas",
           "_varietyName": "Austrian Winter Pea",
           "_varietySupplier": "Osborne"
         },
         {
           "percent": 0.5,
-          "_varietyCrop": "Pea",
+          "_varietyCrop": "Peas",
           "_varietyName": "Tendril Pea",
           "_varietySupplier": "Johnny's"
         }
@@ -1912,29 +1912,29 @@
     },
     {
       "name": "Hot Pepper Mix",
-      "crop": "Pepper - Hot",
+      "crop": "Pepper",
       "components": [
         {
           "percent": 0.3,
-          "_varietyCrop": "Pepper - Hot",
+          "_varietyCrop": "Pepper",
           "_varietyName": "Bastan F1",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.4,
-          "_varietyCrop": "Pepper - Hot",
+          "_varietyCrop": "Pepper",
           "_varietyName": "Black Magic F1",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.2,
-          "_varietyCrop": "Pepper - Hot",
+          "_varietyCrop": "Pepper",
           "_varietyName": "Hungarian Hot Wax",
           "_varietySupplier": "Osborne"
         },
         {
           "percent": 0.1,
-          "_varietyCrop": "Pepper - Hot",
+          "_varietyCrop": "Pepper",
           "_varietyName": "Helios F1",
           "_varietySupplier": "Johnny's"
         }
@@ -1942,17 +1942,17 @@
     },
     {
       "name": "Shishito Mix",
-      "crop": "Pepper - Shishito",
+      "crop": "Pepper",
       "components": [
         {
           "percent": 0.5,
-          "_varietyCrop": "Pepper - Shishito",
+          "_varietyCrop": "Pepper",
           "_varietyName": "Katana",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.5,
-          "_varietyCrop": "Pepper - Shishito",
+          "_varietyCrop": "Pepper",
           "_varietyName": "Shishito",
           "_varietySupplier": "Osborne"
         }
@@ -1960,17 +1960,17 @@
     },
     {
       "name": "Sweet Pepper Mix",
-      "crop": "Pepper - Sweet",
+      "crop": "Pepper",
       "components": [
         {
           "percent": 0.5,
-          "_varietyCrop": "Pepper - Sweet",
+          "_varietyCrop": "Pepper",
           "_varietyName": "Elephant's Ear",
           "_varietySupplier": "Uprising"
         },
         {
           "percent": 0.5,
-          "_varietyCrop": "Pepper - Sweet",
+          "_varietyCrop": "Pepper",
           "_varietyName": "Olly F1",
           "_varietySupplier": "Johnny's"
         }
@@ -2158,17 +2158,17 @@
     },
     {
       "name": "Winter Radish Mix",
-      "crop": "Radish- Winter",
+      "crop": "Radish",
       "components": [
         {
           "percent": 0.5,
-          "_varietyCrop": "Radish- Winter",
+          "_varietyCrop": "Radish",
           "_varietyName": "Daikon",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.5,
-          "_varietyCrop": "Radish- Winter",
+          "_varietyCrop": "Radish",
           "_varietyName": "Okhura Winter Queen Daikon",
           "_varietySupplier": "Adaptive"
         }
@@ -2296,17 +2296,17 @@
     },
     {
       "name": "Shallot Mix",
-      "crop": "Shallot",
+      "crop": "Shallots",
       "components": [
         {
           "percent": 0.5,
-          "_varietyCrop": "Shallot",
+          "_varietyCrop": "Shallots",
           "_varietyName": "Conservor F1",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.5,
-          "_varietyCrop": "Shallot",
+          "_varietyCrop": "Shallots",
           "_varietyName": "Crème Brulee",
           "_varietySupplier": "Johnny's"
         }
@@ -2314,35 +2314,35 @@
     },
     {
       "name": "Overwinter Snapdragon Mix",
-      "crop": "Snapdragon",
+      "crop": "Snapdragons",
       "components": [
         {
           "percent": 0.2,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "Chantilly Cream Yellow",
           "_varietySupplier": "Osborne"
         },
         {
           "percent": 0.2,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "LION'S MOUTH BLEND",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.2,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "Madam Butterfly Mix",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.2,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "Orange Wonder",
           "_varietySupplier": "Adaptive"
         },
         {
           "percent": 0.2,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "Royal Bride",
           "_varietySupplier": "Uprising"
         }
@@ -2350,29 +2350,29 @@
     },
     {
       "name": "Snapdragon Mix",
-      "crop": "Snapdragon",
+      "crop": "Snapdragons",
       "components": [
         {
           "percent": 0.25,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "LION'S MOUTH BLEND",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "Madam Butterfly Mix",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "Orange Wonder",
           "_varietySupplier": "Adaptive"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Snapdragon",
+          "_varietyCrop": "Snapdragons",
           "_varietyName": "Royal Bride",
           "_varietySupplier": "Uprising"
         }
@@ -2415,72 +2415,30 @@
       ]
     },
     {
-      "name": "Summer Squash Mix",
-      "crop": "Squash - Summer",
-      "components": [
-        {
-          "percent": 0.16666666666666666,
-          "_varietyCrop": "Squash - Summer",
-          "_varietyName": "Costata Romanesco",
-          "_varietySupplier": "High Mowing"
-        },
-        {
-          "percent": 0.16666666666666666,
-          "_varietyCrop": "Squash - Summer",
-          "_varietyName": "Dunja F1",
-          "_varietySupplier": "High Mowing"
-        },
-        {
-          "percent": 0.16666666666666666,
-          "_varietyCrop": "Squash - Summer",
-          "_varietyName": "Zephyr",
-          "_varietySupplier": "Johnny's"
-        },
-        {
-          "percent": 0.16666666666666666,
-          "_varietyCrop": "Squash - Summer",
-          "_varietyName": "Sunburst",
-          "_varietySupplier": "Territorial"
-        },
-        {
-          "percent": 0.16666666666666666,
-          "_varietyCrop": "Squash - Summer",
-          "_varietyName": "Y-Star",
-          "_varietySupplier": "Johnny's"
-        },
-        {
-          "percent": 0.16666666666666666,
-          "_varietyCrop": "Squash - Summer",
-          "_varietyName": "Yellow Crookneck",
-          "_varietySupplier": "Siskiyou"
-        }
-      ]
-    },
-    {
       "name": "Butternut Mix",
-      "crop": "Squash - Winter",
+      "crop": "Squash",
       "components": [
         {
           "percent": 0.25,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Butterscotch PMR F1",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Honeynut",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Nutterbutter",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Waltham",
           "_varietySupplier": "High Mowing"
         }
@@ -2488,17 +2446,17 @@
     },
     {
       "name": "Delicata Mix",
-      "crop": "Squash - Winter",
+      "crop": "Squash",
       "components": [
         {
           "percent": 0.5,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Honey Boat",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.5,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Sugar Dumpling F1",
           "_varietySupplier": "High Mowing"
         }
@@ -2506,29 +2464,29 @@
     },
     {
       "name": "Winter Squash Mix",
-      "crop": "Squash - Winter",
+      "crop": "Squash",
       "components": [
         {
           "percent": 0.25,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Red Kuri",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Sunshine",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Mambo",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.25,
-          "_varietyCrop": "Squash - Winter",
+          "_varietyCrop": "Squash",
           "_varietyName": "Neon",
           "_varietySupplier": "Territorial"
         }
@@ -2595,48 +2553,90 @@
       ]
     },
     {
+      "name": "Summer Squash Mix",
+      "crop": "Summer Squash",
+      "components": [
+        {
+          "percent": 0.16666666666666666,
+          "_varietyCrop": "Summer Squash",
+          "_varietyName": "Costata Romanesco",
+          "_varietySupplier": "High Mowing"
+        },
+        {
+          "percent": 0.16666666666666666,
+          "_varietyCrop": "Summer Squash",
+          "_varietyName": "Dunja F1",
+          "_varietySupplier": "High Mowing"
+        },
+        {
+          "percent": 0.16666666666666666,
+          "_varietyCrop": "Summer Squash",
+          "_varietyName": "Zephyr",
+          "_varietySupplier": "Johnny's"
+        },
+        {
+          "percent": 0.16666666666666666,
+          "_varietyCrop": "Summer Squash",
+          "_varietyName": "Sunburst",
+          "_varietySupplier": "Territorial"
+        },
+        {
+          "percent": 0.16666666666666666,
+          "_varietyCrop": "Summer Squash",
+          "_varietyName": "Y-Star",
+          "_varietySupplier": "Johnny's"
+        },
+        {
+          "percent": 0.16666666666666666,
+          "_varietyCrop": "Summer Squash",
+          "_varietyName": "Yellow Crookneck",
+          "_varietySupplier": "Siskiyou"
+        }
+      ]
+    },
+    {
       "name": "Sunflower Mix",
-      "crop": "Sunflowers",
+      "crop": "Sunflower",
       "components": [
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Sunflowers",
+          "_varietyCrop": "Sunflower",
           "_varietyName": "Garden Anarchy Mix",
           "_varietySupplier": "Uprising"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Sunflowers",
+          "_varietyCrop": "Sunflower",
           "_varietyName": "Goldy Double",
           "_varietySupplier": "High Mowing"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Sunflowers",
+          "_varietyCrop": "Sunflower",
           "_varietyName": "Procut Peach",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Sunflowers",
+          "_varietyCrop": "Sunflower",
           "_varietyName": "Red Hedge",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Sunflowers",
+          "_varietyCrop": "Sunflower",
           "_varietyName": "Shock-O-Lat",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Sunflowers",
+          "_varietyCrop": "Sunflower",
           "_varietyName": "Strawberry Blonde",
           "_varietySupplier": "Johnny's"
         },
         {
           "percent": 0.14285714285714285,
-          "_varietyCrop": "Sunflowers",
+          "_varietyCrop": "Sunflower",
           "_varietyName": "Summer Breeze Mix",
           "_varietySupplier": "Johnny's"
         }

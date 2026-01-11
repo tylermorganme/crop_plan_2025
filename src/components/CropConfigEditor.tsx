@@ -629,12 +629,14 @@ export default function CropConfigEditor({
                   >
                     <option value="">None (assign manually)</option>
                     {(() => {
-                      const cropName = formData.crop?.toLowerCase().trim();
+                      const cropName = formData.crop ?? '';
+                      const currentId = formData.defaultSeedSource?.id;
+                      // Hide deprecated unless currently selected
                       const matchingVarieties = Object.values(varieties).filter(
-                        (v) => v.crop.toLowerCase().trim() === cropName
+                        (v) => v.crop === cropName && (!v.deprecated || v.id === currentId)
                       );
                       const matchingMixes = Object.values(seedMixes).filter(
-                        (m) => m.crop.toLowerCase().trim() === cropName
+                        (m) => m.crop === cropName && (!m.deprecated || m.id === currentId)
                       );
 
                       if (matchingVarieties.length === 0 && matchingMixes.length === 0) {

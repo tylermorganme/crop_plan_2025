@@ -89,6 +89,12 @@ export interface Planting {
   /** Reference to the actual seed variety or mix used */
   seedSource?: SeedSource;
 
+  /**
+   * When true, use the CropConfig's defaultSeedSource instead of seedSource.
+   * This allows the planting to automatically follow config updates.
+   */
+  useDefaultSeedSource?: boolean;
+
   // ---- Adjustments ----
 
   /** Overrides to default config timing */
@@ -156,6 +162,8 @@ export interface CreatePlantingInput {
   followOffset?: number;
   /** Optional: seed variety or mix reference */
   seedSource?: SeedSource;
+  /** Optional: use config's default seed source */
+  useDefaultSeedSource?: boolean;
   /** Optional: timing overrides */
   overrides?: PlantingOverrides;
   /** Optional: actual dates */
@@ -177,6 +185,7 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     followsPlantingId: input.followsPlantingId,
     followOffset: input.followOffset,
     seedSource: input.seedSource,
+    useDefaultSeedSource: input.useDefaultSeedSource,
     overrides: input.overrides,
     actuals: input.actuals,
     notes: input.notes,

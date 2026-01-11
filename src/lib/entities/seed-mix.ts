@@ -41,6 +41,9 @@ export interface SeedMix {
 
   /** User notes about this mix */
   notes?: string;
+
+  /** Whether this mix is deprecated (hidden from dropdowns unless already in use) */
+  deprecated?: boolean;
 }
 
 // =============================================================================
@@ -48,26 +51,28 @@ export interface SeedMix {
 // =============================================================================
 
 /**
- * Generate a unique seed mix ID.
- * Format: SM_{timestamp}_{random}
+ * Generate a deterministic seed mix ID from content.
+ * Format: SM_{contentKey} - uses the content key directly for consistency.
+ * This ensures the same mix always gets the same ID across sessions.
+ *
+ * @param name - Mix name
+ * @param crop - Crop name
+ * @returns Deterministic ID in format "SM_{name}|{crop}"
  */
-export function generateSeedMixId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `SM_${timestamp}_${random}`;
+export function getSeedMixId(name: string, crop: string): string {
+  return `SM_${name.toLowerCase().trim()}|${crop.toLowerCase().trim()}`;
 }
 
 /**
- * Generate a content-based key for deduplication.
+ * Get the content key for deduplication (without SM_ prefix).
  * Two mixes with the same name+crop are considered duplicates.
- * Used during import to detect existing mixes.
  */
 export function getSeedMixContentKey(name: string, crop: string): string {
-  return `${name}|${crop}`.toLowerCase().trim();
+  return `${name.toLowerCase().trim()}|${crop.toLowerCase().trim()}`;
 }
 
 /**
- * Get the content key for an existing seed mix.
+ * Get the content key for an existing seed mix (without SM_ prefix).
  */
 export function getSeedMixKey(mix: SeedMix): string {
   return getSeedMixContentKey(mix.name, mix.crop);
@@ -87,18 +92,22 @@ export interface CreateSeedMixInput {
   components: SeedMixComponent[];
   /** Notes */
   notes?: string;
+  /** Deprecated (hidden from dropdowns) */
+  deprecated?: boolean;
 }
 
 /**
  * Factory function for creating SeedMix objects.
+ * ID is deterministic based on name+crop for consistency across sessions.
  */
 export function createSeedMix(input: CreateSeedMixInput): SeedMix {
   return {
-    id: input.id ?? generateSeedMixId(),
+    id: input.id ?? getSeedMixId(input.name, input.crop),
     name: input.name,
     crop: input.crop,
     components: input.components,
     notes: input.notes,
+    deprecated: input.deprecated,
   };
 }
 

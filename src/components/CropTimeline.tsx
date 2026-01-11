@@ -62,6 +62,8 @@ interface TimelineCrop {
   notes?: string;
   /** Reference to the seed variety or mix used */
   seedSource?: SeedSource;
+  /** Whether planting uses config's default seed source */
+  useDefaultSeedSource?: boolean;
   /** Crop name (for filtering varieties/mixes) */
   crop?: string;
 }
@@ -89,12 +91,13 @@ interface CropTimelineProps {
   planYear?: number;
   /** Callback when user adds a planting from timeline */
   onAddPlanting?: (configId: string, fieldStartDate: string, bedId: string) => Promise<string | void>;
-  /** Callback when user updates planting fields (bedFeet, overrides, notes, seedSource) */
+  /** Callback when user updates planting fields (bedFeet, overrides, notes, seedSource, useDefaultSeedSource) */
   onUpdatePlanting?: (plantingId: string, updates: {
     bedFeet?: number;
     overrides?: PlantingOverrides;
     notes?: string;
     seedSource?: SeedSource | null;
+    useDefaultSeedSource?: boolean;
   }) => Promise<void>;
   /** Varieties available in the plan (for seed source picker) */
   varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
@@ -109,74 +112,95 @@ interface CropTimelineProps {
 interface SeedSourcePickerProps {
   crop: string; // Filter varieties/mixes by this crop
   currentSource?: SeedSource | null;
-  varieties: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
-  seedMixes: Record<string, { id: string; crop: string; name: string }>;
-  /** IDs of varieties/mixes already used in the plan (shown at top) */
+  /** Whether planting is set to use config's default */
+  useDefault?: boolean;
+  /** The config's default seed source (if any) */
+  defaultSource?: SeedSource | null;
+  varieties: Record<string, { id: string; crop: string; name: string; supplier?: string; deprecated?: boolean }>;
+  seedMixes: Record<string, { id: string; crop: string; name: string; deprecated?: boolean }>;
+  /** IDs of varieties/mixes already used in the plan (shown at top, also shows deprecated if used) */
   usedVarietyIds?: Set<string>;
   usedMixIds?: Set<string>;
+  /** Called when explicit source changes. Pass null for "None", or {type, id} for explicit */
   onChange: (source: SeedSource | null) => void;
+  /** Called when user toggles "Use Default" on/off */
+  onToggleDefault?: (useDefault: boolean) => void;
 }
 
 function SeedSourcePicker({
   crop,
   currentSource,
+  useDefault = false,
+  defaultSource,
   varieties,
   seedMixes,
   usedVarietyIds = new Set(),
   usedMixIds = new Set(),
   onChange,
+  onToggleDefault,
 }: SeedSourcePickerProps) {
-  // Filter by crop
+  // Filter varieties by crop, hiding deprecated unless used or currently selected
   const cropVarieties = useMemo(() => {
+    const currentVarietyId = currentSource?.type === 'variety' ? currentSource.id : null;
     return Object.values(varieties)
-      .filter(v => v.crop === crop)
+      .filter(v => v.crop === crop && (!v.deprecated || usedVarietyIds.has(v.id) || v.id === currentVarietyId))
       .sort((a, b) => {
-        // Used varieties first, then alphabetical
         const aUsed = usedVarietyIds.has(a.id) ? 0 : 1;
         const bUsed = usedVarietyIds.has(b.id) ? 0 : 1;
         if (aUsed !== bUsed) return aUsed - bUsed;
         return a.name.localeCompare(b.name);
       });
-  }, [varieties, crop, usedVarietyIds]);
+  }, [varieties, crop, usedVarietyIds, currentSource]);
 
+  // Filter mixes by crop, hiding deprecated unless used or currently selected
   const cropMixes = useMemo(() => {
+    const currentMixId = currentSource?.type === 'mix' ? currentSource.id : null;
     return Object.values(seedMixes)
-      .filter(m => m.crop === crop)
+      .filter(m => m.crop === crop && (!m.deprecated || usedMixIds.has(m.id) || m.id === currentMixId))
       .sort((a, b) => {
-        // Used mixes first, then alphabetical
         const aUsed = usedMixIds.has(a.id) ? 0 : 1;
         const bUsed = usedMixIds.has(b.id) ? 0 : 1;
         if (aUsed !== bUsed) return aUsed - bUsed;
         return a.name.localeCompare(b.name);
       });
-  }, [seedMixes, crop, usedMixIds]);
+  }, [seedMixes, crop, usedMixIds, currentSource]);
+
+  // Get display name for a seed source
+  const getSourceName = useCallback((source: SeedSource | null | undefined): string => {
+    if (!source) return '';
+    if (source.type === 'variety') {
+      const v = varieties[source.id];
+      return v ? `${v.name}${v.supplier ? ` (${v.supplier})` : ''}` : 'Unknown variety';
+    } else {
+      const m = seedMixes[source.id];
+      return m ? m.name : 'Unknown mix';
+    }
+  }, [varieties, seedMixes]);
 
   // Build current value for the select
-  const currentValue = currentSource
-    ? `${currentSource.type}:${currentSource.id}`
-    : '';
+  // "default" = use config's default, "" = none, "variety:id" or "mix:id" = explicit
+  const currentValue = useDefault
+    ? 'default'
+    : currentSource
+      ? `${currentSource.type}:${currentSource.id}`
+      : '';
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
-    if (!val) {
+    if (val === 'default') {
+      // User selected "Default" - toggle useDefault on
+      onToggleDefault?.(true);
+    } else if (!val) {
+      // User selected "None"
+      onToggleDefault?.(false);
       onChange(null);
     } else {
+      // User selected an explicit variety/mix
+      onToggleDefault?.(false);
       const [type, id] = val.split(':') as ['variety' | 'mix', string];
       onChange({ type, id });
     }
-  }, [onChange]);
-
-  // Get display name for current selection
-  const currentName = useMemo(() => {
-    if (!currentSource) return null;
-    if (currentSource.type === 'variety') {
-      const v = varieties[currentSource.id];
-      return v ? `${v.name}${v.supplier ? ` (${v.supplier})` : ''}` : 'Unknown variety';
-    } else {
-      const m = seedMixes[currentSource.id];
-      return m ? m.name : 'Unknown mix';
-    }
-  }, [currentSource, varieties, seedMixes]);
+  }, [onChange, onToggleDefault]);
 
   const hasOptions = cropVarieties.length > 0 || cropMixes.length > 0;
 
@@ -188,6 +212,11 @@ function SeedSourcePicker({
     );
   }
 
+  // Build default option label showing what the default resolves to
+  const defaultLabel = defaultSource
+    ? `Default (${getSourceName(defaultSource)})`
+    : 'Default (not set)';
+
   return (
     <select
       value={currentValue}
@@ -195,6 +224,7 @@ function SeedSourcePicker({
       className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
     >
       <option value="">None</option>
+      <option value="default">{defaultLabel}</option>
       {cropVarieties.length > 0 && (
         <optgroup label="Varieties">
           {cropVarieties.map(v => (
@@ -2454,16 +2484,19 @@ export default function CropTimeline({
                     <div className="pt-3 border-t">
                       <div className="text-xs text-gray-600 mb-1">
                         Seed Source
-                        {!crop.seedSource && <span className="text-amber-500 ml-1">⚠</span>}
+                        {!crop.seedSource && !crop.useDefaultSeedSource && <span className="text-amber-500 ml-1">⚠</span>}
                       </div>
                       <SeedSourcePicker
                         crop={crop.crop}
                         currentSource={crop.seedSource}
+                        useDefault={crop.useDefaultSeedSource}
+                        defaultSource={baseConfig?.defaultSeedSource}
                         varieties={varieties}
                         seedMixes={seedMixes}
                         usedVarietyIds={usedVarietyIds}
                         usedMixIds={usedMixIds}
                         onChange={(source) => onUpdatePlanting(crop.groupId, { seedSource: source })}
+                        onToggleDefault={(useDefault) => onUpdatePlanting(crop.groupId, { useDefaultSeedSource: useDefault })}
                       />
                     </div>
                   )}

@@ -23,12 +23,19 @@ import {
   type PlanRevenueReport,
   type CropRevenueResult,
 } from '@/lib/revenue';
+import {
+  calculatePlanSeeds,
+  formatSeeds,
+  formatOunces,
+  type PlanSeedReport,
+  type SupplierSeedResult,
+} from '@/lib/seeds';
 
 // =============================================================================
 // TAB TYPES
 // =============================================================================
 
-type ReportTab = 'revenue';
+type ReportTab = 'revenue' | 'seeds';
 
 // =============================================================================
 // CHART COMPONENTS
@@ -361,6 +368,183 @@ function CropRevenueTable({ data }: { data: CropRevenueResult[] }) {
 }
 
 // =============================================================================
+// SEEDS TAB CONTENT
+// =============================================================================
+
+function SeedsTab({ report }: { report: PlanSeedReport }) {
+  const [expandedSuppliers, setExpandedSuppliers] = useState<Set<string>>(
+    () => new Set(report.bySupplier.map(s => s.supplier)) // All expanded by default
+  );
+
+  const toggleSupplier = (supplier: string) => {
+    setExpandedSuppliers(prev => {
+      const next = new Set(prev);
+      if (next.has(supplier)) {
+        next.delete(supplier);
+      } else {
+        next.add(supplier);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="text-sm font-medium text-gray-500 mb-1">Total Seeds</div>
+          <div className="text-3xl font-bold text-gray-900">
+            {formatSeeds(report.totalSeeds)}
+          </div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="text-sm font-medium text-gray-500 mb-1">Varieties</div>
+          <div className="text-3xl font-bold text-gray-900">
+            {report.varietyCount}
+          </div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="text-sm font-medium text-gray-500 mb-1">Suppliers</div>
+          <div className="text-3xl font-bold text-gray-900">
+            {report.supplierCount}
+          </div>
+        </div>
+        <div className={`bg-white rounded-lg border p-6 ${
+          report.plantingsWithoutSeed > 0
+            ? 'border-orange-300 bg-orange-50'
+            : 'border-gray-200'
+        }`}>
+          <div className="text-sm font-medium text-gray-500 mb-1">Unassigned</div>
+          <div className={`text-3xl font-bold ${
+            report.plantingsWithoutSeed > 0 ? 'text-orange-600' : 'text-gray-900'
+          }`}>
+            {report.plantingsWithoutSeed}
+          </div>
+          {report.plantingsWithoutSeed > 0 && (
+            <div className="text-xs text-orange-600 mt-1">
+              plantings without seed source
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Supplier Sections */}
+      <div className="space-y-4">
+        {report.bySupplier.map(supplier => (
+          <div
+            key={supplier.supplier}
+            className="bg-white rounded-lg border border-gray-200 overflow-hidden"
+          >
+            {/* Supplier Header */}
+            <button
+              onClick={() => toggleSupplier(supplier.supplier)}
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <span className="text-lg font-semibold text-gray-900">
+                  {supplier.supplier}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {supplier.varieties.length} varieties
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">
+                  {formatSeeds(supplier.totalSeeds)} seeds
+                </span>
+                {supplier.totalOunces !== undefined && (
+                  <span className="text-sm text-gray-500">
+                    ({formatOunces(supplier.totalOunces)})
+                  </span>
+                )}
+                <span className="text-gray-400">
+                  {expandedSuppliers.has(supplier.supplier) ? '▼' : '▶'}
+                </span>
+              </div>
+            </button>
+
+            {/* Varieties Table */}
+            {expandedSuppliers.has(supplier.supplier) && (
+              <div className="border-t border-gray-200 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="py-2 px-4 text-left font-medium text-gray-600">Crop</th>
+                      <th className="py-2 px-4 text-left font-medium text-gray-600">Variety</th>
+                      <th className="py-2 px-4 text-right font-medium text-gray-600">Seeds</th>
+                      <th className="py-2 px-4 text-right font-medium text-gray-600">Weight</th>
+                      <th className="py-2 px-4 text-center font-medium text-gray-600">Organic</th>
+                      <th className="py-2 px-4 text-center font-medium text-gray-600">Have</th>
+                      <th className="py-2 px-4 text-right font-medium text-gray-600">Plantings</th>
+                      <th className="py-2 px-4 text-left font-medium text-gray-600">Link</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {supplier.varieties.map(v => (
+                      <tr key={v.varietyId} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-2 px-4 text-gray-900">{v.crop}</td>
+                        <td className="py-2 px-4 font-medium text-gray-900">{v.varietyName}</td>
+                        <td className="py-2 px-4 text-right text-gray-900">
+                          {v.seedsNeeded.toLocaleString()}
+                        </td>
+                        <td className="py-2 px-4 text-right text-gray-600">
+                          {v.ouncesNeeded !== undefined ? formatOunces(v.ouncesNeeded) : '-'}
+                        </td>
+                        <td className="py-2 px-4 text-center">
+                          {v.organic ? (
+                            <span className="text-green-600">✓</span>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-4 text-center">
+                          {v.alreadyOwn ? (
+                            <span className="text-blue-600">✓</span>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-4 text-right text-gray-600">
+                          {v.plantingCount}
+                        </td>
+                        <td className="py-2 px-4">
+                          {v.website ? (
+                            <a
+                              href={v.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              Order →
+                            </a>
+                          ) : (
+                            <span className="text-gray-300">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {report.bySupplier.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <p className="text-gray-500">No seed sources assigned to plantings yet.</p>
+            <p className="text-sm text-gray-400 mt-2">
+              Assign varieties or seed mixes to plantings in the timeline view.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // MAIN PAGE
 // =============================================================================
 
@@ -411,10 +595,15 @@ export default function ReportsPage() {
     loadPlan();
   }, [planId, currentPlan?.id, loadPlanById]);
 
-  // Calculate report when plan is loaded
-  const report = useMemo(() => {
+  // Calculate reports when plan is loaded
+  const revenueReport = useMemo(() => {
     if (!currentPlan) return null;
     return calculatePlanRevenue(currentPlan);
+  }, [currentPlan]);
+
+  const seedReport = useMemo(() => {
+    if (!currentPlan) return null;
+    return calculatePlanSeeds(currentPlan);
   }, [currentPlan]);
 
   if (loading) {
@@ -473,15 +662,27 @@ export default function ReportsPage() {
             >
               Revenue
             </button>
-            {/* Future tabs: Tasks, Seed Orders, etc. */}
+            <button
+              onClick={() => setActiveTab('seeds')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'seeds'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Seeds
+            </button>
           </div>
         </div>
       </header>
 
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'revenue' && report && (
-          <RevenueTab report={report} />
+        {activeTab === 'revenue' && revenueReport && (
+          <RevenueTab report={revenueReport} />
+        )}
+        {activeTab === 'seeds' && seedReport && (
+          <SeedsTab report={seedReport} />
         )}
       </main>
     </div>

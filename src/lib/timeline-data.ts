@@ -9,6 +9,9 @@ import bedPlanData from '@/data/bed-plan.json';
 // Re-export types from plan-types for backwards compatibility
 export type { TimelineCrop, ResourceGroup, BedSpanInfo } from './plan-types';
 import type { TimelineCrop, ResourceGroup, BedSpanInfo } from './plan-types';
+import type { SeedSource } from './entities/planting';
+import { getStockVarieties, getStockSeedMixes } from './stock-data';
+import { getVarietyKey } from './entities/variety';
 
 // Import slim planting computation
 import {
@@ -63,6 +66,10 @@ interface BedAssignment {
   category?: string | number;
   growingStructure?: string;
   dsTp?: 'DS' | 'TP';
+  // Seed source (from Excel Bed Plan sheet)
+  seedSourceName?: string;
+  seedSourceSupplier?: string | null;
+  seedSourceIsMix?: boolean;
 }
 
 interface BedPlanData {
@@ -78,6 +85,65 @@ interface BedPlanData {
  * come from the Bed entity's lengthFt property.
  */
 const LEGACY_IMPORT_BED_FT = 50;
+
+// Cache for seed source resolution
+let seedSourceCache: {
+  varietyByKey: Map<string, string>;
+  mixByName: Map<string, string>;
+} | null = null;
+
+/**
+ * Resolve seed source from assignment fields to a SeedSource reference.
+ * Looks up variety by crop/name/supplier or mix by name.
+ */
+function resolveSeedSource(assignment: BedAssignment): SeedSource | undefined {
+  if (!assignment.seedSourceName) {
+    return undefined;
+  }
+
+  // Build cache on first use
+  if (!seedSourceCache) {
+    const varieties = getStockVarieties();
+    const mixes = getStockSeedMixes();
+
+    const varietyByKey = new Map<string, string>();
+    for (const v of Object.values(varieties)) {
+      varietyByKey.set(getVarietyKey(v), v.id);
+    }
+
+    const mixByName = new Map<string, string>();
+    for (const m of Object.values(mixes)) {
+      // Key by lowercase name for fuzzy matching
+      mixByName.set(m.name.toLowerCase(), m.id);
+    }
+
+    seedSourceCache = { varietyByKey, mixByName };
+  }
+
+  const { varietyByKey, mixByName } = seedSourceCache;
+
+  if (assignment.seedSourceIsMix) {
+    // Look up mix by name
+    const mixId = mixByName.get(assignment.seedSourceName.toLowerCase());
+    if (mixId) {
+      return { type: 'mix', id: mixId };
+    }
+  } else {
+    // Look up variety by crop/name/supplier
+    // Extract crop from the assignment.crop field (e.g., "basil (tulsi) - mature leaf 1x | field tp")
+    // Strip parenthetical qualifiers like "(tulsi)" or "(4x9)" to get base crop name
+    const cropMatch = assignment.crop.match(/^([^(-]+)/);
+    const crop = cropMatch ? cropMatch[1].trim() : '';
+
+    const varietyKey = `${crop}|${assignment.seedSourceName}|${assignment.seedSourceSupplier || ''}`.toLowerCase().trim();
+    const varietyId = varietyByKey.get(varietyKey);
+    if (varietyId) {
+      return { type: 'variety', id: varietyId };
+    }
+  }
+
+  return undefined;
+}
 
 /**
  * Calculate how many beds a crop spans based on feetNeeded and the starting bed.
@@ -226,6 +292,9 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
     // Calculate feet needed
     const feetNeeded = (assignment.bedsCount ?? 1) * LEGACY_IMPORT_BED_FT;
 
+    // Resolve seed source from assignment fields
+    const seedSource = resolveSeedSource(assignment);
+
     // If we can compute dates from config, do so
     if (baseConfig && assignment.fixedFieldStartDate) {
       // Extract slim planting
@@ -253,6 +322,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
         timelineCrops.push({
           ...tc,
           name: displayName,
+          seedSource,
         });
       }
     } else {
@@ -290,6 +360,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
           feetUsed: info.feetUsed,
           bedCapacityFt: info.bedCapacityFt,
           plantingMethod,
+          seedSource,
         });
       });
     }
@@ -484,6 +555,7 @@ export function expandPlantingsToTimelineCrops(
       crop.overrides = planting.overrides;
       crop.notes = planting.notes;
       crop.seedSource = planting.seedSource;
+      crop.useDefaultSeedSource = planting.useDefaultSeedSource;
       // Store crop name for filtering varieties/mixes in picker
       crop.crop = config.crop;
 

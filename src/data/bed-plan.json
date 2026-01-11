@@ -34,7 +34,10 @@
       "daysUntilHarvest": 858,
       "trueHarvestWindow": 18,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Arugala Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
@@ -70,7 +73,10 @@
       "daysUntilHarvest": 885,
       "trueHarvestWindow": 18,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Arugala Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
@@ -106,7 +112,10 @@
       "daysUntilHarvest": 845,
       "trueHarvestWindow": 18,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Arugala Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
@@ -142,7 +151,10 @@
       "daysUntilHarvest": 942,
       "trueHarvestWindow": 18,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Arugala Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
@@ -178,7 +190,10 @@
       "daysUntilHarvest": 988,
       "trueHarvestWindow": 18,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Arugala Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Asian Greens - Mature Head 1X | Field TP ",
@@ -214,7 +229,10 @@
       "daysUntilHarvest": 899,
       "trueHarvestWindow": 14,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Asian Green Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Asian Greens - Mature Head 1X | Field TP ",
@@ -250,7 +268,10 @@
       "daysUntilHarvest": 994,
       "trueHarvestWindow": 14,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Asian Green Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Asian Greens - Young Leaf 1X | Field DS ",
@@ -286,7 +307,10 @@
       "daysUntilHarvest": 877,
       "trueHarvestWindow": 14,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Spring Asian Greens Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Basil (Interplant) - Mature Leaf 1X | Tunnel TP SpSuOw",
@@ -322,7 +346,10 @@
       "daysUntilHarvest": 931,
       "trueHarvestWindow": 49,
       "category": "Herb",
-      "growingStructure": "Tunnel"
+      "growingStructure": "Tunnel",
+      "seedSourceName": "Basil Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Basil (Italian) - Mature Leaf 1X | Tunnel TP SpSuOw",
@@ -358,7 +385,10 @@
       "daysUntilHarvest": 964,
       "trueHarvestWindow": 49,
       "category": "Herb",
-      "growingStructure": "Tunnel"
+      "growingStructure": "Tunnel",
+      "seedSourceName": "Basil Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Basil (Tulsi) - Mature Leaf 1X | Field TP ",
@@ -394,7 +424,10 @@
       "daysUntilHarvest": 936,
       "trueHarvestWindow": 112,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Tulsi",
+      "seedSourceSupplier": "Uprising",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Bean (Pole) - Young Pod 3X | Field TP SuFa",
@@ -430,7 +463,10 @@
       "daysUntilHarvest": 959,
       "trueHarvestWindow": 43,
       "category": "Beans",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Pole Bean Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Bean (Pole) - Young Pod 3X | Field TP SuFa",
@@ -466,7 +502,10 @@
       "daysUntilHarvest": 959,
       "trueHarvestWindow": 43,
       "category": "Beans",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Pole Bean Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Beet - Mature Root 3X | Field TP Sp",
@@ -502,7 +541,10 @@
       "daysUntilHarvest": 908,
       "trueHarvestWindow": 35,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Beet Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Beet - Mature Root 3X | Field TP SuFa",
@@ -538,7 +580,10 @@
       "daysUntilHarvest": 982,
       "trueHarvestWindow": 35,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Beet Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Beet - Mature Root 3X | Field TP SuFa",
@@ -610,7 +655,10 @@
       "daysUntilHarvest": 975,
       "trueHarvestWindow": 21,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Sprouting Broccoli Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cabbage - Large Head 1X | Field TP Fa",
@@ -646,7 +694,10 @@
       "daysUntilHarvest": 1022,
       "trueHarvestWindow": 21,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cabbage Fall Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cabbage (Chinese) - Large Head 1X | Field TP Wi",
@@ -682,7 +733,10 @@
       "daysUntilHarvest": 987,
       "trueHarvestWindow": 14,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Chinese Cabbage Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cabbage (Chinese) - Small Head 1X | Field TP Fa",
@@ -718,7 +772,10 @@
       "daysUntilHarvest": 992,
       "trueHarvestWindow": 14,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Mini Chinese Cabbage Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cabbage (Fast Early 9\") - Large Head 1X | Field TP Sp",
@@ -754,7 +811,10 @@
       "daysUntilHarvest": 922,
       "trueHarvestWindow": 7,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Mini Cabbage Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cabbage (Fast Mid 9\") - Large Head 1X | Field TP Sp",
@@ -790,7 +850,10 @@
       "daysUntilHarvest": 911,
       "trueHarvestWindow": 7,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Farao F1",
+      "seedSourceSupplier": "High Mowing",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
@@ -826,7 +889,10 @@
       "daysUntilHarvest": 895,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Early Carrot Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
@@ -862,7 +928,10 @@
       "daysUntilHarvest": 920,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Early Carrot Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
@@ -898,7 +967,10 @@
       "daysUntilHarvest": 920,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Early Carrot Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
@@ -934,7 +1006,10 @@
       "daysUntilHarvest": 980,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Early Carrot Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
@@ -970,7 +1045,10 @@
       "daysUntilHarvest": 980,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Early Carrot Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Su",
@@ -1042,7 +1120,10 @@
       "daysUntilHarvest": 994,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Maincrop Carrot Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi",
@@ -1078,7 +1159,10 @@
       "daysUntilHarvest": 996,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Maincrop Carrot Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cauliflower - Mature Head 1X | Field TP Fa",
@@ -1114,7 +1198,10 @@
       "daysUntilHarvest": 1022,
       "trueHarvestWindow": 21,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Fall Cauliflower Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cauliflower (Green-Stem) - Mature Head 1X | Field TP Su",
@@ -1150,7 +1237,10 @@
       "daysUntilHarvest": 989,
       "trueHarvestWindow": 21,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Song TJS-65",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Celery - Loose Rib 1X | Field TP SpSu",
@@ -1186,7 +1276,10 @@
       "daysUntilHarvest": 917,
       "trueHarvestWindow": 147,
       "category": "Celery",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Celery Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Choi Sum - Mature Head 1X | Field TP ",
@@ -1222,7 +1315,10 @@
       "daysUntilHarvest": 867,
       "trueHarvestWindow": 28,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Green 70 D",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Choi Sum - Mature Head 1X | Field TP ",
@@ -1258,7 +1354,10 @@
       "daysUntilHarvest": 976,
       "trueHarvestWindow": 28,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Green 70 D",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Chrysanthemum Greens - Mature Leaf 1X | Field DS Ow",
@@ -1294,7 +1393,10 @@
       "daysUntilHarvest": 851,
       "trueHarvestWindow": 56,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Shungiku, Komi",
+      "seedSourceSupplier": "Adaptive",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
@@ -1330,7 +1432,10 @@
       "daysUntilHarvest": 897,
       "trueHarvestWindow": 14,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cilantro Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
@@ -1366,7 +1471,10 @@
       "daysUntilHarvest": 904,
       "trueHarvestWindow": 14,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cilantro Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
@@ -1402,7 +1510,10 @@
       "daysUntilHarvest": 904,
       "trueHarvestWindow": 14,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cilantro Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
@@ -1438,7 +1549,10 @@
       "daysUntilHarvest": 923,
       "trueHarvestWindow": 14,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cilantro Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
@@ -1474,7 +1588,10 @@
       "daysUntilHarvest": 920,
       "trueHarvestWindow": 14,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cilantro Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
@@ -1510,7 +1627,10 @@
       "daysUntilHarvest": 944,
       "trueHarvestWindow": 14,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cilantro Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
@@ -1546,7 +1666,10 @@
       "daysUntilHarvest": 1007,
       "trueHarvestWindow": 14,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cilantro Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Corn  (Sweet Early) - Mature Cob 2X | Field DS ",
@@ -1582,7 +1705,10 @@
       "daysUntilHarvest": 1001,
       "trueHarvestWindow": 14,
       "category": "Corn",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Corn Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cucumber (Asian Long) - Large Fruit 1X | Greenhouse TP ",
@@ -1618,7 +1744,10 @@
       "daysUntilHarvest": 906,
       "trueHarvestWindow": 105,
       "category": "Cucumber",
-      "growingStructure": "Greenhouse"
+      "growingStructure": "Greenhouse",
+      "seedSourceName": "Asian Cucumber Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cucumber (Asian Long) - Ripe Fruit 1X | Field TP ",
@@ -1654,7 +1783,10 @@
       "daysUntilHarvest": 916,
       "trueHarvestWindow": 77,
       "category": "Cucumber",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Asian Cucumber Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cucumber (Lebanese) - Small Fruit 1X | Greenhouse TP ",
@@ -1690,7 +1822,10 @@
       "daysUntilHarvest": 906,
       "trueHarvestWindow": 105,
       "category": 0,
-      "growingStructure": "Greenhouse"
+      "growingStructure": "Greenhouse",
+      "seedSourceName": "Lebanese Cucumber Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Cucumber (Slicer) - Ripe Fruit 1X | Field TP ",
@@ -1726,7 +1861,10 @@
       "daysUntilHarvest": 916,
       "trueHarvestWindow": 77,
       "category": "Cucumber",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Slicing Cucumber Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Dahlia - Cut Flower 1X | Field DS ",
@@ -1798,7 +1936,10 @@
       "daysUntilHarvest": 929,
       "trueHarvestWindow": 17,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Dill Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Su",
@@ -1834,7 +1975,10 @@
       "daysUntilHarvest": 890,
       "trueHarvestWindow": 17,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Dill Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Su",
@@ -1870,7 +2014,10 @@
       "daysUntilHarvest": 897,
       "trueHarvestWindow": 17,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Dill Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Su",
@@ -1906,7 +2053,10 @@
       "daysUntilHarvest": 916,
       "trueHarvestWindow": 17,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Dill Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Su",
@@ -1942,7 +2092,10 @@
       "daysUntilHarvest": 940,
       "trueHarvestWindow": 17,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Dill Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Fava Bean - Mature Pod 1X | Field DS Sp",
@@ -1978,7 +2131,10 @@
       "daysUntilHarvest": 901,
       "trueHarvestWindow": 21,
       "category": "Fava Bean",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Aquadulce",
+      "seedSourceSupplier": "Sustainable Seed Company",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Fennel - Mini Bulb 1X | Field TP Sp",
@@ -2014,7 +2170,10 @@
       "daysUntilHarvest": 887,
       "trueHarvestWindow": 14,
       "category": "Fennel",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Fennel Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Garlic (Green) - Young Bulb 1X | Field DS Ow",
@@ -2050,7 +2209,10 @@
       "daysUntilHarvest": 851,
       "trueHarvestWindow": 29,
       "category": "Garlic",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Saved Seed",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Garlic (Hardneck) - Storage Bulb 1X | Field DS Ow",
@@ -2086,7 +2248,10 @@
       "daysUntilHarvest": 882,
       "trueHarvestWindow": 14,
       "category": "Garlic",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Saved Seed",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Garlic (Softneck) - Storage Bulb 1X | Field DS Ow",
@@ -2122,7 +2287,10 @@
       "daysUntilHarvest": 896,
       "trueHarvestWindow": 10,
       "category": "Garlic",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Saved Seed",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Gooseberry (Cape) - Mature Berry 1X | Field TP ",
@@ -2158,7 +2326,10 @@
       "daysUntilHarvest": 979,
       "trueHarvestWindow": 98,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Peruvian Ground Cherry",
+      "seedSourceSupplier": "Garden Hoard",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Kale - Mature Leaf 2X | Field TP Sp",
@@ -2194,7 +2365,10 @@
       "daysUntilHarvest": 911,
       "trueHarvestWindow": 56,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Warm Kale Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Fa",
@@ -2230,7 +2404,10 @@
       "daysUntilHarvest": 987,
       "trueHarvestWindow": 14,
       "category": "Brassica",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Fresh Kholrabi Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Sp",
@@ -2266,7 +2443,10 @@
       "daysUntilHarvest": 869,
       "trueHarvestWindow": 14,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Fresh Kholrabi Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Leek - Mature Stalk 5X | Field TP Su",
@@ -2302,7 +2482,10 @@
       "daysUntilHarvest": 977,
       "trueHarvestWindow": 28,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Summer Leek Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Lemongrass - Mature Stalks 1X | Field TP SpSu",
@@ -2338,7 +2521,10 @@
       "daysUntilHarvest": 941,
       "trueHarvestWindow": 63,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "East Indian Lemongrass",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
@@ -2374,7 +2560,10 @@
       "daysUntilHarvest": 916,
       "trueHarvestWindow": 14,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Brown Goldring",
+      "seedSourceSupplier": "Wild Garden",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
@@ -2410,7 +2599,10 @@
       "daysUntilHarvest": 924,
       "trueHarvestWindow": 14,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Rouge D'Hiver",
+      "seedSourceSupplier": "High Mowing",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
@@ -2446,7 +2638,10 @@
       "daysUntilHarvest": 925,
       "trueHarvestWindow": 14,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Jester",
+      "seedSourceSupplier": "Wild Garden",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
@@ -2482,7 +2677,10 @@
       "daysUntilHarvest": 943,
       "trueHarvestWindow": 14,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Cool Lettuce Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
@@ -2518,7 +2716,10 @@
       "daysUntilHarvest": 938,
       "trueHarvestWindow": 14,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Truchas - Pelleted",
+      "seedSourceSupplier": "Osborne",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa",
@@ -2554,7 +2755,10 @@
       "daysUntilHarvest": 982,
       "trueHarvestWindow": 14,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Summertime",
+      "seedSourceSupplier": "Uprising",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa",
@@ -2590,7 +2794,10 @@
       "daysUntilHarvest": 997,
       "trueHarvestWindow": 14,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Lovelock",
+      "seedSourceSupplier": "High Mowing",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP Sp",
@@ -2626,7 +2833,10 @@
       "daysUntilHarvest": 904,
       "trueHarvestWindow": 11,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Salanova Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
@@ -2662,7 +2872,10 @@
       "daysUntilHarvest": 906,
       "trueHarvestWindow": 27,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Salanova Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
@@ -2698,7 +2911,10 @@
       "daysUntilHarvest": 910,
       "trueHarvestWindow": 27,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Salanova Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
@@ -2734,7 +2950,10 @@
       "daysUntilHarvest": 982,
       "trueHarvestWindow": 27,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Salanova Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
@@ -2770,7 +2989,10 @@
       "daysUntilHarvest": 996,
       "trueHarvestWindow": 27,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Salanova Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Tunnel TP Sp",
@@ -2806,7 +3028,10 @@
       "daysUntilHarvest": 902,
       "trueHarvestWindow": 13,
       "category": 0,
-      "growingStructure": "Tunnel"
+      "growingStructure": "Tunnel",
+      "seedSourceName": "Salanova Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Lovage (Perennial) - Mature Leaf 1X | Field DS ",
@@ -2842,7 +3067,10 @@
       "daysUntilHarvest": 490,
       "trueHarvestWindow": 260,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Perennial",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Magenta Spreen - Young Stem 1X |  DS Sp",
@@ -2878,7 +3106,10 @@
       "daysUntilHarvest": 874,
       "trueHarvestWindow": 35,
       "category": "Flower",
-      "growingStructure": 0
+      "growingStructure": 0,
+      "seedSourceName": "Magenta Spreen",
+      "seedSourceSupplier": "Adaptive",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Melon - Ripe Fruit 1X | Field TP ",
@@ -2914,7 +3145,10 @@
       "daysUntilHarvest": 947,
       "trueHarvestWindow": 21,
       "category": "Melon",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Melon Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Onion - Mature Bulb 6X | Field TP SpSu",
@@ -2950,7 +3184,10 @@
       "daysUntilHarvest": 945,
       "trueHarvestWindow": 14,
       "category": "Onion",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Rot Resistant Onions Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Onion (Salad Early) - Young Bulb 10X | Field TP Sp",
@@ -2986,7 +3223,10 @@
       "daysUntilHarvest": 900,
       "trueHarvestWindow": 56,
       "category": "Onion",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Rot Resistant Onions Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Onion (Salad Late) - Young Bulb 10X | Field TP Sp",
@@ -3022,7 +3262,10 @@
       "daysUntilHarvest": 907,
       "trueHarvestWindow": 56,
       "category": "Onion",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Rot Resistant Onions Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Parsley - Mature Leaf 3X | Field TP Sp",
@@ -3058,7 +3301,10 @@
       "daysUntilHarvest": 896,
       "trueHarvestWindow": 119,
       "category": "Herb",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Parsley Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Peas (Snap) - Young Pod 3X | Field TP SpSu",
@@ -3094,7 +3340,10 @@
       "daysUntilHarvest": 890,
       "trueHarvestWindow": 33,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Snap Pea Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Pepper (Bell) - Ripe Fruit Large 1X | Field TP ",
@@ -3130,7 +3379,10 @@
       "daysUntilHarvest": 960,
       "trueHarvestWindow": 70,
       "category": "Pepper",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Shishito",
+      "seedSourceSupplier": "Osborne",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Pepper (Bell) - Ripe Fruit Large 1X | Greenhouse TP ",
@@ -3166,7 +3418,10 @@
       "daysUntilHarvest": 960,
       "trueHarvestWindow": 126,
       "category": "Pepper",
-      "growingStructure": "Greenhouse"
+      "growingStructure": "Greenhouse",
+      "seedSourceName": "Sweet Pepper Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP ",
@@ -3202,7 +3457,10 @@
       "daysUntilHarvest": 960,
       "trueHarvestWindow": 70,
       "category": "Pepper",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Shishito",
+      "seedSourceSupplier": "Osborne",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP ",
@@ -3238,7 +3496,10 @@
       "daysUntilHarvest": 971,
       "trueHarvestWindow": 70,
       "category": "Pepper",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hot Pepper Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Greenhouse TP ",
@@ -3274,7 +3535,10 @@
       "daysUntilHarvest": 960,
       "trueHarvestWindow": 126,
       "category": "Pepper",
-      "growingStructure": "Greenhouse"
+      "growingStructure": "Greenhouse",
+      "seedSourceName": "Sweet Pepper Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Potato (Early) - Mature Root 1X | Field DS ",
@@ -3310,7 +3574,10 @@
       "daysUntilHarvest": 898,
       "trueHarvestWindow": 7,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Early Potato Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Potato (Main Crop) - Storage Root 1X | Field DS ",
@@ -3346,7 +3613,10 @@
       "daysUntilHarvest": 964,
       "trueHarvestWindow": 7,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Main Potato Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radicchio (90 Day) - Forced Head 1X | Field TP Su",
@@ -3382,7 +3652,10 @@
       "daysUntilHarvest": 1022,
       "trueHarvestWindow": 14,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "90 Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Sp",
@@ -3418,7 +3691,10 @@
       "daysUntilHarvest": 846,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Sp",
@@ -3454,7 +3730,10 @@
       "daysUntilHarvest": 882,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
@@ -3490,7 +3769,10 @@
       "daysUntilHarvest": 858,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
@@ -3526,7 +3808,10 @@
       "daysUntilHarvest": 942,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
@@ -3562,7 +3847,10 @@
       "daysUntilHarvest": 964,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
@@ -3598,7 +3886,10 @@
       "daysUntilHarvest": 999,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
@@ -3634,7 +3925,10 @@
       "daysUntilHarvest": 975,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
@@ -3670,7 +3964,10 @@
       "daysUntilHarvest": 994,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
@@ -3706,7 +4003,10 @@
       "daysUntilHarvest": 1003,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (Daikon) - Storage Root 1X | Field TP FaWi",
@@ -3742,7 +4042,10 @@
       "daysUntilHarvest": 987,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Winter Radish Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Radish (Munchen Bier) - Storage Root 1X | Field DS ",
@@ -3778,7 +4081,10 @@
       "daysUntilHarvest": 961,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Schwarzer Runder",
+      "seedSourceSupplier": "High Mowing",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Rutabaga - Mature Root 2X | Field TP Fa",
@@ -3922,7 +4228,10 @@
       "daysUntilHarvest": 906,
       "trueHarvestWindow": 14,
       "category": "Onion",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Scallion Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Scallion - Mature Stalk 6X | Field TP Sp",
@@ -3958,7 +4267,10 @@
       "daysUntilHarvest": 956,
       "trueHarvestWindow": 14,
       "category": "Onion",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Scallion Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Scallion - Mature Stalk 6X | Field TP Sp",
@@ -3994,7 +4306,10 @@
       "daysUntilHarvest": 926,
       "trueHarvestWindow": 14,
       "category": "Onion",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Scallion Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Sorrel - Mature Leaf 3X | Field TP ",
@@ -4030,7 +4345,10 @@
       "daysUntilHarvest": 517,
       "trueHarvestWindow": 224,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Sorrel Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Squash (Delicata) - Storage 1X | Field TP ",
@@ -4066,7 +4384,10 @@
       "daysUntilHarvest": 964,
       "trueHarvestWindow": 7,
       "category": "Winter Squash",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Delicata Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Squash (Kuri) - Storage 1X | Field TP ",
@@ -4102,7 +4423,10 @@
       "daysUntilHarvest": 964,
       "trueHarvestWindow": 7,
       "category": "Winter Squash",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Winter Squash Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Summer Squash (Long Season) - Ripe Fruit 1X | Field TP Su",
@@ -4138,7 +4462,10 @@
       "daysUntilHarvest": 896,
       "trueHarvestWindow": 95,
       "category": "Summer Squash",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Centercut",
+      "seedSourceSupplier": "Row 7",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Summer Squash (Short Season) - Ripe Fruit 1X | Field TP Su",
@@ -4174,7 +4501,10 @@
       "daysUntilHarvest": 896,
       "trueHarvestWindow": 77,
       "category": "Summer Squash",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Summer Squash Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Swiss Chard - Mature Leaf 1X | Field TP SpSuFa",
@@ -4210,7 +4540,10 @@
       "daysUntilHarvest": 903,
       "trueHarvestWindow": 87,
       "category": "Green",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Swiss Chard Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomatillo - Ripe Fruit 1X | Field TP ",
@@ -4246,7 +4579,10 @@
       "daysUntilHarvest": 911,
       "trueHarvestWindow": 70,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Tomatillo Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su",
@@ -4282,7 +4618,10 @@
       "daysUntilHarvest": 947,
       "trueHarvestWindow": 63,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Determinate Beefsteak Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su",
@@ -4318,7 +4657,10 @@
       "daysUntilHarvest": 947,
       "trueHarvestWindow": 63,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Determinate Beefsteak Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Field TP Su",
@@ -4354,7 +4696,10 @@
       "daysUntilHarvest": 956,
       "trueHarvestWindow": 63,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Large Tomato Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Greenhouse TP Su",
@@ -4390,7 +4735,10 @@
       "daysUntilHarvest": 941,
       "trueHarvestWindow": 84,
       "category": "Tomato",
-      "growingStructure": "Greenhouse"
+      "growingStructure": "Greenhouse",
+      "seedSourceName": "Large Tomato Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su",
@@ -4426,7 +4774,10 @@
       "daysUntilHarvest": 962,
       "trueHarvestWindow": 98,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Determinate Cherry Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su",
@@ -4462,7 +4813,10 @@
       "daysUntilHarvest": 962,
       "trueHarvestWindow": 98,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Determinate Cherry Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Cherry) - Ripe Fruit Small 1X | Greenhouse TP Su",
@@ -4498,7 +4852,10 @@
       "daysUntilHarvest": 911,
       "trueHarvestWindow": 112,
       "category": "Tomato",
-      "growingStructure": "Greenhouse"
+      "growingStructure": "Greenhouse",
+      "seedSourceName": "Cherry Tomato Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su",
@@ -4534,7 +4891,10 @@
       "daysUntilHarvest": 982,
       "trueHarvestWindow": 63,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Determinate Medium Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su",
@@ -4570,7 +4930,10 @@
       "daysUntilHarvest": 982,
       "trueHarvestWindow": 63,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Determinate Medium Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Tomato (Medium) - Ripe Fruit Medium 1X | Field TP Su",
@@ -4606,7 +4969,10 @@
       "daysUntilHarvest": 956,
       "trueHarvestWindow": 63,
       "category": "Tomato",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Medium Tomato Mix",
+      "seedSourceSupplier": null,
+      "seedSourceIsMix": true
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp",
@@ -4642,7 +5008,10 @@
       "daysUntilHarvest": 890,
       "trueHarvestWindow": 14,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hakurei",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp",
@@ -4678,7 +5047,10 @@
       "daysUntilHarvest": 854,
       "trueHarvestWindow": 14,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hakurei",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
@@ -4714,7 +5086,10 @@
       "daysUntilHarvest": 951,
       "trueHarvestWindow": 14,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hakurei",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
@@ -4750,7 +5125,10 @@
       "daysUntilHarvest": 972,
       "trueHarvestWindow": 14,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hakurei",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
@@ -4786,7 +5164,10 @@
       "daysUntilHarvest": 983,
       "trueHarvestWindow": 14,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hakurei",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
@@ -4822,7 +5203,10 @@
       "daysUntilHarvest": 1007,
       "trueHarvestWindow": 14,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hakurei",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
@@ -4858,7 +5242,10 @@
       "daysUntilHarvest": 1002,
       "trueHarvestWindow": 14,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hakurei",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
@@ -4894,7 +5281,10 @@
       "daysUntilHarvest": 1020,
       "trueHarvestWindow": 14,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "seedSourceName": "Hakurei",
+      "seedSourceSupplier": "Johnny's",
+      "seedSourceIsMix": false
     }
   ],
   "beds": [

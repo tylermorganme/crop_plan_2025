@@ -82,6 +82,8 @@ export interface TimelineCrop {
   notes?: string;
   /** Reference to the seed variety or mix used */
   seedSource?: import('./planting').SeedSource;
+  /** Whether planting uses config's default seed source */
+  useDefaultSeedSource?: boolean;
   /** Calculated seeds needed for this planting (based on CropConfig.seedsPerBed) */
   seedsNeeded?: number;
   /** Crop name (for filtering varieties/mixes in picker) */

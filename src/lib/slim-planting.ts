@@ -544,6 +544,7 @@ export function collapseToPlantings(crops: TimelineCrop[]): Planting[] {
       fieldStartDate: first.startDate,
       startBed: startBedEntry?.resource || null,
       bedFeet: totalFeet,
+      seedSource: first.seedSource,
       overrides: first.overrides,
       notes: first.notes,
     });

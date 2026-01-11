@@ -614,6 +614,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         data.plan.bedGroups = groups;
       }
 
+      // Ensure varieties, seedMixes, and products exist (for plans created before stock data loading)
+      if (!data.plan.varieties || Object.keys(data.plan.varieties).length === 0) {
+        data.plan.varieties = getStockVarieties();
+      }
+      if (!data.plan.seedMixes || Object.keys(data.plan.seedMixes).length === 0) {
+        data.plan.seedMixes = getStockSeedMixes();
+      }
+      if (!data.plan.products || Object.keys(data.plan.products).length === 0) {
+        data.plan.products = getStockProducts();
+      }
+
       // Validate plan on load
       try {
         validatePlan(data.plan);
@@ -936,11 +947,13 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           lastModified: now,
         };
 
-        // Auto-assign defaultSeedSource from CropConfig if planting doesn't have one
-        if (!newPlanting.seedSource && newPlanting.configId && state.currentPlan.cropCatalog) {
+        // If planting has no seed source and config has a default, set useDefaultSeedSource=true
+        // so the planting follows the config's default (rather than copying a snapshot)
+        if (!newPlanting.seedSource && newPlanting.useDefaultSeedSource === undefined &&
+            newPlanting.configId && state.currentPlan.cropCatalog) {
           const config = state.currentPlan.cropCatalog[newPlanting.configId];
           if (config?.defaultSeedSource) {
-            newPlanting.seedSource = { ...config.defaultSeedSource };
+            newPlanting.useDefaultSeedSource = true;
           }
         }
 
@@ -993,7 +1006,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlanting.id;
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource'>>) => {
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource'>>) => {
       set((state) => {
         if (!state.currentPlan?.plantings) return;
 
@@ -1022,6 +1035,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         }
         if (updates.seedSource !== undefined) {
           planting.seedSource = updates.seedSource || undefined; // Clear if null
+        }
+        if (updates.useDefaultSeedSource !== undefined) {
+          planting.useDefaultSeedSource = updates.useDefaultSeedSource;
         }
 
         planting.lastModified = now;

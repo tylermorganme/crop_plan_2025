@@ -6,26 +6,48 @@
  */
 
 // Map from variant/typo -> canonical name
+// These should map to exact CropConfig.crop values
 const CROP_NAME_ALIASES = {
-  // Typos
+  // Typos and spelling variations
   'arugala': 'Arugula',
-  'bachellor\'s button': 'Bachelor\'s Button',
+  'bachelor\'s button': 'Bachellor\'s Button',  // Config has the typo
   'rubeckia': 'Rudbeckia',
   'kholrabi': 'Kohlrabi',
+  'radish- winter': 'Radish',  // Typo with hyphen
 
   // Singular/plural variations
   'marigold': 'Marigolds',
-  'sunflower': 'Sunflowers',
-  'dahlia': 'Dahlias',
+  'sunflower': 'Sunflower',
+  'sunflowers': 'Sunflower',
+  'dahlia': 'Dahlia',
+  'dahlias': 'Dahlia',
+  'snapdragon': 'Snapdragons',
+  'shallot': 'Shallots',
+  'fava beans': 'Fava Bean',
+  'butterfly flower': 'Butterfly Flowers',
+  'pea': 'Peas',
+  'peas': 'Peas',
 
   // Ampersand/word variations
-  'pansy & viola': 'Pansy And Violas',
-  'pansy and viola': 'Pansy And Violas',
-  'pansies & violas': 'Pansy And Violas',
+  'pansy & viola': 'Pansy and Violas',
+  'pansy and viola': 'Pansy and Violas',
+  'pansies & violas': 'Pansy and Violas',
+  'pansy and violas': 'Pansy and Violas',  // Case normalization
 
-  // Subcategory consolidation (when needed)
-  // 'squash - winter': 'Squash',
-  // 'squash - summer': 'Summer Squash',
+  // Trailing space in config
+  'corn': 'Corn ',
+
+  // Extra words
+  'malabar spinach mix': 'Malabar Spinach',
+
+  // Subcategory to base crop consolidation
+  'cabbage - chinese': 'Cabbage',
+  'pepper - hot': 'Pepper',
+  'pepper - sweet': 'Pepper',
+  'pepper - shishito': 'Pepper',
+  'squash - winter': 'Squash',
+  'squash - summer': 'Summer Squash',
+  'radish - winter': 'Radish',
 };
 
 /**
