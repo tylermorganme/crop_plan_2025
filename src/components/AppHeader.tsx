@@ -78,6 +78,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const isExplorerActive = pathname === '/';
   const isTimelineActive = pathname.startsWith('/timeline/');
   const isBedsActive = pathname.startsWith('/beds/');
+  const isReportsActive = pathname.startsWith('/reports/');
   const isVarietiesActive = pathname === '/varieties';
   const isSeedMixesActive = pathname === '/seed-mixes';
   const isProductsActive = pathname === '/products';
@@ -85,6 +86,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   // Links - go to active plan's views
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
   const bedsHref = activePlanId ? `/beds/${activePlanId}` : '/plans';
+  const reportsHref = activePlanId ? `/reports/${activePlanId}` : '/plans';
 
   return (
     <>
@@ -132,6 +134,16 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                 }`}
               >
                 Beds
+              </Link>
+              <Link
+                href={reportsHref}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  isReportsActive
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                Reports
               </Link>
             </>
           ) : (

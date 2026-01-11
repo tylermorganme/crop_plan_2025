@@ -934,6 +934,7 @@ export function calculateProductEndDay(
  * Calculate the aggregate crop end date across all products.
  *
  * Returns the latest end day among all products (when the bed is finally free).
+ * This is measured from SEEDING (includes greenhouse time).
  * Requires productYields to be populated - no legacy fallback.
  */
 export function calculateCropEndDay(crop: CropConfig): number {
@@ -947,6 +948,23 @@ export function calculateCropEndDay(crop: CropConfig): number {
   return Math.max(
     ...crop.productYields.map(py => calculateProductEndDay(py, crop, daysInCells))
   );
+}
+
+/**
+ * Calculate how many days a crop occupies the bed (field days only).
+ *
+ * This is the time from transplant/field-start to crop end, excluding greenhouse time.
+ * Used for bed efficiency calculations ($/day/100ft).
+ *
+ * For transplants: cropEndDay - daysInCells
+ * For direct seed: cropEndDay (daysInCells is 0)
+ */
+export function calculateFieldOccupationDays(crop: CropConfig): number {
+  const cropEndDay = calculateCropEndDay(crop);
+  if (cropEndDay === 0) return 0;
+
+  const daysInCells = calculateDaysInCells(crop);
+  return cropEndDay - daysInCells;
 }
 
 /**

@@ -64,6 +64,7 @@ export {
   calculateProductHarvestWindow,
   calculateProductEndDay,
   calculateCropEndDay,
+  calculateFieldOccupationDays,
 } from './crop-config';
 
 // Plan entity

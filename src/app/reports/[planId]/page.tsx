@@ -1,0 +1,489 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  flexRender,
+  type SortingState,
+  type ColumnDef,
+} from '@tanstack/react-table';
+import {
+  usePlanStore,
+  loadPlanFromLibrary,
+} from '@/lib/plan-store';
+import {
+  calculatePlanRevenue,
+  formatCurrency,
+  formatMonth,
+  type PlanRevenueReport,
+  type CropRevenueResult,
+} from '@/lib/revenue';
+
+// =============================================================================
+// TAB TYPES
+// =============================================================================
+
+type ReportTab = 'revenue';
+
+// =============================================================================
+// CHART COMPONENTS
+// =============================================================================
+
+/** Simple pie chart using CSS conic-gradient */
+function PieChart({ data }: { data: { label: string; value: number; color: string }[] }) {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  if (total === 0) {
+    return (
+      <div className="w-64 h-64 rounded-full bg-gray-100 flex items-center justify-center">
+        <span className="text-gray-400">No data</span>
+      </div>
+    );
+  }
+
+  // Build conic gradient stops
+  let currentAngle = 0;
+  const gradientStops: string[] = [];
+  for (const d of data) {
+    const percent = (d.value / total) * 100;
+    gradientStops.push(`${d.color} ${currentAngle}% ${currentAngle + percent}%`);
+    currentAngle += percent;
+  }
+
+  return (
+    <div
+      className="w-64 h-64 rounded-full"
+      style={{
+        background: `conic-gradient(${gradientStops.join(', ')})`,
+      }}
+    />
+  );
+}
+
+/** Simple bar/area chart for monthly revenue */
+function MonthlyRevenueChart({ data }: { data: { month: string; revenue: number; cumulative: number }[] }) {
+  if (data.length === 0) {
+    return (
+      <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
+        <span className="text-gray-400">No revenue data</span>
+      </div>
+    );
+  }
+
+  const maxRevenue = Math.max(...data.map(d => d.revenue));
+  const maxCumulative = data[data.length - 1]?.cumulative ?? 0;
+
+  return (
+    <div className="h-64 bg-gray-50 rounded-lg p-4">
+      <div className="h-full flex items-end gap-1">
+        {data.map((d, i) => {
+          const heightPercent = maxRevenue > 0 ? (d.revenue / maxRevenue) * 100 : 0;
+          return (
+            <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+              <div
+                className="w-full bg-green-500 rounded-t transition-all hover:bg-green-600"
+                style={{ height: `${heightPercent}%`, minHeight: d.revenue > 0 ? 4 : 0 }}
+                title={`${formatMonth(d.month)}: ${formatCurrency(d.revenue)}`}
+              />
+              <span className="text-[10px] text-gray-500 -rotate-45 origin-left whitespace-nowrap">
+                {formatMonth(d.month).split(' ')[0]}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// REVENUE TAB CONTENT
+// =============================================================================
+
+/** Color palette for pie chart segments */
+const CROP_COLORS = [
+  '#ef4444', // red
+  '#f97316', // orange
+  '#eab308', // yellow
+  '#22c55e', // green
+  '#14b8a6', // teal
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#6b7280', // gray
+  '#78716c', // stone
+];
+
+function RevenueTab({ report }: { report: PlanRevenueReport }) {
+  // Prepare pie chart data - top 8 crops + "Other"
+  const pieData = useMemo(() => {
+    const topCrops = report.byCrop.slice(0, 8);
+    const otherCrops = report.byCrop.slice(8);
+    const otherTotal = otherCrops.reduce((sum, c) => sum + c.totalRevenue, 0);
+
+    const data = topCrops.map((c, i) => ({
+      label: c.crop,
+      value: c.totalRevenue,
+      color: CROP_COLORS[i % CROP_COLORS.length],
+    }));
+
+    if (otherTotal > 0) {
+      data.push({
+        label: 'Other',
+        value: otherTotal,
+        color: '#9ca3af',
+      });
+    }
+
+    return data;
+  }, [report.byCrop]);
+
+  return (
+    <div className="space-y-8">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="text-sm font-medium text-gray-500 mb-1">Total Revenue</div>
+          <div className="text-3xl font-bold text-gray-900">
+            {formatCurrency(report.totalRevenue)}
+          </div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="text-sm font-medium text-gray-500 mb-1">Plantings</div>
+          <div className="text-3xl font-bold text-gray-900">
+            {report.plantingCount}
+          </div>
+        </div>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="text-sm font-medium text-gray-500 mb-1">Crops</div>
+          <div className="text-3xl font-bold text-gray-900">
+            {report.byCrop.length}
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Revenue by Crop */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue by Crop</h3>
+          <div className="flex gap-6">
+            <PieChart data={pieData} />
+            <div className="flex-1 space-y-2">
+              {pieData.map((d) => (
+                <div key={d.label} className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: d.color }}
+                  />
+                  <span className="text-sm text-gray-700 flex-1">{d.label}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {formatCurrency(d.value)}
+                  </span>
+                  <span className="text-xs text-gray-500 w-12 text-right">
+                    {report.totalRevenue > 0
+                      ? `${((d.value / report.totalRevenue) * 100).toFixed(1)}%`
+                      : '0%'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Revenue Over Time */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Over Time</h3>
+          <MonthlyRevenueChart data={report.byMonth} />
+          {report.byMonth.length > 0 && (
+            <div className="mt-4 flex justify-between text-sm text-gray-600">
+              <span>
+                Peak: {formatMonth(report.byMonth.reduce((max, d) => d.revenue > max.revenue ? d : max, report.byMonth[0]).month)}
+                {' '}({formatCurrency(Math.max(...report.byMonth.map(d => d.revenue)))})
+              </span>
+              <span>
+                Cumulative: {formatCurrency(report.byMonth[report.byMonth.length - 1]?.cumulative ?? 0)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Crops Table */}
+      <CropRevenueTable data={report.byCrop} />
+    </div>
+  );
+}
+
+// =============================================================================
+// CROP REVENUE TABLE (TanStack Table)
+// =============================================================================
+
+function CropRevenueTable({ data }: { data: CropRevenueResult[] }) {
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'totalRevenue', desc: true },
+  ]);
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  const columns = useMemo<ColumnDef<CropRevenueResult>[]>(
+    () => [
+      {
+        accessorKey: 'crop',
+        header: 'Crop',
+        cell: info => <span className="font-medium">{info.getValue() as string}</span>,
+      },
+      {
+        accessorKey: 'totalRevenue',
+        header: 'Revenue',
+        cell: info => formatCurrency(info.getValue() as number),
+        meta: { align: 'right' },
+      },
+      {
+        accessorKey: 'percentOfTotal',
+        header: '% of Total',
+        cell: info => `${(info.getValue() as number).toFixed(1)}%`,
+        meta: { align: 'right' },
+      },
+      {
+        accessorKey: 'totalBedFeet',
+        header: 'Bed Feet',
+        cell: info => (info.getValue() as number).toLocaleString(),
+        meta: { align: 'right' },
+      },
+      {
+        id: 'revenuePerFoot',
+        header: '$/ft',
+        accessorFn: row => row.totalBedFeet > 0 ? row.totalRevenue / row.totalBedFeet : 0,
+        cell: info => {
+          const value = info.getValue() as number;
+          return value > 0 ? `$${value.toFixed(2)}` : '-';
+        },
+        meta: { align: 'right' },
+      },
+      {
+        id: 'revenuePerDayPer100ft',
+        header: '$/day/100ft',
+        accessorFn: row => row.totalBedFootDays > 0 ? (row.totalRevenue / row.totalBedFootDays) * 100 : 0,
+        cell: info => {
+          const value = info.getValue() as number;
+          return value > 0 ? `$${value.toFixed(2)}` : '-';
+        },
+        meta: { align: 'right' },
+      },
+      {
+        accessorKey: 'plantingCount',
+        header: 'Plantings',
+        meta: { align: 'right' },
+      },
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting, globalFilter },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">Crops by Revenue</h3>
+        <input
+          type="text"
+          value={globalFilter}
+          onChange={e => setGlobalFilter(e.target.value)}
+          placeholder="Filter crops..."
+          className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id} className="border-b border-gray-200">
+                {headerGroup.headers.map(header => {
+                  const align = (header.column.columnDef.meta as { align?: string })?.align;
+                  return (
+                    <th
+                      key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                      className={`py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 select-none ${
+                        align === 'right' ? 'text-right' : 'text-left'
+                      }`}
+                    >
+                      <div className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : ''}`}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {{
+                          asc: ' ↑',
+                          desc: ' ↓',
+                        }[header.column.getIsSorted() as string] ?? ''}
+                      </div>
+                    </th>
+                  );
+                })}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map(row => (
+              <tr key={row.id} className="border-b border-gray-100 hover:bg-gray-50">
+                {row.getVisibleCells().map(cell => {
+                  const align = (cell.column.columnDef.meta as { align?: string })?.align;
+                  return (
+                    <td
+                      key={cell.id}
+                      className={`py-2 px-3 ${align === 'right' ? 'text-right' : ''}`}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3 text-sm text-gray-500">
+        {table.getFilteredRowModel().rows.length} crops
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// MAIN PAGE
+// =============================================================================
+
+export default function ReportsPage() {
+  const params = useParams();
+  const planId = params.planId as string;
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ReportTab>('revenue');
+
+  // Plan store state
+  const currentPlan = usePlanStore((state) => state.currentPlan);
+  const loadPlanById = usePlanStore((state) => state.loadPlanById);
+
+  // Load the specific plan by ID
+  useEffect(() => {
+    async function loadPlan() {
+      if (!planId) {
+        setError('No plan ID provided');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Check if plan is already loaded in store
+        if (currentPlan?.id === planId) {
+          setLoading(false);
+          return;
+        }
+
+        // Try to load from library
+        const loaded = await loadPlanFromLibrary(planId);
+        if (loaded) {
+          loadPlanById(planId);
+          setLoading(false);
+        } else {
+          setError(`Plan "${planId}" not found`);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('Error loading plan:', err);
+        setError('Failed to load plan');
+        setLoading(false);
+      }
+    }
+
+    loadPlan();
+  }, [planId, currentPlan?.id, loadPlanById]);
+
+  // Calculate report when plan is loaded
+  const report = useMemo(() => {
+    if (!currentPlan) return null;
+    return calculatePlanRevenue(currentPlan);
+  }, [currentPlan]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-500">Loading plan...</div>
+      </div>
+    );
+  }
+
+  if (error || !currentPlan) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-sm p-8 max-w-md">
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Error</h1>
+          <p className="text-gray-600 mb-4">{error || 'Plan not found'}</p>
+          <Link
+            href="/plans"
+            className="text-blue-600 hover:text-blue-800"
+          >
+            ← Back to Plans
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <Link
+                href={`/timeline/${planId}`}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                ← Timeline
+              </Link>
+              <h1 className="text-xl font-semibold text-gray-900">
+                Reports: {currentPlan.metadata.name}
+              </h1>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-4 -mb-px">
+            <button
+              onClick={() => setActiveTab('revenue')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'revenue'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Revenue
+            </button>
+            {/* Future tabs: Tasks, Seed Orders, etc. */}
+          </div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'revenue' && report && (
+          <RevenueTab report={report} />
+        )}
+      </main>
+    </div>
+  );
+}
