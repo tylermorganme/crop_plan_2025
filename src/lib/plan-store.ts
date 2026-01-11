@@ -685,10 +685,36 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     createNewPlan: async (name: string, plantings?: Planting[]) => {
       const now = Date.now();
       const id = generateId();
-      // Default to closest April: if May or later, use next year; otherwise current year
-      const currentMonth = new Date().getMonth(); // 0-indexed (0=Jan, 4=May)
-      const currentYear = new Date().getFullYear();
-      const defaultYear = currentMonth >= 4 ? currentYear + 1 : currentYear;
+
+      // Determine the plan year:
+      // - If plantings provided, detect year from the most common planting date year
+      // - Otherwise, default to closest April (if May or later, next year)
+      let planYear: number;
+      if (plantings && plantings.length > 0) {
+        // Count years from planting dates
+        const yearCounts = new Map<number, number>();
+        for (const p of plantings) {
+          if (p.fieldStartDate) {
+            const year = new Date(p.fieldStartDate).getFullYear();
+            yearCounts.set(year, (yearCounts.get(year) || 0) + 1);
+          }
+        }
+        // Use the most common year
+        let maxCount = 0;
+        planYear = new Date().getFullYear();
+        for (const [year, count] of yearCounts) {
+          if (count > maxCount) {
+            maxCount = count;
+            planYear = year;
+          }
+        }
+      } else {
+        // Default to closest April: if May or later, use next year; otherwise current year
+        const currentMonth = new Date().getMonth(); // 0-indexed (0=Jan, 4=May)
+        const currentYear = new Date().getFullYear();
+        planYear = currentMonth >= 4 ? currentYear + 1 : currentYear;
+      }
+
       // Ensure unique plan name
       const uniqueName = await getUniquePlanName(name);
 
@@ -722,7 +748,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           name: uniqueName,
           createdAt: now,
           lastModified: now,
-          year: defaultYear,
+          year: planYear,
         },
         plantings: convertedPlantings,
         beds,

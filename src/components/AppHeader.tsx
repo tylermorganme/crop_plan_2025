@@ -78,6 +78,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const isExplorerActive = pathname === '/';
   const isTimelineActive = pathname.startsWith('/timeline/');
   const isBedsActive = pathname.startsWith('/beds/');
+  const isOverviewActive = pathname.startsWith('/overview/');
   const isReportsActive = pathname.startsWith('/reports/');
   const isVarietiesActive = pathname === '/varieties';
   const isSeedMixesActive = pathname === '/seed-mixes';
@@ -86,6 +87,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   // Links - go to active plan's views
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
   const bedsHref = activePlanId ? `/beds/${activePlanId}` : '/plans';
+  const overviewHref = activePlanId ? `/overview/${activePlanId}` : '/plans';
   const reportsHref = activePlanId ? `/reports/${activePlanId}` : '/plans';
 
   return (
@@ -134,6 +136,16 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                 }`}
               >
                 Beds
+              </Link>
+              <Link
+                href={overviewHref}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  isOverviewActive
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                Map
               </Link>
               <Link
                 href={reportsHref}

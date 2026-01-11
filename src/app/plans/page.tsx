@@ -67,8 +67,25 @@ export default function PlansPage() {
   const handleCreateFromTemplate = useCallback(async () => {
     const timelineCrops = getTimelineCrops();
     const plantings = collapseToPlantings(timelineCrops);
-    const defaultYear = getDefaultYear();
-    await createNewPlan(`Crop Plan ${defaultYear}`, plantings);
+
+    // Detect year from the planting dates (most common year)
+    const yearCounts = new Map<number, number>();
+    for (const crop of timelineCrops) {
+      if (crop.startDate) {
+        const year = new Date(crop.startDate).getFullYear();
+        yearCounts.set(year, (yearCounts.get(year) || 0) + 1);
+      }
+    }
+    let detectedYear = getDefaultYear();
+    let maxCount = 0;
+    for (const [year, count] of yearCounts) {
+      if (count > maxCount) {
+        maxCount = count;
+        detectedYear = year;
+      }
+    }
+
+    await createNewPlan(`Crop Plan ${detectedYear}`, plantings);
 
     // Get the newly created plan ID and set as active
     const newPlan = usePlanStore.getState().currentPlan;
