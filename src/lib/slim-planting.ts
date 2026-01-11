@@ -11,9 +11,9 @@ import { calculateRowSpan } from './timeline-data';
 import type { TimelineCrop, BedSpanInfo, Planting } from './plan-types';
 import {
   calculateDaysInCells,
-  calculateSeedToHarvest,
   calculatePlantingMethod,
-  calculateHarvestWindow,
+  getPrimarySeedToHarvest,
+  calculateAggregateHarvestWindow,
   type CropConfig,
 } from './entities/crop-config';
 import { createPlanting } from './entities/planting';
@@ -120,10 +120,11 @@ export function lookupConfigFromCatalog(
   if (!entry) return null;
 
   // Calculate derived fields from the minimal crop config
+  // Uses product-aware calculations if productYields exists
   const daysInCells = calculateDaysInCells(entry);
-  const seedToHarvest = calculateSeedToHarvest(entry, daysInCells);
+  const seedToHarvest = getPrimarySeedToHarvest(entry);
   const plantingMethod = calculatePlantingMethod(entry);
-  const harvestWindow = calculateHarvestWindow(entry);
+  const harvestWindow = calculateAggregateHarvestWindow(entry);
 
   return {
     crop: entry.crop,

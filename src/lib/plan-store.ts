@@ -37,11 +37,12 @@ import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities
 import { storage, onSyncMessage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
-import { getStockVarieties, getStockSeedMixes } from './stock-data';
+import { getStockVarieties, getStockSeedMixes, getStockProducts } from './stock-data';
 import type { CropConfig } from './entities/crop-config';
 import { cloneCropConfig, cloneCropCatalog } from './entities/crop-config';
 import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput } from './entities/variety';
 import { createSeedMix, getSeedMixKey, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
+import { createProduct, getProductKey, type Product, type CreateProductInput } from './entities/product';
 
 /**
  * Raw seed mix component from JSON import.
@@ -254,9 +255,10 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     ? cloneCropCatalog(Object.values(state.currentPlan.cropCatalog))
     : {};
 
-  // Copy varieties and seed mixes (shallow copy - IDs are preserved)
+  // Copy varieties, seed mixes, and products (shallow copy - IDs are preserved)
   const varieties = state.currentPlan.varieties ? { ...state.currentPlan.varieties } : undefined;
   const seedMixes = state.currentPlan.seedMixes ? { ...state.currentPlan.seedMixes } : undefined;
+  const products = state.currentPlan.products ? { ...state.currentPlan.products } : undefined;
 
   const newPlan: Plan = {
     id: newId,
@@ -277,6 +279,7 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     cropCatalog,
     varieties,
     seedMixes,
+    products,
     changeLog: [],
   };
 
@@ -536,6 +539,20 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   getSeedMix: (mixId: string) => import('./entities/seed-mix').SeedMix | undefined;
   /** Get all seed mixes for a crop */
   getSeedMixesForCrop: (crop: string) => import('./entities/seed-mix').SeedMix[];
+
+  // ---- Product Management ----
+  /** Add a product to the plan */
+  addProduct: (product: import('./entities/product').Product) => Promise<void>;
+  /** Update a product in the plan */
+  updateProduct: (product: import('./entities/product').Product) => Promise<void>;
+  /** Delete a product from the plan */
+  deleteProduct: (productId: string) => Promise<void>;
+  /** Import products with content-based deduplication */
+  importProducts: (inputs: import('./entities/product').CreateProductInput[]) => Promise<{ added: number; updated: number }>;
+  /** Get product by ID */
+  getProduct: (productId: string) => import('./entities/product').Product | undefined;
+  /** Get all products for a crop */
+  getProductsForCrop: (crop: string) => import('./entities/product').Product[];
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -681,9 +698,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         return p;
       });
 
-      // Load stock varieties and seed mixes
+      // Load stock varieties, seed mixes, and products
       const varieties = getStockVarieties();
       const seedMixes = getStockSeedMixes();
+      const products = getStockProducts();
 
       const plan: Plan = {
         id,
@@ -701,6 +719,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         cropCatalog,
         varieties,
         seedMixes,
+        products,
         changeLog: [],
       };
 
@@ -2187,6 +2206,157 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     getSeedMixesForCrop: (crop: string) => {
       const mixes = get().currentPlan?.seedMixes ?? {};
       return Object.values(mixes).filter((m) => m.crop === crop);
+    },
+
+    // ---- Product Management ----
+
+    addProduct: async (product: Product) => {
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+
+        if (!state.currentPlan.products) {
+          state.currentPlan.products = {};
+        }
+        state.currentPlan.products[product.id] = product;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    updateProduct: async (product: Product) => {
+      set((state) => {
+        if (!state.currentPlan?.products?.[product.id]) return;
+        snapshotForUndo(state);
+
+        state.currentPlan.products[product.id] = product;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    deleteProduct: async (productId: string) => {
+      set((state) => {
+        if (!state.currentPlan?.products?.[productId]) return;
+        snapshotForUndo(state);
+
+        delete state.currentPlan.products[productId];
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    importProducts: async (inputs: CreateProductInput[]) => {
+      const existingProducts = get().currentPlan?.products ?? {};
+      const existingByKey = new Map<string, string>();
+      for (const p of Object.values(existingProducts)) {
+        existingByKey.set(getProductKey(p.crop, p.product, p.unit), p.id);
+      }
+
+      let added = 0;
+      let updated = 0;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+
+        if (!state.currentPlan.products) {
+          state.currentPlan.products = {};
+        }
+
+        for (const input of inputs) {
+          const key = getProductKey(input.crop, input.product, input.unit);
+          const existingId = existingByKey.get(key);
+
+          if (existingId) {
+            // Update existing product
+            const product = createProduct(input);
+            state.currentPlan.products[product.id] = product;
+            updated++;
+          } else {
+            // Add new product
+            const product = createProduct(input);
+            state.currentPlan.products[product.id] = product;
+            added++;
+          }
+        }
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return { added, updated };
+    },
+
+    getProduct: (productId: string) => {
+      return get().currentPlan?.products?.[productId];
+    },
+
+    getProductsForCrop: (crop: string) => {
+      const products = get().currentPlan?.products ?? {};
+      return Object.values(products).filter((p) => p.crop.toLowerCase() === crop.toLowerCase());
     },
   }))
 );

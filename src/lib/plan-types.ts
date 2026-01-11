@@ -50,7 +50,7 @@ export {
   createPlanting,
 } from './entities/planting';
 
-export type { CropConfig, CropCalculated, TrayStage, PlantingMethod } from './entities/crop-config';
+export type { CropConfig, CropCalculated, TrayStage, PlantingMethod, ProductYield } from './entities/crop-config';
 export {
   calculateDaysInCells,
   calculateSeedToHarvest,
@@ -58,6 +58,13 @@ export {
   calculateHarvestWindow,
   calculateCropFields,
   getTimelineConfig,
+  // Product-aware calculations
+  getPrimarySeedToHarvest,
+  calculateAggregateHarvestWindow,
+  calculateProductSeedToHarvest,
+  calculateProductHarvestWindow,
+  calculateProductEndDay,
+  calculateCropEndDay,
 } from './entities/crop-config';
 
 // =============================================================================

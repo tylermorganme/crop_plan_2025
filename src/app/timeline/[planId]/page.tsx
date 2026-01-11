@@ -313,6 +313,7 @@ export default function TimelinePlanPage() {
         onSave={handleSaveCropConfig}
         varieties={currentPlan?.varieties}
         seedMixes={currentPlan?.seedMixes}
+        products={currentPlan?.products}
       />
     </div>
   );

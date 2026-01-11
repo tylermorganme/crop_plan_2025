@@ -10,13 +10,14 @@ import type { Planting } from './planting';
 import type { CropConfig } from './crop-config';
 import type { Variety } from './variety';
 import type { SeedMix } from './seed-mix';
+import type { Product } from './product';
+
+// Re-export migration utilities for backwards compatibility
+export { CURRENT_SCHEMA_VERSION, migratePlan } from '../migrations';
 
 // =============================================================================
 // TYPES
 // =============================================================================
-
-/** Current schema version for data migrations */
-export const CURRENT_SCHEMA_VERSION = 3;
 
 /** Metadata about a saved plan */
 export interface PlanMetadata {
@@ -117,6 +118,9 @@ export interface Plan {
 
   /** Seed mixes (keyed by ID) */
   seedMixes?: Record<string, SeedMix>;
+
+  /** Products for revenue calculation (keyed by ID) */
+  products?: Record<string, Product>;
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];
@@ -252,132 +256,6 @@ export function getGroups(plan: Plan): ResourceGroup[] {
         .sort((a, b) => a.displayOrder - b.displayOrder)
         .map(bed => bed.name),
     }));
-}
-
-// =============================================================================
-// MIGRATIONS
-// =============================================================================
-
-/**
- * Legacy bed format (schema v2 and earlier).
- * Used for migration purposes only.
- */
-interface LegacyBed {
-  id: string;
-  lengthFt: number;
-  group: string;
-}
-
-/**
- * Migrate a plan from an older schema version to the current version.
- * This handles:
- * - v2 -> v3: Convert beds from name-based IDs to UUIDs, create BedGroups
- */
-export function migratePlan(plan: Plan): Plan {
-  const currentVersion = plan.schemaVersion ?? 1;
-
-  if (currentVersion >= CURRENT_SCHEMA_VERSION) {
-    return plan; // Already up to date
-  }
-
-  let migrated = { ...plan };
-
-  // v2 -> v3: Bed UUID migration
-  if (currentVersion < 3) {
-    migrated = migrateToV3(migrated);
-  }
-
-  migrated.schemaVersion = CURRENT_SCHEMA_VERSION;
-  return migrated;
-}
-
-/**
- * Migrate from v2 to v3:
- * - Convert bed IDs from names (e.g., "A1") to UUIDs
- * - Create BedGroup entities from implicit groups
- * - Update planting.startBed references to use UUIDs
- */
-function migrateToV3(plan: Plan): Plan {
-  if (!plan.beds) {
-    return plan;
-  }
-
-  // Cast old beds to legacy format
-  const legacyBeds = plan.beds as unknown as Record<string, LegacyBed>;
-
-  // Build mapping from old bed names to new UUIDs
-  const nameToUuid: Record<string, string> = {};
-  const newBeds: Record<string, Bed> = {};
-  const newGroups: Record<string, BedGroup> = {};
-
-  // Group legacy beds by their group property
-  const groupedBeds = new Map<string, LegacyBed[]>();
-  for (const bed of Object.values(legacyBeds)) {
-    if (!groupedBeds.has(bed.group)) {
-      groupedBeds.set(bed.group, []);
-    }
-    groupedBeds.get(bed.group)!.push(bed);
-  }
-
-  // Sort group names for stable ordering
-  const sortedGroupNames = Array.from(groupedBeds.keys()).sort((a, b) =>
-    a.localeCompare(b)
-  );
-
-  // Create BedGroups and migrate beds
-  for (let groupIndex = 0; groupIndex < sortedGroupNames.length; groupIndex++) {
-    const groupName = sortedGroupNames[groupIndex];
-    const groupId = crypto.randomUUID();
-
-    // Create the group
-    newGroups[groupId] = {
-      id: groupId,
-      name: `Row ${groupName}`,
-      displayOrder: groupIndex,
-    };
-
-    // Sort beds within group by number
-    const bedsInGroup = groupedBeds.get(groupName)!;
-    bedsInGroup.sort((a, b) => {
-      const numA = parseInt(a.id.replace(/\D/g, '')) || 0;
-      const numB = parseInt(b.id.replace(/\D/g, '')) || 0;
-      return numA - numB;
-    });
-
-    // Create new beds with UUIDs
-    for (let bedIndex = 0; bedIndex < bedsInGroup.length; bedIndex++) {
-      const legacyBed = bedsInGroup[bedIndex];
-      const bedId = crypto.randomUUID();
-
-      nameToUuid[legacyBed.id] = bedId;
-
-      newBeds[bedId] = {
-        id: bedId,
-        name: legacyBed.id, // Old ID becomes the display name
-        lengthFt: legacyBed.lengthFt,
-        groupId,
-        displayOrder: bedIndex,
-      };
-    }
-  }
-
-  // Update planting references
-  const migratedPlantings = plan.plantings?.map(planting => {
-    if (planting.startBed && nameToUuid[planting.startBed]) {
-      return {
-        ...planting,
-        startBed: nameToUuid[planting.startBed],
-      };
-    }
-    return planting;
-  });
-
-  return {
-    ...plan,
-    beds: newBeds,
-    bedGroups: newGroups,
-    plantings: migratedPlantings,
-  };
 }
 
 // =============================================================================

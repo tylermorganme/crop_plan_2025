@@ -2,9 +2,9 @@ import cropsData from '@/data/crops.json';
 import {
   type CropConfig,
   calculateDaysInCells,
-  calculateSeedToHarvest,
   calculatePlantingMethod,
-  calculateHarvestWindow,
+  getPrimarySeedToHarvest,
+  calculateAggregateHarvestWindow,
 } from './entities/crop-config';
 
 // Re-export CropConfig as Crop for backwards compatibility
@@ -77,12 +77,13 @@ export function filterCrops(filters: {
 }
 
 // Get calculated values for a crop
+// Uses product-aware calculations if productYields exists
 export function getCropCalculations(crop: Crop) {
   const daysInCells = calculateDaysInCells(crop);
   return {
     daysInCells,
-    seedToHarvest: calculateSeedToHarvest(crop, daysInCells),
+    seedToHarvest: getPrimarySeedToHarvest(crop),
     plantingMethod: calculatePlantingMethod(crop),
-    harvestWindow: calculateHarvestWindow(crop),
+    harvestWindow: calculateAggregateHarvestWindow(crop),
   };
 }

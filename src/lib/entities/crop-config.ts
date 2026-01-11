@@ -37,6 +37,39 @@ export interface TrayStage {
 export type PlantingMethod = 'direct-seed' | 'transplant' | 'perennial';
 
 /**
+ * ProductYield - Links a CropConfig to a Product with yield and timing info.
+ *
+ * Each ProductYield represents one product that this crop configuration produces,
+ * with its own timing (DTM, harvest pattern) and yield formula.
+ *
+ * Example: Garlic config might have two ProductYields:
+ * - Scapes: DTM 180, 1 harvest
+ * - Bulbs: DTM 220, 1 harvest
+ */
+export interface ProductYield {
+  /** Reference to Product in plan.products */
+  productId: string;
+
+  /** Days to maturity for THIS product (same meaning as CropConfig.dtm) */
+  dtm: number;
+
+  /** How many times this product is harvested */
+  numberOfHarvests: number;
+
+  /** Days between harvests (only if numberOfHarvests > 1) */
+  daysBetweenHarvest?: number;
+
+  /** Yield formula for this product (uses same context as CropConfig) */
+  yieldFormula?: string;
+
+  /** Buffer days for this product's initial harvest window */
+  harvestBufferDays?: number;
+
+  /** Post-harvest field days (typically only on last product to harvest) */
+  postHarvestFieldDays?: number;
+}
+
+/**
  * Crop configuration - what we store in crops.json and plan.cropCatalog.
  *
  * This is the "planting recipe" - all the data needed to calculate
@@ -77,13 +110,20 @@ export interface CropConfig {
 
   // ---- Timing Inputs ----
 
-  /** Days to maturity (meaning depends on normalMethod) */
+  /**
+   * @deprecated Use productYields[].dtm instead.
+   * Days to maturity (meaning depends on normalMethod).
+   * Legacy field kept for backwards compatibility with old saved plans.
+   */
   dtm?: number;
 
-  /** Days from seeding to germination */
+  /** Days from seeding to germination (shared across all products) */
   daysToGermination?: number;
 
-  /** Base harvest window in days (before adjustments) */
+  /**
+   * @deprecated Calculated from productYields now.
+   * Base harvest window in days (before adjustments).
+   */
   harvestWindow?: number;
 
   /** Greenhouse tray stages (empty = direct seeded) */
@@ -105,10 +145,16 @@ export interface CropConfig {
    */
   assumedTransplantDays?: number;
 
-  /** Days between harvests (for multiple harvest crops) */
+  /**
+   * @deprecated Use productYields[].daysBetweenHarvest instead.
+   * Days between harvests (for multiple harvest crops).
+   */
   daysBetweenHarvest?: number;
 
-  /** Number of harvests over the production period */
+  /**
+   * @deprecated Use productYields[].numberOfHarvests instead.
+   * Number of harvests over the production period.
+   */
   numberOfHarvests?: number;
 
   // ---- Yield Model ----
@@ -116,28 +162,16 @@ export interface CropConfig {
   // See docs/yield-calculation-design.md for full explanation.
 
   /**
+   * @deprecated Use productYields[].yieldFormula instead.
    * Yield formula as an expression string.
-   *
-   * Available variables:
-   * - plantingsPerBed: Plants per bed (calculated from spacing × rows × bedFeet)
-   * - bedFeet: Bed length in feet
-   * - harvests: Number of harvests
-   * - daysBetweenHarvest: Days between harvest
-   * - rows: Number of rows
-   * - spacing: In-row spacing (inches)
-   * - seeds: Seeds per bed (if applicable)
-   *
-   * Examples:
-   * - "plantingsPerBed * 0.125 * harvests" (basil: 0.125 bunches/plant/harvest)
-   * - "plantingsPerBed * 8" (zinnia: 8 stems/plant total)
-   * - "(bedFeet / 100) * 65 * harvests" (beans: 65 lbs/100ft/harvest)
-   * - "plantingsPerBed * 2 * (daysBetweenHarvest / 7)" (cucumber: 2 fruits/plant/week)
-   *
-   * The formula calculates TOTAL yield for the given bed length.
+   * Legacy field kept for backwards compatibility with old saved plans.
    */
   yieldFormula?: string;
 
-  /** Unit of measure for yield (lb, bunch, head, etc.) */
+  /**
+   * @deprecated Unit now comes from Product entity.
+   * Unit of measure for yield (lb, bunch, head, etc.)
+   */
   yieldUnit?: string;
 
   // ---- Seed-based yield (for shallots, etc.) ----
@@ -163,15 +197,14 @@ export interface CropConfig {
   yieldPerHarvest?: number;
 
   /**
+   * @deprecated Use productYields[].postHarvestFieldDays instead.
    * Days crop occupies bed after last harvest (e.g., tuber curing).
-   * Added to harvest window calculation. Default: 0.
    */
   postHarvestFieldDays?: number;
 
   /**
+   * @deprecated Use productYields[].harvestBufferDays instead.
    * Buffer days for initial harvest window.
-   * Accounts for plants not maturing at exactly the same time.
-   * Default: 7 days.
    */
   harvestBufferDays?: number;
 
@@ -191,6 +224,19 @@ export interface CropConfig {
    * Can be overridden per-planting.
    */
   defaultSeedSource?: import('./planting').SeedSource;
+
+  // ---- Products & Timing ----
+
+  /**
+   * Products this config produces with timing and yield info.
+   *
+   * REQUIRED: At least one product must be specified for timing calculations.
+   *
+   * Each ProductYield has its own DTM, harvest pattern, and yield formula.
+   * The crop's bed occupation is determined by the latest-finishing product.
+   * Harvest window spans from first harvest of any product to last harvest of any product.
+   */
+  productYields?: ProductYield[];
 }
 
 /** Calculated crop values (derived at runtime) */
@@ -816,14 +862,161 @@ export function calculateHarvestWindow(crop: CropConfig): number {
   return (harvests - 1) * daysBetween + buffer + postHarvest;
 }
 
+// =============================================================================
+// PER-PRODUCT CALCULATIONS
+// =============================================================================
+
+/**
+ * Calculate Seed To Harvest for a specific ProductYield.
+ *
+ * Uses the product's DTM with the CropConfig's normalMethod and daysInCells,
+ * since growing method (transplant vs direct) is shared across all products.
+ */
+export function calculateProductSeedToHarvest(
+  productYield: ProductYield,
+  crop: CropConfig,
+  daysInCells: number
+): number {
+  const method = crop.normalMethod ?? 'total-time';
+  const dtm = productYield.dtm;
+  const dtg = crop.daysToGermination ?? 0;
+  const isTransplant = daysInCells > 0;
+
+  switch (method) {
+    case 'from-seeding':
+      return dtg + dtm + (isTransplant ? PLANTING_METHOD_DELTA_DAYS : 0);
+
+    case 'from-transplant': {
+      const assumedDays = crop.assumedTransplantDays ?? DEFAULT_ASSUMED_TRANSPLANT_DAYS;
+      return isTransplant
+        ? daysInCells + dtm
+        : assumedDays + dtm - PLANTING_METHOD_DELTA_DAYS;
+    }
+
+    case 'total-time':
+      return dtm - (isTransplant ? 0 : PLANTING_METHOD_DELTA_DAYS);
+
+    default:
+      return dtm;
+  }
+}
+
+/**
+ * Calculate Harvest Window for a specific ProductYield.
+ */
+export function calculateProductHarvestWindow(productYield: ProductYield): number {
+  const harvests = productYield.numberOfHarvests;
+  const daysBetween = productYield.daysBetweenHarvest ?? 0;
+  const buffer = productYield.harvestBufferDays ?? 0;
+  const postHarvest = productYield.postHarvestFieldDays ?? 0;
+
+  if (harvests <= 1 || daysBetween === 0) {
+    return buffer + postHarvest;
+  }
+
+  return (harvests - 1) * daysBetween + buffer + postHarvest;
+}
+
+/**
+ * Calculate when a product's harvest period ends (days from seeding).
+ */
+export function calculateProductEndDay(
+  productYield: ProductYield,
+  crop: CropConfig,
+  daysInCells: number
+): number {
+  const seedToHarvest = calculateProductSeedToHarvest(productYield, crop, daysInCells);
+  const harvestWindow = calculateProductHarvestWindow(productYield);
+  return seedToHarvest + harvestWindow;
+}
+
+/**
+ * Calculate the aggregate crop end date across all products.
+ *
+ * Returns the latest end day among all products (when the bed is finally free).
+ * Requires productYields to be populated - no legacy fallback.
+ */
+export function calculateCropEndDay(crop: CropConfig): number {
+  if (!crop.productYields || crop.productYields.length === 0) {
+    // Return 0 for crops without products (will show as invalid in UI)
+    return 0;
+  }
+
+  const daysInCells = calculateDaysInCells(crop);
+
+  return Math.max(
+    ...crop.productYields.map(py => calculateProductEndDay(py, crop, daysInCells))
+  );
+}
+
+/**
+ * Calculate the total harvest window across all products.
+ *
+ * This is the time from the first product's first harvest to the last product's last harvest.
+ * Useful for timeline display showing the overall harvest period.
+ *
+ * Requires productYields to be populated - no legacy fallback.
+ */
+export function calculateAggregateHarvestWindow(crop: CropConfig): number {
+  if (!crop.productYields || crop.productYields.length === 0) {
+    // Return 0 for crops without products (will show as invalid in UI)
+    return 0;
+  }
+
+  const daysInCells = calculateDaysInCells(crop);
+
+  // Find earliest first harvest and latest last harvest
+  let earliestFirstHarvest = Infinity;
+  let latestLastHarvest = 0;
+
+  for (const py of crop.productYields) {
+    const seedToHarvest = calculateProductSeedToHarvest(py, crop, daysInCells);
+    const harvestWindow = calculateProductHarvestWindow(py);
+    const endDay = seedToHarvest + harvestWindow;
+
+    earliestFirstHarvest = Math.min(earliestFirstHarvest, seedToHarvest);
+    latestLastHarvest = Math.max(latestLastHarvest, endDay);
+  }
+
+  return latestLastHarvest - earliestFirstHarvest;
+}
+
+/**
+ * Get the primary (earliest) product's seed-to-harvest.
+ *
+ * Returns the time from seeding to the first harvest of any product.
+ * Requires productYields to be populated - no legacy fallback.
+ */
+export function getPrimarySeedToHarvest(crop: CropConfig): number {
+  if (!crop.productYields || crop.productYields.length === 0) {
+    // Return 0 for crops without products (will show as invalid in UI)
+    return 0;
+  }
+
+  const daysInCells = calculateDaysInCells(crop);
+
+  // Use the earliest harvesting product as "primary"
+  let earliest = Infinity;
+  for (const py of crop.productYields) {
+    const sth = calculateProductSeedToHarvest(py, crop, daysInCells);
+    earliest = Math.min(earliest, sth);
+  }
+  return earliest === Infinity ? 0 : earliest;
+}
+
 /**
  * Calculate all derived timing fields for a crop.
+ *
+ * If productYields exists, uses the primary (earliest) product for seedToHarvest
+ * and the aggregate harvest window across all products.
  */
 export function calculateCropFields(crop: CropConfig): CropCalculated {
   const daysInCells = calculateDaysInCells(crop);
-  const seedToHarvest = calculateSeedToHarvest(crop, daysInCells);
   const plantingMethod = calculatePlantingMethod(crop);
-  const harvestWindow = calculateHarvestWindow(crop);
+
+  // Use product-aware calculations if productYields exists
+  const seedToHarvest = getPrimarySeedToHarvest(crop);
+  const harvestWindow = calculateAggregateHarvestWindow(crop);
 
   return {
     daysInCells,
@@ -836,6 +1029,8 @@ export function calculateCropFields(crop: CropConfig): CropCalculated {
 /**
  * Get the config needed for timeline calculations from a crop.
  * Combines stored inputs with calculated values.
+ *
+ * Uses product-aware calculations if productYields exists.
  */
 export function getTimelineConfig(crop: CropConfig): {
   crop: string;
@@ -856,7 +1051,7 @@ export function getTimelineConfig(crop: CropConfig): {
     growingStructure: crop.growingStructure ?? 'field',
     plantingMethod: calculated.plantingMethod,
     seedToHarvest: calculated.seedToHarvest,
-    harvestWindow: crop.harvestWindow ?? 0,
+    harvestWindow: calculated.harvestWindow,
     daysInCells: calculated.daysInCells,
   };
 }

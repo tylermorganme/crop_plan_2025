@@ -43,6 +43,7 @@ export type {
   PlantingMethod,
   CropConfig,
   CropCalculated,
+  ProductYield,
 } from './crop-config';
 export {
   calculateDaysInCells,
@@ -56,6 +57,13 @@ export {
   copyConfig,
   cloneCropConfig,
   cloneCropCatalog,
+  // Product-aware calculations
+  getPrimarySeedToHarvest,
+  calculateAggregateHarvestWindow,
+  calculateProductSeedToHarvest,
+  calculateProductHarvestWindow,
+  calculateProductEndDay,
+  calculateCropEndDay,
 } from './crop-config';
 
 // Plan entity

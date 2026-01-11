@@ -15,7 +15,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "alexanders|mature|bunch",
+          "dtm": 180,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_67f7c411",
@@ -39,7 +47,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-06",
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333 * harvests",
+      "productYields": [
+        {
+          "productId": "amaranth|mature leaf|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_51398223",
@@ -69,7 +87,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 3.0"
+      "yieldFormula": "plantingsPerBed * 3.0",
+      "productYields": [
+        {
+          "productId": "amaranth|mature stem|stem",
+          "dtm": 70,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 3.0"
+        }
+      ]
     },
     {
       "id": "crop_91068a4f",
@@ -99,7 +127,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "anise hysopp|mature stem|bunch",
+          "dtm": 77,
+          "numberOfHarvests": 7,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_00ab93a9",
@@ -120,7 +158,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 3.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 3.0 * harvests",
+      "productYields": [
+        {
+          "productId": "artichoke|mature flower|head",
+          "dtm": 365,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * 3.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_043d38ec",
@@ -144,7 +191,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-11",
-      "yieldFormula": "(bedFeet / 100) * 45.0"
+      "yieldFormula": "(bedFeet / 100) * 45.0",
+      "productYields": [
+        {
+          "productId": "arugula|baby leaf|lb",
+          "dtm": 31,
+          "numberOfHarvests": 2.1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "(bedFeet / 100) * 45.0"
+        }
+      ]
     },
     {
       "id": "crop_a1df6515",
@@ -168,7 +225,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "03-27",
-      "yieldFormula": "(bedFeet / 100) * 45.0"
+      "yieldFormula": "(bedFeet / 100) * 45.0",
+      "productYields": [
+        {
+          "productId": "arugula|baby leaf|lb",
+          "dtm": 24,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "(bedFeet / 100) * 45.0"
+        }
+      ]
     },
     {
       "id": "crop_b50d222d",
@@ -192,7 +259,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "06-25",
-      "yieldFormula": "(bedFeet / 100) * 45.0"
+      "yieldFormula": "(bedFeet / 100) * 45.0",
+      "productYields": [
+        {
+          "productId": "arugula|baby leaf|lb",
+          "dtm": 31,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 3,
+          "yieldFormula": "(bedFeet / 100) * 45.0"
+        }
+      ]
     },
     {
       "id": "crop_99e232ed",
@@ -222,7 +299,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 45.0"
+      "yieldFormula": "(bedFeet / 100) * 45.0",
+      "productYields": [
+        {
+          "productId": "arugula|baby leaf|lb",
+          "dtm": 31,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "(bedFeet / 100) * 45.0"
+        }
+      ]
     },
     {
       "id": "crop_c0bc85c1",
@@ -250,7 +337,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5"
+      "yieldFormula": "plantingsPerBed * 0.5",
+      "productYields": [
+        {
+          "productId": "asian greens|mature head|head",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.5"
+        }
+      ]
     },
     {
       "id": "crop_7d56abb9",
@@ -272,7 +369,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
-      "yieldFormula": "bedFeet"
+      "yieldFormula": "bedFeet",
+      "productYields": [
+        {
+          "productId": "asian greens|young leaf|lb",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "bedFeet"
+        }
+      ]
     },
     {
       "id": "crop_17095df8",
@@ -302,7 +409,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests",
+      "productYields": [
+        {
+          "productId": "asian greens|loose leaf|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 35,
+          "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_f17f208d",
@@ -326,7 +443,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-06",
-      "yieldFormula": "plantingsPerBed * 10.0"
+      "yieldFormula": "plantingsPerBed * 10.0",
+      "productYields": [
+        {
+          "productId": "atriplex|mature stem|stem",
+          "dtm": 92,
+          "numberOfHarvests": 5,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 10.0"
+        }
+      ]
     },
     {
       "id": "crop_9f6d7be0",
@@ -356,7 +483,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 10.0"
+      "yieldFormula": "plantingsPerBed * 10.0",
+      "productYields": [
+        {
+          "productId": "atriplex|mature stem|stem",
+          "dtm": 92,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 10.0"
+        }
+      ]
     },
     {
       "id": "crop_d7562c04",
@@ -380,7 +517,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "03-27",
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "bachellor's button|mature stem|stem",
+          "dtm": 70,
+          "numberOfHarvests": 9,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_2be95ed1",
@@ -411,7 +558,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.125 * harvests",
+      "productYields": [
+        {
+          "productId": "basil|mature leaf|bunch",
+          "dtm": 70,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_a33f3bde",
@@ -442,7 +599,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.125 * harvests",
+      "productYields": [
+        {
+          "productId": "basil|mature leaf|bunch",
+          "dtm": 70,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_e214cf8b",
@@ -473,7 +640,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "basil|mature stem|stem",
+          "dtm": 70,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_cf33c7fb",
@@ -494,7 +671,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "05-11",
-      "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5 * harvests",
+      "productYields": [
+        {
+          "productId": "basil|mature leaf|bunch",
+          "dtm": 55,
+          "numberOfHarvests": 6,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_6e477156",
@@ -525,7 +712,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.25 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.25 * harvests",
+      "productYields": [
+        {
+          "productId": "basil|mature leaf|lb",
+          "dtm": 75,
+          "numberOfHarvests": 6,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed * 0.25 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_dadf4cb3",
@@ -556,7 +753,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "basil|mature stem|stem",
+          "dtm": 75,
+          "numberOfHarvests": 6,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_350996cf",
@@ -586,7 +793,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 65.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 65.0 * harvests",
+      "productYields": [
+        {
+          "productId": "bean|young pod|lb",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 65.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_fcacc6b1",
@@ -616,7 +833,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests",
+      "productYields": [
+        {
+          "productId": "bean|young pod|lb",
+          "dtm": 90,
+          "numberOfHarvests": 13,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 3,
+          "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_2303a0bd",
@@ -647,7 +874,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "bean|flowering tendril|stem",
+          "dtm": 115,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_86059589",
@@ -678,7 +915,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "bean|flowering tendril|stem",
+          "dtm": 90,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_b2c3d16c",
@@ -703,7 +950,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "05-06",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "bean|flowering tendril|stem",
+          "dtm": 90,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_f214efcf",
@@ -734,7 +991,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "bean|flowering tendril|stem",
+          "dtm": 90,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_bc535f11",
@@ -762,7 +1029,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.2"
+      "yieldFormula": "plantingsPerBed * 0.2",
+      "productYields": [
+        {
+          "productId": "beet|baby root|bunch",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.2"
+        }
+      ]
     },
     {
       "id": "crop_b6f6fe64",
@@ -784,7 +1061,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.06666666666666667"
+      "yieldFormula": "plantingsPerBed * 0.06666666666666667",
+      "productYields": [
+        {
+          "productId": "beet|baby root|bunch",
+          "dtm": 85,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.06666666666666667"
+        }
+      ]
     },
     {
       "id": "crop_869a00a2",
@@ -812,7 +1099,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "beet|baby root|bunch",
+          "dtm": 110,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_59c8e374",
@@ -840,7 +1137,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "beet|baby root|bunch",
+          "dtm": 95,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_37e02c72",
@@ -869,7 +1176,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.6666666666666666"
+      "yieldFormula": "plantingsPerBed * 0.6666666666666666",
+      "productYields": [
+        {
+          "productId": "beet|baby root|bunch",
+          "dtm": 91,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.6666666666666666"
+        }
+      ]
     },
     {
       "id": "crop_534f0a11",
@@ -898,7 +1215,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.6666666666666666"
+      "yieldFormula": "plantingsPerBed * 0.6666666666666666",
+      "productYields": [
+        {
+          "productId": "beet|baby root|bunch",
+          "dtm": 80,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.6666666666666666"
+        }
+      ]
     },
     {
       "id": "crop_282d6b85",
@@ -927,7 +1254,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.6666666666666666"
+      "yieldFormula": "plantingsPerBed * 0.6666666666666666",
+      "productYields": [
+        {
+          "productId": "beet|baby root|bunch",
+          "dtm": 180,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.6666666666666666"
+        }
+      ]
     },
     {
       "id": "crop_c712eb6a",
@@ -955,7 +1292,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "bok choy|mature head|head",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_e34ba81a",
@@ -980,7 +1327,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bloom",
       "targetFieldDate": "04-06",
-      "yieldFormula": "plantingsPerBed * 6.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 6.0 * harvests",
+      "productYields": [
+        {
+          "productId": "borage|edible bloom|bloom",
+          "dtm": 55,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 6.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_92840734",
@@ -1005,7 +1362,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-06",
-      "yieldFormula": "plantingsPerBed * 3.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 3.0 * harvests",
+      "productYields": [
+        {
+          "productId": "borage|mature stem|stem",
+          "dtm": 55,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 3.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_16ef3d00",
@@ -1030,7 +1397,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bloom",
       "targetFieldDate": "04-06",
-      "yieldFormula": "plantingsPerBed * 6.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 6.0 * harvests",
+      "productYields": [
+        {
+          "productId": "borage|edible bloom|bloom",
+          "dtm": 55,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 6.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_74599b19",
@@ -1055,7 +1432,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-06",
-      "yieldFormula": "plantingsPerBed * 3.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 3.0 * harvests",
+      "productYields": [
+        {
+          "productId": "borage|mature stem|stem",
+          "dtm": 55,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 3.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_94d0e2d4",
@@ -1077,7 +1464,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "broccoli|mature head|head",
+          "dtm": 85,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_e485cb55",
@@ -1107,7 +1504,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "broccoli|loose florets|bunch",
+          "dtm": 45,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_b5e39b45",
@@ -1144,7 +1551,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.5"
+      "yieldFormula": "plantingsPerBed * 2.5",
+      "productYields": [
+        {
+          "productId": "brussel sprouts|mature sprouts|lb",
+          "dtm": 150,
+          "numberOfHarvests": 16,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.5"
+        }
+      ]
     },
     {
       "id": "crop_c7ae7218",
@@ -1181,7 +1598,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.5"
+      "yieldFormula": "plantingsPerBed * 2.5",
+      "productYields": [
+        {
+          "productId": "brussel sprouts|mature sprouts|lb",
+          "dtm": 210,
+          "numberOfHarvests": 16,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.5"
+        }
+      ]
     },
     {
       "id": "crop_0de1a042",
@@ -1205,7 +1632,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-21",
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333 * harvests",
+      "productYields": [
+        {
+          "productId": "buckwheat|flowering stem|stem",
+          "dtm": 38,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 30,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_dff6d064",
@@ -1229,7 +1666,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 3.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 3.0 * harvests",
+      "productYields": [
+        {
+          "productId": "bupleurum|mature stem|stem",
+          "dtm": 85,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 3.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_d3dcc7f3",
@@ -1259,7 +1706,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "butterfly flowers|flowering tendril|stem",
+          "dtm": 115,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_f9283664",
@@ -1292,7 +1749,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 120,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_97a950f7",
@@ -1326,7 +1793,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 57,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_1dc79ff8",
@@ -1360,7 +1837,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_fa65527a",
@@ -1394,7 +1881,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 70,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_439e3d6f",
@@ -1428,7 +1925,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 65,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_98f9df75",
@@ -1462,7 +1969,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 65,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_66040b23",
@@ -1496,7 +2013,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 55,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_4da2baf5",
@@ -1530,7 +2057,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 225,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_b64470ae",
@@ -1564,7 +2101,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.2 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.2 * harvests",
+      "productYields": [
+        {
+          "productId": "cabbage|mature leaf|bunch",
+          "dtm": 80,
+          "numberOfHarvests": 6,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 28,
+          "yieldFormula": "plantingsPerBed * 0.2 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_e80fb5e5",
@@ -1598,7 +2145,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 120,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_dff723d3",
@@ -1632,7 +2189,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 100,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_a7482817",
@@ -1666,7 +2233,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 77,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_34b2d7f2",
@@ -1700,7 +2277,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 80,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_95037baa",
@@ -1734,7 +2321,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cabbage|large head|head",
+          "dtm": 70,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_6379ef55",
@@ -1758,7 +2355,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "03-27",
-      "yieldFormula": "plantingsPerBed * 0.03571428571428571"
+      "yieldFormula": "plantingsPerBed * 0.03571428571428571",
+      "productYields": [
+        {
+          "productId": "carrot|mature root|bunch",
+          "dtm": 70,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.03571428571428571"
+        }
+      ]
     },
     {
       "id": "crop_9c18dede",
@@ -1782,7 +2389,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "05-21",
-      "yieldFormula": "plantingsPerBed * 0.03571428571428571"
+      "yieldFormula": "plantingsPerBed * 0.03571428571428571",
+      "productYields": [
+        {
+          "productId": "carrot|mature root|bunch",
+          "dtm": 70,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.03571428571428571"
+        }
+      ]
     },
     {
       "id": "crop_bb36edb9",
@@ -1806,7 +2423,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "05-31",
-      "yieldFormula": "plantingsPerBed * 0.0375"
+      "yieldFormula": "plantingsPerBed * 0.0375",
+      "productYields": [
+        {
+          "productId": "carrot|storage root|lb",
+          "dtm": 84,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.0375"
+        }
+      ]
     },
     {
       "id": "crop_26d62969",
@@ -1829,7 +2456,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.05"
+      "yieldFormula": "plantingsPerBed * 0.05",
+      "productYields": [
+        {
+          "productId": "carrot|mature root|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.05"
+        }
+      ]
     },
     {
       "id": "crop_f8d0a38b",
@@ -1859,7 +2496,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "catnip|mature stem|bunch",
+          "dtm": 80,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_f7f4c38e",
@@ -1892,7 +2539,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cauliflower|mature head|head",
+          "dtm": 120,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_7c71fe3c",
@@ -1925,7 +2582,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cauliflower|mature head|head",
+          "dtm": 240,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_fb35cebd",
@@ -1958,7 +2625,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cauliflower|mature head|head",
+          "dtm": 72,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_e6be1361",
@@ -1992,7 +2669,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "cauliflower|mature head|head",
+          "dtm": 42,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_094615d5",
@@ -2025,7 +2712,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5714285714285714 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5714285714285714 * harvests",
+      "productYields": [
+        {
+          "productId": "celery|loose rib|bunch",
+          "dtm": 100,
+          "numberOfHarvests": 21,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.5714285714285714 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_d9a06249",
@@ -2047,7 +2744,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Root",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5 * harvests",
+      "productYields": [
+        {
+          "productId": "celery root|mature root|root",
+          "dtm": 120,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_9912465c",
@@ -2069,7 +2776,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Root",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5 * harvests",
+      "productYields": [
+        {
+          "productId": "celery root|mature root|root",
+          "dtm": 80,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_c2787896",
@@ -2093,7 +2810,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-26",
-      "yieldFormula": "plantingsPerBed * 14.0"
+      "yieldFormula": "plantingsPerBed * 14.0",
+      "productYields": [
+        {
+          "productId": "celosia|mature stem|stem",
+          "dtm": 110,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 14.0"
+        }
+      ]
     },
     {
       "id": "crop_c70c733a",
@@ -2123,7 +2850,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 14.0"
+      "yieldFormula": "plantingsPerBed * 14.0",
+      "productYields": [
+        {
+          "productId": "celosia|mature stem|stem",
+          "dtm": 110,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 14.0"
+        }
+      ]
     },
     {
       "id": "crop_bab7abeb",
@@ -2153,7 +2890,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "chervil|mature stem|bunch",
+          "dtm": 60,
+          "numberOfHarvests": 11,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_6cc9ed66",
@@ -2174,7 +2921,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.75 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.75 * harvests",
+      "productYields": [
+        {
+          "productId": "chicory|chicon|head",
+          "dtm": 90,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * 0.75 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ca4eee32",
@@ -2195,7 +2951,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "chicory|chicon|head",
+          "dtm": 90,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_cb45c195",
@@ -2221,6 +2986,14 @@
         {
           "days": 28,
           "cellsPerTray": 128
+        }
+      ],
+      "productYields": [
+        {
+          "productId": "chijimisai|mature head|head",
+          "dtm": 180,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
         }
       ]
     },
@@ -2251,7 +3024,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "choi sum|mature head|bunch",
+          "dtm": 42,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_8f75114c",
@@ -2280,7 +3063,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.08333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.08333333333333333",
+      "productYields": [
+        {
+          "productId": "choi sum|mature head|bunch",
+          "dtm": 42,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.08333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_131d253b",
@@ -2303,7 +3096,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "03-27",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "chrysanthemum|mature stem|stem",
+          "dtm": 47,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_1ced2589",
@@ -2326,7 +3129,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "03-27",
-      "yieldFormula": "plantingsPerBed * 0.03333333333333333 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.03333333333333333 * harvests",
+      "productYields": [
+        {
+          "productId": "chrysanthemum greens|mature leaf|bunch",
+          "dtm": 37,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.03333333333333333 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_faffd1f8",
@@ -2349,7 +3162,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "08-09",
-      "yieldFormula": "plantingsPerBed * 0.03333333333333333 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.03333333333333333 * harvests",
+      "productYields": [
+        {
+          "productId": "chrysanthemum greens|mature leaf|bunch",
+          "dtm": 37,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.03333333333333333 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_cd64ab16",
@@ -2372,7 +3195,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "06-30",
-      "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.4 * harvests",
+      "productYields": [
+        {
+          "productId": "cilantro|loose leaf|bunch",
+          "dtm": 75,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_e37f24db",
@@ -2395,7 +3228,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "03-12",
-      "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.4 * harvests",
+      "productYields": [
+        {
+          "productId": "cilantro|loose leaf|bunch",
+          "dtm": 71,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_02fc94cf",
@@ -2424,7 +3267,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.4 * harvests",
+      "productYields": [
+        {
+          "productId": "cilantro|loose leaf|bunch",
+          "dtm": 85,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_345c81db",
@@ -2453,7 +3306,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.4 * harvests",
+      "productYields": [
+        {
+          "productId": "cilantro|loose leaf|bunch",
+          "dtm": 71,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ec552194",
@@ -2482,7 +3345,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.4 * harvests",
+      "productYields": [
+        {
+          "productId": "cilantro|loose leaf|bunch",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_76ccb3f5",
@@ -2501,7 +3374,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "clematis|cut flower|stem",
+          "dtm": 365,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_a99036b2",
@@ -2517,7 +3398,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "collard greens|loose leaf|bunch",
+          "dtm": 0,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_a4a0e5a4",
@@ -2531,7 +3420,16 @@
       "safetyFactor": 1.3,
       "seedingFactor": 1,
       "harvestBufferDays": 7,
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "yieldUnit": "Bunch",
+      "productYields": [
+        {
+          "productId": "collard greens|loose leaf|bunch",
+          "dtm": 0,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_6745de5b",
@@ -2561,7 +3459,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "corn|mature cob|cobs",
+          "dtm": 100,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_4a809c2e",
@@ -2591,7 +3499,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "corn|mature cob|cobs",
+          "dtm": 115,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_ed7cbcc3",
@@ -2615,7 +3533,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Cobs",
       "targetFieldDate": "05-16",
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "corn|mature cob|cobs",
+          "dtm": 100,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_6aeee63d",
@@ -2638,7 +3566,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "07-10",
-      "yieldFormula": "plantingsPerBed * 0.0625"
+      "yieldFormula": "plantingsPerBed * 0.0625",
+      "productYields": [
+        {
+          "productId": "corn salad|mature head|lb",
+          "dtm": 75,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.0625"
+        }
+      ]
     },
     {
       "id": "crop_3044de48",
@@ -2661,7 +3599,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "07-20",
-      "yieldFormula": "plantingsPerBed * 0.0625"
+      "yieldFormula": "plantingsPerBed * 0.0625",
+      "productYields": [
+        {
+          "productId": "corn salad|mature head|lb",
+          "dtm": 105,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 45,
+          "yieldFormula": "plantingsPerBed * 0.0625"
+        }
+      ]
     },
     {
       "id": "crop_e89034dd",
@@ -2691,7 +3639,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests",
+      "productYields": [
+        {
+          "productId": "corn salad|mature head|lb",
+          "dtm": 90,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_fa387458",
@@ -2720,7 +3678,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.0625"
+      "yieldFormula": "plantingsPerBed * 0.0625",
+      "productYields": [
+        {
+          "productId": "corn salad|mature head|lb",
+          "dtm": 105,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 45,
+          "yieldFormula": "plantingsPerBed * 0.0625"
+        }
+      ]
     },
     {
       "id": "crop_2646d044",
@@ -2750,7 +3718,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests",
+      "productYields": [
+        {
+          "productId": "corn salad|mature head|lb",
+          "dtm": 90,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_b9af9e26",
@@ -2780,7 +3758,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.0625"
+      "yieldFormula": "plantingsPerBed * 0.0625",
+      "productYields": [
+        {
+          "productId": "corn salad|mature head|lb",
+          "dtm": 90,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.0625"
+        }
+      ]
     },
     {
       "id": "crop_1e77ba6b",
@@ -2801,7 +3789,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "01-26",
-      "yieldFormula": "plantingsPerBed * 0.0625"
+      "yieldFormula": "plantingsPerBed * 0.0625",
+      "productYields": [
+        {
+          "productId": "corn salad|mature head|lb",
+          "dtm": 90,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.0625"
+        }
+      ]
     },
     {
       "id": "crop_dad699a5",
@@ -2825,25 +3823,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
-    },
-    {
-      "id": "crop_7309374d",
-      "identifier": "Cover Mix - Mature Stem 1X | Field DS Ow",
-      "crop": "Cover Mix",
-      "product": "Mature Stem",
-      "growingStructure": "field",
-      "normalMethod": "from-seeding",
-      "dtm": 180,
-      "deprecated": false,
-      "rows": 12,
-      "spacing": 0.2,
-      "seedsPerBed": 46800,
-      "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
-      "harvestBufferDays": 7,
-      "targetFieldDate": "04-01"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "cosmos|cut flower|stem",
+          "dtm": 82,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_a6bc7714",
@@ -2868,7 +3858,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "03-22",
-      "yieldFormula": "plantingsPerBed * 10.0"
+      "yieldFormula": "plantingsPerBed * 10.0",
+      "productYields": [
+        {
+          "productId": "cress|mature stems|stem",
+          "dtm": 70,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 10.0"
+        }
+      ]
     },
     {
       "id": "crop_3dabc5c3",
@@ -2899,7 +3899,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 10.0"
+      "yieldFormula": "plantingsPerBed * 10.0",
+      "productYields": [
+        {
+          "productId": "cress|mature stems|stem",
+          "dtm": 70,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 10.0"
+        }
+      ]
     },
     {
       "id": "crop_67385415",
@@ -2929,7 +3939,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * (daysBetweenHarvest / 7) * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * (daysBetweenHarvest / 7) * harvests",
+      "productYields": [
+        {
+          "productId": "cucumber|large fruit|fruit",
+          "dtm": 70,
+          "numberOfHarvests": 50,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "plantingsPerBed * 2.0 * (daysBetweenHarvest / 7) * harvests"
+        }
+      ]
     },
     {
       "id": "crop_9e54bacf",
@@ -2959,7 +3979,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests",
+      "productYields": [
+        {
+          "productId": "cucumber|ripe fruit|lb",
+          "dtm": 80,
+          "numberOfHarvests": 36,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_088dd7b2",
@@ -2989,7 +4019,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 16.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 16.0 * harvests",
+      "productYields": [
+        {
+          "productId": "cucumber|ripe fruit|lb",
+          "dtm": 80,
+          "numberOfHarvests": 36,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 16.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_86d814ea",
@@ -3018,7 +4058,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * 4.0 * (daysBetweenHarvest / 7) * harvests"
+      "yieldFormula": "plantingsPerBed * 4.0 * (daysBetweenHarvest / 7) * harvests",
+      "productYields": [
+        {
+          "productId": "cucumber|large fruit|fruit",
+          "dtm": 70,
+          "numberOfHarvests": 50,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "plantingsPerBed * 4.0 * (daysBetweenHarvest / 7) * harvests"
+        }
+      ]
     },
     {
       "id": "crop_945af650",
@@ -3047,7 +4097,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * (daysBetweenHarvest / 7) * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * (daysBetweenHarvest / 7) * harvests",
+      "productYields": [
+        {
+          "productId": "cucumber|large fruit|fruit",
+          "dtm": 70,
+          "numberOfHarvests": 50,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "plantingsPerBed * 2.0 * (daysBetweenHarvest / 7) * harvests"
+        }
+      ]
     },
     {
       "id": "crop_9383bc61",
@@ -3077,7 +4137,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests",
+      "productYields": [
+        {
+          "productId": "cucumber|ripe fruit|lb",
+          "dtm": 80,
+          "numberOfHarvests": 36,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_63cfcc05",
@@ -3096,7 +4166,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "dahlia|cut flower|stem",
+          "dtm": 83,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_f40458ef",
@@ -3120,7 +4198,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "dahlia|cut flower|stem",
+          "dtm": 82,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_93ced1b0",
@@ -3146,7 +4234,18 @@
       "yieldUnit": "Stem",
       "targetFieldDate": "03-22",
       "postHarvestFieldDays": 28,
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "dahlia|cut flower|stem",
+          "dtm": 82,
+          "numberOfHarvests": 17,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "postHarvestFieldDays": 28,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_7163c496",
@@ -3176,7 +4275,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "dianthus|mature stem|stem",
+          "dtm": 102,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_8cf866a1",
@@ -3199,7 +4308,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "03-12",
-      "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.4 * harvests",
+      "productYields": [
+        {
+          "productId": "dill|mature leaf|bunch",
+          "dtm": 71,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_0ccbe239",
@@ -3228,7 +4347,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.4 * harvests",
+      "productYields": [
+        {
+          "productId": "dill|mature leaf|bunch",
+          "dtm": 60,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_4c989315",
@@ -3257,7 +4386,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.4 * harvests",
+      "productYields": [
+        {
+          "productId": "dill|mature leaf|bunch",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "plantingsPerBed * 0.4 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_0986ff36",
@@ -3282,7 +4421,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "03-22",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "dill|mature stem|stem",
+          "dtm": 70,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_8341390b",
@@ -3313,7 +4462,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "dill|mature stem|stem",
+          "dtm": 70,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_e26739aa",
@@ -3343,7 +4502,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 8.0"
+      "yieldFormula": "plantingsPerBed * 8.0",
+      "productYields": [
+        {
+          "productId": "dropmore|mature stem|stem",
+          "dtm": 90,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 8.0"
+        }
+      ]
     },
     {
       "id": "crop_c4fdefba",
@@ -3364,7 +4533,16 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 66.66666666666666,
       "yieldUnit": "Stem",
-      "targetFieldDate": "01-26"
+      "targetFieldDate": "01-26",
+      "productYields": [
+        {
+          "productId": "dropmore|mature stem|stem",
+          "dtm": 135,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7
+        }
+      ]
     },
     {
       "id": "crop_5b7b0f1e",
@@ -3401,7 +4579,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 360.0"
+      "yieldFormula": "(bedFeet / 100) * 360.0",
+      "productYields": [
+        {
+          "productId": "eggplant|ripe fruit|lb",
+          "dtm": 90,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 4,
+          "yieldFormula": "(bedFeet / 100) * 360.0"
+        }
+      ]
     },
     {
       "id": "crop_3c916e3e",
@@ -3431,7 +4619,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "epazote|mature stem|bunch",
+          "dtm": 55,
+          "numberOfHarvests": 9,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_d77efaeb",
@@ -3461,7 +4659,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 8.0"
+      "yieldFormula": "plantingsPerBed * 8.0",
+      "productYields": [
+        {
+          "productId": "everlasting|mature stem|stem",
+          "dtm": 75,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 8.0"
+        }
+      ]
     },
     {
       "id": "crop_d67b51f2",
@@ -3484,7 +4692,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "01-31",
-      "yieldFormula": "(bedFeet / 100) * 200.0"
+      "yieldFormula": "(bedFeet / 100) * 200.0",
+      "productYields": [
+        {
+          "productId": "fava bean|mature pod|lb",
+          "dtm": 180,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 200.0"
+        }
+      ]
     },
     {
       "id": "crop_999f9fbe",
@@ -3507,7 +4725,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "09-03",
-      "yieldFormula": "(bedFeet / 100) * 200.0"
+      "yieldFormula": "(bedFeet / 100) * 200.0",
+      "productYields": [
+        {
+          "productId": "fava bean|mature pod|lb",
+          "dtm": 230,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 200.0"
+        }
+      ]
     },
     {
       "id": "crop_ebed4f0c",
@@ -3529,7 +4757,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bulb",
       "targetFieldDate": "03-07",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "fennel|mature bulb|bulb",
+          "dtm": 91,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_0ab162b4",
@@ -3557,7 +4794,16 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "fennel|mature bulb|bulb",
+          "dtm": 56,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_58b5f1ff",
@@ -3587,7 +4833,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "fennel|mature bulb|bulb",
+          "dtm": 56,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_efdf855d",
@@ -3617,7 +4873,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "fennel|mature bulb|bulb",
+          "dtm": 77,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_fe09db21",
@@ -3641,7 +4907,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-06",
-      "yieldFormula": "plantingsPerBed * 4.0"
+      "yieldFormula": "plantingsPerBed * 4.0",
+      "productYields": [
+        {
+          "productId": "flax|flowering stalks|stem",
+          "dtm": 55,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "plantingsPerBed * 4.0"
+        }
+      ]
     },
     {
       "id": "crop_66a5c9af",
@@ -3663,7 +4939,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
-      "yieldFormula": "(bedFeet / 100) * 45.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 45.0 * harvests",
+      "productYields": [
+        {
+          "productId": "frisée|baby leaf|lb",
+          "dtm": 50,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 16,
+          "yieldFormula": "(bedFeet / 100) * 45.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_3c9bb882",
@@ -3683,7 +4969,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "frisée|mature head|head",
+          "dtm": 57,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_a9ed64f8",
@@ -3706,7 +5001,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "08-19",
-      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests",
+      "productYields": [
+        {
+          "productId": "garlic|young bulb|bunch",
+          "dtm": 240,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_9cb81c1e",
@@ -3730,7 +5034,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "08-19",
-      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests",
+      "productYields": [
+        {
+          "productId": "garlic|storage bulb|lb",
+          "dtm": 270,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_9f2cb1e5",
@@ -3754,7 +5068,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "08-19",
-      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests",
+      "productYields": [
+        {
+          "productId": "garlic|storage bulb|lb",
+          "dtm": 240,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ed5f8966",
@@ -3773,7 +5097,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "ginger|young root|lb",
+          "dtm": 180,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_1d3af19b",
@@ -3789,7 +5121,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "lb",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "ginger|young root|lb",
+          "dtm": 0,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_19c9e8ee",
@@ -3826,7 +5166,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "plantingsPerBed * 8.0"
+      "yieldFormula": "plantingsPerBed * 8.0",
+      "productYields": [
+        {
+          "productId": "gooseberry|mature berry|pint",
+          "dtm": 105,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 8.0"
+        }
+      ]
     },
     {
       "id": "crop_5e07104b",
@@ -3857,7 +5207,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 15.0"
+      "yieldFormula": "plantingsPerBed * 15.0",
+      "productYields": [
+        {
+          "productId": "grass|mature stalks|stem",
+          "dtm": 98,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 15.0"
+        }
+      ]
     },
     {
       "id": "crop_dbe6f896",
@@ -3894,7 +5254,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "ground cherry|mature fruit|lb",
+          "dtm": 75,
+          "numberOfHarvests": 7,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_149df39e",
@@ -3925,7 +5295,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 40.0"
+      "yieldFormula": "plantingsPerBed * 40.0",
+      "productYields": [
+        {
+          "productId": "hibiscus|mature stem|stem",
+          "dtm": 122,
+          "numberOfHarvests": 6,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 40.0"
+        }
+      ]
     },
     {
       "id": "crop_66686a9f",
@@ -3944,7 +5324,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "hops vine with flowers|flowering vine|stem",
+          "dtm": 180,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_baeb0324",
@@ -3963,7 +5351,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "huauzontle|mature stem|lb",
+          "dtm": 80,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_ffd6737c",
@@ -3982,7 +5378,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "hyacinth bean vine|flowering tendril|stem",
+          "dtm": 120,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_2b8460ec",
@@ -4002,7 +5406,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "hydrangea|mature stem|stem",
+          "dtm": 365,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_42e1c145",
@@ -4022,7 +5434,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "hydrangea|mature stem|stem",
+          "dtm": 365,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_b84af18f",
@@ -4042,7 +5462,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "hydrangea|mature stem|stem",
+          "dtm": 365,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_c4e31f31",
@@ -4061,7 +5489,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "jelly melon|ripe fruit|lb",
+          "dtm": 120,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_b0e2847e",
@@ -4094,7 +5530,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.125 * harvests",
+      "productYields": [
+        {
+          "productId": "kaibroc|loose florets|lb",
+          "dtm": 75,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_412dae1f",
@@ -4113,7 +5559,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "kale|baby leaf|lb",
+          "dtm": 28,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_b747f2af",
@@ -4142,7 +5596,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5 * harvests",
+      "productYields": [
+        {
+          "productId": "kale|mature leaf|bunch",
+          "dtm": 75,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_2e4555cb",
@@ -4171,7 +5635,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.125 * harvests",
+      "productYields": [
+        {
+          "productId": "kale|mature leaf|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_6d9acbd1",
@@ -4200,7 +5674,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5 * harvests",
+      "productYields": [
+        {
+          "productId": "kale|mature leaf|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_f8de0552",
@@ -4230,7 +5714,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "kohlrabi|storage bulb|bulb",
+          "dtm": 70,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_cd11d53d",
@@ -4260,7 +5754,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "kohlrabi|storage bulb|bulb",
+          "dtm": 48,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_ed8c9e81",
@@ -4289,7 +5793,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "kohlrabi|storage bulb|bulb",
+          "dtm": 55,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_ab0cfe5e",
@@ -4317,7 +5831,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests",
+      "productYields": [
+        {
+          "productId": "komatsuna|loose leaf|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 35,
+          "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_20c7c0a4",
@@ -4345,7 +5869,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests",
+      "productYields": [
+        {
+          "productId": "komatsuna|loose leaf|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 35,
+          "yieldFormula": "plantingsPerBed * 0.2222222222222222 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ac97a295",
@@ -4373,7 +5907,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5"
+      "yieldFormula": "plantingsPerBed * 0.5",
+      "productYields": [
+        {
+          "productId": "komatsuna|loose leaf|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.5"
+        }
+      ]
     },
     {
       "id": "crop_a27e35e6",
@@ -4403,7 +5947,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.25"
+      "yieldFormula": "plantingsPerBed * 0.25",
+      "productYields": [
+        {
+          "productId": "komatsuna|mature leaf|lb",
+          "dtm": 47,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.25"
+        }
+      ]
     },
     {
       "id": "crop_dc2ea65f",
@@ -4427,7 +5981,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "03-07",
-      "yieldFormula": "plantingsPerBed * 0.25"
+      "yieldFormula": "plantingsPerBed * 0.25",
+      "productYields": [
+        {
+          "productId": "komatsuna|mature leaf|lb",
+          "dtm": 47,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.25"
+        }
+      ]
     },
     {
       "id": "crop_47bf49f0",
@@ -4448,7 +6012,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stalk",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.2857142857142857 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.2857142857142857 * harvests",
+      "productYields": [
+        {
+          "productId": "leek|mature stalk|stalk",
+          "dtm": 120,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * 0.2857142857142857 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ee79c07f",
@@ -4469,7 +6042,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stalk",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "leek|mature stalk|stalk",
+          "dtm": 277,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_872c1585",
@@ -4490,7 +6072,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stalk",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.2857142857142857 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.2857142857142857 * harvests",
+      "productYields": [
+        {
+          "productId": "leek|mature stalk|stalk",
+          "dtm": 120,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * 0.2857142857142857 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_c7eeb30f",
@@ -4513,7 +6104,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stalk",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "leek|mature stalk|stalk",
+          "dtm": 165,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_61f99c74",
@@ -4542,7 +6143,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "leek|mature stalk|bunch",
+          "dtm": 345,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_b6b8a7fb",
@@ -4570,7 +6181,17 @@
           "cellsPerTray": 400
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "leek|mature stalk|bunch",
+          "dtm": 142,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_41908655",
@@ -4600,7 +6221,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "lemon balm|mature stem|bunch",
+          "dtm": 70,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_5fda20ed",
@@ -4630,7 +6261,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 8.0"
+      "yieldFormula": "plantingsPerBed * 8.0",
+      "productYields": [
+        {
+          "productId": "lemongrass|mature stalks|bunch",
+          "dtm": 80,
+          "numberOfHarvests": 5,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 8.0"
+        }
+      ]
     },
     {
       "id": "crop_5a1f71de",
@@ -4645,7 +6286,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "lettuce|baby leaf|lb",
+          "dtm": 0,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_0a512e95",
@@ -4666,7 +6315,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 180,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_21977f71",
@@ -4696,7 +6354,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 65,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_61704cb8",
@@ -4726,7 +6394,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 40,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_c8a9bf67",
@@ -4756,7 +6434,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 45,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_bd380c2e",
@@ -4778,7 +6466,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "03-22",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 84,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_b09c0ff6",
@@ -4800,7 +6497,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "04-16",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 70,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_fb0c83af",
@@ -4829,7 +6535,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 260,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_2f69d49f",
@@ -4859,7 +6575,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 55,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_ba4fc68a",
@@ -4889,7 +6615,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 41,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_a83c8ccf",
@@ -4919,7 +6655,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 55,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_b4ac35b0",
@@ -4949,7 +6695,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 120,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_a6a7c854",
@@ -4971,7 +6727,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "03-22",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 84,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_f66d6564",
@@ -4993,7 +6758,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "04-16",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 70,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_eac18ae1",
@@ -5022,7 +6796,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 260,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_4c4f6817",
@@ -5052,7 +6836,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 52,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_d1db0731",
@@ -5082,7 +6876,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 40,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_db7fe45c",
@@ -5112,7 +6916,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 84,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_cc88e9fe",
@@ -5142,7 +6956,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|mature head|head",
+          "dtm": 120,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_1ee750f9",
@@ -5171,7 +6995,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "0.5 + (harvests - 1) * 0.25 * plantingsPerBed"
+      "yieldFormula": "0.5 + (harvests - 1) * 0.25 * plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|baby leaf|lb",
+          "dtm": 55,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "0.5 + (harvests - 1) * 0.25 * plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_dcd2abec",
@@ -5200,7 +7034,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "0.75 + (harvests - 1) * 0.25 * plantingsPerBed"
+      "yieldFormula": "0.75 + (harvests - 1) * 0.25 * plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|baby leaf|lb",
+          "dtm": 40,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "0.75 + (harvests - 1) * 0.25 * plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_bd4e677a",
@@ -5229,7 +7073,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "0.5 + (harvests - 1) * 0.25 * plantingsPerBed"
+      "yieldFormula": "0.5 + (harvests - 1) * 0.25 * plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "lettuce|baby leaf|lb",
+          "dtm": 55,
+          "numberOfHarvests": 5,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "0.5 + (harvests - 1) * 0.25 * plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_5db0a2f6",
@@ -5249,7 +7103,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "lilies|mature stalk|stem",
+          "dtm": 90,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_153bcb76",
@@ -5283,7 +7145,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "lovage|mature leaf|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_965e39a9",
@@ -5304,7 +7176,16 @@
       "harvestBufferDays": 7,
       "yieldPerHarvest": 33.33333333333333,
       "yieldUnit": "Bunch",
-      "targetFieldDate": "01-26"
+      "targetFieldDate": "01-26",
+      "productYields": [
+        {
+          "productId": "lovage|mature leaf|bunch",
+          "dtm": 105,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14
+        }
+      ]
     },
     {
       "id": "crop_824f0476",
@@ -5326,7 +7207,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "03-27",
-      "yieldFormula": "plantingsPerBed * 2.0"
+      "yieldFormula": "plantingsPerBed * 2.0",
+      "productYields": [
+        {
+          "productId": "magenta spreen|flowering stalks|stem",
+          "dtm": 82,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 2.0"
+        }
+      ]
     },
     {
       "id": "crop_1e16ea43",
@@ -5355,7 +7246,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0"
+      "yieldFormula": "plantingsPerBed * 2.0",
+      "productYields": [
+        {
+          "productId": "magenta spreen|flowering stalks|stem",
+          "dtm": 82,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 2.0"
+        }
+      ]
     },
     {
       "id": "crop_223478eb",
@@ -5378,7 +7279,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "03-17",
-      "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.125 * harvests",
+      "productYields": [
+        {
+          "productId": "magenta spreen|young stem|bunch",
+          "dtm": 60,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_6e70d50b",
@@ -5400,7 +7311,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "03-22",
-      "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.125 * harvests",
+      "productYields": [
+        {
+          "productId": "malabar spinach|mature leaf|lb",
+          "dtm": 100,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_86059077",
@@ -5429,7 +7350,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.125 * harvests",
+      "productYields": [
+        {
+          "productId": "malabar spinach|mature leaf|lb",
+          "dtm": 95,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_7cdb9c55",
@@ -5459,7 +7390,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 4.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 4.0 * harvests",
+      "productYields": [
+        {
+          "productId": "malabar spinach|young buds|stem",
+          "dtm": 100,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 4.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_72881065",
@@ -5484,7 +7425,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-21",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "marigolds|mature stem|stem",
+          "dtm": 115,
+          "numberOfHarvests": 5,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_0c4b0e31",
@@ -5515,7 +7466,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "marigolds|mature stem|stem",
+          "dtm": 80,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_24652c55",
@@ -5540,7 +7501,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-21",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "marigolds|mature stem|stem",
+          "dtm": 95,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_2eb08034",
@@ -5571,7 +7542,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "marigolds|mature stem|stem",
+          "dtm": 60,
+          "numberOfHarvests": 13,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_1753cf9d",
@@ -5596,7 +7577,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-21",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "marigolds|mature stem|stem",
+          "dtm": 95,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_b9dc7995",
@@ -5627,7 +7618,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "marigolds|mature stem|stem",
+          "dtm": 60,
+          "numberOfHarvests": 13,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_b7c1041c",
@@ -5657,7 +7658,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "marjoram|mature stem|bunch",
+          "dtm": 87,
+          "numberOfHarvests": 7,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_4b7c67fe",
@@ -5687,7 +7698,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 12.0"
+      "yieldFormula": "plantingsPerBed * 12.0",
+      "productYields": [
+        {
+          "productId": "melon|ripe fruit|lb",
+          "dtm": 90,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 12.0"
+        }
+      ]
     },
     {
       "id": "crop_2f6a684c",
@@ -5716,7 +7737,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 8.0"
+      "yieldFormula": "plantingsPerBed * 8.0",
+      "productYields": [
+        {
+          "productId": "melon|ripe fruit|lb",
+          "dtm": 75,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 8.0"
+        }
+      ]
     },
     {
       "id": "crop_1732db8c",
@@ -5731,7 +7762,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Ounce",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "microgreens|micro leaf|ounce",
+          "dtm": 17,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_0ed99ad3",
@@ -5765,7 +7804,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "milkweed|mature stem|stem",
+          "dtm": 125,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_3be3e657",
@@ -5792,6 +7841,14 @@
           "days": 56,
           "cellsPerTray": 18
         }
+      ],
+      "productYields": [
+        {
+          "productId": "mint|mature sprigs|bunch",
+          "dtm": 80,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
       ]
     },
     {
@@ -5811,7 +7868,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "mock orange|mature branch|stem",
+          "dtm": 365,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_855a9a48",
@@ -5830,7 +7895,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "mustard greens|baby leaf|lb",
+          "dtm": 28,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_07e29e72",
@@ -5860,7 +7933,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "nausturtium|mature stem|bloom",
+          "dtm": 60,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_c9803a69",
@@ -5877,7 +7960,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "nigella|mature stalk|stem",
+          "dtm": 85,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_a629f250",
@@ -5901,7 +7992,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "nigella|mature stalk|stem",
+          "dtm": 70,
+          "numberOfHarvests": 5,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_89c76c8f",
@@ -5931,7 +8032,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 5.0"
+      "yieldFormula": "plantingsPerBed * 5.0",
+      "productYields": [
+        {
+          "productId": "nigella|mature stalk|stem",
+          "dtm": 230,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 5.0"
+        }
+      ]
     },
     {
       "id": "crop_38e699dd",
@@ -5954,7 +8065,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "07-15",
-      "yieldFormula": "plantingsPerBed * 1.375"
+      "yieldFormula": "plantingsPerBed * 1.375",
+      "productYields": [
+        {
+          "productId": "onion|mature bulb|lb",
+          "dtm": 265,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 1.375"
+        }
+      ]
     },
     {
       "id": "crop_335a8b1a",
@@ -5983,7 +8104,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 1.375"
+      "yieldFormula": "plantingsPerBed * 1.375",
+      "productYields": [
+        {
+          "productId": "onion|mature bulb|lb",
+          "dtm": 265,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 1.375"
+        }
+      ]
     },
     {
       "id": "crop_6ef1790b",
@@ -6012,7 +8143,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 1.375"
+      "yieldFormula": "plantingsPerBed * 1.375",
+      "productYields": [
+        {
+          "productId": "onion|mature bulb|lb",
+          "dtm": 135,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 1.375"
+        }
+      ]
     },
     {
       "id": "crop_6e47e854",
@@ -6042,7 +8183,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "onion|young bulb|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_83d071ea",
@@ -6072,7 +8223,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "onion|young bulb|bunch",
+          "dtm": 90,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_bc8a372a",
@@ -6102,7 +8263,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "oregano|mature stem|bunch",
+          "dtm": 85,
+          "numberOfHarvests": 7,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_adba1352",
@@ -6132,7 +8303,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "pansy and violas|mature stem|stem",
+          "dtm": 65,
+          "numberOfHarvests": 20,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_63013d2f",
@@ -6162,7 +8343,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 28.0"
+      "yieldFormula": "plantingsPerBed * 28.0",
+      "productYields": [
+        {
+          "productId": "pansy and violas|mature stem|stem",
+          "dtm": 92,
+          "numberOfHarvests": 20,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 28.0"
+        }
+      ]
     },
     {
       "id": "crop_bbefba4a",
@@ -6183,7 +8374,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "01-26",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "pansy and violas|mature stem|stem",
+          "dtm": 135,
+          "numberOfHarvests": 21,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_93098373",
@@ -6213,7 +8414,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5 * harvests",
+      "productYields": [
+        {
+          "productId": "parsley|mature leaf|bunch",
+          "dtm": 75,
+          "numberOfHarvests": 9,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ca8b579a",
@@ -6243,7 +8454,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5 * harvests",
+      "productYields": [
+        {
+          "productId": "parsley|mature leaf|bunch",
+          "dtm": 56,
+          "numberOfHarvests": 15,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.5 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_2f024032",
@@ -6267,7 +8488,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "05-21",
-      "yieldFormula": "plantingsPerBed * 0.016666666666666666"
+      "yieldFormula": "plantingsPerBed * 0.016666666666666666",
+      "productYields": [
+        {
+          "productId": "parsnip|mature root|bunch",
+          "dtm": 110,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.016666666666666666"
+        }
+      ]
     },
     {
       "id": "crop_4b5ac7d6",
@@ -6291,7 +8522,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "05-21",
-      "yieldFormula": "bedFeet * 4.0"
+      "yieldFormula": "bedFeet * 4.0",
+      "productYields": [
+        {
+          "productId": "parsnip|mature root|bunch",
+          "dtm": 110,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "bedFeet * 4.0"
+        }
+      ]
     },
     {
       "id": "crop_57e02fbc",
@@ -6314,7 +8555,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "03-22",
-      "yieldFormula": "(bedFeet / 100) * 50.0"
+      "yieldFormula": "(bedFeet / 100) * 50.0",
+      "productYields": [
+        {
+          "productId": "pea tendril|young shoots|lb",
+          "dtm": 28,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 50.0"
+        }
+      ]
     },
     {
       "id": "crop_501347b0",
@@ -6344,7 +8595,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 50.0"
+      "yieldFormula": "(bedFeet / 100) * 50.0",
+      "productYields": [
+        {
+          "productId": "pea tendril|young shoots|lb",
+          "dtm": 65,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 50.0"
+        }
+      ]
     },
     {
       "id": "crop_08129a4e",
@@ -6374,7 +8635,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 50.0"
+      "yieldFormula": "(bedFeet / 100) * 50.0",
+      "productYields": [
+        {
+          "productId": "pea tendril|young shoots|lb",
+          "dtm": 65,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 50.0"
+        }
+      ]
     },
     {
       "id": "crop_5bff8080",
@@ -6397,7 +8668,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "03-22",
-      "yieldFormula": "(bedFeet / 100) * 50.0"
+      "yieldFormula": "(bedFeet / 100) * 50.0",
+      "productYields": [
+        {
+          "productId": "peas|young pod|lb",
+          "dtm": 65,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 50.0"
+        }
+      ]
     },
     {
       "id": "crop_ec5bfeac",
@@ -6426,7 +8707,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 50.0"
+      "yieldFormula": "(bedFeet / 100) * 50.0",
+      "productYields": [
+        {
+          "productId": "peas|young pod|lb",
+          "dtm": 65,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 50.0"
+        }
+      ]
     },
     {
       "id": "crop_aa64b3ad",
@@ -6449,7 +8740,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "03-22",
-      "yieldFormula": "(bedFeet / 100) * 50.0"
+      "yieldFormula": "(bedFeet / 100) * 50.0",
+      "productYields": [
+        {
+          "productId": "peas|young pod|lb",
+          "dtm": 65,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "(bedFeet / 100) * 50.0"
+        }
+      ]
     },
     {
       "id": "crop_e3c24c1d",
@@ -6471,7 +8772,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 20.0"
+      "yieldFormula": "plantingsPerBed * 20.0",
+      "productYields": [
+        {
+          "productId": "peonies|mature stalk|stem",
+          "dtm": 365,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 20.0"
+        }
+      ]
     },
     {
       "id": "crop_aa11b861",
@@ -6505,7 +8816,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.28125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.28125 * harvests",
+      "productYields": [
+        {
+          "productId": "pepper|ripe fruit large|lb",
+          "dtm": 150,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.28125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_cf51d613",
@@ -6539,7 +8860,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5625 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.5625 * harvests",
+      "productYields": [
+        {
+          "productId": "pepper|ripe fruit large|lb",
+          "dtm": 150,
+          "numberOfHarvests": 18,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.5625 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_5e56aaa0",
@@ -6573,7 +8904,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.140625 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.140625 * harvests",
+      "productYields": [
+        {
+          "productId": "pepper|ripe fruit large|lb",
+          "dtm": 150,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.140625 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_275e22c0",
@@ -6607,7 +8948,17 @@
           "cellsPerTray": 18
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.140625 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.140625 * harvests",
+      "productYields": [
+        {
+          "productId": "pepper|ripe fruit large|lb",
+          "dtm": 150,
+          "numberOfHarvests": 18,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.140625 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_1f9c1356",
@@ -6637,7 +8988,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "petunia|mature stem|stem",
+          "dtm": 100,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 21,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_69211468",
@@ -6661,7 +9022,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 1.4"
+      "yieldFormula": "plantingsPerBed * 1.4",
+      "productYields": [
+        {
+          "productId": "potato|mature root|lb",
+          "dtm": 60,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 1.4"
+        }
+      ]
     },
     {
       "id": "crop_72c704d6",
@@ -6685,7 +9056,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-21",
-      "yieldFormula": "plantingsPerBed * 1.75 * harvests"
+      "yieldFormula": "plantingsPerBed * 1.75 * harvests",
+      "productYields": [
+        {
+          "productId": "potato|mature root|lb",
+          "dtm": 120,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 1.75 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_2e89aaf1",
@@ -6709,7 +9090,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-11",
-      "yieldFormula": "plantingsPerBed * 1.4"
+      "yieldFormula": "plantingsPerBed * 1.4",
+      "productYields": [
+        {
+          "productId": "potato|mature root|lb",
+          "dtm": 90,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 1.4"
+        }
+      ]
     },
     {
       "id": "crop_30ec9c48",
@@ -6733,7 +9124,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "queen anne's lace|mature stem|stem",
+          "dtm": 80,
+          "numberOfHarvests": 6,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_9a165b91",
@@ -6763,7 +9164,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "radicchio|forced head|head",
+          "dtm": 110,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_d843e465",
@@ -6793,7 +9204,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "radicchio|forced head|head",
+          "dtm": 90,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_9843b5ee",
@@ -6823,7 +9244,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "radish|mature root|bunch",
+          "dtm": 42,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_a18419d4",
@@ -6848,7 +9279,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "03-22",
-      "yieldFormula": "(bedFeet / 100) * 125.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 125.0 * harvests",
+      "productYields": [
+        {
+          "productId": "radish|mature root|bunch",
+          "dtm": 25,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "(bedFeet / 100) * 125.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_3bba629f",
@@ -6873,7 +9314,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-01",
-      "yieldFormula": "(bedFeet / 100) * 125.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 125.0 * harvests",
+      "productYields": [
+        {
+          "productId": "radish|mature root|bunch",
+          "dtm": 25,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "(bedFeet / 100) * 125.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_561c3612",
@@ -6898,7 +9349,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "05-01",
-      "yieldFormula": "(bedFeet / 100) * 125.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 125.0 * harvests",
+      "productYields": [
+        {
+          "productId": "radish|mature root|bunch",
+          "dtm": 25,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "(bedFeet / 100) * 125.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_3fb91792",
@@ -6929,7 +9390,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "radish|mature root|bunch",
+          "dtm": 80,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_44dd5f41",
@@ -6954,7 +9425,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "06-20",
-      "yieldFormula": "plantingsPerBed * 3.0"
+      "yieldFormula": "plantingsPerBed * 3.0",
+      "productYields": [
+        {
+          "productId": "radish|storage root|lb",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 3.0"
+        }
+      ]
     },
     {
       "id": "crop_05bf3b11",
@@ -6985,7 +9466,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 3.0"
+      "yieldFormula": "plantingsPerBed * 3.0",
+      "productYields": [
+        {
+          "productId": "radish|storage root|lb",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 3.0"
+        }
+      ]
     },
     {
       "id": "crop_245edf8f",
@@ -7009,7 +9500,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "06-30",
-      "yieldFormula": "plantingsPerBed * 0.14285714285714285"
+      "yieldFormula": "plantingsPerBed * 0.14285714285714285",
+      "productYields": [
+        {
+          "productId": "radish|storage root|lb",
+          "dtm": 50,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.14285714285714285"
+        }
+      ]
     },
     {
       "id": "crop_ed838265",
@@ -7026,7 +9527,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "ranunculus|mature stalk|stem",
+          "dtm": 180,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_5afa0aae",
@@ -7050,7 +9559,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "1/2 Pint",
       "targetFieldDate": "04-01",
-      "yieldFormula": "bedFeet * 5.0"
+      "yieldFormula": "bedFeet * 5.0",
+      "productYields": [
+        {
+          "productId": "raspberry|black berry|1/2 pint",
+          "dtm": 150,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 3,
+          "yieldFormula": "bedFeet * 5.0"
+        }
+      ]
     },
     {
       "id": "crop_2a22c974",
@@ -7074,7 +9593,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "1/2 Pint",
       "targetFieldDate": "04-01",
-      "yieldFormula": "bedFeet * 5.0"
+      "yieldFormula": "bedFeet * 5.0",
+      "productYields": [
+        {
+          "productId": "raspberry|black berry|1/2 pint",
+          "dtm": 420,
+          "numberOfHarvests": 21,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 3,
+          "yieldFormula": "bedFeet * 5.0"
+        }
+      ]
     },
     {
       "id": "crop_7fe90afc",
@@ -7098,7 +9627,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "1/2 Pint",
       "targetFieldDate": "04-01",
-      "yieldFormula": "bedFeet * 6.25"
+      "yieldFormula": "bedFeet * 6.25",
+      "productYields": [
+        {
+          "productId": "raspberry|black berry|1/2 pint",
+          "dtm": 420,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 3,
+          "yieldFormula": "bedFeet * 6.25"
+        }
+      ]
     },
     {
       "id": "crop_836c7f1b",
@@ -7128,7 +9667,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.03 * daysBetweenHarvest * harvests"
+      "yieldFormula": "plantingsPerBed * 0.03 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "rat tail radish|mature pod|lb",
+          "dtm": 55,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 3,
+          "yieldFormula": "plantingsPerBed * 0.03 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_7f50fca7",
@@ -7148,7 +9697,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "rose|mature stem|stem",
+          "dtm": 365,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_94979a80",
@@ -7178,7 +9735,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 6.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 6.0 * harvests",
+      "productYields": [
+        {
+          "productId": "roselle|mature leaf|lb",
+          "dtm": 115,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 6.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_406b4bbd",
@@ -7204,6 +9771,14 @@
         {
           "days": 180,
           "cellsPerTray": 18
+        }
+      ],
+      "productYields": [
+        {
+          "productId": "rosemary|mature sprigs|bunch",
+          "dtm": 240,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
         }
       ]
     },
@@ -7236,7 +9811,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "rubeckia|mature stem|stem",
+          "dtm": 95,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_1ef66652",
@@ -7258,7 +9843,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "01-26",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "rubeckia|mature stem|stem",
+          "dtm": 208,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_eab3ca32",
@@ -7286,7 +9881,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "rutabaga|mature root|root",
+          "dtm": 120,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_43edd4be",
@@ -7315,7 +9920,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 1.5"
+      "yieldFormula": "plantingsPerBed * 1.5",
+      "productYields": [
+        {
+          "productId": "rutabaga|mature root|root",
+          "dtm": 270,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 1.5"
+        }
+      ]
     },
     {
       "id": "crop_15122baf",
@@ -7342,6 +9957,14 @@
           "days": 90,
           "cellsPerTray": 18
         }
+      ],
+      "productYields": [
+        {
+          "productId": "sage|mature sprigs|bunch",
+          "dtm": 85,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
       ]
     },
     {
@@ -7367,7 +9990,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "03-22",
-      "yieldFormula": "plantingsPerBed * 0.020833333333333332 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.020833333333333332 * harvests",
+      "productYields": [
+        {
+          "productId": "salsola|mature leaf|bunch",
+          "dtm": 47,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.020833333333333332 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_383bd374",
@@ -7392,7 +10025,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "03-22",
-      "yieldFormula": "plantingsPerBed * 1.5"
+      "yieldFormula": "plantingsPerBed * 1.5",
+      "productYields": [
+        {
+          "productId": "salsola|mature leaf|lb",
+          "dtm": 47,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 1.5"
+        }
+      ]
     },
     {
       "id": "crop_2794b064",
@@ -7423,7 +10066,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 1.5"
+      "yieldFormula": "plantingsPerBed * 1.5",
+      "productYields": [
+        {
+          "productId": "salsola|mature leaf|lb",
+          "dtm": 47,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 1.5"
+        }
+      ]
     },
     {
       "id": "crop_41e80dcd",
@@ -7446,7 +10099,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-21",
-      "yieldFormula": "plantingsPerBed * 10.0"
+      "yieldFormula": "plantingsPerBed * 10.0",
+      "productYields": [
+        {
+          "productId": "scabiosa|mature stem|stem",
+          "dtm": 92,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 10.0"
+        }
+      ]
     },
     {
       "id": "crop_f927e90d",
@@ -7470,7 +10133,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "06-25",
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "scallion|mature stalk|bunch",
+          "dtm": 60,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_82041d60",
@@ -7494,7 +10167,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "07-20",
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "scallion|mature stalk|bunch",
+          "dtm": 210,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_4286f6da",
@@ -7518,7 +10201,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "03-27",
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "scallion|mature stalk|bunch",
+          "dtm": 60,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_50367d9e",
@@ -7548,7 +10241,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "scallion|mature stalk|bunch",
+          "dtm": 75,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_9cef4751",
@@ -7578,7 +10281,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "scallion|mature stalk|bunch",
+          "dtm": 210,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_08e9aaa9",
@@ -7608,7 +10321,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5"
+      "yieldFormula": "plantingsPerBed * 0.5",
+      "productYields": [
+        {
+          "productId": "scallion|mature stalk|bunch",
+          "dtm": 60,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.5"
+        }
+      ]
     },
     {
       "id": "crop_0a5b6873",
@@ -7639,7 +10362,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+      "yieldFormula": "plantingsPerBed * 0.3333333333333333",
+      "productYields": [
+        {
+          "productId": "scallion|mature stalk|bunch",
+          "dtm": 60,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.3333333333333333"
+        }
+      ]
     },
     {
       "id": "crop_e9e9d6b2",
@@ -7668,7 +10401,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "seeds * 0.056818 * harvests"
+      "yieldFormula": "seeds * 0.056818 * harvests",
+      "productYields": [
+        {
+          "productId": "shallots|mature bulb|lb",
+          "dtm": 310,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "seeds * 0.056818 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_a849b7c6",
@@ -7697,7 +10440,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "seeds * 0.056818 * harvests"
+      "yieldFormula": "seeds * 0.056818 * harvests",
+      "productYields": [
+        {
+          "productId": "shallots|mature bulb|lb",
+          "dtm": 135,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "seeds * 0.056818 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_beb6a213",
@@ -7720,7 +10473,16 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "08-29",
-      "yieldFormula": "(bedFeet / 100) * 50.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 50.0 * harvests",
+      "productYields": [
+        {
+          "productId": "shallots|mature bulb|lb",
+          "dtm": 270,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "yieldFormula": "(bedFeet / 100) * 50.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_61da1133",
@@ -7743,7 +10505,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "bunch",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.2 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.2 * harvests",
+      "productYields": [
+        {
+          "productId": "shiso|loose leaf|bunch",
+          "dtm": 82,
+          "numberOfHarvests": 16,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.2 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_302ff764",
@@ -7773,7 +10545,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "snapdragons|mature stem|stem",
+          "dtm": 105,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_2b329f03",
@@ -7803,7 +10585,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 8.0"
+      "yieldFormula": "plantingsPerBed * 8.0",
+      "productYields": [
+        {
+          "productId": "snapdragons|mature stem|stem",
+          "dtm": 217,
+          "numberOfHarvests": 7,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 8.0"
+        }
+      ]
     },
     {
       "id": "crop_d30f6388",
@@ -7825,7 +10617,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests",
+      "productYields": [
+        {
+          "productId": "sorrel|mature leaf|bunch",
+          "dtm": 70,
+          "numberOfHarvests": 32,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_13b185ba",
@@ -7854,7 +10656,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests",
+      "productYields": [
+        {
+          "productId": "sorrel|mature leaf|bunch",
+          "dtm": 70,
+          "numberOfHarvests": 32,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_b6c95053",
@@ -7874,7 +10686,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "08-24",
-      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests",
+      "productYields": [
+        {
+          "productId": "sorrel|mature leaf|bunch",
+          "dtm": 150,
+          "numberOfHarvests": 36,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_42495dcc",
@@ -7900,7 +10722,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests",
+      "productYields": [
+        {
+          "productId": "sorrel|mature leaf|bunch",
+          "dtm": 150,
+          "numberOfHarvests": 36,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_0f2fc95e",
@@ -7922,7 +10754,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
-      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests",
+      "productYields": [
+        {
+          "productId": "spinach|baby leaf|lb",
+          "dtm": 35,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_3d9628e5",
@@ -7945,7 +10787,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "06-20",
-      "yieldFormula": "(bedFeet / 100) * 80.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 80.0 * harvests",
+      "productYields": [
+        {
+          "productId": "spinach|baby leaf|lb",
+          "dtm": 55,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 190,
+          "yieldFormula": "(bedFeet / 100) * 80.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_0c91dc12",
@@ -7975,7 +10827,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 80.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 80.0 * harvests",
+      "productYields": [
+        {
+          "productId": "spinach|baby leaf|lb",
+          "dtm": 55,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 190,
+          "yieldFormula": "(bedFeet / 100) * 80.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_2749a906",
@@ -8005,7 +10867,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 80.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 80.0 * harvests",
+      "productYields": [
+        {
+          "productId": "spinach|baby leaf|lb",
+          "dtm": 55,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 190,
+          "yieldFormula": "(bedFeet / 100) * 80.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_80f00194",
@@ -8034,7 +10906,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 20.0 * harvests",
+      "productYields": [
+        {
+          "productId": "spinach|baby leaf|lb",
+          "dtm": 55,
+          "numberOfHarvests": 3,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_0022d8e8",
@@ -8064,7 +10946,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 9.0"
+      "yieldFormula": "plantingsPerBed * 9.0",
+      "productYields": [
+        {
+          "productId": "squash|storage|lb",
+          "dtm": 100,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 9.0"
+        }
+      ]
     },
     {
       "id": "crop_c31339a2",
@@ -8094,7 +10986,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 200.0"
+      "yieldFormula": "(bedFeet / 100) * 200.0",
+      "productYields": [
+        {
+          "productId": "squash|storage|lb",
+          "dtm": 100,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 200.0"
+        }
+      ]
     },
     {
       "id": "crop_a93a2916",
@@ -8124,7 +11026,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 9.0"
+      "yieldFormula": "plantingsPerBed * 9.0",
+      "productYields": [
+        {
+          "productId": "squash|storage|lb",
+          "dtm": 100,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 9.0"
+        }
+      ]
     },
     {
       "id": "crop_a2de67c4",
@@ -8155,7 +11067,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "stock|mature stem|stem",
+          "dtm": 97,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_7cdc3d56",
@@ -8178,7 +11100,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-11",
-      "yieldFormula": "plantingsPerBed * 0.7"
+      "yieldFormula": "plantingsPerBed * 0.7",
+      "productYields": [
+        {
+          "productId": "strawberry|ripe fruit|lb",
+          "dtm": 80,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 3,
+          "yieldFormula": "plantingsPerBed * 0.7"
+        }
+      ]
     },
     {
       "id": "crop_4f06c2f6",
@@ -8201,7 +11133,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-11",
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "strawberry|ripe fruit|lb",
+          "dtm": 154,
+          "numberOfHarvests": 10,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 3,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_d14989b3",
@@ -8220,7 +11162,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "strawberry spinach|mature leaf|lb",
+          "dtm": 50,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_1b03ab76",
@@ -8250,7 +11200,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 15.0"
+      "yieldFormula": "plantingsPerBed * 15.0",
+      "productYields": [
+        {
+          "productId": "strawflower|mature stem|stem",
+          "dtm": 80,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 15.0"
+        }
+      ]
     },
     {
       "id": "crop_a97966db",
@@ -8270,7 +11230,16 @@
       "safetyFactor": 1.3,
       "seedingFactor": 1,
       "harvestBufferDays": 7,
-      "targetFieldDate": "06-10"
+      "targetFieldDate": "06-10",
+      "yieldUnit": "lb",
+      "productYields": [
+        {
+          "productId": "sudangrass|biomass|lb",
+          "dtm": 90,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_23d52672",
@@ -8294,7 +11263,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-21",
-      "yieldFormula": "plantingsPerBed * (daysBetweenHarvest / 7) * harvests"
+      "yieldFormula": "plantingsPerBed * (daysBetweenHarvest / 7) * harvests",
+      "productYields": [
+        {
+          "productId": "summer squash|ripe fruit|lb",
+          "dtm": 55,
+          "numberOfHarvests": 45,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "plantingsPerBed * (daysBetweenHarvest / 7) * harvests"
+        }
+      ]
     },
     {
       "id": "crop_1d9a87d5",
@@ -8324,7 +11303,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * (daysBetweenHarvest / 7) * harvests"
+      "yieldFormula": "plantingsPerBed * (daysBetweenHarvest / 7) * harvests",
+      "productYields": [
+        {
+          "productId": "summer squash|ripe fruit|lb",
+          "dtm": 60,
+          "numberOfHarvests": 45,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "plantingsPerBed * (daysBetweenHarvest / 7) * harvests"
+        }
+      ]
     },
     {
       "id": "crop_e8366a09",
@@ -8348,7 +11337,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-21",
-      "yieldFormula": "(bedFeet / 100) * 10.0 * harvests"
+      "yieldFormula": "(bedFeet / 100) * 10.0 * harvests",
+      "productYields": [
+        {
+          "productId": "summer squash|ripe fruit|lb",
+          "dtm": 55,
+          "numberOfHarvests": 42,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 1,
+          "yieldFormula": "(bedFeet / 100) * 10.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_333b83d6",
@@ -8378,7 +11377,17 @@
           "cellsPerTray": 50
         }
       ],
-      "yieldFormula": "plantingsPerBed * 1.25 * (daysBetweenHarvest / 7) * harvests"
+      "yieldFormula": "plantingsPerBed * 1.25 * (daysBetweenHarvest / 7) * harvests",
+      "productYields": [
+        {
+          "productId": "summer squash|ripe fruit|lb",
+          "dtm": 60,
+          "numberOfHarvests": 21,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 2,
+          "yieldFormula": "plantingsPerBed * 1.25 * (daysBetweenHarvest / 7) * harvests"
+        }
+      ]
     },
     {
       "id": "crop_8d107958",
@@ -8401,7 +11410,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
-      "yieldFormula": "(bedFeet / 100) * 325.925925925926"
+      "yieldFormula": "(bedFeet / 100) * 325.925925925926",
+      "productYields": [
+        {
+          "productId": "sunchoke|mature root|lb",
+          "dtm": 365,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 325.925925925926"
+        }
+      ]
     },
     {
       "id": "crop_37d61cc3",
@@ -8420,7 +11439,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "sunflower|mature stem|stem",
+          "dtm": 100,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_05dcd19f",
@@ -8443,7 +11470,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * harvests"
+      "yieldFormula": "plantingsPerBed * harvests",
+      "productYields": [
+        {
+          "productId": "sunflower|mature stem|stem",
+          "dtm": 67,
+          "numberOfHarvests": 4,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * harvests"
+        }
+      ]
     },
     {
       "id": "crop_8761adf1",
@@ -8468,7 +11505,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+      "yieldFormula": "plantingsPerBed * 2.0 * harvests",
+      "productYields": [
+        {
+          "productId": "sunflower|mature stem|stem",
+          "dtm": 70,
+          "numberOfHarvests": 6,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 2.0 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_46b2c7e6",
@@ -8491,7 +11538,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed"
+      "yieldFormula": "plantingsPerBed",
+      "productYields": [
+        {
+          "productId": "sunflower|mature stem|stem",
+          "dtm": 0,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed"
+        }
+      ]
     },
     {
       "id": "crop_d3539c5e",
@@ -8520,7 +11577,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.25 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.25 * harvests",
+      "productYields": [
+        {
+          "productId": "swiss chard|mature leaf|bunch",
+          "dtm": 59,
+          "numberOfHarvests": 7,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 33,
+          "yieldFormula": "plantingsPerBed * 0.25 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_e447dc84",
@@ -8549,7 +11616,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.25 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.25 * harvests",
+      "productYields": [
+        {
+          "productId": "swiss chard|mature leaf|bunch",
+          "dtm": 63,
+          "numberOfHarvests": 21,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 4,
+          "yieldFormula": "plantingsPerBed * 0.25 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_51f6deee",
@@ -8579,7 +11656,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 7.0"
+      "yieldFormula": "plantingsPerBed * 7.0",
+      "productYields": [
+        {
+          "productId": "talinum|mature stem|stem",
+          "dtm": 95,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 7.0"
+        }
+      ]
     },
     {
       "id": "crop_003b53d8",
@@ -8597,7 +11684,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "None",
-      "targetFieldDate": "01-31"
+      "targetFieldDate": "01-31",
+      "productYields": [
+        {
+          "productId": "tarp|clear ground|none",
+          "dtm": 0,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_abec9c7c",
@@ -8623,6 +11718,14 @@
         {
           "days": 56,
           "cellsPerTray": 18
+        }
+      ],
+      "productYields": [
+        {
+          "productId": "thyme|mature sprigs|bunch",
+          "dtm": 92,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
         }
       ]
     },
@@ -8662,7 +11765,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "plantingsPerBed * 8.0"
+      "yieldFormula": "plantingsPerBed * 8.0",
+      "productYields": [
+        {
+          "productId": "tomatillo|ripe fruit|lb",
+          "dtm": 90,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 9,
+          "yieldFormula": "plantingsPerBed * 8.0"
+        }
+      ]
     },
     {
       "id": "crop_177422e9",
@@ -8700,7 +11813,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 55,
+          "numberOfHarvests": 9,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_fe3a957e",
@@ -8738,7 +11861,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 135,
+          "numberOfHarvests": 9,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_15b33e14",
@@ -8776,7 +11909,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 120,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_d5de36a2",
@@ -8814,7 +11957,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 120,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ab0fc1ee",
@@ -8852,7 +12005,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 70,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_6f618279",
@@ -8890,7 +12053,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 100,
+          "numberOfHarvests": 14,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_c9c65a8f",
@@ -8928,7 +12101,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 90,
+          "numberOfHarvests": 16,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ce03afc6",
@@ -8966,7 +12149,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 90,
+          "numberOfHarvests": 9,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_652819c4",
@@ -9004,7 +12197,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 135,
+          "numberOfHarvests": 9,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_4e395088",
@@ -9042,7 +12245,17 @@
           "cellsPerTray": 9
         }
       ],
-      "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests"
+      "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests",
+      "productYields": [
+        {
+          "productId": "tomato|ripe fruit large|lb",
+          "dtm": 120,
+          "numberOfHarvests": 12,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests"
+        }
+      ]
     },
     {
       "id": "crop_f52e6d31",
@@ -9072,7 +12285,17 @@
           "cellsPerTray": 128
         }
       ],
-      "yieldFormula": "plantingsPerBed * 0.5"
+      "yieldFormula": "plantingsPerBed * 0.5",
+      "productYields": [
+        {
+          "productId": "turnip|mature root|bunch",
+          "dtm": 60,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.5"
+        }
+      ]
     },
     {
       "id": "crop_11559731",
@@ -9095,7 +12318,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.03125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.03125 * harvests",
+      "productYields": [
+        {
+          "productId": "turnip|mature root|bunch",
+          "dtm": 35,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.03125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_ad95c1f7",
@@ -9119,7 +12352,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-01",
-      "yieldFormula": "plantingsPerBed * 0.03125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.03125 * harvests",
+      "productYields": [
+        {
+          "productId": "turnip|mature root|bunch",
+          "dtm": 40,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.03125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_293c2581",
@@ -9143,7 +12386,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "07-05",
-      "yieldFormula": "plantingsPerBed * 0.03125 * harvests"
+      "yieldFormula": "plantingsPerBed * 0.03125 * harvests",
+      "productYields": [
+        {
+          "productId": "turnip|mature root|bunch",
+          "dtm": 40,
+          "numberOfHarvests": 2,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 14,
+          "yieldFormula": "plantingsPerBed * 0.03125 * harvests"
+        }
+      ]
     },
     {
       "id": "crop_9636bdb3",
@@ -9162,7 +12415,15 @@
       "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "stem",
-      "targetFieldDate": "04-01"
+      "targetFieldDate": "04-01",
+      "productYields": [
+        {
+          "productId": "wisteria|mature stem|stem",
+          "dtm": 365,
+          "numberOfHarvests": 1,
+          "harvestBufferDays": 7
+        }
+      ]
     },
     {
       "id": "crop_dcb0428b",
@@ -9192,7 +12453,17 @@
           "cellsPerTray": 72
         }
       ],
-      "yieldFormula": "plantingsPerBed * 20.0"
+      "yieldFormula": "plantingsPerBed * 20.0",
+      "productYields": [
+        {
+          "productId": "yarrow|mature stem|stem",
+          "dtm": 125,
+          "numberOfHarvests": 8,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 10,
+          "yieldFormula": "plantingsPerBed * 20.0"
+        }
+      ]
     },
     {
       "id": "crop_15ab1cf8",
@@ -9216,7 +12487,17 @@
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-26",
-      "yieldFormula": "plantingsPerBed * 8.0"
+      "yieldFormula": "plantingsPerBed * 8.0",
+      "productYields": [
+        {
+          "productId": "zinnia|mature stem|stem",
+          "dtm": 85,
+          "numberOfHarvests": 7,
+          "harvestBufferDays": 7,
+          "daysBetweenHarvest": 7,
+          "yieldFormula": "plantingsPerBed * 8.0"
+        }
+      ]
     }
   ]
 }

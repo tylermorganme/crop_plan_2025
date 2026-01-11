@@ -192,6 +192,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const currentPlanId = usePlanStore((state) => state.currentPlan?.id);
   const varieties = usePlanStore((state) => state.currentPlan?.varieties);
   const seedMixes = usePlanStore((state) => state.currentPlan?.seedMixes);
+  const products = usePlanStore((state) => state.currentPlan?.products);
   const catalogLoading = usePlanStore((state) => state.isLoading);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const addPlanting = usePlanStore((state) => state.addPlanting);
@@ -1600,6 +1601,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         existingIdentifiers={existingIdentifiers}
         varieties={varieties}
         seedMixes={seedMixes}
+        products={products}
       />
 
       {/* Edit Config Modal */}
@@ -1612,6 +1614,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         existingIdentifiers={existingIdentifiers}
         varieties={varieties}
         seedMixes={seedMixes}
+        products={products}
       />
 
       {/* Delete Confirmation Modal */}

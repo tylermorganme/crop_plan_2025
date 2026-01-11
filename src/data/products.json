@@ -1,0 +1,1227 @@
+[
+  {
+    "id": "alexanders|mature|bunch",
+    "crop": "Alexanders",
+    "product": "Mature",
+    "unit": "Bunch"
+  },
+  {
+    "id": "amaranth|mature leaf|bunch",
+    "crop": "Amaranth",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "amaranth|mature stem|stem",
+    "crop": "Amaranth",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "anise hysopp|mature stem|bunch",
+    "crop": "Anise Hysopp",
+    "product": "Mature Stem",
+    "unit": "Bunch",
+    "directPrice": 2.5
+  },
+  {
+    "id": "artichoke|mature flower|head",
+    "crop": "Artichoke",
+    "product": "Mature Flower",
+    "unit": "Head",
+    "directPrice": 3
+  },
+  {
+    "id": "arugula|baby leaf|lb",
+    "crop": "Arugula",
+    "product": "Baby Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "arugula|mature leaf|lb",
+    "crop": "Arugula",
+    "product": "Mature Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "asian greens|loose leaf|bunch",
+    "crop": "Asian Greens",
+    "product": "Loose Leaf",
+    "unit": "Bunch",
+    "directPrice": 3.75
+  },
+  {
+    "id": "asian greens|mature head|head",
+    "crop": "Asian Greens",
+    "product": "Mature Head",
+    "unit": "Head",
+    "directPrice": 4
+  },
+  {
+    "id": "asian greens|young leaf|lb",
+    "crop": "Asian Greens",
+    "product": "Young Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "atriplex|mature stem|stem",
+    "crop": "Atriplex",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.8
+  },
+  {
+    "id": "bachellor's button|mature stem|stem",
+    "crop": "Bachellor's Button",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "basil|mature leaf|bunch",
+    "crop": "Basil",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 3.25
+  },
+  {
+    "id": "basil|mature leaf|lb",
+    "crop": "Basil",
+    "product": "Mature Leaf",
+    "unit": "Lb",
+    "directPrice": 7
+  },
+  {
+    "id": "basil|mature stem|stem",
+    "crop": "Basil",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "bean|flowering tendril|stem",
+    "crop": "Bean",
+    "product": "Flowering Tendril",
+    "unit": "Stem",
+    "directPrice": 4
+  },
+  {
+    "id": "bean|young pod|lb",
+    "crop": "Bean",
+    "product": "Young Pod",
+    "unit": "Lb",
+    "directPrice": 8
+  },
+  {
+    "id": "beet|baby root|bunch",
+    "crop": "Beet",
+    "product": "Baby Root",
+    "unit": "Bunch",
+    "directPrice": 3.25
+  },
+  {
+    "id": "beet|mature root|bunch",
+    "crop": "Beet",
+    "product": "Mature Root",
+    "unit": "Bunch",
+    "directPrice": 4
+  },
+  {
+    "id": "bok choy|mature head|head",
+    "crop": "Bok Choy",
+    "product": "Mature Head",
+    "unit": "Head",
+    "directPrice": 2.5
+  },
+  {
+    "id": "borage|edible bloom|bloom",
+    "crop": "Borage",
+    "product": "Edible Bloom",
+    "unit": "Bloom",
+    "directPrice": 0.2
+  },
+  {
+    "id": "borage|mature stem|stem",
+    "crop": "Borage",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "broccoli|loose florets|bunch",
+    "crop": "Broccoli",
+    "product": "Loose Florets",
+    "unit": "Bunch",
+    "directPrice": 4
+  },
+  {
+    "id": "broccoli|mature head|head",
+    "crop": "Broccoli",
+    "product": "Mature Head",
+    "unit": "Head",
+    "directPrice": 3.25
+  },
+  {
+    "id": "brussel sprouts|mature sprouts|lb",
+    "crop": "Brussel Sprouts",
+    "product": "Mature Sprouts",
+    "unit": "Lb",
+    "directPrice": 5
+  },
+  {
+    "id": "buckwheat|flowering stem|stem",
+    "crop": "Buckwheat",
+    "product": "Flowering Stem",
+    "unit": "Stem",
+    "directPrice": 0.3
+  },
+  {
+    "id": "bupleurum|mature stem|stem",
+    "crop": "Bupleurum",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.3
+  },
+  {
+    "id": "butterfly flowers|flowering tendril|stem",
+    "crop": "Butterfly Flowers",
+    "product": "Flowering Tendril",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "cabbage|large head|head",
+    "crop": "Cabbage",
+    "product": "Large Head",
+    "unit": "Head",
+    "directPrice": 8.8
+  },
+  {
+    "id": "cabbage|mature leaf|bunch",
+    "crop": "Cabbage",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 2.75
+  },
+  {
+    "id": "cabbage|small head|head",
+    "crop": "Cabbage",
+    "product": "Small Head",
+    "unit": "Head",
+    "directPrice": 4
+  },
+  {
+    "id": "carrot|mature root|bunch",
+    "crop": "Carrot",
+    "product": "Mature Root",
+    "unit": "Bunch",
+    "directPrice": 3.25
+  },
+  {
+    "id": "carrot|storage root|lb",
+    "crop": "Carrot",
+    "product": "Storage Root",
+    "unit": "Lb",
+    "directPrice": 3.5
+  },
+  {
+    "id": "catnip|mature stem|bunch",
+    "crop": "Catnip",
+    "product": "Mature Stem",
+    "unit": "Bunch",
+    "directPrice": 2.5
+  },
+  {
+    "id": "cauliflower|mature head|head",
+    "crop": "Cauliflower",
+    "product": "Mature Head",
+    "unit": "Head",
+    "directPrice": 9
+  },
+  {
+    "id": "celery root|mature root|root",
+    "crop": "Celery Root",
+    "product": "Mature Root",
+    "unit": "Root",
+    "directPrice": 4
+  },
+  {
+    "id": "celery root|mini root|root",
+    "crop": "Celery Root",
+    "product": "Mini Root",
+    "unit": "Root",
+    "directPrice": 2
+  },
+  {
+    "id": "celery|loose rib|bunch",
+    "crop": "Celery",
+    "product": "Loose Rib",
+    "unit": "Bunch",
+    "directPrice": 2.75
+  },
+  {
+    "id": "celosia|mature stem|stem",
+    "crop": "Celosia",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.7
+  },
+  {
+    "id": "chervil|mature stem|bunch",
+    "crop": "Chervil",
+    "product": "Mature Stem",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "chicory|chicon|head",
+    "crop": "Chicory",
+    "product": "Chicon",
+    "unit": "Head",
+    "directPrice": 10
+  },
+  {
+    "id": "chicory|mature head|head",
+    "crop": "Chicory",
+    "product": "Mature Head",
+    "unit": "Head",
+    "directPrice": 5
+  },
+  {
+    "id": "chijimisai|mature head|head",
+    "crop": "Chijimisai",
+    "product": "Mature Head",
+    "unit": "Head",
+    "directPrice": 3.5
+  },
+  {
+    "id": "choi sum|mature head|bunch",
+    "crop": "Choi Sum",
+    "product": "Mature Head",
+    "unit": "Bunch",
+    "directPrice": 4
+  },
+  {
+    "id": "chrysanthemum greens|mature leaf|bunch",
+    "crop": "Chrysanthemum Greens",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 4
+  },
+  {
+    "id": "chrysanthemum|mature stem|stem",
+    "crop": "Chrysanthemum",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "cilantro|loose leaf|bunch",
+    "crop": "Cilantro",
+    "product": "Loose Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "clematis|cut flower|stem",
+    "crop": "Clematis",
+    "product": "Cut Flower",
+    "unit": "Stem",
+    "directPrice": 4.313000000000001
+  },
+  {
+    "id": "collard greens|loose leaf|bunch",
+    "crop": "Collard Greens",
+    "product": "Loose Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "corn salad|mature head|lb",
+    "crop": "Corn Salad",
+    "product": "Mature Head",
+    "unit": "Lb",
+    "directPrice": 12
+  },
+  {
+    "id": "corn|mature cob|cobs",
+    "crop": "Corn",
+    "product": "Mature Cob",
+    "unit": "Cobs",
+    "directPrice": 2
+  },
+  {
+    "id": "cosmos|cut flower|stem",
+    "crop": "Cosmos",
+    "product": "Cut Flower",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "cress|mature stems|stem",
+    "crop": "Cress",
+    "product": "Mature Stems",
+    "unit": "Stem",
+    "directPrice": 0.3
+  },
+  {
+    "id": "cucumber|large fruit|fruit",
+    "crop": "Cucumber",
+    "product": "Large Fruit",
+    "unit": "Fruit",
+    "directPrice": 2.25
+  },
+  {
+    "id": "cucumber|ripe fruit|lb",
+    "crop": "Cucumber",
+    "product": "Ripe Fruit",
+    "unit": "Lb",
+    "directPrice": 3
+  },
+  {
+    "id": "cucumber|small fruit|fruit",
+    "crop": "Cucumber",
+    "product": "Small Fruit",
+    "unit": "Fruit",
+    "directPrice": 1
+  },
+  {
+    "id": "dahlia|cut flower|stem",
+    "crop": "Dahlia",
+    "product": "Cut Flower",
+    "unit": "Stem",
+    "directPrice": 3
+  },
+  {
+    "id": "dahlia|mature stem|stem",
+    "crop": "Dahlia",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 3
+  },
+  {
+    "id": "dianthus|mature stem|stem",
+    "crop": "Dianthus",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "dill|mature leaf|bunch",
+    "crop": "Dill",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 2
+  },
+  {
+    "id": "dill|mature stem|stem",
+    "crop": "Dill",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "dropmore|mature stem|stem",
+    "crop": "Dropmore",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 3
+  },
+  {
+    "id": "eggplant|ripe fruit|lb",
+    "crop": "Eggplant",
+    "product": "Ripe Fruit",
+    "unit": "Lb",
+    "directPrice": 4.75
+  },
+  {
+    "id": "epazote|mature stem|bunch",
+    "crop": "Epazote",
+    "product": "Mature Stem",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "everlasting|mature stem|stem",
+    "crop": "Everlasting",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.8
+  },
+  {
+    "id": "fava bean|mature pod|lb",
+    "crop": "Fava Bean",
+    "product": "Mature Pod",
+    "unit": "Lb",
+    "directPrice": 6
+  },
+  {
+    "id": "fennel|mature bulb|bulb",
+    "crop": "Fennel",
+    "product": "Mature Bulb",
+    "unit": "Bulb",
+    "directPrice": 2.5
+  },
+  {
+    "id": "fennel|mini bulb|bulb",
+    "crop": "Fennel",
+    "product": "Mini Bulb",
+    "unit": "Bulb",
+    "directPrice": 1.6666666666666667
+  },
+  {
+    "id": "flax|flowering stalks|stem",
+    "crop": "Flax",
+    "product": "Flowering Stalks",
+    "unit": "Stem",
+    "directPrice": 0.3
+  },
+  {
+    "id": "frisée|baby leaf|lb",
+    "crop": "Frisée",
+    "product": "Baby Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "frisée|mature head|head",
+    "crop": "Frisée",
+    "product": "Mature Head",
+    "unit": "Head",
+    "directPrice": 3
+  },
+  {
+    "id": "garlic|storage bulb|lb",
+    "crop": "Garlic",
+    "product": "Storage Bulb",
+    "unit": "Lb",
+    "directPrice": 18
+  },
+  {
+    "id": "garlic|young bulb|bunch",
+    "crop": "Garlic",
+    "product": "Young Bulb",
+    "unit": "Bunch",
+    "directPrice": 5
+  },
+  {
+    "id": "ginger|young root|lb",
+    "crop": "Ginger",
+    "product": "Young Root",
+    "unit": "Lb",
+    "directPrice": 14
+  },
+  {
+    "id": "gooseberry|mature berry|pint",
+    "crop": "Gooseberry",
+    "product": "Mature Berry",
+    "unit": "Pint",
+    "directPrice": 8
+  },
+  {
+    "id": "grass|mature stalks|stem",
+    "crop": "Grass",
+    "product": "Mature Stalks",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "ground cherry|mature fruit|lb",
+    "crop": "Ground Cherry",
+    "product": "Mature Fruit",
+    "unit": "Lb",
+    "directPrice": 12
+  },
+  {
+    "id": "hibiscus|mature stem|stem",
+    "crop": "Hibiscus",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "hops vine with flowers|flowering vine|stem",
+    "crop": "Hops Vine with Flowers",
+    "product": "Flowering Vine",
+    "unit": "Stem",
+    "directPrice": 5.031000000000001
+  },
+  {
+    "id": "huauzontle|mature stem|lb",
+    "crop": "Huauzontle",
+    "product": "Mature Stem",
+    "unit": "Lb",
+    "directPrice": 4.5
+  },
+  {
+    "id": "hyacinth bean vine|flowering tendril|stem",
+    "crop": "Hyacinth Bean Vine",
+    "product": "Flowering Tendril",
+    "unit": "Stem",
+    "directPrice": 4.025
+  },
+  {
+    "id": "hydrangea|mature stem|stem",
+    "crop": "Hydrangea",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 3.594
+  },
+  {
+    "id": "jelly melon|ripe fruit|lb",
+    "crop": "Jelly Melon",
+    "product": "Ripe Fruit",
+    "unit": "Lb",
+    "directPrice": 4
+  },
+  {
+    "id": "kaibroc|loose florets|lb",
+    "crop": "Kaibroc",
+    "product": "Loose Florets",
+    "unit": "Lb",
+    "directPrice": 4
+  },
+  {
+    "id": "kale|baby leaf|lb",
+    "crop": "Kale",
+    "product": "Baby Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "kale|mature leaf|bunch",
+    "crop": "Kale",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "kohlrabi|storage bulb|bulb",
+    "crop": "Kohlrabi",
+    "product": "Storage Bulb",
+    "unit": "Bulb",
+    "directPrice": 7
+  },
+  {
+    "id": "komatsuna|loose leaf|bunch",
+    "crop": "Komatsuna",
+    "product": "Loose Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "komatsuna|mature head|bunch",
+    "crop": "Komatsuna",
+    "product": "Mature Head",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "komatsuna|mature leaf|lb",
+    "crop": "Komatsuna",
+    "product": "Mature Leaf",
+    "unit": "Lb",
+    "directPrice": 5
+  },
+  {
+    "id": "leek|mature stalk|bunch",
+    "crop": "Leek",
+    "product": "Mature Stalk",
+    "unit": "Bunch",
+    "directPrice": 5
+  },
+  {
+    "id": "leek|mature stalk|stalk",
+    "crop": "Leek",
+    "product": "Mature Stalk",
+    "unit": "Stalk",
+    "directPrice": 3
+  },
+  {
+    "id": "lemon balm|mature stem|bunch",
+    "crop": "Lemon Balm",
+    "product": "Mature Stem",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "lemongrass|mature stalks|bunch",
+    "crop": "Lemongrass",
+    "product": "Mature Stalks",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "lettuce|baby leaf|lb",
+    "crop": "Lettuce",
+    "product": "Baby Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "lettuce|loose leaf|lb",
+    "crop": "Lettuce",
+    "product": "Loose Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "lettuce|mature head|head",
+    "crop": "Lettuce",
+    "product": "Mature Head",
+    "unit": "Head",
+    "directPrice": 4
+  },
+  {
+    "id": "lettuce|mini head|head",
+    "crop": "Lettuce",
+    "product": "Mini Head",
+    "unit": "Head",
+    "directPrice": 3
+  },
+  {
+    "id": "lettuce|overwinter head|head",
+    "crop": "Lettuce",
+    "product": "Overwinter Head",
+    "unit": "Head",
+    "directPrice": 4
+  },
+  {
+    "id": "lilies|mature stalk|stem",
+    "crop": "Lilies",
+    "product": "Mature Stalk",
+    "unit": "Stem",
+    "directPrice": 2
+  },
+  {
+    "id": "lovage|mature leaf|bunch",
+    "crop": "Lovage",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "magenta spreen|flowering stalks|stem",
+    "crop": "Magenta Spreen",
+    "product": "Flowering Stalks",
+    "unit": "Stem",
+    "directPrice": 0.5
+  },
+  {
+    "id": "magenta spreen|young stem|bunch",
+    "crop": "Magenta Spreen",
+    "product": "Young Stem",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "malabar spinach|mature leaf|lb",
+    "crop": "Malabar Spinach",
+    "product": "Mature Leaf",
+    "unit": "Lb",
+    "directPrice": 9
+  },
+  {
+    "id": "malabar spinach|young buds|stem",
+    "crop": "Malabar Spinach",
+    "product": "Young Buds",
+    "unit": "Stem",
+    "directPrice": 0.2
+  },
+  {
+    "id": "marigolds|mature stem|stem",
+    "crop": "Marigolds",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "marjoram|mature stem|bunch",
+    "crop": "Marjoram",
+    "product": "Mature Stem",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "melon|ripe fruit|lb",
+    "crop": "Melon",
+    "product": "Ripe Fruit",
+    "unit": "Lb",
+    "directPrice": 1.5
+  },
+  {
+    "id": "microgreens|micro leaf|ounce",
+    "crop": "Microgreens",
+    "product": "Micro Leaf",
+    "unit": "Ounce"
+  },
+  {
+    "id": "milkweed|mature stem|stem",
+    "crop": "Milkweed",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1.1
+  },
+  {
+    "id": "mint|mature sprigs|bunch",
+    "crop": "Mint",
+    "product": "Mature Sprigs",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "mock orange|mature branch|stem",
+    "crop": "Mock Orange",
+    "product": "Mature Branch",
+    "unit": "Stem",
+    "directPrice": 4
+  },
+  {
+    "id": "mustard greens|baby leaf|lb",
+    "crop": "Mustard Greens",
+    "product": "Baby Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "nausturtium|mature stem|bloom",
+    "crop": "Nausturtium",
+    "product": "Mature Stem",
+    "unit": "Bloom",
+    "directPrice": 0.1
+  },
+  {
+    "id": "nigella|mature stalk|stem",
+    "crop": "Nigella",
+    "product": "Mature Stalk",
+    "unit": "Stem"
+  },
+  {
+    "id": "nigella|mature stem|stem",
+    "crop": "Nigella",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "onion|mature bulb|lb",
+    "crop": "Onion",
+    "product": "Mature Bulb",
+    "unit": "Lb",
+    "directPrice": 3
+  },
+  {
+    "id": "onion|young bulb|bunch",
+    "crop": "Onion",
+    "product": "Young Bulb",
+    "unit": "Bunch",
+    "directPrice": 4
+  },
+  {
+    "id": "oregano|mature stem|bunch",
+    "crop": "Oregano",
+    "product": "Mature Stem",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "pansy and violas|mature stem|stem",
+    "crop": "Pansy and Violas",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.1
+  },
+  {
+    "id": "parsley|mature leaf|bunch",
+    "crop": "Parsley",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 2.5
+  },
+  {
+    "id": "parsnip|mature root|bunch",
+    "crop": "Parsnip",
+    "product": "Mature Root",
+    "unit": "Bunch",
+    "directPrice": 4
+  },
+  {
+    "id": "pea tendril|young shoots|lb",
+    "crop": "Pea Tendril",
+    "product": "Young Shoots",
+    "unit": "Lb",
+    "directPrice": 12
+  },
+  {
+    "id": "peas|young pod|lb",
+    "crop": "Peas",
+    "product": "Young Pod",
+    "unit": "Lb",
+    "directPrice": 9.5
+  },
+  {
+    "id": "peonies|mature stalk|stem",
+    "crop": "Peonies",
+    "product": "Mature Stalk",
+    "unit": "Stem",
+    "directPrice": 4
+  },
+  {
+    "id": "pepper|ripe fruit large|lb",
+    "crop": "Pepper",
+    "product": "Ripe Fruit Large",
+    "unit": "Lb",
+    "directPrice": 4.75
+  },
+  {
+    "id": "pepper|ripe fruit small|lb",
+    "crop": "Pepper",
+    "product": "Ripe Fruit Small",
+    "unit": "Lb",
+    "directPrice": 8
+  },
+  {
+    "id": "petunia|mature stem|stem",
+    "crop": "Petunia",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 2
+  },
+  {
+    "id": "potato|mature root|lb",
+    "crop": "Potato",
+    "product": "Mature Root",
+    "unit": "Lb",
+    "directPrice": 3
+  },
+  {
+    "id": "potato|storage root|lb",
+    "crop": "Potato",
+    "product": "Storage Root",
+    "unit": "Lb",
+    "directPrice": 2.25
+  },
+  {
+    "id": "queen anne's lace|mature stem|stem",
+    "crop": "Queen Anne's Lace",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "radicchio|forced head|head",
+    "crop": "Radicchio",
+    "product": "Forced Head",
+    "unit": "Head",
+    "directPrice": 6
+  },
+  {
+    "id": "radish|mature root|bunch",
+    "crop": "Radish",
+    "product": "Mature Root",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "radish|storage root|bunch",
+    "crop": "Radish",
+    "product": "Storage Root",
+    "unit": "Bunch",
+    "directPrice": 5
+  },
+  {
+    "id": "radish|storage root|lb",
+    "crop": "Radish",
+    "product": "Storage Root",
+    "unit": "Lb",
+    "directPrice": 2
+  },
+  {
+    "id": "ranunculus|mature stalk|stem",
+    "crop": "Ranunculus",
+    "product": "Mature Stalk",
+    "unit": "Stem"
+  },
+  {
+    "id": "raspberry|black berry|1/2 pint",
+    "crop": "Raspberry",
+    "product": "Black Berry",
+    "unit": "1/2 Pint",
+    "directPrice": 6
+  },
+  {
+    "id": "raspberry|red berry|1/2 pint",
+    "crop": "Raspberry",
+    "product": "Red Berry",
+    "unit": "1/2 Pint",
+    "directPrice": 5
+  },
+  {
+    "id": "rat tail radish|mature pod|lb",
+    "crop": "Rat Tail Radish",
+    "product": "Mature Pod",
+    "unit": "Lb",
+    "directPrice": 4.25
+  },
+  {
+    "id": "rose|mature stem|stem",
+    "crop": "Rose",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 4.5
+  },
+  {
+    "id": "roselle|mature leaf|lb",
+    "crop": "Roselle",
+    "product": "Mature Leaf",
+    "unit": "Lb",
+    "directPrice": 22
+  },
+  {
+    "id": "rosemary|mature sprigs|bunch",
+    "crop": "Rosemary",
+    "product": "Mature Sprigs",
+    "unit": "Bunch"
+  },
+  {
+    "id": "rubeckia|mature stem|stem",
+    "crop": "Rubeckia",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "rutabaga|mature root|root",
+    "crop": "Rutabaga",
+    "product": "Mature Root",
+    "unit": "Root",
+    "directPrice": 3.5
+  },
+  {
+    "id": "sage|mature sprigs|bunch",
+    "crop": "Sage",
+    "product": "Mature Sprigs",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "salsola|mature leaf|bunch",
+    "crop": "Salsola",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "salsola|mature leaf|lb",
+    "crop": "Salsola",
+    "product": "Mature Leaf",
+    "unit": "Lb",
+    "directPrice": 22
+  },
+  {
+    "id": "scabiosa|mature stem|stem",
+    "crop": "Scabiosa",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.8
+  },
+  {
+    "id": "scallion|mature stalk|bunch",
+    "crop": "Scallion",
+    "product": "Mature Stalk",
+    "unit": "Bunch",
+    "directPrice": 2.5
+  },
+  {
+    "id": "shallots|mature bulb|lb",
+    "crop": "Shallots",
+    "product": "Mature Bulb",
+    "unit": "Lb",
+    "directPrice": 7
+  },
+  {
+    "id": "shiso|loose leaf|bunch",
+    "crop": "Shiso",
+    "product": "Loose Leaf",
+    "unit": "bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "snapdragons|mature stem|stem",
+    "crop": "Snapdragons",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "sorrel|mature leaf|bunch",
+    "crop": "Sorrel",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "spinach|baby leaf|lb",
+    "crop": "Spinach",
+    "product": "Baby Leaf",
+    "unit": "Lb",
+    "directPrice": 10
+  },
+  {
+    "id": "spinach|mature leaf|lb",
+    "crop": "Spinach",
+    "product": "Mature Leaf",
+    "unit": "Lb",
+    "directPrice": 8
+  },
+  {
+    "id": "squash|storage|lb",
+    "crop": "Squash",
+    "product": "Storage",
+    "unit": "Lb",
+    "directPrice": 2.25
+  },
+  {
+    "id": "stock|mature stem|stem",
+    "crop": "Stock",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "strawberry spinach|mature leaf|lb",
+    "crop": "Strawberry Spinach",
+    "product": "Mature Leaf",
+    "unit": "Lb",
+    "directPrice": 12
+  },
+  {
+    "id": "strawberry|ripe fruit|lb",
+    "crop": "Strawberry",
+    "product": "Ripe Fruit",
+    "unit": "Lb",
+    "directPrice": 8
+  },
+  {
+    "id": "strawflower|mature stem|stem",
+    "crop": "Strawflower",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.5
+  },
+  {
+    "id": "sudangrass|biomass|lb",
+    "crop": "Sudangrass",
+    "product": "Biomass",
+    "unit": "lb"
+  },
+  {
+    "id": "summer squash|ripe fruit|lb",
+    "crop": "Summer Squash",
+    "product": "Ripe Fruit",
+    "unit": "Lb",
+    "directPrice": 2
+  },
+  {
+    "id": "sunchoke|mature root|lb",
+    "crop": "Sunchoke",
+    "product": "Mature Root",
+    "unit": "Lb",
+    "directPrice": 7
+  },
+  {
+    "id": "sunflower|mature stem|stem",
+    "crop": "Sunflower",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1.2
+  },
+  {
+    "id": "swiss chard|mature leaf|bunch",
+    "crop": "Swiss Chard",
+    "product": "Mature Leaf",
+    "unit": "Bunch",
+    "directPrice": 3
+  },
+  {
+    "id": "talinum|mature stem|stem",
+    "crop": "Talinum",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 1
+  },
+  {
+    "id": "tarp|clear ground|none",
+    "crop": "Tarp",
+    "product": "Clear Ground",
+    "unit": "None",
+    "directPrice": 0
+  },
+  {
+    "id": "thyme|mature sprigs|bunch",
+    "crop": "Thyme",
+    "product": "Mature Sprigs",
+    "unit": "Bunch"
+  },
+  {
+    "id": "tomatillo|ripe fruit|lb",
+    "crop": "Tomatillo",
+    "product": "Ripe Fruit",
+    "unit": "Lb",
+    "directPrice": 6
+  },
+  {
+    "id": "tomato|ripe fruit large|lb",
+    "crop": "Tomato",
+    "product": "Ripe Fruit Large",
+    "unit": "Lb",
+    "directPrice": 5
+  },
+  {
+    "id": "tomato|ripe fruit medium|lb",
+    "crop": "Tomato",
+    "product": "Ripe Fruit Medium",
+    "unit": "Lb",
+    "directPrice": 7
+  },
+  {
+    "id": "tomato|ripe fruit small|lb",
+    "crop": "Tomato",
+    "product": "Ripe Fruit Small",
+    "unit": "Lb",
+    "directPrice": 7
+  },
+  {
+    "id": "turnip|mature root|bunch",
+    "crop": "Turnip",
+    "product": "Mature Root",
+    "unit": "Bunch",
+    "directPrice": 2.75
+  },
+  {
+    "id": "wisteria|mature stem|stem",
+    "crop": "Wisteria",
+    "product": "Mature Stem",
+    "unit": "stem",
+    "directPrice": 4.313000000000001
+  },
+  {
+    "id": "yarrow|mature stem|stem",
+    "crop": "Yarrow",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.5
+  },
+  {
+    "id": "zinnia|mature stem|stem",
+    "crop": "Zinnia",
+    "product": "Mature Stem",
+    "unit": "Stem",
+    "directPrice": 0.5
+  }
+]

@@ -19,6 +19,17 @@
 
 const fs = require('fs');
 const crops = JSON.parse(fs.readFileSync('./crops.json.old', 'utf8')).crops;
+const products = JSON.parse(fs.readFileSync('./products.json', 'utf8'));
+
+// Build product lookup by crop+unit for matching
+const productLookup = new Map();
+for (const p of products) {
+  const key = `${p.crop.toLowerCase().trim()}|${p.unit.toLowerCase().trim()}`;
+  // Store first match (there might be multiple products with same crop+unit but different product names)
+  if (!productLookup.has(key)) {
+    productLookup.set(key, p);
+  }
+}
 
 // =============================================================================
 // NAMING CONVENTION MAPPINGS - Convert Excel abbreviations to self-documenting names
@@ -138,17 +149,42 @@ const cleanCrops = crops.map((c) => {
   const dbh = c['Days Between Harvest'] ?? 0;
   const harvests = c['Harvests'] ?? 1;
   const storedHW = c['Harvest window'];
+  let postHarvestFieldDays;
   if (storedHW != null && harvests > 1 && dbh > 0) {
     const formulaHW = (harvests - 1) * dbh + 7;
     const diff = storedHW - formulaHW;
     if (diff > 0) {
       // Extra days beyond formula = postHarvestFieldDays (bed occupied after last harvest)
       crop.postHarvestFieldDays = diff;
+      postHarvestFieldDays = diff;
     }
     // Note: diff < 0 or diff = 0 means Excel has an error or matches formula - use formula
   }
   // Single-harvest crops and crops with dbh=0: any Excel override is likely an error
   // Let the formula calculate correctly (7-day buffer)
+
+  // Create productYields[0] by matching to Product via crop+unit
+  const cropName = c.Crop?.toLowerCase().trim();
+  const unit = c['Unit']?.toLowerCase().trim();
+  if (cropName && unit) {
+    const productKey = `${cropName}|${unit}`;
+    const matchedProduct = productLookup.get(productKey);
+    if (matchedProduct) {
+      crop.productYields = [{
+        productId: matchedProduct.id,
+        dtm: c.DTM ?? 0,
+        numberOfHarvests: c['Harvests'] ?? 1,
+        daysBetweenHarvest: c['Days Between Harvest'] || undefined,
+        yieldFormula: undefined, // Will be set separately if we have yield data
+        harvestBufferDays: 7, // Default buffer
+        postHarvestFieldDays: postHarvestFieldDays || undefined,
+      }];
+      // Clean up undefined values in productYields
+      Object.keys(crop.productYields[0]).forEach(k => {
+        if (crop.productYields[0][k] === undefined) delete crop.productYields[0][k];
+      });
+    }
+  }
 
   // Build tray stages array - each stage has days and cellsPerTray
   const trayStages = [];
@@ -187,6 +223,15 @@ console.log('Created crops.json with', cleanCrops.length, 'crops');
 if (skippedCrops.length > 0) {
   console.log('\nSkipped crops (data fixes applied):');
   skippedCrops.forEach(s => console.log(`  - ${s.identifier}: ${s.reason}`));
+}
+
+// Report product matching stats
+const withProducts = cleanCrops.filter(c => c.productYields && c.productYields.length > 0);
+const withoutProducts = cleanCrops.filter(c => !c.productYields || c.productYields.length === 0);
+console.log(`\nProduct matching: ${withProducts.length}/${cleanCrops.length} crops have productYields`);
+if (withoutProducts.length > 0) {
+  console.log('Crops without product match:');
+  withoutProducts.forEach(c => console.log(`  - ${c.identifier} (crop: ${c.crop}, unit: ${c.yieldUnit || 'none'})`));
 }
 
 console.log('\nSample transplanted crop (with tray stages):');

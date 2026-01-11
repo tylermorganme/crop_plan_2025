@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   type CropConfig,
   type TrayStage,
+  type ProductYield,
   calculateDaysInCells,
   calculateSeedToHarvest,
   calculatePlantingMethod,
@@ -11,9 +12,9 @@ import {
   createBlankConfig,
   evaluateYieldForDisplay,
 } from '@/lib/entities/crop-config';
-import type { SeedSource } from '@/lib/entities/planting';
 import type { Variety } from '@/lib/entities/variety';
 import type { SeedMix } from '@/lib/entities/seed-mix';
+import type { Product } from '@/lib/entities/product';
 import { Z_INDEX } from '@/lib/z-index';
 
 /** Standard tray sizes (cells per tray) */
@@ -36,6 +37,8 @@ interface CropConfigEditorProps {
   varieties?: Record<string, Variety>;
   /** Seed mixes available for default seed source selection */
   seedMixes?: Record<string, SeedMix>;
+  /** Products available for yield/revenue linking */
+  products?: Record<string, Product>;
 }
 
 /**
@@ -118,13 +121,8 @@ function formatRemovalDescription(info: DataRemovalInfo): string[] {
 }
 
 // =============================================================================
-// YIELD SECTION COMPONENT
+// YIELD FORMULA HELPERS
 // =============================================================================
-
-interface YieldSectionProps {
-  formData: Partial<CropConfig>;
-  updateField: <K extends keyof CropConfig>(field: K, value: CropConfig[K] | undefined) => void;
-}
 
 /** Template definition for common yield formula patterns */
 interface FormulaTemplate {
@@ -212,228 +210,6 @@ const FORMULA_TEMPLATES: FormulaTemplate[] = [
   },
 ];
 
-/**
- * Template-based yield formula editor.
- *
- * - Formula field is always editable
- * - Template buttons insert common patterns
- * - Clicking a template auto-selects the rate portion for immediate typing
- */
-function YieldSection({ formData, updateField }: YieldSectionProps) {
-  const formulaInputRef = useRef<HTMLInputElement>(null);
-
-  // Evaluate current formula for preview
-  const yieldResult = evaluateYieldForDisplay(formData as CropConfig);
-  const harvests = formData.numberOfHarvests ?? 1;
-  const perHarvestYield = yieldResult.value !== null ? yieldResult.value / harvests : null;
-
-  // Insert a variable at cursor position
-  const insertVariable = (varName: string) => {
-    const input = formulaInputRef.current;
-    if (!input) return;
-
-    const start = input.selectionStart ?? 0;
-    const end = input.selectionEnd ?? 0;
-    const currentValue = formData.yieldFormula || '';
-
-    // Replace selection (or insert at cursor) with variable name
-    const newValue = currentValue.slice(0, start) + varName + currentValue.slice(end);
-    updateField('yieldFormula', newValue);
-
-    // Focus and position cursor after inserted variable
-    setTimeout(() => {
-      input.focus();
-      const newPos = start + varName.length;
-      input.setSelectionRange(newPos, newPos);
-    }, 0);
-  };
-
-  // Insert a template and select the rate placeholder
-  const insertTemplate = (template: FormulaTemplate) => {
-    if (template.template === '0') {
-      // Special case: "None" template just sets 0
-      updateField('yieldFormula', '0');
-      return;
-    }
-
-    // Insert the template with a placeholder rate
-    const formula = template.template.replace('___', '0');
-    updateField('yieldFormula', formula);
-
-    // Focus the input and select the rate portion
-    setTimeout(() => {
-      if (formulaInputRef.current) {
-        formulaInputRef.current.focus();
-        const start = template.ratePosition.prefix.length;
-        const end = formula.length - template.ratePosition.suffix.length;
-        formulaInputRef.current.setSelectionRange(start, end);
-      }
-    }, 0);
-  };
-
-  return (
-    <section>
-      <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Yield</h3>
-      <div className="space-y-3">
-        {/* Template Buttons - at top for quick starts */}
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">
-            Quick templates:
-          </label>
-          <div className="flex flex-wrap gap-1.5">
-            {FORMULA_TEMPLATES.map((template) => (
-              <button
-                key={template.label}
-                type="button"
-                onClick={() => insertTemplate(template)}
-                title={template.description}
-                className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 hover:border-gray-300 transition-colors"
-              >
-                {template.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Formula Input + Unit side by side */}
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-              Yield Formula
-            </label>
-            <input
-              ref={formulaInputRef}
-              type="text"
-              value={formData.yieldFormula || ''}
-              onChange={(e) => updateField('yieldFormula', e.target.value || undefined)}
-              placeholder="e.g., plantingsPerBed * 0.125 * harvests"
-              className="w-full px-3 py-2 text-sm font-mono text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="w-28">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
-            <input
-              type="text"
-              value={formData.yieldUnit || ''}
-              onChange={(e) => updateField('yieldUnit', e.target.value || undefined)}
-              placeholder="lb, bunch..."
-              className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Preview / Result - right below formula */}
-        <div className="bg-gray-50 rounded-md p-3 border border-gray-200">
-          {/* Main result line with context */}
-          <div className="flex items-baseline justify-between">
-            <span className="text-xs text-gray-500">
-              {yieldResult.context.rows} row{yieldResult.context.rows !== 1 ? 's' : ''} @ {yieldResult.context.spacing}" spacing → {Math.round(yieldResult.context.plantingsPerBed)} plants/50ft
-            </span>
-            {yieldResult.value !== null ? (
-              yieldResult.value === 0 ? (
-                <span className="text-sm text-gray-500 italic">No production</span>
-              ) : (
-                <span className="text-sm font-semibold text-gray-900">
-                  {yieldResult.value.toFixed(1)} {formData.yieldUnit || 'units'}
-                </span>
-              )
-            ) : (
-              <span className="text-sm text-gray-400">—</span>
-            )}
-          </div>
-
-          {/* Per harvest breakdown */}
-          {yieldResult.value !== null && yieldResult.value > 0 && harvests > 1 && (
-            <p className="text-xs text-gray-500 mt-1">
-              {perHarvestYield?.toFixed(1)} per harvest × {harvests} harvests
-            </p>
-          )}
-
-          {/* Error display with suggestions */}
-          {yieldResult.error && (
-            <div className="mt-1">
-              <p className="text-xs text-red-600">
-                Error: {yieldResult.error}
-              </p>
-              {(() => {
-                const unknownVar = extractUnknownVariable(yieldResult.error);
-                if (!unknownVar) return null;
-                const suggestions = findSimilarVariables(unknownVar);
-                if (suggestions.length === 0) return null;
-                return (
-                  <p className="text-xs text-amber-600 mt-1">
-                    Did you mean{' '}
-                    {suggestions.map((s, i) => (
-                      <span key={s}>
-                        {i > 0 && ' or '}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            // Replace the typo with the suggestion
-                            const formula = formData.yieldFormula || '';
-                            const newFormula = formula.replace(
-                              new RegExp(`\\b${unknownVar}\\b`, 'g'),
-                              s
-                            );
-                            updateField('yieldFormula', newFormula);
-                          }}
-                          className="font-mono font-semibold text-blue-600 hover:text-blue-800 underline"
-                        >
-                          {s}
-                        </button>
-                      </span>
-                    ))}
-                    ?
-                  </p>
-                );
-              })()}
-            </div>
-          )}
-
-          {/* Warnings */}
-          {yieldResult.warnings.length > 0 && (
-            <div className="mt-1">
-              {yieldResult.warnings.map((warning, i) => (
-                <p key={i} className="text-xs text-amber-600">
-                  Warning: {warning}
-                </p>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Clickable Variables with current values */}
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1.5">
-            Variables <span className="font-normal text-gray-400">(click to insert)</span>:
-          </label>
-          <div className="flex flex-wrap gap-1.5">
-            {FORMULA_VARIABLES.map((v) => {
-              // Get current value from context
-              const value = yieldResult.context[v.name as keyof typeof yieldResult.context];
-              const displayValue = typeof value === 'number'
-                ? (Number.isInteger(value) ? value : value.toFixed(2))
-                : value;
-              return (
-                <button
-                  key={v.name}
-                  type="button"
-                  onClick={() => insertVariable(v.name)}
-                  title={v.description}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-mono text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 hover:border-blue-300 transition-colors cursor-pointer"
-                >
-                  <span>{v.name}</span>
-                  <span className="text-blue-400">=</span>
-                  <span className="text-blue-600 font-semibold">{displayValue}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 // =============================================================================
 // MAIN COMPONENT
@@ -461,6 +237,7 @@ export default function CropConfigEditor({
   existingIdentifiers = [],
   varieties = {},
   seedMixes = {},
+  products = {},
 }: CropConfigEditorProps) {
   // Form state - initialize from crop when opened
   const [formData, setFormData] = useState<Partial<CropConfig>>({});
@@ -469,6 +246,9 @@ export default function CropConfigEditor({
   const [showRemovalConfirm, setShowRemovalConfirm] = useState(false);
   const [pendingRemovalInfo, setPendingRemovalInfo] = useState<DataRemovalInfo | null>(null);
   const [identifierError, setIdentifierError] = useState<string | null>(null);
+  const [productError, setProductError] = useState<string | null>(null);
+  const [errorsExpanded, setErrorsExpanded] = useState(false);
+  const [errorsClickedOpen, setErrorsClickedOpen] = useState(false);
   const identifierInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when crop changes or modal opens
@@ -484,10 +264,25 @@ export default function CropConfigEditor({
         setShowRemovalConfirm(false);
         setPendingRemovalInfo(null);
         setIdentifierError(null);
+        setProductError(null);
+        setErrorsExpanded(false);
+        setErrorsClickedOpen(false);
         setTimeout(() => identifierInputRef.current?.focus(), 0);
       }
     }
   }, [crop, isOpen, mode]);
+
+  // Auto-collapse errors panel when issues are fixed (drop to 1 or 0)
+  const currentErrorCount =
+    (!formData.identifier?.trim() ? 1 : 0) +
+    (!formData.crop?.trim() ? 1 : 0) +
+    (!formData.productYields || formData.productYields.length === 0 ? 1 : 0);
+  useEffect(() => {
+    if (currentErrorCount <= 1) {
+      setErrorsExpanded(false);
+      setErrorsClickedOpen(false);
+    }
+  }, [currentErrorCount]);
 
   // Handle growing method changes - just change visibility, don't modify data
   const handleGrowingMethodChange = (method: GrowingMethod) => {
@@ -538,6 +333,13 @@ export default function CropConfigEditor({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.identifier?.trim() || !formData.crop?.trim()) return;
+
+    // Require at least one product
+    if (!formData.productYields || formData.productYields.length === 0) {
+      setProductError('At least one product is required for timing calculations');
+      return;
+    }
+    setProductError(null);
 
     // In create mode (or when identifier changed), check for duplicates
     const identifierToCheck = formData.identifier.trim();
@@ -873,63 +675,301 @@ export default function CropConfigEditor({
               </section>
             )}
 
-            {/* Harvest Section */}
-            <section>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Harvest</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Days Between Harvest</label>
-                  <input
-                    type="number"
-                    value={formData.daysBetweenHarvest ?? ''}
-                    onChange={(e) => updateNumberField('daysBetweenHarvest', e.target.value)}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Number of Harvests</label>
-                  <input
-                    type="number"
-                    value={formData.numberOfHarvests ?? ''}
-                    onChange={(e) => updateNumberField('numberOfHarvests', e.target.value)}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Harvest Buffer Days</label>
-                  <input
-                    type="number"
-                    value={formData.harvestBufferDays ?? ''}
-                    onChange={(e) => updateNumberField('harvestBufferDays', e.target.value)}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Post-Harvest Field Days</label>
-                  <input
-                    type="number"
-                    value={formData.postHarvestFieldDays ?? ''}
-                    onChange={(e) => updateNumberField('postHarvestFieldDays', e.target.value)}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">e.g., tuber curing time</p>
-                </div>
-              </div>
-            </section>
+            {/* Product & Revenue Section */}
+            {Object.keys(products).length > 0 && (
+              <section>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">
+                  Products & Timing
+                  <span className="text-red-500 ml-1">*</span>
+                </h3>
+                {productError && (
+                  <p className="text-sm text-red-600 mb-3">{productError}</p>
+                )}
+                <div className="space-y-3">
+                  {/* List of existing product yields */}
+                  {(formData.productYields ?? []).map((py, index) => {
+                    const product = products[py.productId];
+                    return (
+                      <div key={py.productId} className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                        {/* Product header with remove button */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-gray-500">#{index + 1}</span>
+                            <span className="font-medium text-sm text-gray-900">
+                              {product ? `${product.product} (${product.unit})` : py.productId}
+                            </span>
+                            {product?.directPrice && (
+                              <span className="text-xs text-green-600">${product.directPrice}</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = [...(formData.productYields ?? [])];
+                              updated.splice(index, 1);
+                              updateField('productYields', updated.length > 0 ? updated : undefined);
+                            }}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
 
-            {/* Yield Section */}
-            <YieldSection
-              formData={formData}
-              updateField={updateField}
-            />
+                        {/* Product timing fields */}
+                        <div className="grid grid-cols-5 gap-2">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">DTM</label>
+                            <input
+                              type="number"
+                              value={py.dtm ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                                const updated = [...(formData.productYields ?? [])];
+                                updated[index] = { ...py, dtm: val ?? 0 };
+                                updateField('productYields', updated);
+                              }}
+                              className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1"># Harvests</label>
+                            <input
+                              type="number"
+                              value={py.numberOfHarvests ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
+                                const updated = [...(formData.productYields ?? [])];
+                                updated[index] = { ...py, numberOfHarvests: val };
+                                updateField('productYields', updated);
+                              }}
+                              className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Days Btwn</label>
+                            <input
+                              type="number"
+                              value={py.daysBetweenHarvest ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                                const updated = [...(formData.productYields ?? [])];
+                                updated[index] = { ...py, daysBetweenHarvest: val };
+                                updateField('productYields', updated);
+                              }}
+                              className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Buffer</label>
+                            <input
+                              type="number"
+                              value={py.harvestBufferDays ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                                const updated = [...(formData.productYields ?? [])];
+                                updated[index] = { ...py, harvestBufferDays: val };
+                                updateField('productYields', updated);
+                              }}
+                              className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Post-Harv</label>
+                            <input
+                              type="number"
+                              value={py.postHarvestFieldDays ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value === '' ? undefined : parseInt(e.target.value, 10);
+                                const updated = [...(formData.productYields ?? [])];
+                                updated[index] = { ...py, postHarvestFieldDays: val };
+                                updateField('productYields', updated);
+                              }}
+                              className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              title="Post-harvest field days (e.g., tuber curing)"
+                            />
+                          </div>
+                        </div>
+                        {/* Yield Formula with templates and variables */}
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-medium text-gray-600">Yield Formula</label>
+                            <div className="flex flex-wrap gap-1">
+                              {FORMULA_TEMPLATES.map((template) => (
+                                <button
+                                  key={template.label}
+                                  type="button"
+                                  onClick={() => {
+                                    const formula = template.template === '0' ? '0' : template.template.replace('___', '0');
+                                    const updated = [...(formData.productYields ?? [])];
+                                    updated[index] = { ...py, yieldFormula: formula };
+                                    updateField('productYields', updated);
+                                  }}
+                                  title={template.description}
+                                  className="px-1.5 py-0.5 text-[10px] font-medium text-gray-500 bg-gray-100 border border-gray-200 rounded hover:bg-gray-200 hover:text-gray-700 transition-colors"
+                                >
+                                  {template.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <input
+                            type="text"
+                            value={py.yieldFormula ?? ''}
+                            onChange={(e) => {
+                              const updated = [...(formData.productYields ?? [])];
+                              updated[index] = { ...py, yieldFormula: e.target.value || undefined };
+                              updateField('productYields', updated);
+                            }}
+                            placeholder="e.g., plantingsPerBed * 0.5 * harvests"
+                            className="w-full px-2 py-1.5 text-sm font-mono text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          {/* Variable hints */}
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {FORMULA_VARIABLES.map((v) => (
+                              <button
+                                key={v.name}
+                                type="button"
+                                onClick={() => {
+                                  const current = py.yieldFormula ?? '';
+                                  const updated = [...(formData.productYields ?? [])];
+                                  updated[index] = { ...py, yieldFormula: current + (current ? ' * ' : '') + v.name };
+                                  updateField('productYields', updated);
+                                }}
+                                title={v.description}
+                                className="px-1 py-0.5 text-[10px] font-mono text-blue-600 bg-blue-50 border border-blue-100 rounded hover:bg-blue-100 transition-colors"
+                              >
+                                {v.name}
+                              </button>
+                            ))}
+                          </div>
+                          {/* Formula validation */}
+                          {py.yieldFormula && (() => {
+                            const result = evaluateYieldForDisplay({ ...formData, yieldFormula: py.yieldFormula, numberOfHarvests: py.numberOfHarvests } as CropConfig);
+                            if (result.error) {
+                              const unknownVar = extractUnknownVariable(result.error);
+                              const suggestions = unknownVar ? findSimilarVariables(unknownVar) : [];
+                              return (
+                                <div className="mt-1">
+                                  <p className="text-[10px] text-red-600">{result.error}</p>
+                                  {suggestions.length > 0 && (
+                                    <p className="text-[10px] text-amber-600">
+                                      Did you mean: {suggestions.map((s, i) => (
+                                        <button
+                                          key={s}
+                                          type="button"
+                                          onClick={() => {
+                                            const newFormula = py.yieldFormula!.replace(new RegExp(`\\b${unknownVar}\\b`, 'g'), s);
+                                            const updated = [...(formData.productYields ?? [])];
+                                            updated[index] = { ...py, yieldFormula: newFormula };
+                                            updateField('productYields', updated);
+                                          }}
+                                          className="font-mono text-blue-600 hover:underline"
+                                        >
+                                          {i > 0 ? ', ' : ''}{s}
+                                        </button>
+                                      ))}?
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            }
+                            if (result.value !== null) {
+                              const unit = product?.unit ?? formData.yieldUnit ?? 'units';
+                              return (
+                                <p className="text-[10px] text-green-600 mt-1">
+                                  = {result.value.toFixed(1)} {unit}/50ft
+                                  {py.numberOfHarvests > 1 && ` (${(result.value / py.numberOfHarvests).toFixed(1)} per harvest)`}
+                                </p>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Add Product button and selector */}
+                  {(() => {
+                    const cropName = formData.crop?.toLowerCase().trim();
+                    const matchingProducts = Object.values(products).filter(
+                      (p) => p.crop.toLowerCase().trim() === cropName
+                    );
+                    // Filter out already-added products
+                    const existingIds = new Set((formData.productYields ?? []).map(py => py.productId));
+                    const availableProducts = matchingProducts.filter(p => !existingIds.has(p.id));
+
+                    if (matchingProducts.length === 0) {
+                      return (
+                        <p className="text-xs text-gray-500 italic">
+                          No products defined for &quot;{formData.crop}&quot;
+                        </p>
+                      );
+                    }
+
+                    if (availableProducts.length === 0) {
+                      return (
+                        <p className="text-xs text-gray-500 italic">
+                          All available products for this crop have been added
+                        </p>
+                      );
+                    }
+
+                    return (
+                      <div className="flex items-center gap-2">
+                        <select
+                          id="add-product-select"
+                          defaultValue=""
+                          className="flex-1 px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="" disabled>Select a product to add...</option>
+                          {availableProducts.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.product} ({p.unit}) - ${p.directPrice ?? 'N/A'}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const select = document.getElementById('add-product-select') as HTMLSelectElement;
+                            const productId = select.value;
+                            if (!productId) return;
+
+                            // New products start empty - user must fill in timing
+                            const newYield: ProductYield = {
+                              productId,
+                              dtm: 0,
+                              numberOfHarvests: 1,
+                            };
+                            const updated = [...(formData.productYields ?? []), newYield];
+                            updateField('productYields', updated);
+                            select.value = '';
+                          }}
+                          className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  <p className="text-xs text-gray-500">
+                    Add products for revenue calculations. Each product can have its own timing and yield.
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* Legacy Harvest/Yield sections removed - now per-product in Products section */}
 
             {/* ========== METHOD-SPECIFIC FIELDS ========== */}
 
-            {/* Timing Section - for DS and Transplant */}
+            {/* Timing Section - shared plant timing (not per-product) */}
             {growingMethod !== 'perennial' && (
               <section>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Timing</h3>
-                <div className="grid grid-cols-3 gap-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Timing (Shared)</h3>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">DTM Measured From</label>
                     <select
@@ -943,19 +983,8 @@ export default function CropConfigEditor({
                       <option value="total-time">Full seed-to-harvest (grower/book)</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
-                      {growingMethod === 'direct-seed'
-                        ? 'Usually "from seeding" for direct-seeded crops'
-                        : 'How the DTM source measured timing'}
+                      How DTM values in products are measured
                     </p>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">DTM (Days to Maturity)</label>
-                    <input
-                      type="number"
-                      value={formData.dtm ?? ''}
-                      onChange={(e) => updateNumberField('dtm', e.target.value)}
-                      className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Days to Germination</label>
@@ -1003,24 +1032,7 @@ export default function CropConfigEditor({
               </section>
             )}
 
-            {/* Perennial Timing Section */}
-            {growingMethod === 'perennial' && (
-              <section>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Harvest Timing</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">DTM (Days to First Harvest)</label>
-                    <input
-                      type="number"
-                      value={formData.dtm ?? ''}
-                      onChange={(e) => updateNumberField('dtm', e.target.value)}
-                      className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Days from season start to first harvest</p>
-                  </div>
-                </div>
-              </section>
-            )}
+            {/* Perennial timing is per-product, no separate section needed */}
 
             {/* Tray Stages Section - only for transplant, or perennial with establishment */}
             {(growingMethod === 'transplant' || (growingMethod === 'perennial' && trayStages.length > 0)) && (
@@ -1100,22 +1112,93 @@ export default function CropConfigEditor({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!formData.identifier?.trim() || !formData.crop?.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {mode === 'create' ? 'Create Config' : 'Save Changes'}
-            </button>
-          </div>
+          {(() => {
+            // Build validation errors
+            const validationErrors: string[] = [];
+            if (!formData.identifier?.trim()) validationErrors.push('Identifier is required');
+            if (!formData.crop?.trim()) validationErrors.push('Crop name is required');
+            if (!formData.productYields || formData.productYields.length === 0) {
+              validationErrors.push('At least one product is required');
+            }
+            const hasErrors = validationErrors.length > 0;
+            const hasMultipleErrors = validationErrors.length > 1;
+
+            return (
+              <div className="shrink-0">
+                {/* Expandable error panel - above footer buttons */}
+                {hasMultipleErrors && errorsExpanded && (
+                  <div className="px-6 py-3 bg-red-50 border-t border-red-100">
+                    <ul className="space-y-1">
+                      {validationErrors.map((error, i) => (
+                        <li key={i} className="text-sm text-red-700 flex items-center gap-2">
+                          <span className="w-1 h-1 rounded-full bg-red-400" />
+                          {error}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Footer bar */}
+                <div className="px-6 py-4 border-t bg-gray-50 flex justify-between items-center gap-3">
+                  {/* Left side: validation errors */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    {hasErrors && !hasMultipleErrors && (
+                      <span className="text-sm text-red-600 truncate">
+                        {validationErrors[0]}
+                      </span>
+                    )}
+                    {hasMultipleErrors && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newExpanded = !errorsExpanded;
+                          setErrorsExpanded(newExpanded);
+                          setErrorsClickedOpen(newExpanded);
+                        }}
+                        onMouseEnter={() => setErrorsExpanded(true)}
+                        onMouseLeave={() => {
+                          // Only collapse on mouse leave if it wasn't clicked open
+                          if (!errorsClickedOpen) {
+                            setErrorsExpanded(false);
+                          }
+                        }}
+                        className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1"
+                      >
+                        <span>{validationErrors.length} issues</span>
+                        <svg
+                          className={`w-4 h-4 transition-transform ${errorsExpanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Right side: buttons */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={hasErrors}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {mode === 'create' ? 'Create Config' : 'Save Changes'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </form>
       </div>
 

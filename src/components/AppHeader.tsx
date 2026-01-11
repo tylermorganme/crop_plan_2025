@@ -80,6 +80,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const isBedsActive = pathname.startsWith('/beds/');
   const isVarietiesActive = pathname === '/varieties';
   const isSeedMixesActive = pathname === '/seed-mixes';
+  const isProductsActive = pathname === '/products';
 
   // Links - go to active plan's views
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
@@ -162,6 +163,16 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
             }`}
           >
             Mixes
+          </Link>
+          <Link
+            href="/products"
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              isProductsActive
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            Products
           </Link>
         </nav>
 

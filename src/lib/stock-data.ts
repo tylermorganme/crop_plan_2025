@@ -1,19 +1,22 @@
 /**
  * Stock Data Module
  *
- * Loads and transforms stock varieties and seed mixes from JSON files.
+ * Loads and transforms stock varieties, seed mixes, and products from JSON files.
  * Used when creating new plans from template.
  *
  * The JSON files contain raw data without IDs. This module:
  * 1. Creates Variety entities with generated IDs
  * 2. Resolves seed mix variety references to actual IDs
  * 3. Creates SeedMix entities with generated IDs
+ * 4. Creates Product entities with deterministic IDs
  */
 
 import varietiesData from '@/data/varieties.json';
 import seedMixesData from '@/data/seed-mixes.json';
+import productsData from '@/data/products.json';
 import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput } from './entities/variety';
 import { createSeedMix, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
+import { createProduct, type Product, type CreateProductInput } from './entities/product';
 
 // =============================================================================
 // TYPES
@@ -54,6 +57,7 @@ interface SeedMixesData {
 // Cache the processed stock data
 let cachedVarieties: Record<string, Variety> | null = null;
 let cachedSeedMixes: Record<string, SeedMix> | null = null;
+let cachedProducts: Record<string, Product> | null = null;
 
 /**
  * Get all stock varieties as a Record keyed by ID.
@@ -132,16 +136,39 @@ export function getStockSeedMixes(): Record<string, SeedMix> {
 }
 
 /**
+ * Get all stock products as a Record keyed by ID.
+ * Products have deterministic IDs based on crop|product|unit.
+ * Creates entities on first access and caches the result.
+ */
+export function getStockProducts(): Record<string, Product> {
+  if (cachedProducts) return cachedProducts;
+
+  const data = productsData as CreateProductInput[];
+  const products: Record<string, Product> = {};
+
+  for (const input of data) {
+    const product = createProduct(input);
+    products[product.id] = product;
+  }
+
+  cachedProducts = products;
+  return products;
+}
+
+/**
  * Get stock data stats for debugging.
  */
 export function getStockDataStats() {
   const varieties = getStockVarieties();
   const seedMixes = getStockSeedMixes();
+  const products = getStockProducts();
 
   return {
     varietyCount: Object.keys(varieties).length,
     seedMixCount: Object.keys(seedMixes).length,
+    productCount: Object.keys(products).length,
     varietyCrops: new Set(Object.values(varieties).map((v) => v.crop)).size,
     seedMixCrops: new Set(Object.values(seedMixes).map((m) => m.crop)).size,
+    productCrops: new Set(Object.values(products).map((p) => p.crop)).size,
   };
 }
