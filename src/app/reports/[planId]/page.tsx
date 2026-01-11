@@ -13,6 +13,17 @@ import {
   type ColumnDef,
 } from '@tanstack/react-table';
 import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+} from 'recharts';
+import {
   usePlanStore,
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
@@ -41,7 +52,7 @@ type ReportTab = 'revenue' | 'seeds';
 // CHART COMPONENTS
 // =============================================================================
 
-/** Simple pie chart using CSS conic-gradient */
+/** Pie chart using Recharts */
 function PieChart({ data }: { data: { label: string; value: number; color: string }[] }) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   if (total === 0) {
@@ -52,27 +63,43 @@ function PieChart({ data }: { data: { label: string; value: number; color: strin
     );
   }
 
-  // Build conic gradient stops
-  let currentAngle = 0;
-  const gradientStops: string[] = [];
-  for (const d of data) {
-    const percent = (d.value / total) * 100;
-    gradientStops.push(`${d.color} ${currentAngle}% ${currentAngle + percent}%`);
-    currentAngle += percent;
-  }
-
   return (
-    <div
-      className="w-64 h-64 rounded-full"
-      style={{
-        background: `conic-gradient(${gradientStops.join(', ')})`,
-      }}
-    />
+    <div className="w-64 h-64">
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsPieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="label"
+            cx="50%"
+            cy="50%"
+            outerRadius={100}
+            innerRadius={0}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value) => formatCurrency(value as number)}
+            contentStyle={{ fontSize: 12 }}
+          />
+        </RechartsPieChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
-/** Simple bar/area chart for monthly revenue */
-function MonthlyRevenueChart({ data }: { data: { month: string; revenue: number; cumulative: number }[] }) {
+/** Stacked area chart for monthly revenue by crop using Recharts */
+function StackedAreaChart({
+  data,
+  crops,
+  cropColors,
+}: {
+  data: { month: string; revenue: number; byCrop: Record<string, number> }[];
+  crops: string[];
+  cropColors: Record<string, string>;
+}) {
   if (data.length === 0) {
     return (
       <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
@@ -81,28 +108,116 @@ function MonthlyRevenueChart({ data }: { data: { month: string; revenue: number;
     );
   }
 
-  const maxRevenue = Math.max(...data.map(d => d.revenue));
-  const maxCumulative = data[data.length - 1]?.cumulative ?? 0;
+  // Only show top 8 crops in the chart to avoid clutter
+  const topCrops = crops.slice(0, 8);
+
+  // Filter out months with negligible revenue (< 1% of max month)
+  // This removes noise from perennial crops spreading tiny amounts across many months
+  const maxMonthRevenue = Math.max(...data.map(d => d.revenue));
+  const threshold = maxMonthRevenue * 0.01; // 1% threshold
+  const filteredData = data.filter(d => d.revenue >= threshold);
+
+  // Transform data for Recharts - flatten byCrop into top-level keys
+  // Ensure all crops have a value for every month (default to 0)
+  const chartData = filteredData.map(d => {
+    // Format as "Apr '25" to keep year context while staying compact
+    const [year, monthNum] = d.month.split('-');
+    const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+    const monthLabel = date.toLocaleDateString('en-US', { month: 'short' }) + " '" + year.slice(2);
+
+    const row: Record<string, string | number> = {
+      month: monthLabel,
+      _totalRevenue: d.revenue, // Store actual total for tooltip
+    };
+    // Initialize all top crops to 0, then override with actual values
+    let topCropsTotal = 0;
+    for (const crop of topCrops) {
+      const cropRevenue = d.byCrop[crop] ?? 0;
+      row[crop] = cropRevenue;
+      topCropsTotal += cropRevenue;
+    }
+    // Add "Other" for crops not in top 8
+    row['Other'] = Math.max(0, d.revenue - topCropsTotal);
+    return row;
+  });
 
   return (
-    <div className="h-64 bg-gray-50 rounded-lg p-4">
-      <div className="h-full flex items-end gap-1">
-        {data.map((d, i) => {
-          const heightPercent = maxRevenue > 0 ? (d.revenue / maxRevenue) * 100 : 0;
-          return (
-            <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
-              <div
-                className="w-full bg-green-500 rounded-t transition-all hover:bg-green-600"
-                style={{ height: `${heightPercent}%`, minHeight: d.revenue > 0 ? 4 : 0 }}
-                title={`${formatMonth(d.month)}: ${formatCurrency(d.revenue)}`}
-              />
-              <span className="text-[10px] text-gray-500 -rotate-45 origin-left whitespace-nowrap">
-                {formatMonth(d.month).split(' ')[0]}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+    <div className="h-64 bg-gray-50 rounded-lg p-2">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+          <XAxis
+            dataKey="month"
+            tick={{ fontSize: 10 }}
+            tickLine={false}
+            axisLine={{ stroke: '#e5e7eb' }}
+            interval="preserveStartEnd"
+            padding={{ left: 20, right: 20 }}
+          />
+          <YAxis
+            tick={{ fontSize: 10 }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+          />
+          <Tooltip
+            content={({ active, payload, label }) => {
+              if (!active || !payload?.length) return null;
+              // Get the actual total revenue from the data (includes all crops, not just top 8)
+              const dataPoint = payload[0]?.payload as Record<string, number> | undefined;
+              const actualTotal = dataPoint?._totalRevenue ?? 0;
+              // Sum of top 8 crops shown in chart
+              const shownTotal = payload.reduce((sum, entry) => sum + (entry.value as number || 0), 0);
+              const otherTotal = actualTotal - shownTotal;
+
+              return (
+                <div className="bg-white border border-gray-200 rounded shadow-lg p-2 text-xs">
+                  <div className="font-semibold mb-1">{label}</div>
+                  {payload.map((entry, i) => (
+                    entry.value as number > 0 && (
+                      <div key={i} className="flex justify-between gap-4">
+                        <span style={{ color: entry.color }}>{entry.name}</span>
+                        <span>{formatCurrency(entry.value as number)}</span>
+                      </div>
+                    )
+                  ))}
+                  {otherTotal > 0 && (
+                    <div className="flex justify-between gap-4 text-gray-500">
+                      <span>Other</span>
+                      <span>{formatCurrency(otherTotal)}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-gray-200 mt-1 pt-1 font-semibold flex justify-between gap-4">
+                    <span>Total</span>
+                    <span>{formatCurrency(actualTotal)}</span>
+                  </div>
+                </div>
+              );
+            }}
+          />
+          {/* "Other" category at the bottom of the stack */}
+          <Area
+            key="Other"
+            type="step"
+            dataKey="Other"
+            stackId="1"
+            stroke="#9ca3af"
+            fill="#9ca3af"
+            fillOpacity={0.8}
+          />
+          {/* Render crop areas in reverse order so first crops appear on top */}
+          {[...topCrops].reverse().map((crop) => (
+            <Area
+              key={crop}
+              type="step"
+              dataKey={crop}
+              stackId="1"
+              stroke={cropColors[crop]}
+              fill={cropColors[crop]}
+              fillOpacity={0.8}
+            />
+          ))}
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -126,16 +241,30 @@ const CROP_COLORS = [
 ];
 
 function RevenueTab({ report }: { report: PlanRevenueReport }) {
+  // Build crop color mapping (consistent across pie and area chart)
+  const cropColors = useMemo(() => {
+    const colors: Record<string, string> = {};
+    report.byCrop.forEach((c, i) => {
+      colors[c.crop] = CROP_COLORS[i % CROP_COLORS.length];
+    });
+    return colors;
+  }, [report.byCrop]);
+
+  // Get ordered list of crops for stacked chart (by revenue)
+  const orderedCrops = useMemo(() => {
+    return report.byCrop.map(c => c.crop);
+  }, [report.byCrop]);
+
   // Prepare pie chart data - top 8 crops + "Other"
   const pieData = useMemo(() => {
     const topCrops = report.byCrop.slice(0, 8);
     const otherCrops = report.byCrop.slice(8);
     const otherTotal = otherCrops.reduce((sum, c) => sum + c.totalRevenue, 0);
 
-    const data = topCrops.map((c, i) => ({
+    const data = topCrops.map((c) => ({
       label: c.crop,
       value: c.totalRevenue,
-      color: CROP_COLORS[i % CROP_COLORS.length],
+      color: cropColors[c.crop],
     }));
 
     if (otherTotal > 0) {
@@ -147,7 +276,7 @@ function RevenueTab({ report }: { report: PlanRevenueReport }) {
     }
 
     return data;
-  }, [report.byCrop]);
+  }, [report.byCrop, cropColors]);
 
   return (
     <div className="space-y-8">
@@ -185,7 +314,7 @@ function RevenueTab({ report }: { report: PlanRevenueReport }) {
                 <div key={d.label} className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: d.color }}
+                    style={{ backgroundColor: d.color, opacity: 0.8 }}
                   />
                   <span className="text-sm text-gray-700 flex-1">{d.label}</span>
                   <span className="text-sm font-medium text-gray-900">
@@ -205,7 +334,11 @@ function RevenueTab({ report }: { report: PlanRevenueReport }) {
         {/* Revenue Over Time */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Over Time</h3>
-          <MonthlyRevenueChart data={report.byMonth} />
+          <StackedAreaChart
+            data={report.byMonth}
+            crops={orderedCrops}
+            cropColors={cropColors}
+          />
           {report.byMonth.length > 0 && (
             <div className="mt-4 flex justify-between text-sm text-gray-600">
               <span>

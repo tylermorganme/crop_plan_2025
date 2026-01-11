@@ -16,6 +16,67 @@ import type { Product } from './entities/product';
 import { evaluateYieldFormula, buildYieldContext, calculateFieldOccupationDays } from './entities/crop-config';
 
 // =============================================================================
+// HARVEST WINDOW HELPERS
+// =============================================================================
+
+/**
+ * Calculate how many days of a date range fall within a given month.
+ */
+function daysInMonth(startDate: Date, endDate: Date, year: number, month: number): number {
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0); // Last day of month
+
+  // No overlap if range is entirely before or after month
+  if (endDate < monthStart || startDate > monthEnd) {
+    return 0;
+  }
+
+  // Calculate overlap
+  const overlapStart = startDate > monthStart ? startDate : monthStart;
+  const overlapEnd = endDate < monthEnd ? endDate : monthEnd;
+
+  return Math.max(0, Math.floor((overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+}
+
+/**
+ * Distribute revenue across months based on a harvest window.
+ * Returns a map of month (YYYY-MM) to revenue amount.
+ */
+function distributeRevenueAcrossWindow(
+  revenue: number,
+  harvestStart: Date,
+  harvestEnd: Date
+): Map<string, number> {
+  const result = new Map<string, number>();
+
+  // Calculate total days in harvest window
+  const totalDays = Math.max(1, Math.floor((harvestEnd.getTime() - harvestStart.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+
+  // Iterate through each month in the range
+  let year = harvestStart.getFullYear();
+  let month = harvestStart.getMonth();
+  const endYear = harvestEnd.getFullYear();
+  const endMonth = harvestEnd.getMonth();
+
+  while (year < endYear || (year === endYear && month <= endMonth)) {
+    const days = daysInMonth(harvestStart, harvestEnd, year, month);
+    if (days > 0) {
+      const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+      const monthRevenue = (days / totalDays) * revenue;
+      result.set(monthKey, monthRevenue);
+    }
+
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+  }
+
+  return result;
+}
+
+// =============================================================================
 // TYPES
 // =============================================================================
 
@@ -62,6 +123,8 @@ export interface MonthlyRevenueResult {
   revenue: number;
   /** Cumulative revenue up to and including this month */
   cumulative: number;
+  /** Revenue breakdown by crop for this month */
+  byCrop: Record<string, number>;
 }
 
 /** Complete revenue report for a plan */
@@ -182,6 +245,7 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
   const plantingResults: PlantingRevenueResult[] = [];
   const cropTotals = new Map<string, { revenue: number; bedFeet: number; bedFootDays: number; count: number }>();
   const monthlyTotals = new Map<string, number>();
+  const monthByCrop = new Map<string, Record<string, number>>();
 
   const plantings = plan.plantings ?? [];
   const cropCatalog = plan.cropCatalog ?? {};
@@ -208,10 +272,41 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
       count: existing.count + 1,
     });
 
-    // Aggregate by month (using harvest start date)
-    if (result.harvestStartDate) {
-      const month = result.harvestStartDate.slice(0, 7); // YYYY-MM
-      monthlyTotals.set(month, (monthlyTotals.get(month) ?? 0) + result.totalRevenue);
+    // Distribute revenue across harvest windows for each product
+    if (planting.fieldStartDate) {
+      const fieldStart = new Date(planting.fieldStartDate);
+
+      for (const py of config.productYields ?? []) {
+        const product = products[py.productId];
+        const productResult = calculateProductYieldRevenue(py, config, planting.bedFeet, product);
+        if (!productResult || productResult.revenue <= 0) continue;
+
+        // Calculate harvest window for this product
+        const harvestStart = new Date(fieldStart);
+        harvestStart.setDate(harvestStart.getDate() + py.dtm);
+
+        const harvestEnd = new Date(harvestStart);
+        const numHarvests = py.numberOfHarvests ?? 1;
+        const daysBetween = py.daysBetweenHarvest ?? 7;
+        harvestEnd.setDate(harvestEnd.getDate() + (numHarvests - 1) * daysBetween);
+
+        // Distribute this product's revenue across the harvest window
+        const monthlyRevenue = distributeRevenueAcrossWindow(
+          productResult.revenue,
+          harvestStart,
+          harvestEnd
+        );
+
+        // Add to totals
+        for (const [month, revenue] of monthlyRevenue) {
+          monthlyTotals.set(month, (monthlyTotals.get(month) ?? 0) + revenue);
+
+          // Track per-crop revenue by month for stacked chart
+          const cropMonthData = monthByCrop.get(month) ?? {};
+          cropMonthData[cropKey] = (cropMonthData[cropKey] ?? 0) + revenue;
+          monthByCrop.set(month, cropMonthData);
+        }
+      }
     }
   }
 
@@ -231,12 +326,15 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
     .sort((a, b) => b.totalRevenue - a.totalRevenue);
 
   // Build monthly results sorted chronologically
+  // Only include months with actual revenue data (no filling empty months)
   const sortedMonths = Array.from(monthlyTotals.keys()).sort();
+
   let cumulative = 0;
   const byMonth: MonthlyRevenueResult[] = sortedMonths.map(month => {
     const revenue = monthlyTotals.get(month) ?? 0;
+    const byCrop = monthByCrop.get(month) ?? {};
     cumulative += revenue;
-    return { month, revenue, cumulative };
+    return { month, revenue, cumulative, byCrop };
   });
 
   return {
