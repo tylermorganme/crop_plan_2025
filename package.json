@@ -14,6 +14,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.13",
+    "convert-units": "^2.3.4",
     "date-fns": "^4.1.0",
     "immer": "^11.0.1",
     "localforage": "^1.10.0",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/convert-units": "^2.3.12",
     "@types/node": "^20",
     "@types/pako": "^2.0.4",
     "@types/react": "^19",

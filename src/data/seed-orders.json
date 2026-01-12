@@ -1,0 +1,482 @@
+{
+  "_generated": "2026-01-11T23:53:20.895977+00:00",
+  "_source": "Crop Plan 2025 V20.xlsm",
+  "seedOrders": [
+    {
+      "varietyId": "V_beet|chiogga|adaptive",
+      "_crop": "Beet",
+      "_variety": "Chiogga",
+      "_company": "Adaptive",
+      "productWeight": 1.0,
+      "productUnit": "oz",
+      "productCost": 16.0,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_beet|badger flame|high mowing",
+      "_crop": "Beet",
+      "_variety": "Badger Flame",
+      "_company": "High Mowing",
+      "quantity": 0,
+      "alreadyHave": true
+    },
+    {
+      "varietyId": "V_beet|boro f1|high mowing",
+      "_crop": "Beet",
+      "_variety": "Boro F1",
+      "_company": "High Mowing",
+      "productWeight": 5000.0,
+      "productUnit": "ct",
+      "productCost": 23.15,
+      "quantity": 1,
+      "notes": "Bought from Osborne"
+    },
+    {
+      "varietyId": "V_cabbage|bilko f1|high mowing",
+      "_crop": "Cabbage",
+      "_variety": "Bilko F1",
+      "_company": "High Mowing",
+      "productWeight": 500.0,
+      "productUnit": "ct",
+      "productCost": 12.0,
+      "quantity": 1,
+      "notes": "Bought from Osborne"
+    },
+    {
+      "varietyId": "V_cabbage|bronco f1|high mowing",
+      "_crop": "Cabbage",
+      "_variety": "Bronco F1",
+      "_company": "High Mowing",
+      "productWeight": 500.0,
+      "productUnit": "ct",
+      "productCost": 18.9,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_cabbage|emiko f1|high mowing",
+      "_crop": "Cabbage",
+      "_variety": "Emiko F1",
+      "_company": "High Mowing",
+      "productWeight": 500.0,
+      "productUnit": "ct",
+      "productCost": 12.0,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_carrot|narvik|high mowing",
+      "_crop": "Carrot",
+      "_variety": "Narvik",
+      "_company": "High Mowing",
+      "productWeight": 10000.0,
+      "productUnit": "ct",
+      "productCost": 34.45,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_carrot|bolero f1|johnny's",
+      "_crop": "Carrot",
+      "_variety": "Bolero F1",
+      "_company": "Johnny's",
+      "productWeight": 5000.0,
+      "productUnit": "ct",
+      "productCost": 9.4,
+      "quantity": 2
+    },
+    {
+      "varietyId": "V_corn|new mama super sweet|adaptive",
+      "_crop": "Corn ",
+      "_variety": "New Mama Super Sweet",
+      "_company": "Adaptive",
+      "productWeight": 4.0,
+      "productUnit": "oz",
+      "productCost": 12.0,
+      "quantity": 2
+    },
+    {
+      "varietyId": "V_corn|enchanted f1|high mowing",
+      "_crop": "Corn ",
+      "_variety": "Enchanted F1",
+      "_company": "High Mowing",
+      "productWeight": 1000.0,
+      "productUnit": "ct",
+      "productCost": 30.0,
+      "quantity": 2
+    },
+    {
+      "varietyId": "V_melon|blacktail mountain|high mowing",
+      "_crop": "Melon",
+      "_variety": "Blacktail Mountain",
+      "_company": "High Mowing",
+      "productWeight": 0.25,
+      "productUnit": "oz",
+      "productCost": 12.55,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_melon|mini love|johnny's",
+      "_crop": "Melon",
+      "_variety": "Mini Love",
+      "_company": "Johnny's",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 38.0,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_squash|red kuri|high mowing",
+      "_crop": "Squash",
+      "_variety": "Red Kuri",
+      "_company": "High Mowing",
+      "productWeight": 2.0,
+      "productUnit": "oz",
+      "productCost": 20.25,
+      "quantity": 1,
+      "notes": "Bought from Osborne"
+    },
+    {
+      "varietyId": "V_squash|mambo|johnny's",
+      "_crop": "Squash",
+      "_variety": "Mambo",
+      "_company": "Johnny's",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 19.45,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_squash|sunshine|johnny's",
+      "_crop": "Squash",
+      "_variety": "Sunshine",
+      "_company": "Johnny's",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 22.25,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_squash|neon|territorial",
+      "_crop": "Squash",
+      "_variety": "Neon",
+      "_company": "Territorial",
+      "productWeight": 7.0,
+      "productUnit": "g",
+      "productCost": 8.95,
+      "quantity": 1,
+      "notes": "Skip"
+    },
+    {
+      "varietyId": "V_summer squash|costata romanesco|high mowing",
+      "_crop": "Summer Squash",
+      "_variety": "Costata Romanesco",
+      "_company": "High Mowing",
+      "productWeight": 0.5,
+      "productUnit": "oz",
+      "productCost": 1.0,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|42-day|a h whaley",
+      "_crop": "Tomato",
+      "_variety": "42-Day",
+      "_company": "A H Whaley",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 5.5,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|beauty king|a p whaley",
+      "_crop": "Tomato",
+      "_variety": "Beauty King",
+      "_company": "A P Whaley",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 7.25,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|beefy purple|a p whaley",
+      "_crop": "Tomato",
+      "_variety": "Beefy Purple",
+      "_company": "A P Whaley",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 8.0,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|cherry falls|a p whaley",
+      "_crop": "Tomato",
+      "_variety": "Cherry Falls",
+      "_company": "A P Whaley",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 6.25,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|janet's jacinth jewel|a p whaley",
+      "_crop": "Tomato",
+      "_variety": "Janet's Jacinth Jewel",
+      "_company": "A P Whaley",
+      "productWeight": 25.0,
+      "productUnit": "ct",
+      "productCost": 4.5,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|large barred boar|a p whaley",
+      "_crop": "Tomato",
+      "_variety": "Large Barred Boar",
+      "_company": "A P Whaley",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 7.25,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|pink jazz|a p whaley",
+      "_crop": "Tomato",
+      "_variety": "Pink Jazz",
+      "_company": "A P Whaley",
+      "productWeight": 25.0,
+      "productUnit": "ct",
+      "productCost": 4.5,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|orange you glad|adaptive",
+      "_crop": "Tomato",
+      "_variety": "Orange You Glad",
+      "_company": "Adaptive",
+      "productWeight": 0.5,
+      "productUnit": "g",
+      "productCost": 8.7,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|spring king|adaptive",
+      "_crop": "Tomato",
+      "_variety": "Spring King",
+      "_company": "Adaptive",
+      "productWeight": 0.5,
+      "productUnit": "g",
+      "productCost": 8.7,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|tiffen mennonite|adaptive",
+      "_crop": "Tomato",
+      "_variety": "Tiffen Mennonite",
+      "_company": "Adaptive",
+      "productWeight": 0.5,
+      "productUnit": "g",
+      "productCost": 9.57,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|red racer|harris",
+      "_crop": "Tomato",
+      "_variety": "Red Racer",
+      "_company": "Harris",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 13.93,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|woodstock|johnnys",
+      "_crop": "Tomato",
+      "_variety": "Woodstock",
+      "_company": "Johnnys",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 6.75,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|german johnson|johnny's",
+      "_crop": "Tomato",
+      "_variety": "German Johnson",
+      "_company": "Johnny's",
+      "productWeight": 250.0,
+      "productUnit": "ct",
+      "productCost": 9.05,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|gin fizz|johnny's",
+      "_crop": "Tomato",
+      "_variety": "Gin Fizz",
+      "_company": "Johnny's",
+      "productWeight": 50.0,
+      "productUnit": "ct",
+      "productCost": 48.15,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|marbonne|johnny's",
+      "_crop": "Tomato",
+      "_variety": "Marbonne",
+      "_company": "Johnny's",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 99.5,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|margold|johnny's",
+      "_crop": "Tomato",
+      "_variety": "Margold",
+      "_company": "Johnny's",
+      "productWeight": 50.0,
+      "productUnit": "ct",
+      "productCost": 74.0,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|washington cherry|johnny's",
+      "_crop": "Tomato",
+      "_variety": "Washington Cherry",
+      "_company": "Johnny's",
+      "productWeight": 250.0,
+      "productUnit": "ct",
+      "productCost": 9.05,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|pork chop|osborne",
+      "_crop": "Tomato",
+      "_variety": "Pork Chop",
+      "_company": "Osborne",
+      "quantity": 1,
+      "alreadyHave": true
+    },
+    {
+      "varietyId": "V_tomato|solar flare|osborne",
+      "_crop": "Tomato",
+      "_variety": "Solar Flare",
+      "_company": "Osborne",
+      "quantity": 1,
+      "alreadyHave": true
+    },
+    {
+      "varietyId": "V_tomato|brandywine|seed savers",
+      "_crop": "Tomato",
+      "_variety": "Brandywine",
+      "_company": "Seed Savers",
+      "quantity": 1,
+      "alreadyHave": true
+    },
+    {
+      "varietyId": "V_tomato|red deuce|seedway",
+      "_crop": "Tomato",
+      "_variety": "Red Deuce",
+      "_company": "Seedway",
+      "productWeight": 100.0,
+      "productUnit": "ct",
+      "productCost": 15.62,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|early cherry|territorial",
+      "_crop": "Tomato",
+      "_variety": "Early Cherry",
+      "_company": "Territorial",
+      "productWeight": 1.0,
+      "productUnit": "g",
+      "productCost": 10.95,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|banana legs|tomato fest",
+      "_crop": "Tomato",
+      "_variety": "Banana Legs",
+      "_company": "Tomato Fest",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 4.5,
+      "quantity": 2
+    },
+    {
+      "varietyId": "V_tomato|black sea man|tomato fest",
+      "_crop": "Tomato",
+      "_variety": "Black Sea Man",
+      "_company": "Tomato Fest",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 4.5,
+      "quantity": 2
+    },
+    {
+      "varietyId": "V_tomato|cream sausage|tomato fest",
+      "_crop": "Tomato",
+      "_variety": "Cream Sausage",
+      "_company": "Tomato Fest",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 4.5,
+      "quantity": 2
+    },
+    {
+      "varietyId": "V_tomato|dwarf purple heart|tomato fest",
+      "_crop": "Tomato",
+      "_variety": "Dwarf Purple Heart",
+      "_company": "Tomato Fest",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 5.5,
+      "quantity": 2
+    },
+    {
+      "varietyId": "V_tomato|sean's yellow dwarf|tomato fest",
+      "_crop": "Tomato",
+      "_variety": "Sean's Yellow Dwarf",
+      "_company": "Tomato Fest",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 4.5,
+      "quantity": 2
+    },
+    {
+      "varietyId": "V_tomato|dynamite delight|wild board farm",
+      "_crop": "Tomato",
+      "_variety": "Dynamite Delight",
+      "_company": "Wild Board Farm",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 5.99,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|emerald flame|wild board farm",
+      "_crop": "Tomato",
+      "_variety": "Emerald Flame",
+      "_company": "Wild Board Farm",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 5.99,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|golden hour|wild board farm",
+      "_crop": "Tomato",
+      "_variety": "Golden Hour",
+      "_company": "Wild Board Farm",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 5.99,
+      "quantity": 1
+    },
+    {
+      "varietyId": "V_tomato|limelight|wild board farm",
+      "_crop": "Tomato",
+      "_variety": "Limelight",
+      "_company": "Wild Board Farm",
+      "productWeight": 15.0,
+      "productUnit": "ct",
+      "productCost": 5.99,
+      "quantity": 1
+    }
+  ]
+}

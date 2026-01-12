@@ -67,6 +67,34 @@ export {
   calculateCropEndDay,
 } from './entities/crop-config';
 
+export type { SeedOrder, ProductUnit, CreateSeedOrderInput } from './entities/seed-order';
+export {
+  getSeedOrderId,
+  getVarietyIdFromOrderId,
+  createSeedOrder,
+  cloneSeedOrder,
+  cloneSeedOrders,
+  getOrderedAmount,
+  getOrderCost,
+  formatOrderAmount,
+  formatOrderCost,
+} from './entities/seed-order';
+
+export type { Variety, DensityUnit, CreateVarietyInput } from './entities/variety';
+export {
+  getVarietyId,
+  getVarietyContentKey,
+  getVarietyKey,
+  createVariety,
+  cloneVariety,
+  cloneVarieties,
+  convertMass,
+  getSeedsPerGram,
+  calculateWeightForSeeds,
+  calculateSeedsFromWeight,
+  formatDensity,
+} from './entities/variety';
+
 // =============================================================================
 // PLAN STATE (for zustand store)
 // =============================================================================

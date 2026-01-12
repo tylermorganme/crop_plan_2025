@@ -6,9 +6,20 @@
  * Connection to CropConfig is by crop name (Variety.crop === CropConfig.crop).
  */
 
+import convert from 'convert-units';
+
 // =============================================================================
 // TYPES
 // =============================================================================
+
+/**
+ * Unit for seed density measurements.
+ * - g: grams (metric)
+ * - oz: ounces (imperial)
+ * - lb: pounds (imperial)
+ * - ct: count (for seeds sold by count, e.g., pelleted)
+ */
+export type DensityUnit = 'g' | 'oz' | 'lb' | 'ct';
 
 /**
  * A seed variety from a specific supplier.
@@ -42,7 +53,23 @@ export interface Variety {
   /** Variety-specific days to maturity (optional override) */
   dtm?: number;
 
-  /** Seeds per ounce for ordering calculations */
+  /**
+   * Seed density - number of seeds per densityUnit.
+   * E.g., density=6000, densityUnit='oz' means 6000 seeds per ounce.
+   */
+  density?: number;
+
+  /**
+   * Unit for seed density measurement.
+   * 'ct' means seeds are sold/measured by count (no weight conversion).
+   */
+  densityUnit?: DensityUnit;
+
+  /**
+   * @deprecated Use density + densityUnit instead.
+   * Seeds per ounce for ordering calculations.
+   * Kept for backwards compatibility with existing data.
+   */
   seedsPerOz?: number;
 
   /** Link to seed catalog page */
@@ -56,6 +83,136 @@ export interface Variety {
 
   /** Whether this variety is deprecated (hidden from dropdowns unless already in use) */
   deprecated?: boolean;
+}
+
+// =============================================================================
+// DENSITY CONVERSION HELPERS
+// =============================================================================
+
+/**
+ * Convert a mass value from one unit to another.
+ * Does not handle 'ct' (count) - caller should check for count-only varieties.
+ */
+export function convertMass(value: number, from: 'g' | 'oz' | 'lb', to: 'g' | 'oz' | 'lb'): number {
+  if (from === to) return value;
+  return convert(value).from(from).to(to);
+}
+
+/**
+ * Get the seeds per gram for a variety (normalized density).
+ * Returns undefined if density is not set or if it's count-only.
+ */
+export function getSeedsPerGram(variety: Variety): number | undefined {
+  // Try new density fields first
+  if (variety.density !== undefined && variety.densityUnit) {
+    if (variety.densityUnit === 'ct') {
+      return undefined; // Count-only, no weight conversion
+    }
+    // Convert to seeds per gram
+    const gramsPerUnit = convertMass(1, variety.densityUnit, 'g');
+    return variety.density / gramsPerUnit;
+  }
+
+  // Fall back to legacy seedsPerOz
+  if (variety.seedsPerOz !== undefined) {
+    const gramsPerOz = convertMass(1, 'oz', 'g');
+    return variety.seedsPerOz / gramsPerOz;
+  }
+
+  return undefined;
+}
+
+/**
+ * Calculate how much weight is needed for a given number of seeds.
+ * Returns the weight in the variety's native densityUnit.
+ *
+ * @param variety - The variety with density info
+ * @param seedCount - Number of seeds needed
+ * @returns { weight, unit } or undefined if density not available
+ */
+export function calculateWeightForSeeds(
+  variety: Variety,
+  seedCount: number
+): { weight: number; unit: DensityUnit } | undefined {
+  if (variety.density === undefined || !variety.densityUnit) {
+    // Try legacy field
+    if (variety.seedsPerOz !== undefined) {
+      return {
+        weight: seedCount / variety.seedsPerOz,
+        unit: 'oz',
+      };
+    }
+    return undefined;
+  }
+
+  if (variety.densityUnit === 'ct') {
+    // Count-only - just return the count
+    return { weight: seedCount, unit: 'ct' };
+  }
+
+  // Calculate weight in native unit
+  return {
+    weight: seedCount / variety.density,
+    unit: variety.densityUnit,
+  };
+}
+
+/**
+ * Calculate how many seeds are in a given weight.
+ *
+ * @param variety - The variety with density info
+ * @param weight - Weight value
+ * @param unit - Unit of the weight
+ * @returns Number of seeds, or undefined if density not available
+ */
+export function calculateSeedsFromWeight(
+  variety: Variety,
+  weight: number,
+  unit: DensityUnit
+): number | undefined {
+  if (variety.density === undefined || !variety.densityUnit) {
+    // Try legacy field
+    if (variety.seedsPerOz !== undefined && unit !== 'ct') {
+      const weightInOz = unit === 'oz' ? weight : convertMass(weight, unit as 'g' | 'lb', 'oz');
+      return weightInOz * variety.seedsPerOz;
+    }
+    return undefined;
+  }
+
+  if (variety.densityUnit === 'ct') {
+    // Count-only variety
+    if (unit === 'ct') {
+      return weight; // Already a count
+    }
+    return undefined; // Can't convert weight to count for count-only variety
+  }
+
+  if (unit === 'ct') {
+    return undefined; // Can't use count input with weight-based variety
+  }
+
+  // Convert input weight to variety's native unit
+  const weightInNativeUnit = convertMass(weight, unit, variety.densityUnit);
+  return weightInNativeUnit * variety.density;
+}
+
+/**
+ * Format density for display.
+ * E.g., "6,000 seeds/oz" or "250 seeds/g" or "Count only"
+ */
+export function formatDensity(variety: Variety): string {
+  if (variety.density !== undefined && variety.densityUnit) {
+    if (variety.densityUnit === 'ct') {
+      return 'Count only';
+    }
+    return `${variety.density.toLocaleString()} seeds/${variety.densityUnit}`;
+  }
+
+  if (variety.seedsPerOz !== undefined) {
+    return `${variety.seedsPerOz.toLocaleString()} seeds/oz`;
+  }
+
+  return 'No density data';
 }
 
 // =============================================================================
@@ -111,7 +268,14 @@ export interface CreateVarietyInput {
   pelletedApproved?: boolean;
   /** Days to maturity */
   dtm?: number;
-  /** Seeds per ounce */
+  /** Seed density (seeds per densityUnit) */
+  density?: number;
+  /** Unit for density measurement */
+  densityUnit?: DensityUnit;
+  /**
+   * @deprecated Use density + densityUnit instead.
+   * Seeds per ounce
+   */
   seedsPerOz?: number;
   /** Catalog link */
   website?: string;
@@ -137,6 +301,8 @@ export function createVariety(input: CreateVarietyInput): Variety {
     pelleted: input.pelleted ?? false,
     pelletedApproved: input.pelletedApproved,
     dtm: input.dtm,
+    density: input.density,
+    densityUnit: input.densityUnit,
     seedsPerOz: input.seedsPerOz,
     website: input.website,
     notes: input.notes,

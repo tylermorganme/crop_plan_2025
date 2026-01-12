@@ -147,16 +147,39 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
               >
                 Map
               </Link>
-              <Link
-                href={reportsHref}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  isReportsActive
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                Reports
-              </Link>
+              {/* Reports dropdown */}
+              <div className="relative group">
+                <Link
+                  href={reportsHref}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1 ${
+                    isReportsActive
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  Reports
+                  <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </Link>
+                {/* Dropdown menu */}
+                <div className="absolute left-0 top-full pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150" style={{ zIndex: Z_INDEX.DROPDOWN }}>
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px]">
+                    <Link
+                      href={`${reportsHref}?tab=revenue`}
+                      className="block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Revenue
+                    </Link>
+                    <Link
+                      href={`${reportsHref}?tab=seeds`}
+                      className="block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Seeds
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </>
           ) : (
             <span className="px-3 py-1.5 text-sm text-gray-500">

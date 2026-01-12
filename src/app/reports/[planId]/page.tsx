@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   useReactTable,
@@ -38,15 +38,61 @@ import {
   calculatePlanSeeds,
   formatSeeds,
   formatOunces,
+  formatWeight,
   type PlanSeedReport,
   type SupplierSeedResult,
+  type VarietySeedResult,
 } from '@/lib/seeds';
+import { createSeedOrder, type SeedOrder, type ProductUnit } from '@/lib/entities/seed-order';
+import { Z_INDEX } from '@/lib/z-index';
 
 // =============================================================================
 // TAB TYPES
 // =============================================================================
 
 type ReportTab = 'revenue' | 'seeds';
+
+// =============================================================================
+// SEED ORDER DEFAULTS
+// =============================================================================
+
+/**
+ * Default unit for ordering seeds.
+ * TODO: Make this a user-configurable setting in the future.
+ */
+const DEFAULT_ORDER_UNIT: ProductUnit = 'oz';
+
+/**
+ * Default unit for inventory (what you have on hand).
+ * Grams is convenient for weighing small amounts on a scale.
+ * TODO: Make this a user-configurable setting in the future.
+ */
+const DEFAULT_HAVE_UNIT: ProductUnit = 'g';
+
+// =============================================================================
+// WEIGHT CONVERSION
+// =============================================================================
+
+/** Convert weight between units for comparison */
+function convertWeight(value: number, fromUnit: ProductUnit, toUnit: ProductUnit): number {
+  if (fromUnit === toUnit) return value;
+
+  // Convert to grams first (our base unit)
+  const toGrams: Record<ProductUnit, number> = {
+    g: 1,
+    oz: 28.3495,
+    lb: 453.592,
+    ct: 0, // Can't convert count to weight
+  };
+
+  // Can't convert between count and weight
+  if (fromUnit === 'ct' || toUnit === 'ct') {
+    return fromUnit === toUnit ? value : 0;
+  }
+
+  const grams = value * toGrams[fromUnit];
+  return grams / toGrams[toUnit];
+}
 
 // =============================================================================
 // CHART COMPONENTS
@@ -501,175 +547,439 @@ function CropRevenueTable({ data }: { data: CropRevenueResult[] }) {
 }
 
 // =============================================================================
-// SEEDS TAB CONTENT
+// SEEDS TAB CONTENT - Flat table with inline editing
 // =============================================================================
 
-function SeedsTab({ report }: { report: PlanSeedReport }) {
-  const [expandedSuppliers, setExpandedSuppliers] = useState<Set<string>>(
-    () => new Set(report.bySupplier.map(s => s.supplier)) // All expanded by default
+/** Inline editable row for seed orders */
+function SeedOrderRow({
+  variety,
+  savedOrder,
+  onSave,
+}: {
+  variety: VarietySeedResult;
+  savedOrder?: SeedOrder;
+  onSave: (order: SeedOrder) => void;
+}) {
+  // Local form state - initialize from saved order if exists, otherwise use defaults
+  // "Have" fields - inventory on hand (defaults to grams for scale weighing)
+  const [haveWeight, setHaveWeight] = useState(() =>
+    savedOrder?.haveWeight ? String(savedOrder.haveWeight) : ''
+  );
+  const [haveUnit, setHaveUnit] = useState<ProductUnit>(() =>
+    savedOrder?.haveUnit ?? DEFAULT_HAVE_UNIT
+  );
+  // "Order" fields - what to purchase (defaults to oz)
+  const [weight, setWeight] = useState(() =>
+    savedOrder?.productWeight ? String(savedOrder.productWeight) : ''
+  );
+  const [unit, setUnit] = useState<ProductUnit>(() =>
+    savedOrder?.productUnit ?? DEFAULT_ORDER_UNIT
+  );
+  const [qty, setQty] = useState(() =>
+    savedOrder?.quantity ? String(savedOrder.quantity) : '1'
+  );
+  const [cost, setCost] = useState(() =>
+    savedOrder?.productCost ? String(savedOrder.productCost) : ''
   );
 
-  const toggleSupplier = (supplier: string) => {
-    setExpandedSuppliers(prev => {
-      const next = new Set(prev);
-      if (next.has(supplier)) {
-        next.delete(supplier);
-      } else {
-        next.add(supplier);
-      }
-      return next;
+  // Save order with optional field overrides (for immediate save on select change)
+  const saveOrder = (overrides?: { haveUnit?: ProductUnit; productUnit?: ProductUnit }) => {
+    const effectiveHaveUnit = overrides?.haveUnit ?? haveUnit;
+    const effectiveProductUnit = overrides?.productUnit ?? unit;
+    const order = createSeedOrder({
+      varietyId: variety.varietyId,
+      haveWeight: haveWeight ? parseFloat(haveWeight) : undefined,
+      haveUnit: haveWeight ? effectiveHaveUnit : undefined,
+      productWeight: weight ? parseFloat(weight) : undefined,
+      productUnit: effectiveProductUnit,
+      productCost: cost ? parseFloat(cost) : undefined,
+      quantity: qty ? parseInt(qty, 10) : 0,
+      productLink: variety.order?.productLink ?? variety.website,
     });
+    onSave(order);
   };
 
+  // Calculate order totals
+  const orderWeight = weight && qty ? parseFloat(weight) * parseInt(qty, 10) : 0;
+  const orderCost = cost && qty ? parseFloat(cost) * parseInt(qty, 10) : 0;
+  const haveWeightNum = haveWeight ? parseFloat(haveWeight) : 0;
+
+  // Calculate "Total Need" in Order Unit (so Need and Order are in same unit)
+  const totalNeedInOrderUnit = variety.weightNeeded && variety.weightUnit
+    ? convertWeight(variety.weightNeeded, variety.weightUnit, unit)
+    : undefined;
+
+  // Calculate "Have" in Order Unit for Order Need calculation
+  const haveInOrderUnit = haveWeightNum > 0 ? convertWeight(haveWeightNum, haveUnit, unit) : 0;
+
+  // Calculate "Order Need" = Total Need - Have (what you still need to order)
+  const orderNeed = totalNeedInOrderUnit !== undefined
+    ? Math.max(0, totalNeedInOrderUnit - haveInOrderUnit)
+    : undefined;
+
+  // Status badge - compare (have + order) to total need
+  const getStatusBadge = () => {
+    if (totalNeedInOrderUnit === undefined) {
+      const hasAnyData = haveWeightNum > 0 || orderWeight > 0;
+      if (!hasAnyData) {
+        return <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">-</span>;
+      }
+      return <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">?</span>;
+    }
+
+    const totalCoverage = haveInOrderUnit + orderWeight;
+
+    if (totalCoverage === 0) {
+      return <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">-</span>;
+    }
+
+    const pct = Math.round((totalCoverage / totalNeedInOrderUnit) * 100);
+
+    if (pct >= 100) {
+      // Green: have + order covers need
+      return <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">{pct}%</span>;
+    } else {
+      // Yellow: still short
+      return <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">{pct}%</span>;
+    }
+  };
+
+  const statusBadge = getStatusBadge();
+
   return (
-    <div className="space-y-8">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-sm font-medium text-gray-500 mb-1">Total Seeds</div>
-          <div className="text-3xl font-bold text-gray-900">
-            {formatSeeds(report.totalSeeds)}
-          </div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-sm font-medium text-gray-500 mb-1">Varieties</div>
-          <div className="text-3xl font-bold text-gray-900">
-            {report.varietyCount}
-          </div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-sm font-medium text-gray-500 mb-1">Suppliers</div>
-          <div className="text-3xl font-bold text-gray-900">
-            {report.supplierCount}
-          </div>
-        </div>
-        <div className={`bg-white rounded-lg border p-6 ${
-          report.plantingsWithoutSeed > 0
-            ? 'border-orange-300 bg-orange-50'
-            : 'border-gray-200'
-        }`}>
-          <div className="text-sm font-medium text-gray-500 mb-1">Unassigned</div>
-          <div className={`text-3xl font-bold ${
-            report.plantingsWithoutSeed > 0 ? 'text-orange-600' : 'text-gray-900'
-          }`}>
-            {report.plantingsWithoutSeed}
-          </div>
-          {report.plantingsWithoutSeed > 0 && (
-            <div className="text-xs text-orange-600 mt-1">
-              plantings without seed source
-            </div>
+    <tr className="border-b border-gray-100 hover:bg-gray-50/50">
+      {/* Crop */}
+      <td className="py-1.5 px-2 text-gray-900 whitespace-nowrap">{variety.crop}</td>
+      {/* Variety */}
+      <td className="py-1.5 px-2">
+        <div className="flex items-center gap-1">
+          <span className="font-medium text-gray-900">{variety.varietyName}</span>
+          {variety.website && (
+            <a
+              href={variety.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 hover:text-blue-700 text-xs"
+              title="Product page"
+            >
+              ↗
+            </a>
           )}
         </div>
+      </td>
+      {/* Supplier */}
+      <td className="py-1.5 px-2 text-gray-600 whitespace-nowrap">{variety.supplier}</td>
+      {/* Organic */}
+      <td className="py-1.5 px-2 text-center">
+        {variety.organic ? <span className="text-green-600">✓</span> : <span className="text-gray-300">-</span>}
+      </td>
+      {/* Seeds Needed */}
+      <td className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap">
+        {formatSeeds(variety.seedsNeeded)}
+      </td>
+      {/* Total Need - displayed in Order Unit */}
+      <td className="py-1.5 px-2 text-right text-gray-600 whitespace-nowrap">
+        {totalNeedInOrderUnit !== undefined
+          ? `${totalNeedInOrderUnit.toFixed(2)} ${unit}`
+          : <span className="text-gray-300">-</span>}
+      </td>
+      {/* Have weight input */}
+      <td className="py-1.5 px-1">
+        <input
+          type="number"
+          step="any"
+          value={haveWeight}
+          onChange={e => setHaveWeight(e.target.value)}
+          onBlur={() => saveOrder()}
+          className="w-14 px-1.5 py-0.5 text-sm border border-blue-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-blue-50/30"
+          placeholder="-"
+          title="Amount already in inventory"
+        />
+      </td>
+      {/* Have unit select */}
+      <td className="py-1.5 px-1">
+        <select
+          value={haveUnit}
+          onChange={e => {
+            const newUnit = e.target.value as ProductUnit;
+            setHaveUnit(newUnit);
+            saveOrder({ haveUnit: newUnit });
+          }}
+          className="w-12 px-0.5 py-0.5 text-sm border border-blue-200 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-blue-50/30"
+          title="Unit for inventory amount"
+        >
+          <option value="g">g</option>
+          <option value="oz">oz</option>
+          <option value="lb">lb</option>
+          <option value="ct">ct</option>
+        </select>
+      </td>
+      {/* Order Need = Total Need - Have (in order unit) */}
+      <td className="py-1.5 px-2 text-right text-gray-600 whitespace-nowrap">
+        {orderNeed !== undefined
+          ? `${orderNeed.toFixed(2)} ${unit}`
+          : <span className="text-gray-300">-</span>}
+      </td>
+      {/* Order weight input */}
+      <td className="py-1.5 px-1">
+        <input
+          type="number"
+          step="any"
+          value={weight}
+          onChange={e => setWeight(e.target.value)}
+          onBlur={() => saveOrder()}
+          className="w-14 px-1.5 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+          placeholder="-"
+        />
+      </td>
+      {/* Order unit select */}
+      <td className="py-1.5 px-1">
+        <select
+          value={unit}
+          onChange={e => {
+            const newUnit = e.target.value as ProductUnit;
+            setUnit(newUnit);
+            saveOrder({ productUnit: newUnit });
+          }}
+          className="w-12 px-0.5 py-0.5 text-sm border border-gray-200 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+        >
+          <option value="oz">oz</option>
+          <option value="g">g</option>
+          <option value="lb">lb</option>
+          <option value="ct">ct</option>
+        </select>
+      </td>
+      {/* Qty input */}
+      <td className="py-1.5 px-1">
+        <input
+          type="number"
+          min="0"
+          value={qty}
+          onChange={e => setQty(e.target.value)}
+          onBlur={() => saveOrder()}
+          className="w-10 px-1 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+          placeholder="1"
+        />
+      </td>
+      {/* Cost input */}
+      <td className="py-1.5 px-1">
+        <div className="flex items-center">
+          <span className="text-gray-400 text-sm mr-0.5">$</span>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={cost}
+            onChange={e => setCost(e.target.value)}
+            onBlur={() => saveOrder()}
+            className="w-14 px-1.5 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+            placeholder="-"
+          />
+        </div>
+      </td>
+      {/* Order Total (weight * qty) */}
+      <td className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap">
+        {orderWeight > 0 ? `${orderWeight} ${unit}` : <span className="text-gray-300">-</span>}
+      </td>
+      {/* Order Cost (cost * qty) */}
+      <td className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap">
+        {orderCost > 0 ? `$${orderCost.toFixed(2)}` : <span className="text-gray-300">-</span>}
+      </td>
+      {/* Status */}
+      <td className="py-1.5 px-2 text-center">{statusBadge}</td>
+    </tr>
+  );
+}
+
+function SeedsTab({ report }: { report: PlanSeedReport }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterSupplier, setFilterSupplier] = useState<string>('');
+  const [filterCrop, setFilterCrop] = useState<string>('');
+  const [sortKey, setSortKey] = useState<'crop' | 'variety' | 'supplier' | 'needed'>('crop');
+  const [sortDesc, setSortDesc] = useState(false);
+
+  // Store hooks for updating orders
+  const upsertSeedOrder = usePlanStore((state) => state.upsertSeedOrder);
+  const seedOrders = usePlanStore((state) => state.currentPlan?.seedOrders ?? {});
+
+  // Get unique values for filters
+  const uniqueSuppliers = useMemo(() => {
+    const suppliers = new Set(report.byVariety.map(v => v.supplier));
+    return Array.from(suppliers).sort();
+  }, [report.byVariety]);
+
+  const uniqueCrops = useMemo(() => {
+    const crops = new Set(report.byVariety.map(v => v.crop));
+    return Array.from(crops).sort();
+  }, [report.byVariety]);
+
+  // Filter and sort data
+  const filteredData = useMemo(() => {
+    let result = report.byVariety;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(v =>
+        v.varietyName.toLowerCase().includes(q) ||
+        v.crop.toLowerCase().includes(q) ||
+        v.supplier.toLowerCase().includes(q)
+      );
+    }
+
+    if (filterSupplier) {
+      result = result.filter(v => v.supplier === filterSupplier);
+    }
+
+    if (filterCrop) {
+      result = result.filter(v => v.crop === filterCrop);
+    }
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case 'crop':
+          cmp = a.crop.localeCompare(b.crop) || a.varietyName.localeCompare(b.varietyName);
+          break;
+        case 'variety':
+          cmp = a.varietyName.localeCompare(b.varietyName);
+          break;
+        case 'supplier':
+          cmp = a.supplier.localeCompare(b.supplier) || a.crop.localeCompare(b.crop);
+          break;
+        case 'needed':
+          cmp = (b.seedsNeeded ?? 0) - (a.seedsNeeded ?? 0);
+          break;
+      }
+      return sortDesc ? -cmp : cmp;
+    });
+
+    return result;
+  }, [report.byVariety, searchQuery, filterSupplier, filterCrop, sortKey, sortDesc]);
+
+  const hasFilters = searchQuery || filterSupplier || filterCrop;
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setFilterSupplier('');
+    setFilterCrop('');
+  };
+
+  const handleSort = (key: typeof sortKey) => {
+    if (sortKey === key) {
+      setSortDesc(!sortDesc);
+    } else {
+      setSortKey(key);
+      setSortDesc(false);
+    }
+  };
+
+  const SortHeader = ({ k, children, className = '' }: { k: typeof sortKey; children: React.ReactNode; className?: string }) => (
+    <th
+      onClick={() => handleSort(k)}
+      className={`py-2 px-2 font-medium text-gray-600 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap ${className}`}
+    >
+      <span className="inline-flex items-center gap-0.5">
+        {children}
+        {sortKey === k && (sortDesc ? ' ↓' : ' ↑')}
+      </span>
+    </th>
+  );
+
+  return (
+    <div className="space-y-3">
+      {/* Toolbar */}
+      <div className="bg-white rounded-lg border border-gray-200 px-3 py-2 flex items-center gap-2 flex-wrap text-sm">
+        <span className="font-medium text-gray-700">
+          {filteredData.length} / {report.byVariety.length}
+        </span>
+
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search..."
+          className="px-2 py-1 border rounded text-sm w-32"
+        />
+
+        <select
+          value={filterSupplier}
+          onChange={e => setFilterSupplier(e.target.value)}
+          className="px-2 py-1 border rounded text-sm"
+        >
+          <option value="">All Suppliers</option>
+          {uniqueSuppliers.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+
+        <select
+          value={filterCrop}
+          onChange={e => setFilterCrop(e.target.value)}
+          className="px-2 py-1 border rounded text-sm"
+        >
+          <option value="">All Crops</option>
+          {uniqueCrops.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+
+        {hasFilters && (
+          <button onClick={clearFilters} className="text-xs text-gray-500 hover:text-gray-700">
+            Clear
+          </button>
+        )}
+
+        <div className="flex-1" />
+
+        {report.plantingsWithoutSeed > 0 && (
+          <span className="text-orange-600 font-medium">
+            ⚠ {report.plantingsWithoutSeed} unassigned
+          </span>
+        )}
       </div>
 
-      {/* Supplier Sections */}
-      <div className="space-y-4">
-        {report.bySupplier.map(supplier => (
-          <div
-            key={supplier.supplier}
-            className="bg-white rounded-lg border border-gray-200 overflow-hidden"
-          >
-            {/* Supplier Header */}
-            <button
-              onClick={() => toggleSupplier(supplier.supplier)}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-4">
-                <span className="text-lg font-semibold text-gray-900">
-                  {supplier.supplier}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {supplier.varieties.length} varieties
-                </span>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">
-                  {formatSeeds(supplier.totalSeeds)} seeds
-                </span>
-                {supplier.totalOunces !== undefined && (
-                  <span className="text-sm text-gray-500">
-                    ({formatOunces(supplier.totalOunces)})
-                  </span>
-                )}
-                <span className="text-gray-400">
-                  {expandedSuppliers.has(supplier.supplier) ? '▼' : '▶'}
-                </span>
-              </div>
-            </button>
-
-            {/* Varieties Table */}
-            {expandedSuppliers.has(supplier.supplier) && (
-              <div className="border-t border-gray-200 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="py-2 px-4 text-left font-medium text-gray-600">Crop</th>
-                      <th className="py-2 px-4 text-left font-medium text-gray-600">Variety</th>
-                      <th className="py-2 px-4 text-right font-medium text-gray-600">Seeds</th>
-                      <th className="py-2 px-4 text-right font-medium text-gray-600">Weight</th>
-                      <th className="py-2 px-4 text-center font-medium text-gray-600">Organic</th>
-                      <th className="py-2 px-4 text-center font-medium text-gray-600">Have</th>
-                      <th className="py-2 px-4 text-right font-medium text-gray-600">Plantings</th>
-                      <th className="py-2 px-4 text-left font-medium text-gray-600">Link</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {supplier.varieties.map(v => (
-                      <tr key={v.varietyId} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-2 px-4 text-gray-900">{v.crop}</td>
-                        <td className="py-2 px-4 font-medium text-gray-900">{v.varietyName}</td>
-                        <td className="py-2 px-4 text-right text-gray-900">
-                          {v.seedsNeeded.toLocaleString()}
-                        </td>
-                        <td className="py-2 px-4 text-right text-gray-600">
-                          {v.ouncesNeeded !== undefined ? formatOunces(v.ouncesNeeded) : '-'}
-                        </td>
-                        <td className="py-2 px-4 text-center">
-                          {v.organic ? (
-                            <span className="text-green-600">✓</span>
-                          ) : (
-                            <span className="text-gray-300">-</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-4 text-center">
-                          {v.alreadyOwn ? (
-                            <span className="text-blue-600">✓</span>
-                          ) : (
-                            <span className="text-gray-300">-</span>
-                          )}
-                        </td>
-                        <td className="py-2 px-4 text-right text-gray-600">
-                          {v.plantingCount}
-                        </td>
-                        <td className="py-2 px-4">
-                          {v.website ? (
-                            <a
-                              href={v.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 hover:underline"
-                            >
-                              Order →
-                            </a>
-                          ) : (
-                            <span className="text-gray-300">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+      {/* Table */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        {filteredData.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            {report.byVariety.length === 0
+              ? 'No seed sources assigned to plantings yet.'
+              : 'No varieties match the current filters.'}
           </div>
-        ))}
-
-        {report.bySupplier.length === 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <p className="text-gray-500">No seed sources assigned to plantings yet.</p>
-            <p className="text-sm text-gray-400 mt-2">
-              Assign varieties or seed mixes to plantings in the timeline view.
-            </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <SortHeader k="crop" className="text-left">Crop</SortHeader>
+                  <SortHeader k="variety" className="text-left">Variety</SortHeader>
+                  <SortHeader k="supplier" className="text-left">Supplier</SortHeader>
+                  <th className="py-2 px-2 font-medium text-gray-600 text-center whitespace-nowrap">Org</th>
+                  <SortHeader k="needed" className="text-right">Seeds</SortHeader>
+                  <th className="py-2 px-2 font-medium text-gray-600 text-right whitespace-nowrap" title="Total amount needed (in order unit)">Total Need</th>
+                  {/* Inventory (Have) columns - blue tint */}
+                  <th className="py-2 px-1 font-medium text-blue-700 text-center whitespace-nowrap bg-blue-50/50" title="Inventory on hand">Have</th>
+                  <th className="py-2 px-1 font-medium text-blue-700 text-center whitespace-nowrap bg-blue-50/50">Unit</th>
+                  {/* Order Need = Total Need - Have */}
+                  <th className="py-2 px-2 font-medium text-gray-600 text-right whitespace-nowrap" title="Amount still needed to order (Total Need - Have)">Order Need</th>
+                  {/* Order input columns */}
+                  <th className="py-2 px-1 font-medium text-gray-600 text-center whitespace-nowrap" title="Product weight per unit">Wt</th>
+                  <th className="py-2 px-1 font-medium text-gray-600 text-center whitespace-nowrap">Unit</th>
+                  <th className="py-2 px-1 font-medium text-gray-600 text-center whitespace-nowrap">Qty</th>
+                  <th className="py-2 px-1 font-medium text-gray-600 text-center whitespace-nowrap">$/ea</th>
+                  <th className="py-2 px-2 font-medium text-gray-600 text-right whitespace-nowrap" title="Order Weight × Qty">Order Amt</th>
+                  <th className="py-2 px-2 font-medium text-gray-600 text-right whitespace-nowrap" title="Order Cost × Qty">Cost</th>
+                  <th className="py-2 px-2 font-medium text-gray-600 text-center whitespace-nowrap" title="(Have + Order) / Total Need">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map(v => (
+                  <SeedOrderRow
+                    key={v.varietyId}
+                    variety={v}
+                    savedOrder={seedOrders[`SO_${v.varietyId}`]}
+                    onSave={upsertSeedOrder}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
@@ -683,11 +993,23 @@ function SeedsTab({ report }: { report: PlanSeedReport }) {
 
 export default function ReportsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const planId = params.planId as string;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<ReportTab>('revenue');
+  const [activeTab, setActiveTab] = useState<ReportTab>(() => {
+    const tabParam = searchParams.get('tab');
+    return tabParam === 'seeds' ? 'seeds' : 'revenue';
+  });
+
+  // Update tab when URL changes
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'seeds' || tabParam === 'revenue') {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);

@@ -1,5 +1,5 @@
 {
-  "_generated": "2026-01-09T01:22:54.945Z",
+  "_generated": "2026-01-11T23:49:46.789035Z",
   "_source": "tmp/varieties_from_excel.json",
   "varieties": [
     {
@@ -8,7 +8,9 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/vegetables/products/amaranth-callaloo-suriname?_pos=1&_sid=8aae837f1&_ss=r"
+      "website": "https://uprisingorganics.com/collections/vegetables/products/amaranth-callaloo-suriname?_pos=1&_sid=8aae837f1&_ss=r",
+      "density": 35000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Amaranth",
@@ -24,7 +26,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/amaranthus/emerald-tassels-amaranthus-seed-1786.html"
+      "website": "https://www.johnnyseeds.com/flowers/amaranthus/emerald-tassels-amaranthus-seed-1786.html",
+      "density": 48000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Amaranth",
@@ -40,7 +44,9 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/amaranth/products/amaranth-love-lies-bleeding"
+      "website": "https://uprisingorganics.com/collections/amaranth/products/amaranth-love-lies-bleeding",
+      "density": 30000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Amaranth",
@@ -48,7 +54,9 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/amaranth/products/amaranth-opopeo"
+      "website": "https://uprisingorganics.com/collections/amaranth/products/amaranth-opopeo",
+      "density": 30000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Amaranth",
@@ -56,7 +64,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/amaranthus/red-spike-amaranthus-seed-3786.html"
+      "website": "https://www.johnnyseeds.com/flowers/amaranthus/red-spike-amaranthus-seed-3786.html",
+      "density": 40600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Amaranth",
@@ -87,7 +97,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-astro-arugula.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-astro-arugula.html",
+      "density": 13000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Arugula",
@@ -95,7 +107,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/greens/arugula-roquette/esmee-organic-salad-arugula-seed-3746G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/greens/arugula-roquette/esmee-organic-salad-arugula-seed-3746G.html",
+      "density": 220000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Atriplex",
@@ -103,7 +117,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/atriplex/copper-plume-organic-atriplex-seed-3739G.html"
+      "website": "https://www.johnnyseeds.com/flowers/atriplex/copper-plume-organic-atriplex-seed-3739G.html",
+      "density": 7100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Atriplex",
@@ -111,7 +127,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/orach-red-flash-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/orach-red-flash-organic/",
+      "density": 150,
+      "densityUnit": "g"
     },
     {
       "crop": "Bachelor's Button",
@@ -187,7 +205,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-deep-purple-basil.html",
-      "subCategory": "Purple"
+      "subCategory": "Purple",
+      "density": 20000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Basil",
@@ -204,7 +224,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/herbs/basil-golden-mountain-sweet-thai-mix-organic/"
+      "website": "https://www.adaptiveseeds.com/product/herbs/basil-golden-mountain-sweet-thai-mix-organic/",
+      "density": 700,
+      "densityUnit": "g"
     },
     {
       "crop": "Basil",
@@ -221,7 +243,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://uprisingorganics.com/products/basil-italian-largeleaf?_pos=2&_sid=86892f78d&_ss=r",
-      "subCategory": "Itallian"
+      "subCategory": "Itallian",
+      "density": 20400,
+      "densityUnit": "oz"
     },
     {
       "crop": "Basil",
@@ -245,7 +269,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/basil/genovese-basil/noga-prospera-active-dmr-organic-basil-seed-5467G.html"
+      "website": "https://www.johnnyseeds.com/herbs/basil/genovese-basil/noga-prospera-active-dmr-organic-basil-seed-5467G.html",
+      "density": 18700,
+      "densityUnit": "oz"
     },
     {
       "crop": "Basil",
@@ -253,15 +279,19 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-prospera-f1-basil.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-prospera-f1-basil.html",
+      "density": 19900,
+      "densityUnit": "oz"
     },
     {
       "crop": "Basil",
-      "name": "Prospera® Active Thai-Thai F1 Basil",
+      "name": "Prospera\u00ae Active Thai-Thai F1 Basil",
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/basil/asian-basil/thai-thai-prospera-active-dmr-organic-basil-seed-4968G.html"
+      "website": "https://www.johnnyseeds.com/herbs/basil/asian-basil/thai-thai-prospera-active-dmr-organic-basil-seed-4968G.html",
+      "density": 19500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Basil",
@@ -277,7 +307,8 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/herbs/products/basil-tulsi-sacred-basil-holy-basil?_pos=1&_sid=f9868298f&_ss=r"
+      "website": "https://uprisingorganics.com/collections/herbs/products/basil-tulsi-sacred-basil-holy-basil?_pos=1&_sid=f9868298f&_ss=r",
+      "densityUnit": "ct"
     },
     {
       "crop": "Basil",
@@ -285,7 +316,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=744"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=744",
+      "density": 574,
+      "densityUnit": "g"
     },
     {
       "crop": "Bean",
@@ -302,7 +335,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/beans/bush-snap-bean-cupidon-organic/",
-      "subCategory": "Bush"
+      "subCategory": "Bush",
+      "density": 120,
+      "densityUnit": "oz"
     },
     {
       "crop": "Bean",
@@ -310,7 +345,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-dragon-langerie-bush-bean.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-dragon-langerie-bush-bean.html",
+      "density": 1200,
+      "densityUnit": "lb"
     },
     {
       "crop": "Bean",
@@ -335,7 +372,9 @@
       "supplier": "Everwilde",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.everwilde.com/store/Organic-Yard-Long-Bean-Green-Yard-Long-Bean.html"
+      "website": "https://www.everwilde.com/store/Organic-Yard-Long-Bean-Green-Yard-Long-Bean.html",
+      "density": 2000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Bean",
@@ -368,7 +407,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/beans/pole-beans/northeaster-organic-bean-seed-39G.html",
-      "subCategory": "Runner"
+      "subCategory": "Runner",
+      "density": 850,
+      "densityUnit": "lb"
     },
     {
       "crop": "Bean",
@@ -385,7 +426,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-rattlesnake-bean.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-rattlesnake-bean.html",
+      "density": 145,
+      "densityUnit": "oz"
     },
     {
       "crop": "Bean",
@@ -394,7 +437,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/flowers/hyacinth-bean/ruby-moon-hyacinth-bean-seed-1002.html",
-      "subCategory": "Ruby Moon"
+      "subCategory": "Ruby Moon",
+      "density": 1000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Bean",
@@ -403,7 +448,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/flowers/scarlet-runner-bean/scarlet-runner-bean-flower-seed-1000.html",
-      "subCategory": "Scarlet Runner"
+      "subCategory": "Scarlet Runner",
+      "density": 430,
+      "densityUnit": "lb"
     },
     {
       "crop": "Bean",
@@ -429,7 +476,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-badger-flame-beet.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-badger-flame-beet.html",
+      "density": 1500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Beet",
@@ -438,7 +487,8 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.row7seeds.com/products/badger-flame-beet",
-      "subCategory": "Yellow"
+      "subCategory": "Yellow",
+      "densityUnit": "ct"
     },
     {
       "crop": "Beet",
@@ -463,7 +513,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-boro-f1-beet.html",
-      "subCategory": "Red"
+      "subCategory": "Red",
+      "density": 2000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Beet",
@@ -488,7 +540,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.seedsavers.org/burpees-golden-organic-beet",
-      "subCategory": "Golden"
+      "subCategory": "Golden",
+      "density": 1600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Beet",
@@ -497,7 +551,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/beets/beet-chioggia-organic/",
-      "subCategory": "Red"
+      "subCategory": "Red",
+      "density": 80,
+      "densityUnit": "g"
     },
     {
       "crop": "Beet",
@@ -546,7 +602,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-touchstone-gold-beet.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-touchstone-gold-beet.html",
+      "density": 1500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Beet",
@@ -562,7 +620,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/greens/pac-choi-bok-choy/bopak-organic-f1-green-seed-4206G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/greens/pac-choi-bok-choy/bopak-organic-f1-green-seed-4206G.html",
+      "density": 122900,
+      "densityUnit": "lb"
     },
     {
       "crop": "Bok Choy",
@@ -579,7 +639,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/herbs/borage-organic/",
-      "subCategory": "Blue"
+      "subCategory": "Blue",
+      "density": 60,
+      "densityUnit": "g"
     },
     {
       "crop": "Borage",
@@ -596,7 +658,8 @@
       "supplier": "Rare Seeds",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.rareseeds.com/borage-white"
+      "website": "https://www.rareseeds.com/borage-white",
+      "densityUnit": "ct"
     },
     {
       "crop": "Broccoli",
@@ -604,7 +667,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/broccoli/mini-broccoli/burgundy-f1-broccoli-seed-3460.html"
+      "website": "https://www.johnnyseeds.com/vegetables/broccoli/mini-broccoli/burgundy-f1-broccoli-seed-3460.html",
+      "density": 128400,
+      "densityUnit": "lb"
     },
     {
       "crop": "Broccoli",
@@ -644,7 +709,9 @@
       "supplier": "Kitazawa",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.trueleafmarket.com/products/organic-japanese-buckwheat"
+      "website": "https://www.trueleafmarket.com/products/organic-japanese-buckwheat",
+      "density": 900,
+      "densityUnit": "oz"
     },
     {
       "crop": "Buckwheat",
@@ -670,7 +737,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/bupleurum/green-gold-bupleurum-seed-1045.html"
+      "website": "https://www.johnnyseeds.com/flowers/bupleurum/green-gold-bupleurum-seed-1045.html",
+      "density": 19400,
+      "densityUnit": "oz"
     },
     {
       "crop": "Bupleurum",
@@ -678,7 +747,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=601"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=601",
+      "density": 9000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Butterfly Flowers",
@@ -686,7 +757,9 @@
       "supplier": "Baker Creek",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.rareseeds.com/butterfly-pea-blue-queen"
+      "website": "https://www.rareseeds.com/butterfly-pea-blue-queen",
+      "density": 22000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Butterfly Flowers",
@@ -710,7 +783,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-bilko-f1-napa-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-bilko-f1-napa-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -718,7 +793,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-bronco-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-bronco-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -735,7 +812,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-deadon-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-deadon-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -743,7 +822,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/cabbage/fresh-market-cabbage/deadon-organic-f1-cabbage-seed-306G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/cabbage/fresh-market-cabbage/deadon-organic-f1-cabbage-seed-306G.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -751,7 +832,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-emiko-f1-napa-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-emiko-f1-napa-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -766,7 +849,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-expect-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-expect-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -774,7 +859,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-famosa-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-famosa-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -782,7 +869,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-farao-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-farao-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -806,7 +895,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-integro-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-integro-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -814,7 +905,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/cabbage/fresh-market-cabbage/integro-organic-f1-cabbage-seed-262G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/cabbage/fresh-market-cabbage/integro-organic-f1-cabbage-seed-262G.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -822,7 +915,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/cabbage/cabbage-january-king-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/cabbage/cabbage-january-king-organic/",
+      "density": 300,
+      "densityUnit": "g"
     },
     {
       "crop": "Cabbage",
@@ -838,7 +933,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/gganic-non-gmo-klimaro-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/gganic-non-gmo-klimaro-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -846,7 +943,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/chinese-cabbage/merlot-f1-chinese-cabbage-seed-4171.html"
+      "website": "https://www.johnnyseeds.com/vegetables/chinese-cabbage/merlot-f1-chinese-cabbage-seed-4171.html",
+      "density": 140000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cabbage",
@@ -881,7 +980,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/chinese-cabbage/minuet-f1-chinese-cabbage-seed-2901.html"
+      "website": "https://www.johnnyseeds.com/vegetables/chinese-cabbage/minuet-f1-chinese-cabbage-seed-2901.html",
+      "density": 137000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cabbage",
@@ -889,7 +990,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-passat-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-passat-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -905,7 +1008,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-reaction-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-reaction-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -913,7 +1018,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-express-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-express-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -929,7 +1036,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-stanton-f1-cabbage.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-stanton-f1-cabbage.html",
+      "density": 4800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cabbage",
@@ -962,7 +1071,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-bengala-f1-carrot.html",
-      "subCategory": "Main Crop"
+      "subCategory": "Main Crop",
+      "density": 11000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Carrot",
@@ -987,7 +1098,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/carrots/storage-carrots/bolero-f1-carrot-seed-216.html"
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/storage-carrots/bolero-f1-carrot-seed-216.html",
+      "density": 250400,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -995,7 +1108,9 @@
       "supplier": "Osborne",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.osborneseed.com/products/bolero-f1-untreated-seed-raw-carrot-seeds"
+      "website": "https://www.osborneseed.com/products/bolero-f1-untreated-seed-raw-carrot-seeds",
+      "density": 250400,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1003,7 +1118,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-cosmic-purple-carrot.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cosmic-purple-carrot.html",
+      "density": 20000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1019,7 +1136,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/carrots/main-crop-carrots/deep-purple-f1-carrot-seed-2737.html"
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/main-crop-carrots/deep-purple-f1-carrot-seed-2737.html",
+      "density": 20000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1027,7 +1146,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-dolciva-carrot.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-dolciva-carrot.html",
+      "density": 20000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1043,7 +1164,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-dragon-carrot.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-dragon-carrot.html",
+      "density": 24250,
+      "densityUnit": "oz"
     },
     {
       "crop": "Carrot",
@@ -1067,7 +1190,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/carrots/early-carrots/mokum-f1-carrot-seed-2186.html"
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/early-carrots/mokum-f1-carrot-seed-2186.html",
+      "density": 319100,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1075,7 +1200,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-napoli-f1-carrot.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-napoli-f1-carrot.html",
+      "density": 24250,
+      "densityUnit": "oz"
     },
     {
       "crop": "Carrot",
@@ -1083,7 +1210,9 @@
       "supplier": "Osborne",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.osborneseed.com/catalog/item-content/77169/napoli-f1/pr_77169/cp_/catalog/seed-form/organic/carrot"
+      "website": "https://www.osborneseed.com/catalog/item-content/77169/napoli-f1/pr_77169/cp_/catalog/seed-form/organic/carrot",
+      "density": 316800,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1091,7 +1220,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-narvik-f1-carrot.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-narvik-f1-carrot.html",
+      "density": 20000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1124,7 +1255,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/carrots/main-crop-carrots/romance-f1-carrot-seed-3116.html"
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/main-crop-carrots/romance-f1-carrot-seed-3116.html",
+      "density": 204000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1133,7 +1266,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://territorialseed.com/products/carrot-romance",
-      "subCategory": "Maincrop"
+      "subCategory": "Maincrop",
+      "density": 204000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Carrot",
@@ -1141,7 +1276,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/carrots/colored-carrots/yellowstone-organic-carrot-seed-3333G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/carrots/colored-carrots/yellowstone-organic-carrot-seed-3333G.html",
+      "density": 230900,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cauliflower",
@@ -1173,7 +1310,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/purple-moon-f1-cauliflower-seed-4822.html"
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/purple-moon-f1-cauliflower-seed-4822.html",
+      "density": 84000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cauliflower",
@@ -1181,7 +1320,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/skywalker-organic-f1-cauliflower-seed-2593G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/skywalker-organic-f1-cauliflower-seed-2593G.html",
+      "density": 95500,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cauliflower",
@@ -1189,7 +1330,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/green-stem-cauliflower/song-tjs-65-f1-cauliflower-seed-4131.html"
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/green-stem-cauliflower/song-tjs-65-f1-cauliflower-seed-4131.html",
+      "density": 142900,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cauliflower",
@@ -1197,7 +1340,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/green-stem-cauliflower/song-tjs-65-f1-cauliflower-seed-4131.html"
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/green-stem-cauliflower/song-tjs-65-f1-cauliflower-seed-4131.html",
+      "density": 142900,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cauliflower",
@@ -1205,7 +1350,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/tessaury-organic-f1-cauliflower-seed-6042G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/cauliflower/standard-cauliflower/tessaury-organic-f1-cauliflower-seed-6042G.html",
+      "density": 84600,
+      "densityUnit": "lb"
     },
     {
       "crop": "Celery",
@@ -1222,7 +1369,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-merengo-f1-celery.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-merengo-f1-celery.html",
+      "density": 65000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Celery",
@@ -1230,7 +1379,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": true,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-merengo-f1-celery.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-merengo-f1-celery.html",
+      "density": 65000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Celery",
@@ -1238,7 +1389,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-tango-celery.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-tango-celery.html",
+      "density": 65000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Celery",
@@ -1246,7 +1399,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/celery-and-celeriac/celery/tango-organic-celery-seed-647G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/celery-and-celeriac/celery/tango-organic-celery-seed-647G.html",
+      "density": 66700,
+      "densityUnit": "oz"
     },
     {
       "crop": "Celery",
@@ -1255,7 +1410,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/celeriac-celery/celery-ventura-organic/",
-      "subCategory": "Utah"
+      "subCategory": "Utah",
+      "density": 2400,
+      "densityUnit": "g"
     },
     {
       "crop": "Celery",
@@ -1271,7 +1428,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/celosia/flamingo-purple-celosia-seed-4780.html"
+      "website": "https://www.johnnyseeds.com/flowers/celosia/flamingo-purple-celosia-seed-4780.html",
+      "density": 28400,
+      "densityUnit": "oz"
     },
     {
       "crop": "Celosia",
@@ -1279,7 +1438,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=435"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=435",
+      "density": 940,
+      "densityUnit": "g"
     },
     {
       "crop": "Celosia",
@@ -1287,7 +1448,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/celosia/sunday-mix-celosia-seed-4310.html"
+      "website": "https://www.johnnyseeds.com/flowers/celosia/sunday-mix-celosia-seed-4310.html",
+      "density": 37500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Chijimisai",
@@ -1319,7 +1482,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/green-70-d-improved-asian-green-seed-4031.html"
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/green-70-d-improved-asian-green-seed-4031.html",
+      "density": 200000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Chrysanthemum",
@@ -1335,7 +1500,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/shungiku-asian-green-seed-514.html"
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/shungiku-asian-green-seed-514.html",
+      "density": 125000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Chrysanthemum Greens",
@@ -1343,7 +1510,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/shungiku-komi-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/shungiku-komi-organic/",
+      "density": 325,
+      "densityUnit": "g"
     },
     {
       "crop": "Cilantro",
@@ -1351,7 +1520,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/cilantro-coriander/calypso-cilantro-coriander-seed-3803.html"
+      "website": "https://www.johnnyseeds.com/herbs/cilantro-coriander/calypso-cilantro-coriander-seed-3803.html",
+      "density": 3400,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cilantro",
@@ -1359,7 +1530,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-cruiser-cilantro.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cruiser-cilantro.html",
+      "density": 3800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cilantro",
@@ -1367,7 +1540,9 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/herbs/products/cilantro-pokey-joe?_pos=1&_sid=1dfa0d036&_ss=r"
+      "website": "https://uprisingorganics.com/collections/herbs/products/cilantro-pokey-joe?_pos=1&_sid=1dfa0d036&_ss=r",
+      "density": 3800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cilantro",
@@ -1375,7 +1550,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/herbs/cilantro-rak-tamachat-organic/"
+      "website": "https://www.adaptiveseeds.com/product/herbs/cilantro-rak-tamachat-organic/",
+      "density": 90,
+      "densityUnit": "g"
     },
     {
       "crop": "Corn",
@@ -1383,7 +1560,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-allure-f1-sweet-corn.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-allure-f1-sweet-corn.html",
+      "density": 1700,
+      "densityUnit": "oz"
     },
     {
       "crop": "Corn",
@@ -1399,7 +1578,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-enchanted-f1-corn.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-enchanted-f1-corn.html",
+      "density": 170,
+      "densityUnit": "oz"
     },
     {
       "crop": "Corn",
@@ -1407,7 +1588,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-natural-bright-xr-f1-sweet-corn.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-natural-bright-xr-f1-sweet-corn.html",
+      "density": 1700,
+      "densityUnit": "oz"
     },
     {
       "crop": "Corn",
@@ -1424,7 +1607,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/corn/sweet-corn-new-mama-super-sweet-organic/",
-      "subCategory": "Sweet"
+      "subCategory": "Sweet",
+      "density": 200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Corn",
@@ -1437,11 +1622,13 @@
     },
     {
       "crop": "Corn Salad",
-      "name": "Gelber Nüssler",
+      "name": "Gelber N\u00fcssler",
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/corn-salad-gelber-nussler/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/corn-salad-gelber-nussler/",
+      "density": 950,
+      "densityUnit": "g"
     },
     {
       "crop": "Corn Salad",
@@ -1449,7 +1636,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/corn-salad-piedmont-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/corn-salad-piedmont-organic/",
+      "density": 400,
+      "densityUnit": "g"
     },
     {
       "crop": "Corn Salad",
@@ -1457,7 +1646,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-vit-mache.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-vit-mache.html",
+      "density": 13400,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cosmos",
@@ -1465,7 +1656,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=753"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=753",
+      "density": 4000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cosmos",
@@ -1473,7 +1666,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=720"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=720",
+      "density": 4000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cosmos",
@@ -1481,7 +1676,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/flowers/cosmos-daydream-organic/"
+      "website": "https://www.adaptiveseeds.com/product/flowers/cosmos-daydream-organic/",
+      "density": 150,
+      "densityUnit": "g"
     },
     {
       "crop": "Cosmos",
@@ -1489,7 +1686,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/cosmos/double-click-bicolor-violet-cosmos-seed-3311.html"
+      "website": "https://www.johnnyseeds.com/flowers/cosmos/double-click-bicolor-violet-cosmos-seed-3311.html",
+      "density": 3800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cosmos",
@@ -1497,7 +1696,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=532"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=532",
+      "density": 4000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cress",
@@ -1505,7 +1706,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=62"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=62",
+      "density": 10000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cress",
@@ -1513,7 +1716,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/cress-ornamental/persian-cress-organic-cress-seed-3399G.html"
+      "website": "https://www.johnnyseeds.com/flowers/cress-ornamental/persian-cress-organic-cress-seed-3399G.html",
+      "density": 12300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cucumber",
@@ -1521,11 +1726,13 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/vegetables/products/cucumber-cengelkoy?_pos=1&_sid=5413b124b&_ss=r"
+      "website": "https://uprisingorganics.com/collections/vegetables/products/cucumber-cengelkoy?_pos=1&_sid=5413b124b&_ss=r",
+      "density": 40,
+      "densityUnit": "g"
     },
     {
       "crop": "Cucumber",
-      "name": "ÇENGELKÖY'",
+      "name": "\u00c7ENGELK\u00d6Y'",
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
@@ -1537,7 +1744,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/cucumbers/slicing-cucumbers/corinto-organic-f1-cucumber-seed-2562G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/cucumbers/slicing-cucumbers/corinto-organic-f1-cucumber-seed-2562G.html",
+      "density": 17700,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cucumber",
@@ -1546,7 +1755,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/cucumbers/seedless-and-thin-skinned-cucumbers/diva-cucumber-seed-2198.html",
-      "subCategory": "Snacking"
+      "subCategory": "Snacking",
+      "density": 18800,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cucumber",
@@ -1579,7 +1790,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-manny-f1-cucumber.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-manny-f1-cucumber.html",
+      "density": 1100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cucumber",
@@ -1587,7 +1800,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-marketmore-76-cucumber.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-marketmore-76-cucumber.html",
+      "density": 1100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cucumber",
@@ -1627,7 +1842,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-shintokiwa-cucumber.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-shintokiwa-cucumber.html",
+      "density": 1100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cucumber",
@@ -1651,7 +1868,9 @@
       "supplier": "Whitman Organics",
       "organic": false,
       "pelleted": false,
-      "website": "https://whitwamorganics.com/products/sooyow-nishiki-cucumber-seeds-1?_pos=1&_sid=6169e0576&_ss=r"
+      "website": "https://whitwamorganics.com/products/sooyow-nishiki-cucumber-seeds-1?_pos=1&_sid=6169e0576&_ss=r",
+      "density": 11000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cucumber",
@@ -1659,7 +1878,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-suyo-long-cucumber.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-suyo-long-cucumber.html",
+      "density": 15600,
+      "densityUnit": "lb"
     },
     {
       "crop": "Cucumber",
@@ -1667,7 +1888,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-tasty-green-f1-cucumber.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-tasty-green-f1-cucumber.html",
+      "density": 1100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Cucumber",
@@ -1691,7 +1914,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/cucumbers/seedless-and-thin-skinned-cucumbers/unagi-f1-cucumber-seed-4552.html",
-      "subCategory": "Asian"
+      "subCategory": "Asian",
+      "density": 17600,
+      "densityUnit": "lb"
     },
     {
       "crop": "Dahlias",
@@ -1708,7 +1933,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/flowers/sweet-william-hollandia-purple-crown-mix-organic/"
+      "website": "https://www.adaptiveseeds.com/product/flowers/sweet-william-hollandia-purple-crown-mix-organic/",
+      "density": 875,
+      "densityUnit": "g"
     },
     {
       "crop": "Dianthus",
@@ -1724,7 +1951,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_123&products_id=447"
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_123&products_id=447",
+      "density": 1000,
+      "densityUnit": "g"
     },
     {
       "crop": "Dianthus",
@@ -1732,7 +1961,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/dianthus-sweet-william/volcano-mix-organic-dianthus-seed-1988G.html"
+      "website": "https://www.johnnyseeds.com/flowers/dianthus-sweet-william/volcano-mix-organic-dianthus-seed-1988G.html",
+      "density": 34900,
+      "densityUnit": "oz"
     },
     {
       "crop": "Dill",
@@ -1740,7 +1971,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/herbs/dill-ambrosia-organic/"
+      "website": "https://www.adaptiveseeds.com/product/herbs/dill-ambrosia-organic/",
+      "density": 400,
+      "densityUnit": "g"
     },
     {
       "crop": "Dill",
@@ -1748,7 +1981,9 @@
       "supplier": "Osborne",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.osborneseed.com/products/dill-bouquet-organic-herb-seeds?_pos=2&_psq=bouquet+dill&_ss=e&_v=1.0"
+      "website": "https://www.osborneseed.com/products/dill-bouquet-organic-herb-seeds?_pos=2&_psq=bouquet+dill&_ss=e&_v=1.0",
+      "density": 16900,
+      "densityUnit": "oz"
     },
     {
       "crop": "Dill",
@@ -1773,7 +2008,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_168&products_id=607",
-      "subCategory": "White/Ammi Cut Flower"
+      "subCategory": "White/Ammi Cut Flower",
+      "density": 1220,
+      "densityUnit": "g"
     },
     {
       "crop": "Dill",
@@ -1781,7 +2018,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-greensleeves-dill.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-greensleeves-dill.html",
+      "density": 15000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Dill",
@@ -1789,7 +2028,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/dill/thalia-organic-dill-seed-4010G.html"
+      "website": "https://www.johnnyseeds.com/herbs/dill/thalia-organic-dill-seed-4010G.html",
+      "density": 21600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Dill",
@@ -1798,7 +2039,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_168&products_id=606",
-      "subCategory": "White/Ammi Cut Flower"
+      "subCategory": "White/Ammi Cut Flower",
+      "density": 1040,
+      "densityUnit": "g"
     },
     {
       "crop": "Dropmore",
@@ -1814,7 +2057,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-annina-f1-eggplant.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-annina-f1-eggplant.html",
+      "density": 5500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Eggplant",
@@ -1840,7 +2085,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/eggplant/eggplant-petch-siam-organic/",
-      "subCategory": "Thai"
+      "subCategory": "Thai",
+      "density": 6000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Eggplant",
@@ -1849,7 +2096,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/eggplant/eggplant-poamoho-dark-long-organic/",
-      "subCategory": "Asian"
+      "subCategory": "Asian",
+      "density": 6001,
+      "densityUnit": "oz"
     },
     {
       "crop": "Eggplant",
@@ -1873,7 +2122,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/eggplant/italian-eggplants/traviata-organic-f1-eggplant-seed-2575G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/eggplant/italian-eggplants/traviata-organic-f1-eggplant-seed-2575G.html",
+      "density": 6500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Everlasting",
@@ -1881,7 +2132,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/flowers/winged-everlasting-organic/"
+      "website": "https://www.adaptiveseeds.com/product/flowers/winged-everlasting-organic/",
+      "density": 2000,
+      "densityUnit": "g"
     },
     {
       "crop": "Fava Beans",
@@ -1889,7 +2142,9 @@
       "supplier": "Sustainable Seed Company",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.trueleafmarket.com/products/bean-seeds-fava-aquadulce-organic"
+      "website": "https://www.trueleafmarket.com/products/bean-seeds-fava-aquadulce-organic",
+      "density": 20,
+      "densityUnit": "oz"
     },
     {
       "crop": "Fava Beans",
@@ -1946,7 +2201,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?cPath=37&products_id=68"
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=37&products_id=68",
+      "density": 7000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Fennel",
@@ -1962,7 +2219,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-solaris-f1-fennel.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-solaris-f1-fennel.html",
+      "density": 7000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Flax",
@@ -1970,7 +2229,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/grains/flax-foster-organic/"
+      "website": "https://www.adaptiveseeds.com/product/grains/flax-foster-organic/",
+      "density": 250,
+      "densityUnit": "g"
     },
     {
       "crop": "Garlic",
@@ -2002,7 +2263,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/grasses-ornamental/frosted-explosion-ornamental-grass-seed-1855.html"
+      "website": "https://www.johnnyseeds.com/flowers/grasses-ornamental/frosted-explosion-ornamental-grass-seed-1855.html",
+      "density": 38300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Green Onion",
@@ -2010,7 +2273,9 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/products/scallion-ishikura-long-winter?_pos=1&_sid=04d2ed212&_ss=r"
+      "website": "https://uprisingorganics.com/products/scallion-ishikura-long-winter?_pos=1&_sid=04d2ed212&_ss=r",
+      "density": 200000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Green Onion",
@@ -2026,7 +2291,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/onions/green-onions-white-spear-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/onions/green-onions-white-spear-organic/",
+      "density": 200,
+      "densityUnit": "g"
     },
     {
       "crop": "Green Onion",
@@ -2042,7 +2309,8 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/products/ground-cherry-aunt-mollys?_pos=1&_sid=fd6489ca0&_ss=r"
+      "website": "https://uprisingorganics.com/products/ground-cherry-aunt-mollys?_pos=1&_sid=fd6489ca0&_ss=r",
+      "densityUnit": "ct"
     },
     {
       "crop": "Ground Cherry",
@@ -2050,7 +2318,8 @@
       "supplier": "Garden Hoard",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.gardenhoard.com/peruvian-ground-cherry-seeds-certified-organic.html"
+      "website": "https://www.gardenhoard.com/peruvian-ground-cherry-seeds-certified-organic.html",
+      "densityUnit": "ct"
     },
     {
       "crop": "Hibiscus",
@@ -2058,7 +2327,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/hibiscus/mahogany-splendor-hibiscus-seed-4013.html"
+      "website": "https://www.johnnyseeds.com/flowers/hibiscus/mahogany-splendor-hibiscus-seed-4013.html",
+      "density": 2200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Huauzontle",
@@ -2082,7 +2353,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/heirloom-tomatoes/cipollas-pride-organic-tomato-seed-4180G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/heirloom-tomatoes/cipollas-pride-organic-tomato-seed-4180G.html",
+      "density": 165000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Kaibroc",
@@ -2106,7 +2379,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-arun-f1-kale.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-arun-f1-kale.html",
+      "density": 5600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Kale",
@@ -2114,7 +2389,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-black-jack-f1-kale.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-black-jack-f1-kale.html",
+      "density": 5600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Kale",
@@ -2129,7 +2406,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-darkibor-f1-kale.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-darkibor-f1-kale.html",
+      "density": 5600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Kale",
@@ -2144,7 +2423,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/dazzling-blue-kale.html"
+      "website": "https://www.highmowingseeds.com/dazzling-blue-kale.html",
+      "density": 5600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Kale",
@@ -2167,7 +2448,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-russian-kale.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-russian-kale.html",
+      "density": 133200,
+      "densityUnit": "lb"
     },
     {
       "crop": "Kale",
@@ -2175,7 +2458,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-white-russian-kale.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-white-russian-kale.html",
+      "density": 5600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Kale",
@@ -2198,7 +2483,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/fresh-market-kohlrabi/kolibri-organic-f1-kohlrabi-seed-320G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/fresh-market-kohlrabi/kolibri-organic-f1-kohlrabi-seed-320G.html",
+      "density": 500000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Kohlrabi",
@@ -2206,7 +2493,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/fresh-market-kohlrabi/konan-organic-f1-kohlrabi-seed-4431G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/fresh-market-kohlrabi/konan-organic-f1-kohlrabi-seed-4431G.html",
+      "density": 82200,
+      "densityUnit": "lb"
     },
     {
       "crop": "Kohlrabi",
@@ -2214,7 +2503,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/storage-kohlrabi/kossak-organic-f1-kohlrabi-seed-237G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/kohlrabi/storage-kohlrabi/kossak-organic-f1-kohlrabi-seed-237G.html",
+      "density": 6000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Komatsuna",
@@ -2222,7 +2513,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/carlton-f1-asian-green-seed-3872.html"
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/carlton-f1-asian-green-seed-3872.html",
+      "density": 9600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Komatsuna",
@@ -2230,7 +2523,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-komatsuna-asian-greens.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-komatsuna-asian-greens.html",
+      "density": 12500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Komatsuna",
@@ -2279,7 +2574,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/leeks/king-richard-organic-leek-seed-416G.59.html?source=google_johnny_seeds"
+      "website": "https://www.johnnyseeds.com/vegetables/leeks/king-richard-organic-leek-seed-416G.59.html?source=google_johnny_seeds",
+      "density": 9500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Leek",
@@ -2295,7 +2592,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/lemon-grass/lemon-grass-east-indian-cleaned-seed-lemon-grass-seed-4074.html"
+      "website": "https://www.johnnyseeds.com/herbs/lemon-grass/lemon-grass-east-indian-cleaned-seed-lemon-grass-seed-4074.html",
+      "density": 74300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lemongrass",
@@ -2303,7 +2602,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/lemon-grass/lemon-grass-east-indian-cleaned-seed-lemon-grass-seed-4074.html"
+      "website": "https://www.johnnyseeds.com/herbs/lemon-grass/lemon-grass-east-indian-cleaned-seed-lemon-grass-seed-4074.html",
+      "density": 74300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2320,7 +2621,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/oakleaf-lettuce/bauer-organic-lettuce-seed-4245G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/oakleaf-lettuce/bauer-organic-lettuce-seed-4245G.html",
+      "density": 524393,
+      "densityUnit": "lb"
     },
     {
       "crop": "Lettuce",
@@ -2337,7 +2640,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-black-seeded-simp-lettuce.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-black-seeded-simp-lettuce.html",
+      "density": 24000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2345,7 +2650,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_72&products_id=84"
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_72&products_id=84",
+      "density": 600,
+      "densityUnit": "g"
     },
     {
       "crop": "Lettuce",
@@ -2353,7 +2660,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=243"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=243",
+      "density": 250000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Lettuce",
@@ -2392,7 +2701,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": true,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-green-incised-pelleted-lettuce-seed-3052JP.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-green-incised-pelleted-lettuce-seed-3052JP.html",
+      "density": 790,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2400,7 +2711,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": true,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-green-sweet-crisp-pelleted-lettuce-seed-3054JP.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-green-sweet-crisp-pelleted-lettuce-seed-3054JP.html",
+      "density": 750,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2429,7 +2742,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": true,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/one-cut-lettuce/intercut-pelleted-lettuce-seed-4460JP.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/one-cut-lettuce/intercut-pelleted-lettuce-seed-4460JP.html",
+      "density": 11700,
+      "densityUnit": "lb"
     },
     {
       "crop": "Lettuce",
@@ -2437,7 +2752,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_74&products_id=251"
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_74&products_id=251",
+      "density": 885,
+      "densityUnit": "g"
     },
     {
       "crop": "Lettuce",
@@ -2461,7 +2778,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-lovelock-lettuce.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-lovelock-lettuce.html",
+      "density": 24000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2477,7 +2796,9 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/vegetables/products/lettuce-merlot?_pos=1&_sid=43c5c95ee&_ss=r"
+      "website": "https://uprisingorganics.com/collections/vegetables/products/lettuce-merlot?_pos=1&_sid=43c5c95ee&_ss=r",
+      "density": 800,
+      "densityUnit": "g"
     },
     {
       "crop": "Lettuce",
@@ -2485,7 +2806,9 @@
       "supplier": "Fedco",
       "organic": true,
       "pelleted": false,
-      "website": "https://fedcoseeds.com/seeds/merlox-red-oak-organic-oakleaf-lettuce-2781"
+      "website": "https://fedcoseeds.com/seeds/merlox-red-oak-organic-oakleaf-lettuce-2781",
+      "density": 700,
+      "densityUnit": "g"
     },
     {
       "crop": "Lettuce",
@@ -2493,7 +2816,9 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/products/lettuce-merveille-des-quatre-saisons"
+      "website": "https://uprisingorganics.com/products/lettuce-merveille-des-quatre-saisons",
+      "density": 800,
+      "densityUnit": "g"
     },
     {
       "crop": "Lettuce",
@@ -2501,7 +2826,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/summer-crisp-lettuce-batavia/muir-organic-lettuce-seed-3881G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/summer-crisp-lettuce-batavia/muir-organic-lettuce-seed-3881G.html",
+      "density": 25200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2509,7 +2836,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/summer-crisp-lettuce-batavia/muir-organic-pelleted-lettuce-seed-3881GP.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/summer-crisp-lettuce-batavia/muir-organic-pelleted-lettuce-seed-3881GP.html",
+      "density": 1100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2542,7 +2871,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_72&products_id=105"
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=43_72&products_id=105",
+      "density": 22000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2550,7 +2881,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": true,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-red-sweet-crisp-pelleted-lettuce-seed-3055JP.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-red-sweet-crisp-pelleted-lettuce-seed-3055JP.html",
+      "density": 780,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2567,7 +2900,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-rouge-d-hiver-lettuce.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-rouge-d-hiver-lettuce.html",
+      "density": 24000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2575,7 +2910,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": true,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-red-oakleaf-pelleted-lettuce-seed-3059JP.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/salanova-lettuce/salanova-red-oakleaf-pelleted-lettuce-seed-3059JP.html",
+      "density": 800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2591,7 +2928,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/romaine-lettuce-cos/truchas-organic-lettuce-seed-3880G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/romaine-lettuce-cos/truchas-organic-lettuce-seed-3880G.html",
+      "density": 31100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Lettuce",
@@ -2600,7 +2939,8 @@
       "organic": true,
       "pelleted": true,
       "pelletedApproved": true,
-      "website": "https://www.osborneseed.com/products/truchas-organic-nop-compliant-pellet-lettuce-seeds?_pos=1&_sid=5be874f6b&_ss=r&variant=40616662171714"
+      "website": "https://www.osborneseed.com/products/truchas-organic-nop-compliant-pellet-lettuce-seeds?_pos=1&_sid=5be874f6b&_ss=r&variant=40616662171714",
+      "densityUnit": "ct"
     },
     {
       "crop": "Lettuce",
@@ -2615,7 +2955,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/lettuce/romaine-lettuce-cos/xalbadora-organic-lettuce-seed-4195G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/lettuce/romaine-lettuce-cos/xalbadora-organic-lettuce-seed-4195G.html",
+      "density": 12867,
+      "densityUnit": "lb"
     },
     {
       "crop": "Lettuce",
@@ -2647,7 +2989,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/lambsquarter-magenta-spreen-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/greens/lambsquarter-magenta-spreen-organic/",
+      "density": 1000,
+      "densityUnit": "g"
     },
     {
       "crop": "Malabar Spinach",
@@ -2655,7 +2999,9 @@
       "supplier": "Kitazawa",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.trueleafmarket.com/products/malbar-spinach-seeds-big-round-leaf"
+      "website": "https://www.trueleafmarket.com/products/malbar-spinach-seeds-big-round-leaf",
+      "density": 800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Malabar Spinach",
@@ -2663,7 +3009,9 @@
       "supplier": "Kitazawa",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.trueleafmarket.com/products/malabar-spinach-seeds-green-vines-supreme"
+      "website": "https://www.trueleafmarket.com/products/malabar-spinach-seeds-green-vines-supreme",
+      "density": 800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Malabar Spinach",
@@ -2679,7 +3027,8 @@
       "supplier": "Strictly Medicinal",
       "organic": true,
       "pelleted": false,
-      "website": "https://strictlymedicinalseeds.com/product/spinach-malabar-red-basella-rubra-packet-of-10-seeds/"
+      "website": "https://strictlymedicinalseeds.com/product/spinach-malabar-red-basella-rubra-packet-of-10-seeds/",
+      "densityUnit": "ct"
     },
     {
       "crop": "Marigolds",
@@ -2687,7 +3036,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/marigold/white-swan-f1-marigold-seed-4641.html"
+      "website": "https://www.johnnyseeds.com/flowers/marigold/white-swan-f1-marigold-seed-4641.html",
+      "density": 9200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Marigolds",
@@ -2695,7 +3046,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/marigold/coco-gold-f1-marigold-seed-4097.html"
+      "website": "https://www.johnnyseeds.com/flowers/marigold/coco-gold-f1-marigold-seed-4097.html",
+      "density": 7200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Marigolds",
@@ -2711,7 +3064,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/marigold/giant-orange-marigold-seed-1883.html"
+      "website": "https://www.johnnyseeds.com/flowers/marigold/giant-orange-marigold-seed-1883.html",
+      "density": 6900,
+      "densityUnit": "oz"
     },
     {
       "crop": "Marigolds",
@@ -2719,7 +3074,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/marigold/giant-yellow-marigold-seed-1884.html"
+      "website": "https://www.johnnyseeds.com/flowers/marigold/giant-yellow-marigold-seed-1884.html",
+      "density": 10500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Marigolds",
@@ -2727,7 +3084,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/flowers/marigold-ildkongen-organic/"
+      "website": "https://www.adaptiveseeds.com/product/flowers/marigold-ildkongen-organic/",
+      "density": 270,
+      "densityUnit": "g"
     },
     {
       "crop": "Marigolds",
@@ -2735,7 +3094,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/marigold/lemon-gem-marigold-seed-1410.html"
+      "website": "https://www.johnnyseeds.com/flowers/marigold/lemon-gem-marigold-seed-1410.html",
+      "density": 41800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Marigolds",
@@ -2743,7 +3104,9 @@
       "supplier": "Territorial",
       "organic": false,
       "pelleted": false,
-      "website": "https://territorialseed.com/products/marigold-lemon-gem"
+      "website": "https://territorialseed.com/products/marigold-lemon-gem",
+      "density": 41800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Marigolds",
@@ -2751,7 +3114,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/marigold/red-gem-marigold-seed-1857.html"
+      "website": "https://www.johnnyseeds.com/flowers/marigold/red-gem-marigold-seed-1857.html",
+      "density": 37300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Marigolds",
@@ -2759,7 +3124,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_134&products_id=376"
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_134&products_id=376",
+      "density": 300,
+      "densityUnit": "g"
     },
     {
       "crop": "Marigolds",
@@ -2767,7 +3134,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/flowers/marigold-tangerine-gem-organic/"
+      "website": "https://www.adaptiveseeds.com/product/flowers/marigold-tangerine-gem-organic/",
+      "density": 1000,
+      "densityUnit": "g"
     },
     {
       "crop": "Marigolds",
@@ -2775,7 +3144,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/marigold/white-swan-f1-marigold-seed-4641.html"
+      "website": "https://www.johnnyseeds.com/flowers/marigold/white-swan-f1-marigold-seed-4641.html",
+      "density": 9200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Melon",
@@ -2783,7 +3154,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-blacktail-mtn-watermelon.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-blacktail-mtn-watermelon.html",
+      "density": 500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Melon",
@@ -2792,7 +3165,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/melons/cantaloupe-muskmelon/divergent-organic-f1-melon-seed-3760G.html",
-      "subCategory": "Cantaloupe"
+      "subCategory": "Cantaloupe",
+      "density": 15000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Melon",
@@ -2809,7 +3184,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/melons/melon-farthest-north-mix-organic/",
-      "subCategory": "Mix"
+      "subCategory": "Mix",
+      "density": 30,
+      "densityUnit": "g"
     },
     {
       "crop": "Melon",
@@ -2825,7 +3202,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/watermelons/diploid-watermelons/mini-love-f1-watermelon-seed-3457.html"
+      "website": "https://www.johnnyseeds.com/vegetables/watermelons/diploid-watermelons/mini-love-f1-watermelon-seed-3457.html",
+      "density": 6800,
+      "densityUnit": "lb"
     },
     {
       "crop": "Melon",
@@ -2850,7 +3229,8 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/melon/products/melon-prescott-fond-blanc"
+      "website": "https://uprisingorganics.com/collections/melon/products/melon-prescott-fond-blanc",
+      "densityUnit": "ct"
     },
     {
       "crop": "Melon",
@@ -2865,7 +3245,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/melons/cantaloupe-muskmelon/triton-f1-melon-seed-4182.html"
+      "website": "https://www.johnnyseeds.com/vegetables/melons/cantaloupe-muskmelon/triton-f1-melon-seed-4182.html",
+      "density": 19000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Melon",
@@ -2881,7 +3263,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-true-love-f1-melon.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-true-love-f1-melon.html",
+      "density": 18000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Milkweed",
@@ -2889,7 +3273,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=576"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=576",
+      "density": 130,
+      "densityUnit": "g"
     },
     {
       "crop": "Milkweed",
@@ -2897,7 +3283,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=636"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=636",
+      "density": 145,
+      "densityUnit": "g"
     },
     {
       "crop": "Milkweed",
@@ -2905,7 +3293,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=424"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=424",
+      "density": 360,
+      "densityUnit": "g"
     },
     {
       "crop": "Milkweed",
@@ -2913,7 +3303,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=425"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=425",
+      "density": 360,
+      "densityUnit": "g"
     },
     {
       "crop": "Milkweed",
@@ -2921,7 +3313,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/asclepias-butterfly-weed/swamp-milkweed-asclepias-seed-990.html"
+      "website": "https://www.johnnyseeds.com/flowers/asclepias-butterfly-weed/swamp-milkweed-asclepias-seed-990.html",
+      "density": 6300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Mizuna",
@@ -2959,7 +3353,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/nasturtium/empress-of-india-organic-nasturtium-seed-1824G.html"
+      "website": "https://www.johnnyseeds.com/flowers/nasturtium/empress-of-india-organic-nasturtium-seed-1824G.html",
+      "density": 300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Nausturtium",
@@ -2975,7 +3371,9 @@
       "supplier": "Osborne",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.osborneseed.com/catalog/item-content/88847/salmon-baby/pr_88847/cp_/catalog/flowers/nasturtiums"
+      "website": "https://www.osborneseed.com/catalog/item-content/88847/salmon-baby/pr_88847/cp_/catalog/flowers/nasturtiums",
+      "density": 1000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Nausturtium",
@@ -3007,7 +3405,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/flowers/nigella-exotic-love-in-a-mist-organic/"
+      "website": "https://www.adaptiveseeds.com/product/flowers/nigella-exotic-love-in-a-mist-organic/",
+      "density": 350,
+      "densityUnit": "g"
     },
     {
       "crop": "Okra",
@@ -3023,7 +3423,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-ailsa-craig-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-ailsa-craig-onion.html",
+      "density": 6000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Onion",
@@ -3031,7 +3433,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-amber-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-amber-onion.html",
+      "density": 6000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Onion",
@@ -3047,7 +3451,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-cortland-f1-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cortland-f1-onion.html",
+      "density": 6000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Onion",
@@ -3080,7 +3486,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-carpet-f1-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-carpet-f1-onion.html",
+      "density": 6000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Onion",
@@ -3088,7 +3496,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-long-of-florence-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-long-of-florence-onion.html",
+      "density": 6000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Onion",
@@ -3096,7 +3506,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/onions/full-size-onions/red-spring-f1-onion-seed-4815.html"
+      "website": "https://www.johnnyseeds.com/vegetables/onions/full-size-onions/red-spring-f1-onion-seed-4815.html",
+      "density": 121700,
+      "densityUnit": "lb"
     },
     {
       "crop": "Onion",
@@ -3104,7 +3516,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/onions/onion-rose-de-roscoff-keravel-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/onions/onion-rose-de-roscoff-keravel-organic/",
+      "density": 200,
+      "densityUnit": "g"
     },
     {
       "crop": "Onion",
@@ -3113,7 +3527,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/onions/onion-rose-de-roscoff-keravel-organic/",
-      "subCategory": "Storage"
+      "subCategory": "Storage",
+      "density": 200,
+      "densityUnit": "g"
     },
     {
       "crop": "Onion",
@@ -3129,7 +3545,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-sedona-f1-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-sedona-f1-onion.html",
+      "density": 7000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Onion",
@@ -3147,7 +3565,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://uprisingorganics.com/products/storage-onion-stuttgarter-riesen",
-      "subCategory": "Storage"
+      "subCategory": "Storage",
+      "density": 100000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Onion",
@@ -3163,7 +3583,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-talon-f1-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-talon-f1-onion.html",
+      "density": 99400,
+      "densityUnit": "lb"
     },
     {
       "crop": "Onion",
@@ -3171,7 +3593,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-walla-walla-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-walla-walla-onion.html",
+      "density": 6000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pak Choi",
@@ -3187,7 +3611,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-komatsuna-asian-greens.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-komatsuna-asian-greens.html",
+      "density": 12500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pak Choi",
@@ -3203,7 +3629,9 @@
       "supplier": "Baker Creek",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.rareseeds.com/viola-black-devil-pansy"
+      "website": "https://www.rareseeds.com/viola-black-devil-pansy",
+      "density": 22000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pansy And Violas",
@@ -3211,7 +3639,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/brush-strokes-viola-seed-4562.html"
+      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/brush-strokes-viola-seed-4562.html",
+      "density": 29240,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pansy And Violas",
@@ -3219,7 +3649,8 @@
       "supplier": "Baker Creek",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.rareseeds.com/viola-celestial-blue-pansy"
+      "website": "https://www.rareseeds.com/viola-celestial-blue-pansy",
+      "densityUnit": "ct"
     },
     {
       "crop": "Pansy And Violas",
@@ -3227,7 +3658,9 @@
       "supplier": "Osborne",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.osborneseed.com/products/frizzle-sizzle-lemonberry-untreated-pansy-seeds?_pos=1&_psq=frizzle%20sizzzle%20lem&_ss=e&_v=1.0"
+      "website": "https://www.osborneseed.com/products/frizzle-sizzle-lemonberry-untreated-pansy-seeds?_pos=1&_psq=frizzle%20sizzzle%20lem&_ss=e&_v=1.0",
+      "density": 360285,
+      "densityUnit": "lb"
     },
     {
       "crop": "Pansy And Violas",
@@ -3235,7 +3668,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/frizzle-sizzle-mini-tapestry-viola-seed-4645.html"
+      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/frizzle-sizzle-mini-tapestry-viola-seed-4645.html",
+      "density": 22600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pansy And Violas",
@@ -3243,7 +3678,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/frizzle-sizzle-yellow-blue-swirl-viola-seed-4453.html"
+      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/frizzle-sizzle-yellow-blue-swirl-viola-seed-4453.html",
+      "density": 17000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pansy And Violas",
@@ -3251,7 +3688,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/sorbet-formula-mix-f1-viola-seed-1413.html"
+      "website": "https://www.johnnyseeds.com/flowers/viola-pansy/sorbet-formula-mix-f1-viola-seed-1413.html",
+      "density": 37000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pansy And Violas",
@@ -3259,7 +3698,8 @@
       "supplier": "Baker Creek",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.rareseeds.com/viola-tiger-laeta"
+      "website": "https://www.rareseeds.com/viola-tiger-laeta",
+      "densityUnit": "ct"
     },
     {
       "crop": "Pansy And Violsa",
@@ -3267,7 +3707,8 @@
       "supplier": "Baker Creek",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.rareseeds.com/butterfly-pea-blue-queen"
+      "website": "https://www.rareseeds.com/butterfly-pea-blue-queen",
+      "densityUnit": "ct"
     },
     {
       "crop": "Parsley",
@@ -3276,7 +3717,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/herbs/parsley-cilician-organic/",
-      "subCategory": "Flat leaf"
+      "subCategory": "Flat leaf",
+      "density": 450,
+      "densityUnit": "g"
     },
     {
       "crop": "Parsley",
@@ -3284,7 +3727,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/herbs/parsley-cilician-organic/"
+      "website": "https://www.adaptiveseeds.com/product/herbs/parsley-cilician-organic/",
+      "density": 450,
+      "densityUnit": "g"
     },
     {
       "crop": "Parsley",
@@ -3293,7 +3738,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/herbs/parsley-einfache-schnitt-3-organic/",
-      "subCategory": "Flat leaf"
+      "subCategory": "Flat leaf",
+      "density": 450,
+      "densityUnit": "g"
     },
     {
       "crop": "Parsley",
@@ -3301,7 +3748,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/herbs/parsley-forest-green-organic/"
+      "website": "https://www.adaptiveseeds.com/product/herbs/parsley-forest-green-organic/",
+      "density": 750,
+      "densityUnit": "g"
     },
     {
       "crop": "Parsley",
@@ -3309,7 +3758,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/parsley/leaf-parsley/giant-of-italy-organic-parsley-seed-2390G.html"
+      "website": "https://www.johnnyseeds.com/herbs/parsley/leaf-parsley/giant-of-italy-organic-parsley-seed-2390G.html",
+      "density": 15300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Parsley",
@@ -3317,7 +3768,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-laica-parsley.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-laica-parsley.html",
+      "density": 15000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Parsley",
@@ -3343,7 +3796,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=131"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=131",
+      "density": 14000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Parsnip",
@@ -3351,7 +3806,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-halblange-parsnip.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-halblange-parsnip.html",
+      "density": 5776,
+      "densityUnit": "oz"
     },
     {
       "crop": "Parsnip",
@@ -3359,7 +3816,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-panorama-f1-parsnip.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-panorama-f1-parsnip.html",
+      "density": 5776,
+      "densityUnit": "oz"
     },
     {
       "crop": "Passion Flower",
@@ -3400,7 +3859,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/shoots/tendril-pea-organic-shoot-seed-3165SG.html",
-      "subCategory": "Tendril"
+      "subCategory": "Tendril",
+      "density": 1950,
+      "densityUnit": "lb"
     },
     {
       "crop": "Pear",
@@ -3415,7 +3876,9 @@
       "supplier": "Territorial",
       "organic": true,
       "pelleted": false,
-      "website": "https://territorialseed.com/products/pea-cascadia"
+      "website": "https://territorialseed.com/products/pea-cascadia",
+      "density": 2000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Peas",
@@ -3431,7 +3894,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/peas/snap-peas/super-sugar-snap-pea-seed-2855.html"
+      "website": "https://www.johnnyseeds.com/vegetables/peas/snap-peas/super-sugar-snap-pea-seed-2855.html",
+      "density": 1800,
+      "densityUnit": "lb"
     },
     {
       "crop": "Pepper",
@@ -3482,7 +3947,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/bastan-organic-f1-poblano-pepper-seed-3274G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/bastan-organic-f1-poblano-pepper-seed-3274G.html",
+      "density": 55000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Pepper",
@@ -3516,7 +3983,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/black-magic-organic-f1-jalapeno-pepper-seed-4718G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/black-magic-organic-f1-jalapeno-pepper-seed-4718G.html",
+      "density": 64300,
+      "densityUnit": "lb"
     },
     {
       "crop": "Pepper",
@@ -3532,7 +4001,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/peppers/sweet-peppers/carmen-organic-f1-corno-di-toro-pepper-seed-2993G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/sweet-peppers/carmen-organic-f1-corno-di-toro-pepper-seed-2993G.html",
+      "density": 4500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pepper",
@@ -3565,7 +4036,8 @@
       "organic": true,
       "pelleted": false,
       "website": "https://uprisingorganics.com/products/sweet-pepper-elephants-ear",
-      "subCategory": "Sweet"
+      "subCategory": "Sweet",
+      "densityUnit": "ct"
     },
     {
       "crop": "Pepper",
@@ -3573,7 +4045,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/helios-f1-habanero-pepper-seed-3219.html"
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/helios-f1-habanero-pepper-seed-3219.html",
+      "density": 6050,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pepper",
@@ -3581,7 +4055,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/hungarian-hot-wax-organic-pepper-seed-3092G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/hot-peppers/hungarian-hot-wax-organic-pepper-seed-3092G.html",
+      "density": 68900,
+      "densityUnit": "lb"
     },
     {
       "crop": "Pepper",
@@ -3631,7 +4107,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/peppers/sweet-bell-peppers/olly-organic-f1-bell-pepper-seed-4761G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/peppers/sweet-bell-peppers/olly-organic-f1-bell-pepper-seed-4761G.html",
+      "density": 50300,
+      "densityUnit": "lb"
     },
     {
       "crop": "Pepper",
@@ -3640,7 +4118,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/peppers/sweet-pepper-peace-bell-organic/",
-      "subCategory": "Bell"
+      "subCategory": "Bell",
+      "density": 100,
+      "densityUnit": "g"
     },
     {
       "crop": "Pepper",
@@ -3649,7 +4129,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-primero-red-f1-habanero-pepper.html",
-      "subCategory": "Hot"
+      "subCategory": "Hot",
+      "density": 6500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Pepper",
@@ -3658,7 +4140,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.osborneseed.com/collections/organic-garden-peppers-seed/products/shishito-organic-pepper-seeds",
-      "subCategory": "Hot"
+      "subCategory": "Hot",
+      "density": 71215,
+      "densityUnit": "lb"
     },
     {
       "crop": "Pepper",
@@ -3674,7 +4158,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-shishito-pepper.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-shishito-pepper.html",
+      "density": 71215,
+      "densityUnit": "lb"
     },
     {
       "crop": "Petunias",
@@ -3738,7 +4224,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-german-butterball-potato.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-german-butterball-potato.html",
+      "density": 9,
+      "densityUnit": "lb"
     },
     {
       "crop": "Potato",
@@ -3754,7 +4242,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-german-butterball-potato.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-german-butterball-potato.html",
+      "density": 9,
+      "densityUnit": "lb"
     },
     {
       "crop": "Potato",
@@ -3779,7 +4269,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://irisheyesgardenseeds.com/product/viking-purple-organic/",
-      "subCategory": "Early"
+      "subCategory": "Early",
+      "density": 10,
+      "densityUnit": "lb"
     },
     {
       "crop": "Potato",
@@ -3803,7 +4295,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/potatoes/purple-viking-organic-seed-potatoes-3424G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/potatoes/purple-viking-organic-seed-potatoes-3424G.html",
+      "density": 9,
+      "densityUnit": "lb"
     },
     {
       "crop": "Potato",
@@ -3811,7 +4305,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/potatoes/dark-red-norland-organic-seed-potatoes-552G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/potatoes/dark-red-norland-organic-seed-potatoes-552G.html",
+      "density": 9,
+      "densityUnit": "lb"
     },
     {
       "crop": "Queen Anne's Lace",
@@ -3819,7 +4315,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_151&products_id=533"
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=93_151&products_id=533",
+      "density": 1071,
+      "densityUnit": "g"
     },
     {
       "crop": "Radicchio",
@@ -3828,7 +4326,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://uprisingorganics.com/products/radicchio-castelfranco-4-20?_pos=7&_sid=e9e99d278&_ss=r",
-      "subCategory": "90 VARIEGATO DI CASTELFRANCO"
+      "subCategory": "90 VARIEGATO DI CASTELFRANCO",
+      "density": 13000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radicchio",
@@ -3886,7 +4386,9 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/vegetables/products/radicchio-castelfranco-4-21?_pos=1&_sid=93d8693b4&_ss=r"
+      "website": "https://uprisingorganics.com/collections/vegetables/products/radicchio-castelfranco-4-21?_pos=1&_sid=93d8693b4&_ss=r",
+      "density": 13000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radicchio",
@@ -3904,7 +4406,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://uprisingorganics.com/products/radicchio-treviso-precoce-4-11?_pos=13&_sid=e9e99d278&_ss=r",
-      "subCategory": "110 ROSSO DI TREVISO PRECOCE"
+      "subCategory": "110 ROSSO DI TREVISO PRECOCE",
+      "density": 13000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radicchio",
@@ -3913,7 +4417,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://uprisingorganics.com/products/radicchio-treviso-precoce-4-10?_pos=15&_sid=e9e99d278&_ss=r",
-      "subCategory": "90 ROSSO DI TREVISO PRECOCE"
+      "subCategory": "90 ROSSO DI TREVISO PRECOCE",
+      "density": 13000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radicchio",
@@ -3929,7 +4435,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-daikon.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-daikon.html",
+      "density": 1800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radish",
@@ -3945,7 +4453,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-french-breakfast-radish.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-french-breakfast-radish.html",
+      "density": 2650,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radish",
@@ -3962,7 +4472,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/radishes/radish-okhura-winter-queen-daikon-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/radishes/radish-okhura-winter-queen-daikon-organic/",
+      "density": 50,
+      "densityUnit": "g"
     },
     {
       "crop": "Radish",
@@ -3970,7 +4482,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-patricia-radish.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-patricia-radish.html",
+      "density": 2650,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radish",
@@ -3978,7 +4492,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/radishes/round-radishes/pearl-organic-f1-radish-seed-3456G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/radishes/round-radishes/pearl-organic-f1-radish-seed-3456G.html",
+      "density": 60000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Radish",
@@ -3986,7 +4502,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/radishes/radish-rudi-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/radishes/radish-rudi-organic/",
+      "density": 113,
+      "densityUnit": "g"
     },
     {
       "crop": "Radish",
@@ -3994,7 +4512,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-schwarzer-runder-radish.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-schwarzer-runder-radish.html",
+      "density": 1800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radish",
@@ -4003,7 +4523,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-schwarzer-runder-radish.html",
-      "subCategory": "Winter"
+      "subCategory": "Winter",
+      "density": 2650,
+      "densityUnit": "oz"
     },
     {
       "crop": "Radish",
@@ -4011,7 +4533,8 @@
       "supplier": "Baker Creek",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.rareseeds.com/radish-chinese-shawo-fruit"
+      "website": "https://www.rareseeds.com/radish-chinese-shawo-fruit",
+      "densityUnit": "ct"
     },
     {
       "crop": "Radish",
@@ -4028,7 +4551,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-sora-radish.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-sora-radish.html",
+      "density": 48200,
+      "densityUnit": "lb"
     },
     {
       "crop": "Rapini",
@@ -4044,7 +4569,8 @@
       "supplier": "Seed Savers",
       "organic": true,
       "pelleted": false,
-      "website": "https://shop.seedsavers.org/rat-tail-purple-organic-radish"
+      "website": "https://shop.seedsavers.org/rat-tail-purple-organic-radish",
+      "densityUnit": "ct"
     },
     {
       "crop": "Rat Tail Radish",
@@ -4086,7 +4612,9 @@
       "supplier": "Kitazawa",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.trueleafmarket.com/products/hibiscus-seeds-asian-sour-leaf-roselle"
+      "website": "https://www.trueleafmarket.com/products/hibiscus-seeds-asian-sour-leaf-roselle",
+      "density": 720,
+      "densityUnit": "oz"
     },
     {
       "crop": "Rosemary",
@@ -4190,7 +4718,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-helenor-rutabaga.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-helenor-rutabaga.html",
+      "density": 1000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Rutabaga",
@@ -4198,7 +4728,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/rutabaga-major-dunne-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/rutabaga-major-dunne-organic/",
+      "density": 250,
+      "densityUnit": "g"
     },
     {
       "crop": "Rutabaga",
@@ -4231,7 +4763,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/saltwort/saltwort-herb-seed-2677.11.html"
+      "website": "https://www.johnnyseeds.com/herbs/saltwort/saltwort-herb-seed-2677.11.html",
+      "density": 7700,
+      "densityUnit": "oz"
     },
     {
       "crop": "Salsola",
@@ -4247,7 +4781,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/herbs/saltwort/saltwort-herb-seed-2677.html"
+      "website": "https://www.johnnyseeds.com/herbs/saltwort/saltwort-herb-seed-2677.html",
+      "density": 7700,
+      "densityUnit": "oz"
     },
     {
       "crop": "Scabiosa",
@@ -4255,7 +4791,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=749"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=749",
+      "density": 444,
+      "densityUnit": "g"
     },
     {
       "crop": "Scabiosa",
@@ -4263,7 +4801,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=699"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=699",
+      "density": 25,
+      "densityUnit": "oz"
     },
     {
       "crop": "Scallion",
@@ -4271,7 +4811,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-parade-bunching-onion.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-parade-bunching-onion.html",
+      "density": 200000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Shallots",
@@ -4279,7 +4821,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/shallots/conservor-organic-f1-shallot-seed-2703G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/shallots/conservor-organic-f1-shallot-seed-2703G.html",
+      "density": 125200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Shallots",
@@ -4287,15 +4831,19 @@
       "supplier": "High Mowing",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-conservor-f1-shallots.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-conservor-f1-shallots.html",
+      "density": 125200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Shallots",
-      "name": "Crème Brulee",
+      "name": "Cr\u00e8me Brulee",
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/shallots/cre%CC%80me-bru%CC%82le%CC%81e-f1-shallot-seed-4575.html"
+      "website": "https://www.johnnyseeds.com/vegetables/shallots/cre%CC%80me-bru%CC%82le%CC%81e-f1-shallot-seed-4575.html",
+      "density": 111700,
+      "densityUnit": "oz"
     },
     {
       "crop": "Shallots",
@@ -4312,7 +4860,8 @@
       "supplier": "Osborne",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.osborneseed.com/products/chantilly-cream-yellow-untreated-snapdragon-seeds?_pos=1&_sid=3d44097cb&_ss=r"
+      "website": "https://www.osborneseed.com/products/chantilly-cream-yellow-untreated-snapdragon-seeds?_pos=1&_sid=3d44097cb&_ss=r",
+      "densityUnit": "ct"
     },
     {
       "crop": "Snapdragons",
@@ -4320,7 +4869,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-lion-s-mouth-snapdragon.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-lion-s-mouth-snapdragon.html",
+      "density": 100000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Snapdragons",
@@ -4328,7 +4879,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/snapdragon/madame-butterfly-mix-f1-snapdragon-seed-1930.html"
+      "website": "https://www.johnnyseeds.com/flowers/snapdragon/madame-butterfly-mix-f1-snapdragon-seed-1930.html",
+      "density": 154000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Snapdragons",
@@ -4336,7 +4889,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/flowers/snapdragon-orange-wonder-organic/"
+      "website": "https://www.adaptiveseeds.com/product/flowers/snapdragon-orange-wonder-organic/",
+      "density": 4500,
+      "densityUnit": "g"
     },
     {
       "crop": "Snapdragons",
@@ -4344,7 +4899,8 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/products/snapdragon-royal-bride"
+      "website": "https://uprisingorganics.com/products/snapdragon-royal-bride",
+      "densityUnit": "ct"
     },
     {
       "crop": "Sorghum-sudan Grass",
@@ -4360,7 +4916,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?cPath=62&products_id=163"
+      "website": "https://www.wildgardenseed.com/product_info.php?cPath=62&products_id=163",
+      "density": 28000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Sorrel",
@@ -4368,7 +4926,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-veined-sorrel.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-red-veined-sorrel.html",
+      "density": 11200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Spinach",
@@ -4391,7 +4951,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-regiment-f1-spinach.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-regiment-f1-spinach.html",
+      "density": 2200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Spinach",
@@ -4407,7 +4969,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/spinach/spinach-verdil-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/spinach/spinach-verdil-organic/",
+      "density": 72,
+      "densityUnit": "g"
     },
     {
       "crop": "Spinach",
@@ -4431,7 +4995,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-bush-delicata-squash.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-bush-delicata-squash.html",
+      "density": 425,
+      "densityUnit": "oz"
     },
     {
       "crop": "Squash",
@@ -4439,7 +5005,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-butterscotch-pmr-f1-butternut-squash.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-butterscotch-pmr-f1-butternut-squash.html",
+      "density": 260,
+      "densityUnit": "oz"
     },
     {
       "crop": "Squash",
@@ -4463,7 +5031,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-honey-boat-winter-squash.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-honey-boat-winter-squash.html",
+      "density": 425,
+      "densityUnit": "oz"
     },
     {
       "crop": "Squash",
@@ -4480,7 +5050,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-honeynut-butternut-squash.html",
-      "subCategory": "Butternut"
+      "subCategory": "Butternut",
+      "density": 135,
+      "densityUnit": "oz"
     },
     {
       "crop": "Squash",
@@ -4505,7 +5077,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/mambo-organic-f1-kabocha-squash-seed-4304G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/mambo-organic-f1-kabocha-squash-seed-4304G.html",
+      "density": 2100,
+      "densityUnit": "lb"
     },
     {
       "crop": "Squash",
@@ -4521,7 +5095,9 @@
       "supplier": "Territorial",
       "organic": false,
       "pelleted": false,
-      "website": "https://territorialseed.com/products/pumpkin-neon"
+      "website": "https://territorialseed.com/products/pumpkin-neon",
+      "density": 5,
+      "densityUnit": "g"
     },
     {
       "crop": "Squash",
@@ -4537,7 +5113,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-nutterbutter-bnut-squash.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-nutterbutter-bnut-squash.html",
+      "density": 135,
+      "densityUnit": "oz"
     },
     {
       "crop": "Squash",
@@ -4546,7 +5124,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-red-kuri-winter-squash.html",
-      "subCategory": "Hubbard"
+      "subCategory": "Hubbard",
+      "density": 90,
+      "densityUnit": "oz"
     },
     {
       "crop": "Squash",
@@ -4579,7 +5159,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-sugar-dumpling-f1-squash.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-sugar-dumpling-f1-squash.html",
+      "density": 425,
+      "densityUnit": "oz"
     },
     {
       "crop": "Squash",
@@ -4587,7 +5169,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/sunshine-organic-f1-kabocha-squash-seed-2998G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/sunshine-organic-f1-kabocha-squash-seed-2998G.html",
+      "density": 3000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Squash",
@@ -4603,7 +5187,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/tetsukabuto-f1-hubbard-squash-seed-3578.html"
+      "website": "https://www.johnnyseeds.com/vegetables/squash/winter-squash/tetsukabuto-f1-hubbard-squash-seed-3578.html",
+      "density": 2200,
+      "densityUnit": "lb"
     },
     {
       "crop": "Squash",
@@ -4636,7 +5222,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-honeynut-butternut-squash.html",
-      "subCategory": "Butternut"
+      "subCategory": "Butternut",
+      "density": 300,
+      "densityUnit": "oz"
     },
     {
       "crop": "Squash - Summer",
@@ -4644,7 +5232,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-dunja-f1-zucchini.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-dunja-f1-zucchini.html",
+      "density": 3950,
+      "densityUnit": "lb"
     },
     {
       "crop": "Stock",
@@ -4652,7 +5242,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/stock/antique-pink-stock-seed-4094.html"
+      "website": "https://www.johnnyseeds.com/flowers/stock/antique-pink-stock-seed-4094.html",
+      "density": 13800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Stock",
@@ -4660,7 +5252,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/stock/iron-pastel-mix-stock-seed-4649.html"
+      "website": "https://www.johnnyseeds.com/flowers/stock/iron-pastel-mix-stock-seed-4649.html",
+      "density": 16600,
+      "densityUnit": "oz"
     },
     {
       "crop": "Stock",
@@ -4668,7 +5262,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/stock/katz-formula-mix-stock-seed-3725.html"
+      "website": "https://www.johnnyseeds.com/flowers/stock/katz-formula-mix-stock-seed-3725.html",
+      "density": 17000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Stock",
@@ -4683,7 +5279,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/flowers/strawflower-monstrosum-mix-organic/"
+      "website": "https://www.adaptiveseeds.com/product/flowers/strawflower-monstrosum-mix-organic/",
+      "density": 1000,
+      "densityUnit": "g"
     },
     {
       "crop": "Strawflower",
@@ -4691,7 +5289,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-roggli-riesen-strawflower.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-roggli-riesen-strawflower.html",
+      "density": 50000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Strawflower",
@@ -4699,7 +5299,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/strawflower/vintage-white-organic-strawflower-seed-3330G.html"
+      "website": "https://www.johnnyseeds.com/flowers/strawflower/vintage-white-organic-strawflower-seed-3330G.html",
+      "density": 54500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Strawflower",
@@ -4707,7 +5309,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=739"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=739",
+      "density": 800,
+      "densityUnit": "g"
     },
     {
       "crop": "Summer Squash",
@@ -4715,7 +5319,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/butterfingers-organic-f1-yellow-summer-squash-seed-4306G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/butterfingers-organic-f1-yellow-summer-squash-seed-4306G.html",
+      "density": 4800,
+      "densityUnit": "lb"
     },
     {
       "crop": "Summer Squash",
@@ -4724,7 +5330,8 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.row7seeds.com/products/centercut-squash",
-      "subCategory": "Tromboncino"
+      "subCategory": "Tromboncino",
+      "densityUnit": "ct"
     },
     {
       "crop": "Summer Squash",
@@ -4733,7 +5340,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-cocozelle-zucchini.html",
-      "subCategory": "Zucchini"
+      "subCategory": "Zucchini",
+      "density": 160,
+      "densityUnit": "oz"
     },
     {
       "crop": "Summer Squash",
@@ -4741,7 +5350,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/costata-romanesco-zucchini-squash-seed-2053.html"
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/costata-romanesco-zucchini-squash-seed-2053.html",
+      "density": 2700,
+      "densityUnit": "lb"
     },
     {
       "crop": "Summer Squash",
@@ -4756,7 +5367,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-costata-romanesc-zucchini.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-costata-romanesc-zucchini.html",
+      "density": 185,
+      "densityUnit": "oz"
     },
     {
       "crop": "Summer Squash",
@@ -4765,7 +5378,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.highmowingseeds.com/organic-non-gmo-costata-romanesc-zucchini.html",
-      "subCategory": "Zucchini"
+      "subCategory": "Zucchini",
+      "density": 260,
+      "densityUnit": "oz"
     },
     {
       "crop": "Summer Squash",
@@ -4773,7 +5388,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/dunja-organic-f1-zucchini-squash-seed-3843G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/dunja-organic-f1-zucchini-squash-seed-3843G.html",
+      "density": 3950,
+      "densityUnit": "lb"
     },
     {
       "crop": "Summer Squash",
@@ -4797,7 +5414,9 @@
       "supplier": "Territorial",
       "organic": false,
       "pelleted": false,
-      "website": "https://territorialseed.com/products/squash-summer-sunburst"
+      "website": "https://territorialseed.com/products/squash-summer-sunburst",
+      "density": 7,
+      "densityUnit": "g"
     },
     {
       "crop": "Summer Squash",
@@ -4805,7 +5424,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/tempest-organic-f1-yellow-summer-squash-seed-3256G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/tempest-organic-f1-yellow-summer-squash-seed-3256G.html",
+      "density": 4500,
+      "densityUnit": "lb"
     },
     {
       "crop": "Summer Squash",
@@ -4813,7 +5434,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/y-star-organic-f1-patty-pan-squash-seed-3855G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/y-star-organic-f1-patty-pan-squash-seed-3855G.html",
+      "density": 5700,
+      "densityUnit": "lb"
     },
     {
       "crop": "Summer Squash",
@@ -4821,7 +5444,9 @@
       "supplier": "Siskiyou",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.siskiyouseeds.com/collections/squash-croockneck/products/summer-squash-yellow-crookneck"
+      "website": "https://www.siskiyouseeds.com/collections/squash-croockneck/products/summer-squash-yellow-crookneck",
+      "density": 250,
+      "densityUnit": "oz"
     },
     {
       "crop": "Summer Squash",
@@ -4830,7 +5455,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/squash/summer-squash/zephyr-f1-yellow-summer-squash-seed-2217.html",
-      "subCategory": "Yellow"
+      "subCategory": "Yellow",
+      "density": 4600,
+      "densityUnit": "lb"
     },
     {
       "crop": "Sunflowers",
@@ -4847,7 +5474,8 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/sunflower/products/sunflower-garden-anarchy-mix?_pos=1&_sid=4b1e24747&_ss=r"
+      "website": "https://uprisingorganics.com/collections/sunflower/products/sunflower-garden-anarchy-mix?_pos=1&_sid=4b1e24747&_ss=r",
+      "densityUnit": "ct"
     },
     {
       "crop": "Sunflowers",
@@ -4855,7 +5483,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-goldy-double-sunflower.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-goldy-double-sunflower.html",
+      "density": 550,
+      "densityUnit": "oz"
     },
     {
       "crop": "Sunflowers",
@@ -4863,7 +5493,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/procut-peach-f1-sunflower-seed-4445.html"
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/procut-peach-f1-sunflower-seed-4445.html",
+      "density": 400,
+      "densityUnit": "oz"
     },
     {
       "crop": "Sunflowers",
@@ -4881,7 +5513,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/red-hedge-f1-sunflower-seed-1941.html",
-      "subCategory": "Red"
+      "subCategory": "Red",
+      "density": 800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Sunflowers",
@@ -4898,7 +5532,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/shock-o-lat-f1-sunflower-seed-4731.html"
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/shock-o-lat-f1-sunflower-seed-4731.html",
+      "density": 500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Sunflowers",
@@ -4906,7 +5542,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/strawberry-blonde-f1-sunflower-seed-1744.html"
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/strawberry-blonde-f1-sunflower-seed-1744.html",
+      "density": 750,
+      "densityUnit": "oz"
     },
     {
       "crop": "Sunflowers",
@@ -4914,7 +5552,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/summer-breeze-mix-sunflower-seed-4782.html"
+      "website": "https://www.johnnyseeds.com/flowers/sunflowers/tall-sunflowers/summer-breeze-mix-sunflower-seed-4782.html",
+      "density": 500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Sunflowers",
@@ -4930,7 +5570,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/swiss-chard/bright-lights-swiss-chard-seed-703D.html"
+      "website": "https://www.johnnyseeds.com/vegetables/swiss-chard/bright-lights-swiss-chard-seed-703D.html",
+      "density": 30400,
+      "densityUnit": "lb"
     },
     {
       "crop": "Swiss Chard",
@@ -4938,7 +5580,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-fordhook-giant-chard.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-fordhook-giant-chard.html",
+      "density": 20000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Swiss Chard",
@@ -4946,7 +5590,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-ruby-rhubarb-red-chard.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-ruby-rhubarb-red-chard.html",
+      "density": 1500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Swiss Chard",
@@ -4954,7 +5600,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-rhubarb-supreme-chard.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-rhubarb-supreme-chard.html",
+      "density": 1500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Swiss Chard",
@@ -4962,7 +5610,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-sunset-chard.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-sunset-chard.html",
+      "density": 1500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Talinum",
@@ -4970,7 +5620,9 @@
       "supplier": "Garden Hoard",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.gardenhoard.com/jewels-of-opar-aka-fame-flower-seeds-certified-organic.html"
+      "website": "https://www.gardenhoard.com/jewels-of-opar-aka-fame-flower-seeds-certified-organic.html",
+      "density": 87800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Talinum",
@@ -4978,7 +5630,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/talinum/limon-talinum-seed-4411.html"
+      "website": "https://www.johnnyseeds.com/flowers/talinum/limon-talinum-seed-4411.html",
+      "density": 87800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tatsoi",
@@ -4986,7 +5640,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/red-cloud-f1-asian-green-seed-3341.html"
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/red-cloud-f1-asian-green-seed-3341.html",
+      "density": 27000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Tatsoi",
@@ -4994,7 +5650,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/red-cloud-f1-asian-green-seed-3341.html"
+      "website": "https://www.johnnyseeds.com/vegetables/greens/asian-greens/red-cloud-f1-asian-green-seed-3341.html",
+      "density": 27000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Tatsoi",
@@ -5018,7 +5676,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatillos/de-milpa-organic-tomatillo-seed-2075.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatillos/de-milpa-organic-tomatillo-seed-2075.html",
+      "density": 18800,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomatillo",
@@ -5034,7 +5694,8 @@
       "supplier": "Uprising",
       "organic": true,
       "pelleted": false,
-      "website": "https://uprisingorganics.com/collections/vegetables/products/tomatillo-queen-of-malinalco?_pos=10&_sid=8b390d579&_ss=r"
+      "website": "https://uprisingorganics.com/collections/vegetables/products/tomatillo-queen-of-malinalco?_pos=10&_sid=8b390d579&_ss=r",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomatillo",
@@ -5042,7 +5703,8 @@
       "supplier": "Fedco",
       "organic": true,
       "pelleted": false,
-      "website": "https://fedcoseeds.com/seeds/queen-of-malinalco-organic-tomatillo-4010"
+      "website": "https://fedcoseeds.com/seeds/queen-of-malinalco-organic-tomatillo-4010",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomatillo",
@@ -5050,7 +5712,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-toma-verde-tomatillo.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-toma-verde-tomatillo.html",
+      "density": 350,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5123,7 +5787,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/black-cherry-organic-tomato-seed-88G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/black-cherry-organic-tomato-seed-88G.html",
+      "density": 17668,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5139,7 +5805,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/blush-organic-tomato-seed-3517G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/blush-organic-tomato-seed-3517G.html",
+      "density": 19000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5156,7 +5824,8 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.gardenhoard.com/tomato-brad-s-atomic-grape-seeds.html",
-      "subCategory": "Grape"
+      "subCategory": "Grape",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomato",
@@ -5164,7 +5833,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-brandywine-tomato.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-brandywine-tomato.html",
+      "density": 225,
+      "densityUnit": "g"
     },
     {
       "crop": "Tomato",
@@ -5189,7 +5860,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-cherokee-purple-tomato.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-cherokee-purple-tomato.html",
+      "density": 225,
+      "densityUnit": "g"
     },
     {
       "crop": "Tomato",
@@ -5229,7 +5902,8 @@
       "supplier": "Wild Mountain",
       "organic": false,
       "pelleted": false,
-      "website": "https://wildmountainseeds.com/product/cosmic-mountain-sunset/"
+      "website": "https://wildmountainseeds.com/product/cosmic-mountain-sunset/",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomato",
@@ -5269,7 +5943,9 @@
       "supplier": "Territorial",
       "organic": true,
       "pelleted": false,
-      "website": "https://territorialseed.com/products/tomato-early-cherry"
+      "website": "https://territorialseed.com/products/tomato-early-cherry",
+      "density": 300,
+      "densityUnit": "g"
     },
     {
       "crop": "Tomato",
@@ -5285,7 +5961,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/heirloom-tomatoes/german-johnson-organic-tomato-seed-3815G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/heirloom-tomatoes/german-johnson-organic-tomato-seed-3815G.html",
+      "density": 12100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5293,7 +5971,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/geronimo-f1-tomato-seed-2794.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/geronimo-f1-tomato-seed-2794.html",
+      "density": 8200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5301,7 +5981,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/ginfiz-organic-f1-tomato-seed-4605G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/ginfiz-organic-f1-tomato-seed-4605G.html",
+      "density": 139600,
+      "densityUnit": "lb"
     },
     {
       "crop": "Tomato",
@@ -5334,7 +6016,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/hot-streak-f1-tomato-seed-4760.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/hot-streak-f1-tomato-seed-4760.html",
+      "density": 150000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Tomato",
@@ -5352,7 +6036,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/indigo-cherry-drops-organic-tomato-seed-3233G.html",
-      "subCategory": "Cherry"
+      "subCategory": "Cherry",
+      "density": 16400,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5400,7 +6086,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/marbonne-f1-tomato-seed-3225.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/marbonne-f1-tomato-seed-3225.html",
+      "density": 8900,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5408,7 +6096,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/margold-f1-tomato-seed-3177.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/margold-f1-tomato-seed-3177.html",
+      "density": 9200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5416,7 +6106,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/marnero-f1-tomato-seed-3176.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/beefsteak-tomatoes/marnero-f1-tomato-seed-3176.html",
+      "density": 13100,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5459,7 +6151,9 @@
       "supplier": "Territorial",
       "organic": true,
       "pelleted": false,
-      "website": "https://territorialseed.com/products/tomato-mortgage-lifter"
+      "website": "https://territorialseed.com/products/tomato-mortgage-lifter",
+      "density": 100000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Tomato",
@@ -5477,7 +6171,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/tomatoes/heirloom-tomatoes/nepal-organic-tomato-seed-748.html",
-      "subCategory": "Red Medium"
+      "subCategory": "Red Medium",
+      "density": 10700,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5485,7 +6181,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-orange-glad-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-orange-glad-organic/",
+      "density": 300,
+      "densityUnit": "g"
     },
     {
       "crop": "Tomato",
@@ -5494,7 +6192,8 @@
       "organic": false,
       "pelleted": false,
       "website": "https://growersblend.ca/shop-seeds/ols/products/painted-pink-tomato",
-      "subCategory": "Cherry"
+      "subCategory": "Cherry",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomato",
@@ -5529,7 +6228,8 @@
       "organic": true,
       "pelleted": false,
       "website": "https://uprisingorganics.com/products/tomato-pinky?_pos=1&_sid=ad1b65c97&_ss=r",
-      "subCategory": "Pink Clustering"
+      "subCategory": "Pink Clustering",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomato",
@@ -5546,7 +6246,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.osborneseed.com/catalog/item-content/78810/pork-chop/pr_78810",
-      "subCategory": "Beefsteak"
+      "subCategory": "Beefsteak",
+      "density": 147000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Tomato",
@@ -5570,7 +6272,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/sakura-organic-f1-tomato-seed-3853G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/sakura-organic-f1-tomato-seed-3853G.html",
+      "density": 14500,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5579,7 +6283,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.seedsavers.org/salvaterras-select-organic-tomato",
-      "subCategory": "Paste"
+      "subCategory": "Paste",
+      "density": 15000,
+      "densityUnit": "lb"
     },
     {
       "crop": "Tomato",
@@ -5604,7 +6310,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-spring-king-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-spring-king-organic/",
+      "density": 300,
+      "densityUnit": "g"
     },
     {
       "crop": "Tomato",
@@ -5620,7 +6328,8 @@
       "supplier": "Osborne",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.osborneseed.com/products/sun-dipper-f1-untreated-tomato-seeds"
+      "website": "https://www.osborneseed.com/products/sun-dipper-f1-untreated-tomato-seeds",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomato",
@@ -5629,7 +6338,9 @@
       "organic": true,
       "pelleted": false,
       "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-sungella-organic/",
-      "subCategory": "Orange Large Cherry"
+      "subCategory": "Orange Large Cherry",
+      "density": 400,
+      "densityUnit": "g"
     },
     {
       "crop": "Tomato",
@@ -5638,7 +6349,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/sun-gold-f1-tomato-seed-770.html",
-      "subCategory": "Orange Cherry"
+      "subCategory": "Orange Cherry",
+      "density": 15950,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5647,7 +6360,9 @@
       "organic": false,
       "pelleted": false,
       "website": "https://territorialseed.com/products/tomato-sweet-million",
-      "subCategory": "Cherry"
+      "subCategory": "Cherry",
+      "density": 16000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5664,7 +6379,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-tiffen-mennonite-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/tomatoes/tomato-tiffen-mennonite-organic/",
+      "density": 300,
+      "densityUnit": "g"
     },
     {
       "crop": "Tomato",
@@ -5682,7 +6399,8 @@
       "organic": false,
       "pelleted": false,
       "website": "https://www.totallytomato.com/product/T00786/124",
-      "subCategory": "Pear"
+      "subCategory": "Pear",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomato",
@@ -5690,7 +6408,9 @@
       "supplier": "Johnny's",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/washington-cherry-organic-tomato-seed-764.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/cherry-tomatoes/washington-cherry-organic-tomato-seed-764.html",
+      "density": 15250,
+      "densityUnit": "oz"
     },
     {
       "crop": "Tomato",
@@ -5698,7 +6418,8 @@
       "supplier": "Southern Exposure",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.southernexposure.com/products/west-virginia-63-centennial-tomato/"
+      "website": "https://www.southernexposure.com/products/west-virginia-63-centennial-tomato/",
+      "densityUnit": "ct"
     },
     {
       "crop": "Tomato",
@@ -5714,7 +6435,9 @@
       "supplier": "Johnnys",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/woodstock-organic-f1-tomato-seed-4503G.html"
+      "website": "https://www.johnnyseeds.com/vegetables/tomatoes/specialty-tomatoes/woodstock-organic-f1-tomato-seed-4503G.html",
+      "density": 118300,
+      "densityUnit": "lb"
     },
     {
       "crop": "Tomato",
@@ -5749,7 +6472,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/turnip-aprovecho-hardy-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/turnip-aprovecho-hardy-organic/",
+      "density": 250,
+      "densityUnit": "g"
     },
     {
       "crop": "Turnip",
@@ -5765,7 +6490,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/vegetables/turnips/hakurei-f1-turnip-seed-706.html"
+      "website": "https://www.johnnyseeds.com/vegetables/turnips/hakurei-f1-turnip-seed-706.html",
+      "density": 180650,
+      "densityUnit": "lb"
     },
     {
       "crop": "Turnip",
@@ -5773,7 +6500,9 @@
       "supplier": "Adaptive",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/turnip-tokyo-market-organic/"
+      "website": "https://www.adaptiveseeds.com/product/vegetables/turnips-rutabagas/turnip-tokyo-market-organic/",
+      "density": 250,
+      "densityUnit": "g"
     },
     {
       "crop": "Turnip",
@@ -5781,7 +6510,9 @@
       "supplier": "High Mowing",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.highmowingseeds.com/organic-non-gmo-tokyo-market-turnip.html"
+      "website": "https://www.highmowingseeds.com/organic-non-gmo-tokyo-market-turnip.html",
+      "density": 11000,
+      "densityUnit": "oz"
     },
     {
       "crop": "Yarrow",
@@ -5789,7 +6520,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=516"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=516",
+      "density": 6000,
+      "densityUnit": "g"
     },
     {
       "crop": "Yarrow",
@@ -5797,7 +6530,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=413"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=413",
+      "density": 6000,
+      "densityUnit": "g"
     },
     {
       "crop": "Yarrow",
@@ -5805,7 +6540,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=414"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=414",
+      "density": 6000,
+      "densityUnit": "g"
     },
     {
       "crop": "Zinnia",
@@ -5813,7 +6550,9 @@
       "supplier": "Johnny's",
       "organic": false,
       "pelleted": false,
-      "website": "https://www.johnnyseeds.com/flowers/zinnias/benarys-giant-series/benarys-giant-mix-zinnia-seed-1346.html"
+      "website": "https://www.johnnyseeds.com/flowers/zinnias/benarys-giant-series/benarys-giant-mix-zinnia-seed-1346.html",
+      "density": 3200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Zinnia",
@@ -5821,7 +6560,9 @@
       "supplier": "Fedco",
       "organic": false,
       "pelleted": false,
-      "website": "https://fedcoseeds.com/seeds/benarys-giant-mix-organic-zinnia-5708"
+      "website": "https://fedcoseeds.com/seeds/benarys-giant-mix-organic-zinnia-5708",
+      "density": 3200,
+      "densityUnit": "oz"
     },
     {
       "crop": "Zinnia",
@@ -5829,7 +6570,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=751"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=751",
+      "density": 127,
+      "densityUnit": "g"
     },
     {
       "crop": "Zinnia",
@@ -5837,7 +6580,9 @@
       "supplier": "Wild Garden",
       "organic": true,
       "pelleted": false,
-      "website": "https://www.wildgardenseed.com/product_info.php?products_id=583"
+      "website": "https://www.wildgardenseed.com/product_info.php?products_id=583",
+      "density": 82,
+      "densityUnit": "g"
     }
   ]
 }

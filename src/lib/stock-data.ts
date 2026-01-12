@@ -14,18 +14,41 @@
 import varietiesData from '@/data/varieties.json';
 import seedMixesData from '@/data/seed-mixes.json';
 import productsData from '@/data/products.json';
+import seedOrdersData from '@/data/seed-orders.json';
 import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput } from './entities/variety';
 import { createSeedMix, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
 import { createProduct, type Product, type CreateProductInput } from './entities/product';
+import { createSeedOrder, type SeedOrder, type CreateSeedOrderInput, type ProductUnit } from './entities/seed-order';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
+/**
+ * Raw variety data as loaded from JSON.
+ * densityUnit comes in as string, validated during createVariety().
+ */
+interface RawVarietyInput {
+  crop: string;
+  name: string;
+  supplier: string;
+  organic?: boolean;
+  pelleted?: boolean;
+  pelletedApproved?: boolean;
+  dtm?: number;
+  density?: number;
+  densityUnit?: string; // String from JSON, validated in createVariety
+  seedsPerOz?: number;
+  website?: string;
+  notes?: string;
+  alreadyOwn?: boolean;
+  deprecated?: boolean;
+}
+
 interface VarietiesData {
   _generated?: string;
   _source?: string;
-  varieties: CreateVarietyInput[];
+  varieties: RawVarietyInput[];
 }
 
 /** Component as stored in seed-mixes.json (before variety ID resolution) */
@@ -50,6 +73,28 @@ interface SeedMixesData {
   seedMixes: JsonSeedMix[];
 }
 
+/** Raw seed order from JSON */
+interface RawSeedOrder {
+  varietyId: string;
+  productWeight?: number;
+  productUnit?: string;
+  productCost?: number;
+  quantity?: number;
+  alreadyHave?: boolean;
+  productLink?: string;
+  notes?: string;
+  // Debug fields from import
+  _crop?: string;
+  _variety?: string;
+  _company?: string;
+}
+
+interface SeedOrdersData {
+  _generated?: string;
+  _source?: string;
+  seedOrders: RawSeedOrder[];
+}
+
 // =============================================================================
 // STOCK DATA LOADING
 // =============================================================================
@@ -58,6 +103,10 @@ interface SeedMixesData {
 let cachedVarieties: Record<string, Variety> | null = null;
 let cachedSeedMixes: Record<string, SeedMix> | null = null;
 let cachedProducts: Record<string, Product> | null = null;
+let cachedSeedOrders: Record<string, SeedOrder> | null = null;
+
+/** Valid density units */
+const VALID_DENSITY_UNITS = new Set(['g', 'oz', 'lb', 'ct']);
 
 /**
  * Get all stock varieties as a Record keyed by ID.
@@ -69,7 +118,17 @@ export function getStockVarieties(): Record<string, Variety> {
   const data = varietiesData as VarietiesData;
   const varieties: Record<string, Variety> = {};
 
-  for (const input of data.varieties) {
+  for (const raw of data.varieties) {
+    // Validate and cast densityUnit from JSON string to DensityUnit
+    const densityUnit = raw.densityUnit && VALID_DENSITY_UNITS.has(raw.densityUnit)
+      ? (raw.densityUnit as 'g' | 'oz' | 'lb' | 'ct')
+      : undefined;
+
+    const input: CreateVarietyInput = {
+      ...raw,
+      densityUnit,
+    };
+
     const variety = createVariety(input);
     varieties[variety.id] = variety;
   }
@@ -155,6 +214,44 @@ export function getStockProducts(): Record<string, Product> {
   return products;
 }
 
+/** Valid product units (same as density units) */
+const VALID_PRODUCT_UNITS = new Set(['g', 'oz', 'lb', 'ct']);
+
+/**
+ * Get all stock seed orders as a Record keyed by ID.
+ * Creates entities on first access and caches the result.
+ */
+export function getStockSeedOrders(): Record<string, SeedOrder> {
+  if (cachedSeedOrders) return cachedSeedOrders;
+
+  const data = seedOrdersData as SeedOrdersData;
+  const seedOrders: Record<string, SeedOrder> = {};
+
+  for (const raw of data.seedOrders) {
+    // Validate and cast productUnit from JSON string to ProductUnit
+    const productUnit = raw.productUnit && VALID_PRODUCT_UNITS.has(raw.productUnit)
+      ? (raw.productUnit as ProductUnit)
+      : undefined;
+
+    const input: CreateSeedOrderInput = {
+      varietyId: raw.varietyId,
+      productWeight: raw.productWeight,
+      productUnit,
+      productCost: raw.productCost,
+      quantity: raw.quantity,
+      // Note: raw.alreadyHave is deprecated - now using haveWeight/haveUnit
+      productLink: raw.productLink,
+      notes: raw.notes,
+    };
+
+    const order = createSeedOrder(input);
+    seedOrders[order.id] = order;
+  }
+
+  cachedSeedOrders = seedOrders;
+  return seedOrders;
+}
+
 /**
  * Get stock data stats for debugging.
  */
@@ -162,11 +259,13 @@ export function getStockDataStats() {
   const varieties = getStockVarieties();
   const seedMixes = getStockSeedMixes();
   const products = getStockProducts();
+  const seedOrders = getStockSeedOrders();
 
   return {
     varietyCount: Object.keys(varieties).length,
     seedMixCount: Object.keys(seedMixes).length,
     productCount: Object.keys(products).length,
+    seedOrderCount: Object.keys(seedOrders).length,
     varietyCrops: new Set(Object.values(varieties).map((v) => v.crop)).size,
     seedMixCrops: new Set(Object.values(seedMixes).map((m) => m.crop)).size,
     productCrops: new Set(Object.values(products).map((p) => p.crop)).size,

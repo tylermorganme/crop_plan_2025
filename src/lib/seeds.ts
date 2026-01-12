@@ -4,13 +4,17 @@
  * Calculates seeds needed per variety across all plantings in a plan.
  * Handles both direct variety assignments and seed mixes.
  * Groups results by supplier for ordering.
+ * Integrates with SeedOrder to show ordering status.
  */
 
 import type { Plan } from './plan-types';
 import type { Planting } from './entities/planting';
 import type { CropConfig } from './entities/crop-config';
-import type { Variety } from './entities/variety';
+import type { Variety, DensityUnit } from './entities/variety';
+import { calculateWeightForSeeds, calculateSeedsFromWeight } from './entities/variety';
 import type { SeedMix } from './entities/seed-mix';
+import type { SeedOrder } from './entities/seed-order';
+import { getOrderedAmount, getSeedOrderId } from './entities/seed-order';
 
 // =============================================================================
 // CONSTANTS
@@ -34,12 +38,41 @@ export interface VarietySeedResult {
   supplier: string;
   organic: boolean;
   seedsNeeded: number;
+  /** Weight needed in the variety's native density unit */
+  weightNeeded?: number;
+  /** Unit for weightNeeded */
+  weightUnit?: DensityUnit;
+  /** @deprecated Use weightNeeded/weightUnit instead */
   seedsPerOz?: number;
+  /** @deprecated Use weightNeeded/weightUnit instead */
   ouncesNeeded?: number;
   website?: string;
   alreadyOwn?: boolean;
   /** Number of plantings using this variety */
   plantingCount: number;
+  /** Order info from SeedOrder entity */
+  order?: {
+    /** Total seeds ordered (calculated from order weight × density) */
+    seedsOrdered: number;
+    /** Weight ordered */
+    weightOrdered: number;
+    /** Unit for ordered weight */
+    orderUnit: DensityUnit;
+    /** Cost per product */
+    productCost?: number;
+    /** Quantity ordered */
+    quantity: number;
+    /** Amount already in inventory */
+    haveWeight?: number;
+    /** Unit for inventory amount */
+    haveUnit?: DensityUnit;
+    /** Link to product page */
+    productLink?: string;
+  };
+  /** Whether (have + order) meets or exceeds needed */
+  isEnough?: boolean;
+  /** Shortage (seeds) - positive means we need more */
+  shortageSeeds?: number;
 }
 
 /** Seeds grouped by supplier */
@@ -160,6 +193,7 @@ export function calculatePlanSeeds(
   const cropCatalog = plan.cropCatalog ?? {};
   const varieties = plan.varieties ?? {};
   const seedMixes = plan.seedMixes ?? {};
+  const seedOrders = plan.seedOrders ?? {};
 
   let plantingsWithoutSeed = 0;
 
@@ -207,8 +241,8 @@ export function calculatePlanSeeds(
     }
   }
 
-  // Build aggregated results
-  const byVariety = buildVarietyResults(varietyTotals, varieties);
+  // Build aggregated results with order info
+  const byVariety = buildVarietyResults(varietyTotals, varieties, seedOrders);
   const bySupplier = groupBySupplier(byVariety);
 
   const totalSeeds = byVariety.reduce((sum, v) => sum + v.seedsNeeded, 0);
@@ -244,10 +278,12 @@ function addToVarietyTotals(
 
 /**
  * Build variety results from accumulated totals.
+ * Integrates SeedOrder data to show ordering status.
  */
 function buildVarietyResults(
   totals: Map<string, { seeds: number; plantingIds: Set<string> }>,
-  varieties: Record<string, Variety>
+  varieties: Record<string, Variety>,
+  seedOrders: Record<string, SeedOrder>
 ): VarietySeedResult[] {
   const results: VarietySeedResult[] = [];
 
@@ -255,23 +291,76 @@ function buildVarietyResults(
     const variety = varieties[varietyId];
     if (!variety) continue;
 
+    // Calculate weight needed using new density system
+    const weightInfo = calculateWeightForSeeds(variety, data.seeds);
+
+    // Legacy fields for backwards compatibility
     const ouncesNeeded = variety.seedsPerOz
       ? data.seeds / variety.seedsPerOz
       : undefined;
 
-    results.push({
+    // Get seed order if exists
+    const orderId = getSeedOrderId(varietyId);
+    const order = seedOrders[orderId];
+
+    // Build result
+    const result: VarietySeedResult = {
       varietyId,
       varietyName: variety.name,
       crop: variety.crop,
       supplier: variety.supplier,
       organic: variety.organic,
       seedsNeeded: data.seeds,
+      weightNeeded: weightInfo?.weight,
+      weightUnit: weightInfo?.unit,
       seedsPerOz: variety.seedsPerOz,
       ouncesNeeded,
       website: variety.website,
       alreadyOwn: variety.alreadyOwn,
       plantingCount: data.plantingIds.size,
-    });
+    };
+
+    // Add order info if available
+    if (order) {
+      const orderedAmount = getOrderedAmount(order);
+      if (orderedAmount) {
+        // Calculate seeds ordered from weight × density
+        const seedsOrdered = calculateSeedsFromWeight(
+          variety,
+          orderedAmount.weight,
+          orderedAmount.unit
+        );
+
+        if (seedsOrdered !== undefined) {
+          // Calculate seeds from inventory (haveWeight)
+          let seedsHave = 0;
+          if (order.haveWeight && order.haveUnit) {
+            const haveSeeds = calculateSeedsFromWeight(variety, order.haveWeight, order.haveUnit);
+            if (haveSeeds !== undefined) {
+              seedsHave = haveSeeds;
+            }
+          }
+
+          result.order = {
+            seedsOrdered,
+            weightOrdered: orderedAmount.weight,
+            orderUnit: orderedAmount.unit,
+            productCost: order.productCost,
+            quantity: order.quantity,
+            haveWeight: order.haveWeight,
+            haveUnit: order.haveUnit,
+            productLink: order.productLink,
+          };
+
+          // Calculate if (have + order) meets need
+          const totalSeeds = seedsHave + seedsOrdered;
+          result.isEnough = totalSeeds >= data.seeds;
+          result.shortageSeeds = Math.max(0, data.seeds - totalSeeds);
+        }
+      }
+    }
+
+    results.push(result);
   }
 
   return results.sort((a, b) => b.seedsNeeded - a.seedsNeeded);
@@ -326,10 +415,45 @@ export function formatSeeds(count: number): string {
 
 /**
  * Format ounces for display (converts to lb if >= 16oz).
+ * @deprecated Use formatWeight instead
  */
 export function formatOunces(oz: number): string {
   if (oz >= 16) {
     return `${(oz / 16).toFixed(2)} lb`;
   }
   return `${oz.toFixed(2)} oz`;
+}
+
+/**
+ * Format weight with unit for display.
+ * Automatically converts to larger units when appropriate.
+ *
+ * @param weight - Weight value
+ * @param unit - Unit of measurement (g, oz, lb, ct)
+ * @returns Formatted string like "2.5 oz" or "1,000 seeds"
+ */
+export function formatWeight(weight: number, unit: DensityUnit): string {
+  if (unit === 'ct') {
+    return `${Math.round(weight).toLocaleString()} seeds`;
+  }
+
+  if (unit === 'g') {
+    if (weight >= 1000) {
+      return `${(weight / 1000).toFixed(2)} kg`;
+    }
+    return `${weight.toFixed(1)} g`;
+  }
+
+  if (unit === 'oz') {
+    if (weight >= 16) {
+      return `${(weight / 16).toFixed(2)} lb`;
+    }
+    return `${weight.toFixed(2)} oz`;
+  }
+
+  if (unit === 'lb') {
+    return `${weight.toFixed(2)} lb`;
+  }
+
+  return `${weight} ${unit}`;
 }

@@ -40,9 +40,46 @@ import { getAllCrops } from './crops';
 import { getStockVarieties, getStockSeedMixes, getStockProducts } from './stock-data';
 import type { CropConfig } from './entities/crop-config';
 import { cloneCropConfig, cloneCropCatalog } from './entities/crop-config';
-import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput } from './entities/variety';
+import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput, type DensityUnit } from './entities/variety';
 import { createSeedMix, getSeedMixKey, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
 import { createProduct, getProductKey, type Product, type CreateProductInput } from './entities/product';
+import { createSeedOrder, getSeedOrderId, type SeedOrder, type CreateSeedOrderInput } from './entities/seed-order';
+
+/**
+ * Raw variety input from JSON import.
+ * densityUnit comes as string and gets validated during import.
+ */
+export interface RawVarietyInput {
+  crop: string;
+  name: string;
+  supplier: string;
+  organic?: boolean;
+  pelleted?: boolean;
+  pelletedApproved?: boolean;
+  dtm?: number;
+  density?: number;
+  densityUnit?: string; // String from JSON, validated during import
+  seedsPerOz?: number;
+  website?: string;
+  notes?: string;
+  alreadyOwn?: boolean;
+  deprecated?: boolean;
+}
+
+/** Valid density units for validation */
+const VALID_DENSITY_UNITS = new Set(['g', 'oz', 'lb', 'ct']);
+
+/** Convert raw variety input to typed CreateVarietyInput */
+function normalizeVarietyInput(raw: RawVarietyInput): CreateVarietyInput {
+  const densityUnit = raw.densityUnit && VALID_DENSITY_UNITS.has(raw.densityUnit)
+    ? (raw.densityUnit as DensityUnit)
+    : undefined;
+
+  return {
+    ...raw,
+    densityUnit,
+  };
+}
 
 /**
  * Raw seed mix component from JSON import.
@@ -519,8 +556,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   updateVariety: (variety: import('./entities/variety').Variety) => Promise<void>;
   /** Delete a variety from the plan */
   deleteVariety: (varietyId: string) => Promise<void>;
-  /** Import varieties with content-based deduplication */
-  importVarieties: (inputs: import('./entities/variety').CreateVarietyInput[]) => Promise<{ added: number; updated: number }>;
+  /** Import varieties with content-based deduplication (accepts raw JSON with string densityUnit) */
+  importVarieties: (inputs: RawVarietyInput[]) => Promise<{ added: number; updated: number }>;
   /** Get variety by ID */
   getVariety: (varietyId: string) => import('./entities/variety').Variety | undefined;
   /** Get all varieties for a crop */
@@ -553,6 +590,20 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   getProduct: (productId: string) => import('./entities/product').Product | undefined;
   /** Get all products for a crop */
   getProductsForCrop: (crop: string) => import('./entities/product').Product[];
+
+  // ---- Seed Order Management ----
+  /** Add or update a seed order for a variety */
+  upsertSeedOrder: (order: import('./entities/seed-order').SeedOrder) => Promise<void>;
+  /** Delete a seed order */
+  deleteSeedOrder: (orderId: string) => Promise<void>;
+  /** Import seed orders with content-based deduplication */
+  importSeedOrders: (inputs: import('./entities/seed-order').CreateSeedOrderInput[]) => Promise<{ added: number; updated: number }>;
+  /** Get seed order by ID */
+  getSeedOrder: (orderId: string) => import('./entities/seed-order').SeedOrder | undefined;
+  /** Get seed order for a variety */
+  getSeedOrderForVariety: (varietyId: string) => import('./entities/seed-order').SeedOrder | undefined;
+  /** Get all seed orders */
+  getAllSeedOrders: () => import('./entities/seed-order').SeedOrder[];
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -614,7 +665,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         data.plan.bedGroups = groups;
       }
 
-      // Ensure varieties, seedMixes, and products exist (for plans created before stock data loading)
+      // Ensure varieties, seedMixes, products, and seedOrders exist (for plans created before stock data loading)
       if (!data.plan.varieties || Object.keys(data.plan.varieties).length === 0) {
         data.plan.varieties = getStockVarieties();
       }
@@ -623,6 +674,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
       if (!data.plan.products || Object.keys(data.plan.products).length === 0) {
         data.plan.products = getStockProducts();
+      }
+      // Seed orders start empty - user enters them fresh
+      if (!data.plan.seedOrders) {
+        data.plan.seedOrders = {};
       }
 
       // Validate plan on load
@@ -735,7 +790,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         return p;
       });
 
-      // Load stock varieties, seed mixes, and products
+      // Load stock varieties, seed mixes, and products (seed orders start empty)
       const varieties = getStockVarieties();
       const seedMixes = getStockSeedMixes();
       const products = getStockProducts();
@@ -757,6 +812,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         varieties,
         seedMixes,
         products,
+        seedOrders: {}, // Start empty - user enters fresh
         changeLog: [],
       };
 
@@ -1973,6 +2029,12 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           }
         }
 
+        // Delete associated seed order
+        if (state.currentPlan.seedOrders) {
+          const orderId = getSeedOrderId(varietyId);
+          delete state.currentPlan.seedOrders[orderId];
+        }
+
         state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
@@ -1993,7 +2055,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
-    importVarieties: async (inputs: CreateVarietyInput[]) => {
+    importVarieties: async (rawInputs: RawVarietyInput[]) => {
       const existingVarieties = get().currentPlan?.varieties ?? {};
       const existingByKey = new Map<string, string>();
       for (const v of Object.values(existingVarieties)) {
@@ -2011,7 +2073,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           state.currentPlan.varieties = {};
         }
 
-        for (const input of inputs) {
+        for (const raw of rawInputs) {
+          // Normalize the raw input (validates densityUnit)
+          const input = normalizeVarietyInput(raw);
           const contentKey = `${input.crop}|${input.name}|${input.supplier}`.toLowerCase().trim();
           const existingId = existingByKey.get(contentKey);
 
@@ -2399,6 +2463,125 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     getProductsForCrop: (crop: string) => {
       const products = get().currentPlan?.products ?? {};
       return Object.values(products).filter((p) => p.crop.toLowerCase() === crop.toLowerCase());
+    },
+
+    // ---- Seed Order Management ----
+
+    upsertSeedOrder: async (order: SeedOrder) => {
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+
+        if (!state.currentPlan.seedOrders) {
+          state.currentPlan.seedOrders = {};
+        }
+        state.currentPlan.seedOrders[order.id] = order;
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const plan = get().currentPlan;
+      if (plan) {
+        try {
+          await savePlanToLibrary(plan);
+        } finally {
+          set((state) => {
+            state.isSaving = false;
+          });
+        }
+      }
+    },
+
+    deleteSeedOrder: async (orderId: string) => {
+      set((state) => {
+        if (!state.currentPlan?.seedOrders?.[orderId]) return;
+        snapshotForUndo(state);
+
+        delete state.currentPlan.seedOrders[orderId];
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const plan = get().currentPlan;
+      if (plan) {
+        try {
+          await savePlanToLibrary(plan);
+        } finally {
+          set((state) => {
+            state.isSaving = false;
+          });
+        }
+      }
+    },
+
+    importSeedOrders: async (inputs: CreateSeedOrderInput[]) => {
+      let added = 0;
+      let updated = 0;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+
+        if (!state.currentPlan.seedOrders) {
+          state.currentPlan.seedOrders = {};
+        }
+
+        for (const input of inputs) {
+          const order = createSeedOrder(input);
+          const existingOrder = state.currentPlan.seedOrders[order.id];
+
+          if (existingOrder) {
+            // Update existing - merge fields (don't overwrite user's quantity choices with empty values)
+            if (input.productWeight !== undefined) existingOrder.productWeight = input.productWeight;
+            if (input.productUnit !== undefined) existingOrder.productUnit = input.productUnit;
+            if (input.productCost !== undefined) existingOrder.productCost = input.productCost;
+            if (input.productLink !== undefined) existingOrder.productLink = input.productLink;
+            // Don't overwrite quantity or alreadyHave - those are user decisions
+            updated++;
+          } else {
+            state.currentPlan.seedOrders[order.id] = order;
+            added++;
+          }
+        }
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const plan = get().currentPlan;
+      if (plan) {
+        try {
+          await savePlanToLibrary(plan);
+        } finally {
+          set((state) => {
+            state.isSaving = false;
+          });
+        }
+      }
+
+      return { added, updated };
+    },
+
+    getSeedOrder: (orderId: string) => {
+      return get().currentPlan?.seedOrders?.[orderId];
+    },
+
+    getSeedOrderForVariety: (varietyId: string) => {
+      const orderId = getSeedOrderId(varietyId);
+      return get().currentPlan?.seedOrders?.[orderId];
+    },
+
+    getAllSeedOrders: () => {
+      const seedOrders = get().currentPlan?.seedOrders ?? {};
+      return Object.values(seedOrders);
     },
   }))
 );

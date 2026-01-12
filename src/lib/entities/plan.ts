@@ -11,6 +11,7 @@ import type { CropConfig } from './crop-config';
 import type { Variety } from './variety';
 import type { SeedMix } from './seed-mix';
 import type { Product } from './product';
+import type { SeedOrder } from './seed-order';
 
 // Re-export migration utilities for backwards compatibility
 export { CURRENT_SCHEMA_VERSION, migratePlan } from '../migrations';
@@ -123,6 +124,9 @@ export interface Plan {
 
   /** Products for revenue calculation (keyed by ID) */
   products?: Record<string, Product>;
+
+  /** Seed orders (keyed by ID) - tracks ordering decisions per variety */
+  seedOrders?: Record<string, SeedOrder>;
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];
