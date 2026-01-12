@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import CropConfigEditor from '@/components/CropConfigEditor';
@@ -39,7 +39,12 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
 
 export default function TimelinePlanPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const planId = params.planId as string;
+
+  // Check for filter param (e.g., ?filter=no-variety)
+  const filterParam = searchParams.get('filter');
+  const initialNoVarietyFilter = filterParam === 'no-variety';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -290,6 +295,7 @@ export default function TimelinePlanPage() {
           onUpdatePlanting={handleUpdatePlanting}
           varieties={currentPlan.varieties}
           seedMixes={currentPlan.seedMixes}
+          initialNoVarietyFilter={initialNoVarietyFilter}
         />
       </div>
 

@@ -103,6 +103,8 @@ interface CropTimelineProps {
   varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
   /** Seed mixes available in the plan (for seed source picker) */
   seedMixes?: Record<string, { id: string; crop: string; name: string }>;
+  /** Initial state for no-variety filter (set via URL param) */
+  initialNoVarietyFilter?: boolean;
 }
 
 // =============================================================================
@@ -500,6 +502,7 @@ export default function CropTimeline({
   onUpdatePlanting,
   varieties,
   seedMixes,
+  initialNoVarietyFilter,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -530,7 +533,8 @@ export default function CropTimeline({
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   // Filter to show only plantings without seed source
-  const [showNoVarietyOnly, setShowNoVarietyOnly] = useState(false);
+  // Initialize from URL param if provided
+  const [showNoVarietyOnly, setShowNoVarietyOnly] = useState(initialNoVarietyFilter ?? false);
   // State for hover preview when browsing crops in AddToBedPanel
   const [hoverPreview, setHoverPreview] = useState<{
     config: CropConfig;

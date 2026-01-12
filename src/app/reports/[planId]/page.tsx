@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -44,6 +44,7 @@ import {
   type VarietySeedResult,
 } from '@/lib/seeds';
 import { createSeedOrder, type SeedOrder, type ProductUnit } from '@/lib/entities/seed-order';
+import type { Variety, DensityUnit } from '@/lib/entities/variety';
 import { Z_INDEX } from '@/lib/z-index';
 
 // =============================================================================
@@ -547,6 +548,186 @@ function CropRevenueTable({ data }: { data: CropRevenueResult[] }) {
 }
 
 // =============================================================================
+// DENSITY EDIT MODAL
+// =============================================================================
+
+interface DensityEditModalProps {
+  varietyId: string;
+  varieties: Record<string, Variety>;
+  onSave: (variety: Variety) => Promise<void>;
+  onClose: () => void;
+}
+
+function DensityEditModal({ varietyId, varieties, onSave, onClose }: DensityEditModalProps) {
+  const variety = varieties[varietyId];
+  const [density, setDensity] = useState(variety?.density?.toString() ?? '');
+  const [densityUnit, setDensityUnit] = useState<DensityUnit>(variety?.densityUnit ?? 'oz');
+  const [saving, setSaving] = useState(false);
+
+  if (!variety) {
+    return null;
+  }
+
+  // Find similar varieties with density data
+  const similarVarieties = useMemo(() => {
+    const results: Array<{ variety: Variety; matchType: 'exact-name' | 'same-crop' }> = [];
+    const seen = new Set<string>();
+
+    for (const v of Object.values(varieties)) {
+      if (v.id === varietyId) continue;
+      if (v.density === undefined) continue;
+      if (seen.has(v.id)) continue;
+
+      // Same variety name, different supplier (highest priority)
+      if (v.name.toLowerCase() === variety.name.toLowerCase()) {
+        results.unshift({ variety: v, matchType: 'exact-name' });
+        seen.add(v.id);
+      }
+      // Same crop (lower priority)
+      else if (v.crop.toLowerCase() === variety.crop.toLowerCase()) {
+        results.push({ variety: v, matchType: 'same-crop' });
+        seen.add(v.id);
+      }
+    }
+
+    // Sort: exact name matches first, then by crop
+    results.sort((a, b) => {
+      if (a.matchType === 'exact-name' && b.matchType !== 'exact-name') return -1;
+      if (b.matchType === 'exact-name' && a.matchType !== 'exact-name') return 1;
+      return a.variety.name.localeCompare(b.variety.name);
+    });
+
+    return results.slice(0, 10); // Limit to 10
+  }, [varieties, varietyId, variety.name, variety.crop]);
+
+  const handleSave = async () => {
+    if (!density) return;
+    setSaving(true);
+    try {
+      await onSave({
+        ...variety,
+        density: parseFloat(density),
+        densityUnit,
+      });
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const applyFromSimilar = (v: Variety) => {
+    if (v.density !== undefined) {
+      setDensity(v.density.toString());
+    }
+    if (v.densityUnit) {
+      setDensityUnit(v.densityUnit);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
+      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Edit Density</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {variety.crop} &bull; {variety.name} &bull; {variety.supplier}
+          </p>
+        </div>
+
+        {/* Form */}
+        <div className="px-4 py-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Seeds per unit
+              </label>
+              <input
+                type="number"
+                value={density}
+                onChange={e => setDensity(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., 6000"
+                autoFocus
+              />
+            </div>
+            <div className="w-24">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Unit
+              </label>
+              <select
+                value={densityUnit}
+                onChange={e => setDensityUnit(e.target.value as DensityUnit)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="oz">oz</option>
+                <option value="g">g</option>
+                <option value="lb">lb</option>
+              </select>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            Enter the number of seeds per {densityUnit}
+          </p>
+        </div>
+
+        {/* Similar varieties */}
+        <div className="flex-1 overflow-auto px-4 py-3">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">
+            Similar varieties with density data
+          </h3>
+          {similarVarieties.length === 0 ? (
+            <p className="text-sm text-gray-500 italic">No similar varieties found with density data</p>
+          ) : (
+            <div className="space-y-1">
+              {similarVarieties.map(({ variety: v, matchType }) => (
+                <button
+                  key={v.id}
+                  onClick={() => applyFromSimilar(v)}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors ${
+                    matchType === 'exact-name' ? 'bg-green-50 border border-green-200' : 'bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-medium">{v.name}</span>
+                      <span className="text-gray-500"> &bull; {v.supplier}</span>
+                      {matchType === 'exact-name' && (
+                        <span className="ml-2 text-xs text-green-600 font-medium">Same variety</span>
+                      )}
+                    </div>
+                    <span className="text-gray-600 font-mono text-xs">
+                      {v.density?.toLocaleString()} / {v.densityUnit}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!density || saving}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // SEEDS TAB CONTENT - Flat table with inline editing
 // =============================================================================
 
@@ -555,10 +736,14 @@ function SeedOrderRow({
   variety,
   savedOrder,
   onSave,
+  onEditDensity,
+  colWidths,
 }: {
   variety: VarietySeedResult;
   savedOrder?: SeedOrder;
   onSave: (order: SeedOrder) => void;
+  onEditDensity: (varietyId: string) => void;
+  colWidths: Record<string, number>;
 }) {
   // Local form state - initialize from saved order if exists, otherwise use defaults
   // "Have" fields - inventory on hand (defaults to grams for scale weighing)
@@ -646,58 +831,74 @@ function SeedOrderRow({
 
   const statusBadge = getStatusBadge();
 
+  // Helper to get cell style with width
+  const cellStyle = (colKey: string) => ({
+    width: colWidths[colKey],
+    minWidth: colWidths[colKey],
+  });
+
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50/50">
+    <div className="flex border-b border-gray-100 hover:bg-gray-50/50 text-sm">
       {/* Crop */}
-      <td className="py-1.5 px-2 text-gray-900 whitespace-nowrap">{variety.crop}</td>
+      <div style={cellStyle('crop')} className="py-1.5 px-2 text-gray-900 whitespace-nowrap truncate flex items-center">
+        {variety.crop}
+      </div>
       {/* Variety */}
-      <td className="py-1.5 px-2">
-        <div className="flex items-center gap-1">
-          <span className="font-medium text-gray-900">{variety.varietyName}</span>
-          {variety.website && (
-            <a
-              href={variety.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 hover:text-blue-700 text-xs"
-              title="Product page"
-            >
-              ↗
-            </a>
-          )}
-        </div>
-      </td>
+      <div style={cellStyle('variety')} className="py-1.5 px-2 flex items-center gap-1">
+        <span className="font-medium text-gray-900 truncate">{variety.varietyName}</span>
+        {variety.website && (
+          <a
+            href={variety.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-700 text-xs flex-shrink-0"
+            title="Product page"
+          >
+            ↗
+          </a>
+        )}
+      </div>
       {/* Supplier */}
-      <td className="py-1.5 px-2 text-gray-600 whitespace-nowrap">{variety.supplier}</td>
+      <div style={cellStyle('supplier')} className="py-1.5 px-2 text-gray-600 whitespace-nowrap truncate flex items-center">
+        {variety.supplier}
+      </div>
       {/* Organic */}
-      <td className="py-1.5 px-2 text-center">
+      <div style={cellStyle('organic')} className="py-1.5 px-2 text-center flex items-center justify-center">
         {variety.organic ? <span className="text-green-600">✓</span> : <span className="text-gray-300">-</span>}
-      </td>
+      </div>
       {/* Seeds Needed */}
-      <td className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap">
+      <div style={cellStyle('seedsNeeded')} className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap flex items-center justify-end">
         {formatSeeds(variety.seedsNeeded)}
-      </td>
+      </div>
       {/* Total Need - displayed in Order Unit */}
-      <td className="py-1.5 px-2 text-right text-gray-600 whitespace-nowrap">
-        {totalNeedInOrderUnit !== undefined
-          ? `${totalNeedInOrderUnit.toFixed(2)} ${unit}`
-          : <span className="text-gray-300">-</span>}
-      </td>
+      <div style={cellStyle('weightNeeded')} className="py-1.5 px-2 text-right whitespace-nowrap flex items-center justify-end">
+        {totalNeedInOrderUnit !== undefined ? (
+          <span className="text-gray-600">{totalNeedInOrderUnit.toFixed(2)} {unit}</span>
+        ) : (
+          <button
+            onClick={() => onEditDensity(variety.varietyId)}
+            className="text-orange-500 hover:text-orange-700 hover:underline cursor-pointer text-xs font-medium"
+            title="Click to add density data for this variety"
+          >
+            No density
+          </button>
+        )}
+      </div>
       {/* Have weight input */}
-      <td className="py-1.5 px-1">
+      <div style={cellStyle('inStock')} className="py-1.5 px-1 flex items-center">
         <input
           type="number"
           step="any"
           value={haveWeight}
           onChange={e => setHaveWeight(e.target.value)}
           onBlur={() => saveOrder()}
-          className="w-14 px-1.5 py-0.5 text-sm border border-blue-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-blue-50/30"
+          className="w-full px-1.5 py-0.5 text-sm border border-blue-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-blue-50/30"
           placeholder="-"
           title="Amount already in inventory"
         />
-      </td>
+      </div>
       {/* Have unit select */}
-      <td className="py-1.5 px-1">
+      <div style={cellStyle('stockUnit')} className="py-1.5 px-1 flex items-center">
         <select
           value={haveUnit}
           onChange={e => {
@@ -705,7 +906,7 @@ function SeedOrderRow({
             setHaveUnit(newUnit);
             saveOrder({ haveUnit: newUnit });
           }}
-          className="w-12 px-0.5 py-0.5 text-sm border border-blue-200 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-blue-50/30"
+          className="w-full px-0.5 py-0.5 text-sm border border-blue-200 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200 bg-blue-50/30"
           title="Unit for inventory amount"
         >
           <option value="g">g</option>
@@ -713,27 +914,27 @@ function SeedOrderRow({
           <option value="lb">lb</option>
           <option value="ct">ct</option>
         </select>
-      </td>
+      </div>
       {/* Order Need = Total Need - Have (in order unit) */}
-      <td className="py-1.5 px-2 text-right text-gray-600 whitespace-nowrap">
+      <div style={cellStyle('additionalNeeded')} className="py-1.5 px-2 text-right text-gray-600 whitespace-nowrap flex items-center justify-end">
         {orderNeed !== undefined
           ? `${orderNeed.toFixed(2)} ${unit}`
           : <span className="text-gray-300">-</span>}
-      </td>
+      </div>
       {/* Order weight input */}
-      <td className="py-1.5 px-1">
+      <div style={cellStyle('productWeight')} className="py-1.5 px-1 flex items-center">
         <input
           type="number"
           step="any"
           value={weight}
           onChange={e => setWeight(e.target.value)}
           onBlur={() => saveOrder()}
-          className="w-14 px-1.5 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+          className="w-full px-1.5 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
           placeholder="-"
         />
-      </td>
+      </div>
       {/* Order unit select */}
-      <td className="py-1.5 px-1">
+      <div style={cellStyle('productUnit')} className="py-1.5 px-1 flex items-center">
         <select
           value={unit}
           onChange={e => {
@@ -741,66 +942,231 @@ function SeedOrderRow({
             setUnit(newUnit);
             saveOrder({ productUnit: newUnit });
           }}
-          className="w-12 px-0.5 py-0.5 text-sm border border-gray-200 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+          className="w-full px-0.5 py-0.5 text-sm border border-gray-200 rounded focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
         >
           <option value="oz">oz</option>
           <option value="g">g</option>
           <option value="lb">lb</option>
           <option value="ct">ct</option>
         </select>
-      </td>
+      </div>
       {/* Qty input */}
-      <td className="py-1.5 px-1">
+      <div style={cellStyle('productQty')} className="py-1.5 px-1 flex items-center">
         <input
           type="number"
           min="0"
           value={qty}
           onChange={e => setQty(e.target.value)}
           onBlur={() => saveOrder()}
-          className="w-10 px-1 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+          className="w-full px-1 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
           placeholder="1"
         />
-      </td>
+      </div>
       {/* Cost input */}
-      <td className="py-1.5 px-1">
-        <div className="flex items-center">
-          <span className="text-gray-400 text-sm mr-0.5">$</span>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={cost}
-            onChange={e => setCost(e.target.value)}
-            onBlur={() => saveOrder()}
-            className="w-14 px-1.5 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
-            placeholder="-"
-          />
-        </div>
-      </td>
+      <div style={cellStyle('productPrice')} className="py-1.5 px-1 flex items-center">
+        <span className="text-gray-400 text-sm mr-0.5">$</span>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={cost}
+          onChange={e => setCost(e.target.value)}
+          onBlur={() => saveOrder()}
+          className="w-full px-1.5 py-0.5 text-sm border border-gray-200 rounded text-right focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+          placeholder="-"
+        />
+      </div>
       {/* Order Total (weight * qty) */}
-      <td className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap">
+      <div style={cellStyle('orderWeight')} className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap flex items-center justify-end">
         {orderWeight > 0 ? `${orderWeight} ${unit}` : <span className="text-gray-300">-</span>}
-      </td>
+      </div>
       {/* Order Cost (cost * qty) */}
-      <td className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap">
+      <div style={cellStyle('orderCost')} className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap flex items-center justify-end">
         {orderCost > 0 ? `$${orderCost.toFixed(2)}` : <span className="text-gray-300">-</span>}
-      </td>
+      </div>
       {/* Status */}
-      <td className="py-1.5 px-2 text-center">{statusBadge}</td>
-    </tr>
+      <div style={cellStyle('status')} className="py-1.5 px-2 text-center flex items-center justify-center">
+        {statusBadge}
+      </div>
+    </div>
   );
 }
 
-function SeedsTab({ report }: { report: PlanSeedReport }) {
+// Default column widths in pixels
+const DEFAULT_COL_WIDTHS: Record<string, number> = {
+  crop: 80,
+  variety: 140,
+  supplier: 100,
+  organic: 50,
+  seedsNeeded: 80,
+  weightNeeded: 80,
+  inStock: 60,
+  stockUnit: 50,
+  additionalNeeded: 80,
+  productWeight: 70,
+  productUnit: 50,
+  productQty: 50,
+  productPrice: 70,
+  orderWeight: 80,
+  orderCost: 80,
+  status: 55,
+};
+
+// Column order for iteration
+const COL_ORDER = [
+  'crop', 'variety', 'supplier', 'organic', 'seedsNeeded', 'weightNeeded',
+  'inStock', 'stockUnit', 'additionalNeeded', 'productWeight', 'productUnit',
+  'productQty', 'productPrice', 'orderWeight', 'orderCost', 'status',
+];
+
+// localStorage key for persisting column widths
+const SEEDS_TAB_STORAGE_KEY = 'seeds-tab-state';
+
+interface SeedsTabPersistedState {
+  colWidths: Record<string, number>;
+}
+
+function loadSeedsTabState(): SeedsTabPersistedState | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem(SEEDS_TAB_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveSeedsTabState(state: SeedsTabPersistedState) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SEEDS_TAB_STORAGE_KEY, JSON.stringify(state));
+  } catch { /* ignore */ }
+}
+
+function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSupplier, setFilterSupplier] = useState<string>('');
   const [filterCrop, setFilterCrop] = useState<string>('');
+  const [filterMissingDensity, setFilterMissingDensity] = useState(false);
   const [sortKey, setSortKey] = useState<'crop' | 'variety' | 'supplier' | 'needed'>('crop');
   const [sortDesc, setSortDesc] = useState(false);
+
+  // Column widths state - start with defaults, hydrate from localStorage
+  const [colWidths, setColWidths] = useState<Record<string, number>>(DEFAULT_COL_WIDTHS);
+  const [resizing, setResizing] = useState<string | null>(null);
+  const [startX, setStartX] = useState(0);
+  const [startWidth, setStartWidth] = useState(0);
+
+  // Container ref for measuring available width
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Store hooks for updating orders
   const upsertSeedOrder = usePlanStore((state) => state.upsertSeedOrder);
   const seedOrders = usePlanStore((state) => state.currentPlan?.seedOrders ?? {});
+  const varieties = usePlanStore((state) => state.currentPlan?.varieties ?? {});
+  const updateVariety = usePlanStore((state) => state.updateVariety);
+
+  // Density edit modal state
+  const [editingVarietyId, setEditingVarietyId] = useState<string | null>(null);
+
+  // Calculate missing density info
+  const missingDensityVarieties = useMemo(() => {
+    return report.byVariety.filter(v => v.weightNeeded === undefined);
+  }, [report.byVariety]);
+
+  // Load persisted state on mount
+  useEffect(() => {
+    const saved = loadSeedsTabState();
+    if (saved?.colWidths) {
+      setColWidths(saved.colWidths);
+    }
+  }, []);
+
+  // Save column widths when they change (debounced via resizing check)
+  useEffect(() => {
+    // Only save after resize ends (resizing is null)
+    if (resizing === null) {
+      saveSeedsTabState({ colWidths });
+    }
+  }, [colWidths, resizing]);
+
+  // Reset columns to fill available width proportionally
+  const resetColumnWidths = useCallback(() => {
+    if (!containerRef.current) return;
+    const containerWidth = containerRef.current.clientWidth;
+    const defaultTotal = Object.values(DEFAULT_COL_WIDTHS).reduce((s, w) => s + w, 0);
+    const scale = containerWidth / defaultTotal;
+
+    const newWidths: Record<string, number> = {};
+    for (const col of COL_ORDER) {
+      newWidths[col] = Math.max(40, Math.round(DEFAULT_COL_WIDTHS[col] * scale));
+    }
+    setColWidths(newWidths);
+  }, []);
+
+  // Handle column resize
+  const handleMouseDown = (colKey: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent click from triggering sort
+    setResizing(colKey);
+    setStartX(e.clientX);
+    setStartWidth(colWidths[colKey] || 80);
+  };
+
+  useEffect(() => {
+    if (!resizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - startX;
+      const newWidth = Math.max(40, startWidth + delta); // minimum 40px
+      setColWidths(prev => ({ ...prev, [resizing]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      setResizing(null);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizing, startX, startWidth]);
+
+  // Resizable header component - uses div like CropExplorer
+  const ResizableHeader = ({
+    colKey,
+    children,
+    className = '',
+    sortable,
+    sortKeyName,
+  }: {
+    colKey: string;
+    children: React.ReactNode;
+    className?: string;
+    sortable?: boolean;
+    sortKeyName?: typeof sortKey;
+  }) => (
+    <div
+      style={{ width: colWidths[colKey], minWidth: colWidths[colKey] }}
+      className={`relative py-2 px-2 text-xs font-medium text-gray-600 select-none flex items-center ${className} ${
+        sortable ? 'cursor-pointer hover:text-gray-900' : ''
+      }`}
+      onClick={sortable && sortKeyName ? () => handleSort(sortKeyName) : undefined}
+    >
+      <span className="truncate">{children}</span>
+      {sortable && sortKeyName && sortKey === sortKeyName && (
+        <span className="ml-1 flex-shrink-0">{sortDesc ? '↓' : '↑'}</span>
+      )}
+      <div
+        onMouseDown={(e) => handleMouseDown(colKey, e)}
+        onClick={(e) => e.stopPropagation()}
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400"
+        style={{ marginRight: -1 }}
+      />
+    </div>
+  );
 
   // Get unique values for filters
   const uniqueSuppliers = useMemo(() => {
@@ -834,6 +1200,10 @@ function SeedsTab({ report }: { report: PlanSeedReport }) {
       result = result.filter(v => v.crop === filterCrop);
     }
 
+    if (filterMissingDensity) {
+      result = result.filter(v => v.weightNeeded === undefined);
+    }
+
     // Sort
     result = [...result].sort((a, b) => {
       let cmp = 0;
@@ -855,14 +1225,15 @@ function SeedsTab({ report }: { report: PlanSeedReport }) {
     });
 
     return result;
-  }, [report.byVariety, searchQuery, filterSupplier, filterCrop, sortKey, sortDesc]);
+  }, [report.byVariety, searchQuery, filterSupplier, filterCrop, filterMissingDensity, sortKey, sortDesc]);
 
-  const hasFilters = searchQuery || filterSupplier || filterCrop;
+  const hasFilters = searchQuery || filterSupplier || filterCrop || filterMissingDensity;
 
   const clearFilters = () => {
     setSearchQuery('');
     setFilterSupplier('');
     setFilterCrop('');
+    setFilterMissingDensity(false);
   };
 
   const handleSort = (key: typeof sortKey) => {
@@ -874,17 +1245,11 @@ function SeedsTab({ report }: { report: PlanSeedReport }) {
     }
   };
 
-  const SortHeader = ({ k, children, className = '' }: { k: typeof sortKey; children: React.ReactNode; className?: string }) => (
-    <th
-      onClick={() => handleSort(k)}
-      className={`py-2 px-2 font-medium text-gray-600 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap ${className}`}
-    >
-      <span className="inline-flex items-center gap-0.5">
-        {children}
-        {sortKey === k && (sortDesc ? ' ↓' : ' ↑')}
-      </span>
-    </th>
-  );
+  // Calculate total width from all columns
+  // Used to ensure table expands when columns are widened
+  const totalWidth = useMemo(() => {
+    return Object.values(colWidths).reduce((sum, w) => sum + w, 0);
+  }, [colWidths]);
 
   return (
     <div className="space-y-3">
@@ -928,15 +1293,50 @@ function SeedsTab({ report }: { report: PlanSeedReport }) {
 
         <div className="flex-1" />
 
-        {report.plantingsWithoutSeed > 0 && (
-          <span className="text-orange-600 font-medium">
-            ⚠ {report.plantingsWithoutSeed} unassigned
-          </span>
-        )}
+        {/* Warning indicators - clickable toggles */}
+        <div className="flex items-center gap-2">
+          {/* Missing density filter toggle */}
+          {missingDensityVarieties.length > 0 && (
+            <button
+              onClick={() => setFilterMissingDensity(!filterMissingDensity)}
+              className={`px-2 py-1 text-xs font-medium rounded border flex items-center gap-1 ${
+                filterMissingDensity
+                  ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600'
+                  : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
+              }`}
+              title={filterMissingDensity ? 'Show all varieties' : 'Show only varieties missing density'}
+            >
+              ⚠ {missingDensityVarieties.length} missing density
+            </button>
+          )}
+
+          {/* Unassigned plantings - links to timeline with filter */}
+          {report.plantingsWithoutSeed > 0 && (
+            <Link
+              href={`/timeline/${planId}?filter=no-variety`}
+              className="px-2 py-1 text-xs font-medium rounded border bg-orange-50 text-orange-700 border-orange-300 hover:bg-orange-100 flex items-center gap-1"
+              title="Click to view unassigned plantings in Timeline"
+            >
+              ⚠ {report.plantingsWithoutSeed} unassigned
+            </Link>
+          )}
+        </div>
+
+        <button
+          onClick={resetColumnWidths}
+          className="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 border border-gray-300 rounded hover:bg-gray-50"
+          title="Reset column widths to fill available space"
+        >
+          Reset Columns
+        </button>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Table - flex-based, height constrained to viewport */}
+      <div
+        ref={containerRef}
+        className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col"
+        style={{ maxHeight: 'calc(100vh - 280px)' }}
+      >
         {filteredData.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             {report.byVariety.length === 0
@@ -944,45 +1344,63 @@ function SeedsTab({ report }: { report: PlanSeedReport }) {
               : 'No varieties match the current filters.'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <SortHeader k="crop" className="text-left">Crop</SortHeader>
-                  <SortHeader k="variety" className="text-left">Variety</SortHeader>
-                  <SortHeader k="supplier" className="text-left">Supplier</SortHeader>
-                  <th className="py-2 px-2 font-medium text-gray-600 text-center whitespace-nowrap">Org</th>
-                  <SortHeader k="needed" className="text-right">Seeds</SortHeader>
-                  <th className="py-2 px-2 font-medium text-gray-600 text-right whitespace-nowrap" title="Total amount needed (in order unit)">Total Need</th>
-                  {/* Inventory (Have) columns - blue tint */}
-                  <th className="py-2 px-1 font-medium text-blue-700 text-center whitespace-nowrap bg-blue-50/50" title="Inventory on hand">Have</th>
-                  <th className="py-2 px-1 font-medium text-blue-700 text-center whitespace-nowrap bg-blue-50/50">Unit</th>
-                  {/* Order Need = Total Need - Have */}
-                  <th className="py-2 px-2 font-medium text-gray-600 text-right whitespace-nowrap" title="Amount still needed to order (Total Need - Have)">Order Need</th>
-                  {/* Order input columns */}
-                  <th className="py-2 px-1 font-medium text-gray-600 text-center whitespace-nowrap" title="Product weight per unit">Wt</th>
-                  <th className="py-2 px-1 font-medium text-gray-600 text-center whitespace-nowrap">Unit</th>
-                  <th className="py-2 px-1 font-medium text-gray-600 text-center whitespace-nowrap">Qty</th>
-                  <th className="py-2 px-1 font-medium text-gray-600 text-center whitespace-nowrap">$/ea</th>
-                  <th className="py-2 px-2 font-medium text-gray-600 text-right whitespace-nowrap" title="Order Weight × Qty">Order Amt</th>
-                  <th className="py-2 px-2 font-medium text-gray-600 text-right whitespace-nowrap" title="Order Cost × Qty">Cost</th>
-                  <th className="py-2 px-2 font-medium text-gray-600 text-center whitespace-nowrap" title="(Have + Order) / Total Need">%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData.map(v => (
-                  <SeedOrderRow
-                    key={v.varietyId}
-                    variety={v}
-                    savedOrder={seedOrders[`SO_${v.varietyId}`]}
-                    onSave={upsertSeedOrder}
-                  />
-                ))}
-              </tbody>
-            </table>
+          <div className="overflow-auto flex-1">
+            {/* Header - sticky */}
+            <div className="sticky top-0 z-10 flex bg-gray-50 border-b border-gray-200" style={{ width: totalWidth }}>
+              <ResizableHeader colKey="crop" sortable sortKeyName="crop">Crop</ResizableHeader>
+              <ResizableHeader colKey="variety" sortable sortKeyName="variety">Variety</ResizableHeader>
+              <ResizableHeader colKey="supplier" sortable sortKeyName="supplier">Supplier</ResizableHeader>
+              <ResizableHeader colKey="organic" className="justify-center">Organic</ResizableHeader>
+              <ResizableHeader colKey="seedsNeeded" sortable sortKeyName="needed" className="justify-end">Seeds Needed</ResizableHeader>
+              <ResizableHeader colKey="weightNeeded" className="justify-end">Weight Needed</ResizableHeader>
+              {/* Inventory columns - blue tint */}
+              <ResizableHeader colKey="inStock" className="justify-center text-blue-700 bg-blue-50/50">In Stock</ResizableHeader>
+              <ResizableHeader colKey="stockUnit" className="justify-center text-blue-700 bg-blue-50/50">Stock Unit</ResizableHeader>
+              {/* Additional needed */}
+              <ResizableHeader colKey="additionalNeeded" className="justify-end">Additional Needed</ResizableHeader>
+              {/* Product/order input columns */}
+              <ResizableHeader colKey="productWeight" className="justify-center">Product Weight</ResizableHeader>
+              <ResizableHeader colKey="productUnit" className="justify-center">Product Unit</ResizableHeader>
+              <ResizableHeader colKey="productQty" className="justify-center">Product Qty</ResizableHeader>
+              <ResizableHeader colKey="productPrice" className="justify-center">Product Price</ResizableHeader>
+              <ResizableHeader colKey="orderWeight" className="justify-end">Order Weight</ResizableHeader>
+              <ResizableHeader colKey="orderCost" className="justify-end">Order Cost</ResizableHeader>
+              <ResizableHeader colKey="status" className="justify-center">Status</ResizableHeader>
+            </div>
+            {/* Body */}
+            <div style={{ width: totalWidth }}>
+              {filteredData.map(v => (
+                <SeedOrderRow
+                  key={v.varietyId}
+                  variety={v}
+                  savedOrder={seedOrders[`SO_${v.varietyId}`]}
+                  onSave={upsertSeedOrder}
+                  onEditDensity={setEditingVarietyId}
+                  colWidths={colWidths}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>
+
+      {/* Resize overlay - captures mouse events during column resize */}
+      {resizing && (
+        <div
+          className="fixed inset-0 cursor-col-resize"
+          style={{ zIndex: Z_INDEX.RESIZE_OVERLAY }}
+        />
+      )}
+
+      {/* Density Edit Modal */}
+      {editingVarietyId && (
+        <DensityEditModal
+          varietyId={editingVarietyId}
+          varieties={varieties}
+          onSave={updateVariety}
+          onClose={() => setEditingVarietyId(null)}
+        />
+      )}
     </div>
   );
 }
@@ -1137,7 +1555,7 @@ export default function ReportsPage() {
           <RevenueTab report={revenueReport} />
         )}
         {activeTab === 'seeds' && seedReport && (
-          <SeedsTab report={seedReport} />
+          <SeedsTab report={seedReport} planId={planId} />
         )}
       </main>
     </div>
