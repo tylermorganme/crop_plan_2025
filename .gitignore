@@ -49,6 +49,7 @@ next-env.d.ts
 
 # playwright screenshots
 .playwright-mcp/
+.claude-playwright/
 
 # temporary working files
 /tmp/
