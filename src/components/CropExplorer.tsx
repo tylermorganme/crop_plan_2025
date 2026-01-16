@@ -61,7 +61,7 @@ const DEFAULT_VISIBLE = [
   'harvestBufferDays', 'yieldPerHarvest', 'yieldUnit', 'deprecated'
 ];
 
-const STORAGE_KEY = 'crop-explorer-state-v4'; // Bumped for new camelCase field names
+const STORAGE_KEY = 'crop-explorer-state-v5'; // Bumped for frozen columns
 
 type SortDirection = 'asc' | 'desc' | null;
 type FilterValue = string | { min?: number; max?: number } | boolean | null;
@@ -75,6 +75,7 @@ interface PersistedState {
   filterPaneOpen: boolean;
   filterPaneWidth: number;
   scrollTop?: number;
+  frozenColumnCount?: number;
 }
 
 function loadPersistedState(): PersistedState | null {
@@ -277,6 +278,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filterPaneOpen, setFilterPaneOpen] = useState(true);
   const [filterPaneWidth, setFilterPaneWidth] = useState(DEFAULT_FILTER_PANE_WIDTH);
+  const [frozenColumnCount, setFrozenColumnCount] = useState(1); // Default: freeze first column
   const [hydrated, setHydrated] = useState(false);
   const [pendingScrollTop, setPendingScrollTop] = useState<number | null>(null);
   const scrollRestoredRef = useRef(false);
@@ -297,6 +299,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       setSortDirection(persisted.sortDirection ?? 'asc');
       setFilterPaneOpen(persisted.filterPaneOpen ?? true);
       setFilterPaneWidth(persisted.filterPaneWidth ?? DEFAULT_FILTER_PANE_WIDTH);
+      setFrozenColumnCount(persisted.frozenColumnCount ?? 1);
       // Queue scroll restoration for after render
       if (persisted.scrollTop != null && persisted.scrollTop > 0) {
         setPendingScrollTop(persisted.scrollTop);
@@ -335,8 +338,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       sortDirection,
       filterPaneOpen,
       filterPaneWidth,
+      frozenColumnCount,
     });
-  }, [hydrated, visibleColumns, columnOrder, columnWidths, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth]);
+  }, [hydrated, visibleColumns, columnOrder, columnWidths, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth, frozenColumnCount]);
 
   // Clear filters for hidden columns
   useEffect(() => {
@@ -360,6 +364,33 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     }
     return cols;
   }, [columnOrder, visibleColumns, sidebarColumnSearch]);
+
+  // Compute frozen column set and left offsets
+  const frozenColumns = useMemo(() => {
+    return new Set(displayColumns.slice(0, frozenColumnCount));
+  }, [displayColumns, frozenColumnCount]);
+
+  // Get left offset for a frozen column (sum of widths of all frozen columns before it)
+  const getFrozenLeftOffset = useCallback((col: string, colIndex: number) => {
+    if (!frozenColumns.has(col)) return undefined;
+    let offset = 0;
+    for (let i = 0; i < colIndex; i++) {
+      const c = displayColumns[i];
+      if (frozenColumns.has(c)) {
+        offset += columnWidths[c] ?? getDefaultColumnWidth(c);
+      }
+    }
+    return offset;
+  }, [frozenColumns, displayColumns, columnWidths]);
+
+  // Total width of frozen columns (for non-frozen content offset)
+  const frozenColumnsWidth = useMemo(() => {
+    let width = 0;
+    for (let i = 0; i < frozenColumnCount && i < displayColumns.length; i++) {
+      width += columnWidths[displayColumns[i]] ?? getDefaultColumnWidth(displayColumns[i]);
+    }
+    return width;
+  }, [frozenColumnCount, displayColumns, columnWidths]);
 
   // Column metadata (type, options, range)
   const columnMeta = useMemo(() => {
@@ -1193,6 +1224,20 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
           )}
           <span className="text-xs text-gray-600">Drag headers to reorder · Drag edges to resize</span>
           <div className="flex-1" />
+          {/* Freeze columns control */}
+          <div className="flex items-center gap-1.5 text-sm text-gray-700">
+            <span>Freeze:</span>
+            <select
+              value={frozenColumnCount}
+              onChange={(e) => setFrozenColumnCount(Number(e.target.value))}
+              className="px-2 py-1 text-sm border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-green-500"
+            >
+              <option value={0}>None</option>
+              {[1, 2, 3, 4, 5].map(n => (
+                <option key={n} value={n}>{n} col{n > 1 ? 's' : ''}</option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={() => setShowColumnManager(true)}
             className="px-3 py-1.5 text-sm text-gray-900 bg-gray-100 hover:bg-gray-200 rounded"
@@ -1230,9 +1275,10 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
           <div ref={headerContainerRef} className="overflow-hidden border-b border-gray-200">
             <div style={{ width: totalWidth + 80, minWidth: '100%' }}>
               <div className="flex bg-gray-50" style={{ height: HEADER_HEIGHT }}>
-                {/* Checkbox column */}
+                {/* Checkbox column - always sticky */}
                 <div
                   className="w-10 flex-shrink-0 px-2 flex items-center justify-center border-r border-gray-100 bg-gray-50"
+                  style={{ position: 'sticky', left: 0, zIndex: 3 }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <input
@@ -1243,46 +1289,62 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                     title={selectedCropIds.size === sortedCrops.length ? "Deselect all" : "Select all visible"}
                   />
                 </div>
-                {/* Actions column */}
-                <div className="w-10 flex-shrink-0 px-2 flex items-center justify-center border-r border-gray-100 bg-gray-50">
+                {/* Actions column - always sticky */}
+                <div
+                  className="w-10 flex-shrink-0 px-2 flex items-center justify-center border-r border-gray-100 bg-gray-50"
+                  style={{ position: 'sticky', left: 40, zIndex: 3 }}
+                >
                   <span className="text-xs text-gray-600">+</span>
                 </div>
-                {displayColumns.map(col => (
-                  <div
-                    key={col}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, col)}
-                    onDragOver={(e) => handleDragOver(e, col)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, col)}
-                    onDragEnd={handleDragEnd}
-                    style={{ width: getColumnWidth(col), minWidth: getColumnWidth(col) }}
-                    className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
-                      dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : getColumnBgClass(col, true)
-                    } ${draggedColumn === col ? 'opacity-50' : ''}`}
-                    onClick={() => handleSort(col)}
-                  >
-                    <span className="flex-1 truncate">{formatColumnHeader(col)}</span>
-                    <span className="w-4 text-center flex-shrink-0">
-                      {sortColumn === col ? (sortDirection === 'asc' ? '↑' : '↓') : (
-                        <span className="text-gray-300 opacity-0 group-hover:opacity-100">↕</span>
-                      )}
-                    </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); hideColumn(col); }}
-                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 px-1 flex-shrink-0"
-                      title="Hide column"
-                    >
-                      ×
-                    </button>
+                {displayColumns.map((col, colIndex) => {
+                  const isFrozen = frozenColumns.has(col);
+                  const leftOffset = getFrozenLeftOffset(col, colIndex);
+                  const isLastFrozen = isFrozen && colIndex === frozenColumnCount - 1;
+                  return (
                     <div
-                      onMouseDown={(e) => handleResizeStart(e, col)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-green-400 group-hover:bg-gray-300"
-                      style={{ marginRight: -1 }}
-                    />
-                  </div>
-                ))}
+                      key={col}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, col)}
+                      onDragOver={(e) => handleDragOver(e, col)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, col)}
+                      onDragEnd={handleDragEnd}
+                      style={{
+                        width: getColumnWidth(col),
+                        minWidth: getColumnWidth(col),
+                        ...(isFrozen && {
+                          position: 'sticky',
+                          left: 40 + 40 + (leftOffset ?? 0), // checkbox (w-10=40px) + actions (w-10=40px) + offset
+                          zIndex: 2,
+                        }),
+                      }}
+                      className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
+                        dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : getColumnBgClass(col, true)
+                      } ${draggedColumn === col ? 'opacity-50' : ''} ${isFrozen ? 'bg-gray-100' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
+                      onClick={() => handleSort(col)}
+                    >
+                      <span className="flex-1 truncate">{formatColumnHeader(col)}</span>
+                      <span className="w-4 text-center flex-shrink-0">
+                        {sortColumn === col ? (sortDirection === 'asc' ? '↑' : '↓') : (
+                          <span className="text-gray-300 opacity-0 group-hover:opacity-100">↕</span>
+                        )}
+                      </span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); hideColumn(col); }}
+                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 px-1 flex-shrink-0"
+                        title="Hide column"
+                      >
+                        ×
+                      </button>
+                      <div
+                        onMouseDown={(e) => handleResizeStart(e, col)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-green-400 group-hover:bg-gray-300"
+                        style={{ marginRight: -1 }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1326,9 +1388,10 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                         transform: `translateY(${virtualRow.start}px)`,
                       }}
                     >
-                      {/* Checkbox */}
+                      {/* Checkbox - always sticky */}
                       <div
-                        className="w-10 shrink-0 px-2 flex items-center justify-center border-r border-gray-50"
+                        className="w-10 shrink-0 px-2 flex items-center justify-center border-r border-gray-50 bg-white"
+                        style={{ position: 'sticky', left: 0, zIndex: 2 }}
                         onClick={(e) => toggleCropSelection(crop.id, e)}
                       >
                         <input
@@ -1338,9 +1401,10 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </div>
-                      {/* Quick add button */}
+                      {/* Quick add button - always sticky */}
                       <div
-                        className="w-10 shrink-0 px-2 flex items-center justify-center border-r border-gray-50"
+                        className="w-10 shrink-0 px-2 flex items-center justify-center border-r border-gray-50 bg-white"
+                        style={{ position: 'sticky', left: 40, zIndex: 2 }}
                       >
                         <button
                           onClick={(e) => handleQuickAdd(crop, e)}
@@ -1350,16 +1414,29 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                           +
                         </button>
                       </div>
-                      {displayColumns.map(col => (
-                        <div
-                          key={col}
-                          style={{ width: getColumnWidth(col), minWidth: getColumnWidth(col) }}
-                          className={`px-3 py-2 text-sm text-gray-900 whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center ${getColumnBgClass(col)}`}
-                          title={String(crop[col as keyof Crop] ?? '')}
-                        >
-                          {formatValue(crop[col as keyof Crop], col)}
-                        </div>
-                      ))}
+                      {displayColumns.map((col, colIndex) => {
+                        const isFrozen = frozenColumns.has(col);
+                        const leftOffset = getFrozenLeftOffset(col, colIndex);
+                        const isLastFrozen = isFrozen && colIndex === frozenColumnCount - 1;
+                        return (
+                          <div
+                            key={col}
+                            style={{
+                              width: getColumnWidth(col),
+                              minWidth: getColumnWidth(col),
+                              ...(isFrozen && {
+                                position: 'sticky',
+                                left: 40 + 40 + (leftOffset ?? 0), // checkbox (w-10=40px) + actions (w-10=40px) + offset
+                                zIndex: 1,
+                              }),
+                            }}
+                            className={`px-3 py-2 text-sm text-gray-900 whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center ${getColumnBgClass(col)} ${isFrozen ? 'bg-white' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]' : ''}`}
+                            title={String(crop[col as keyof Crop] ?? '')}
+                          >
+                            {formatValue(crop[col as keyof Crop], col)}
+                          </div>
+                        );
+                      })}
                     </div>
                   );
                 })}
