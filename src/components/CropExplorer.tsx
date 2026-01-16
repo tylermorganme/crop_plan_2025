@@ -9,6 +9,7 @@ import type { Planting } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
 import { type CropConfig } from '@/lib/entities/crop-config';
+import { calculateConfigRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
 import CropConfigCreator from './CropConfigCreator';
 import CropConfigEditor from './CropConfigEditor';
 import columnAnalysis from '@/data/column-analysis.json';
@@ -219,7 +220,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const [columnFilters, setColumnFilters] = useState<Record<string, FilterValue>>({});
 
   // Use plan's catalog when active, otherwise fall back to master list (crops prop)
-  const displayCrops = useMemo(() => {
+  const baseCrops = useMemo(() => {
     // Check if the store has the active plan loaded
     if (activePlanId && currentPlanId === activePlanId && planCatalog.length > 0) {
       return planCatalog as Crop[];
@@ -228,16 +229,43 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     return crops;
   }, [activePlanId, currentPlanId, planCatalog, crops]);
 
+  // Extend type to include computed revenue field
+  type CropWithRevenue = Crop & { revenuePerBed?: number | null };
+
+  // Enrich crops with computed revenuePerBed (revenue for a standard bed)
+  const displayCrops: CropWithRevenue[] = useMemo(() => {
+    if (!products || Object.keys(products).length === 0) {
+      // No products loaded - return crops without revenue
+      return baseCrops;
+    }
+
+    return baseCrops.map(crop => {
+      const revenue = calculateConfigRevenue(crop as CropConfig, STANDARD_BED_LENGTH, products);
+      return {
+        ...crop,
+        revenuePerBed: revenue,
+      };
+    });
+  }, [baseCrops, products]);
+
   // All columns - derive from crop keys if allHeaders not provided
+  // Include revenuePerBed as a computed column
   const allColumns = useMemo(() => {
     if (allHeaders && allHeaders.length > 0) {
-      return ['id', ...allHeaders];
+      // Add revenuePerBed to the list if not already present
+      const cols = ['id', ...allHeaders];
+      if (!cols.includes('revenuePerBed')) {
+        cols.push('revenuePerBed');
+      }
+      return cols;
     }
     // Generate headers from displayCrops fields
     const fields = new Set<string>();
     displayCrops.forEach(crop => {
       Object.keys(crop).forEach(key => fields.add(key));
     });
+    // Ensure revenuePerBed is included
+    fields.add('revenuePerBed');
     return Array.from(fields);
   }, [allHeaders, displayCrops]);
 
@@ -1234,7 +1262,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                     } ${draggedColumn === col ? 'opacity-50' : ''}`}
                     onClick={() => handleSort(col)}
                   >
-                    <span className="flex-1 truncate">{col}</span>
+                    <span className="flex-1 truncate">{formatColumnHeader(col)}</span>
                     <span className="w-4 text-center flex-shrink-0">
                       {sortColumn === col ? (sortDirection === 'asc' ? '↑' : '↓') : (
                         <span className="text-gray-300 opacity-0 group-hover:opacity-100">↕</span>
@@ -1329,7 +1357,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                           className={`px-3 py-2 text-sm text-gray-900 whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center ${getColumnBgClass(col)}`}
                           title={String(crop[col as keyof Crop] ?? '')}
                         >
-                          {formatValue(crop[col as keyof Crop])}
+                          {formatValue(crop[col as keyof Crop], col)}
                         </div>
                       ))}
                     </div>
@@ -1765,12 +1793,23 @@ function FilterInput({
   );
 }
 
-function formatValue(value: unknown): string {
+function formatValue(value: unknown, columnName?: string): string {
   if (value === null || value === undefined) return '–';
   if (typeof value === 'boolean') return value ? '✓' : '–';
   if (typeof value === 'number') {
+    // Format revenue as currency
+    if (columnName === 'revenuePerBed') {
+      return '$' + value.toFixed(2);
+    }
     if (Number.isInteger(value)) return value.toString();
     return value.toFixed(2);
   }
   return String(value);
+}
+
+/** Format column headers for display (handle special computed columns) */
+function formatColumnHeader(col: string): string {
+  // Special display names for computed columns
+  if (col === 'revenuePerBed') return 'Rev/Bed';
+  return col;
 }

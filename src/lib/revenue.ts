@@ -16,6 +16,13 @@ import type { Product } from './entities/product';
 import { evaluateYieldFormula, buildYieldContext, calculateFieldOccupationDays } from './entities/crop-config';
 
 // =============================================================================
+// CONSTANTS
+// =============================================================================
+
+/** Standard bed length for revenue and yield comparisons (feet) */
+export const STANDARD_BED_LENGTH = 50;
+
+// =============================================================================
 // HARVEST WINDOW HELPERS
 // =============================================================================
 
@@ -182,6 +189,42 @@ export function calculateProductYieldRevenue(
     price,
     revenue,
   };
+}
+
+/**
+ * Calculate total revenue for a CropConfig at a given bed length.
+ *
+ * This is the core revenue calculation used by both:
+ * - CropExplorer (with STANDARD_BED_LENGTH for comparison)
+ * - Planting reports (with actual planting.bedFeet)
+ *
+ * @param config - The CropConfig to calculate
+ * @param bedFeet - Bed length in feet
+ * @param products - Product catalog for pricing lookup
+ * @returns Total revenue, or null if no valid product yields
+ */
+export function calculateConfigRevenue(
+  config: CropConfig,
+  bedFeet: number,
+  products: Record<string, Product>
+): number | null {
+  if (!config.productYields?.length) {
+    return null;
+  }
+
+  let totalRevenue = 0;
+  let hasValidProduct = false;
+
+  for (const py of config.productYields) {
+    const product = products[py.productId];
+    const result = calculateProductYieldRevenue(py, config, bedFeet, product);
+    if (result) {
+      totalRevenue += result.revenue;
+      hasValidProduct = true;
+    }
+  }
+
+  return hasValidProduct ? totalRevenue : null;
 }
 
 /**

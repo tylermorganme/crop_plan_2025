@@ -21,6 +21,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   // Use centralized store state - automatically syncs across tabs
   const activePlanId = usePlanStore((state) => state.activePlanId);
   const currentPlanName = usePlanStore((state) => state.currentPlan?.metadata.name ?? 'Untitled');
+  const refreshPlanList = usePlanStore((state) => state.refreshPlanList);
 
   // Undo/redo from store
   const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
@@ -296,6 +297,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
         onClose={() => setShowCopyModal(false)}
         onCopy={async (options: CopyPlanOptions) => {
           await copyPlan(options);
+          await refreshPlanList();
           setShowCopyModal(false);
         }}
       />
