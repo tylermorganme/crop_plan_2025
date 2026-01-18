@@ -30,6 +30,7 @@ import BedItem from '@/components/beds/BedItem';
 import GroupHeader from '@/components/beds/GroupHeader';
 import DeleteBedModal from '@/components/beds/DeleteBedModal';
 import DeleteGroupModal from '@/components/beds/DeleteGroupModal';
+import ImportBedsModal from '@/components/beds/ImportBedsModal';
 
 export default function BedsPage() {
   const params = useParams();
@@ -40,11 +41,13 @@ export default function BedsPage() {
     loadPlanById,
     renameBed,
     addBed,
+    upsertBeds,
     deleteBed,
     reorderBed,
     renameBedGroup,
     addBedGroup,
     deleteBedGroup,
+    deleteBedGroupWithBeds,
     reorderBedGroup,
     moveBedToGroup,
     deleteBedWithPlantings,
@@ -70,6 +73,9 @@ export default function BedsPage() {
   // Delete modals
   const [deletingBed, setDeletingBed] = useState<Bed | null>(null);
   const [deletingGroup, setDeletingGroup] = useState<BedGroup | null>(null);
+
+  // Import modal
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -111,6 +117,16 @@ export default function BedsPage() {
   // Count plantings referencing a bed
   const getPlantingCount = (bedId: string): number => {
     return plantings.filter(p => p.startBed === bedId).length;
+  };
+
+  // Count plantings referencing any bed in a group
+  const getGroupPlantingCount = (groupId: string): number => {
+    const bedIdsInGroup = new Set(
+      Object.values(beds)
+        .filter(b => b.groupId === groupId)
+        .map(b => b.id)
+    );
+    return plantings.filter(p => p.startBed && bedIdsInGroup.has(p.startBed)).length;
   };
 
   // Stats
@@ -301,19 +317,42 @@ export default function BedsPage() {
     }
   };
 
-  const handleDeleteGroup = async (action: 'cancel' | 'delete') => {
+  const handleDeleteGroup = async (action: 'cancel' | 'delete' | 'deleteWithBeds') => {
     if (action === 'cancel' || !deletingGroup) {
       setDeletingGroup(null);
       return;
     }
 
     try {
-      await deleteBedGroup(deletingGroup.id);
+      if (action === 'deleteWithBeds') {
+        await deleteBedGroupWithBeds(deletingGroup.id);
+      } else {
+        await deleteBedGroup(deletingGroup.id);
+      }
       setDeletingGroup(null);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete group');
     }
+  };
+
+  // Build existingBeds for the import modal
+  const existingBeds = useMemo(() => {
+    return Object.values(beds).map(bed => ({
+      id: bed.id,
+      name: bed.name,
+      groupName: bedGroups[bed.groupId]?.name ?? '',
+      lengthFt: bed.lengthFt,
+    }));
+  }, [beds, bedGroups]);
+
+  const handleImportBeds = async (
+    beds: { name: string; group: string; length: number }[]
+  ) => {
+    // Single atomic operation - all changes saved together
+    return upsertBeds(
+      beds.map(b => ({ groupName: b.group, bedName: b.name, lengthFt: b.length }))
+    );
   };
 
   if (isLoading) {
@@ -355,6 +394,14 @@ export default function BedsPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Import CSV */}
+              <button
+                onClick={() => setShowImportModal(true)}
+                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium"
+              >
+                Import CSV
+              </button>
+
               {/* Add Group */}
               {addingGroup ? (
                 <div className="flex items-center gap-2">
@@ -472,7 +519,6 @@ export default function BedsPage() {
                         onCancelEdit={handleCancelEdit}
                         onAddBed={() => setAddingBedToGroup(group.id)}
                         onDelete={() => setDeletingGroup(group)}
-                        canDelete={bedsInGroup.length === 0}
                       />
 
                       {/* Inline add bed form */}
@@ -602,9 +648,20 @@ export default function BedsPage() {
       {deletingGroup && (
         <DeleteGroupModal
           group={deletingGroup}
+          bedCount={getBedsForGroup(deletingGroup.id).length}
+          plantingCount={getGroupPlantingCount(deletingGroup.id)}
           onAction={handleDeleteGroup}
         />
       )}
+
+      {/* Import beds modal */}
+      <ImportBedsModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImport={handleImportBeds}
+        existingGroups={sortedGroups.map(g => g.name)}
+        existingBeds={existingBeds}
+      />
     </div>
   );
 }

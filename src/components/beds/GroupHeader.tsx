@@ -15,7 +15,6 @@ interface GroupHeaderProps {
   onCancelEdit: () => void;
   onAddBed: () => void;
   onDelete: () => void;
-  canDelete: boolean;
 }
 
 export default function GroupHeader({
@@ -29,7 +28,6 @@ export default function GroupHeader({
   onCancelEdit,
   onAddBed,
   onDelete,
-  canDelete,
 }: GroupHeaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const dragHandle = useDragHandle();
@@ -135,13 +133,8 @@ export default function GroupHeader({
             e.stopPropagation();
             onDelete();
           }}
-          disabled={!canDelete}
-          className={`p-1.5 rounded ${
-            canDelete
-              ? 'text-gray-400 hover:text-red-600 hover:bg-gray-100'
-              : 'text-gray-300 cursor-not-allowed'
-          }`}
-          title={canDelete ? 'Delete group' : 'Remove all beds first'}
+          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-gray-100 rounded"
+          title="Delete group"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="3,6 5,6 21,6" />
