@@ -24,7 +24,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from 'fs';
 import { gzipSync, gunzipSync } from 'zlib';
 import { join } from 'path';
-import type { Plan } from './plan-types';
 import type { PlanData, PlanSummary, PlanSnapshot, StorageAdapter } from './storage-adapter';
 import type { StashEntry, Checkpoint } from './plan-types';
 
@@ -135,7 +134,7 @@ function writeJson(path: string, data: unknown): void {
 
 // File paths
 const registryPath = () => join(PLANS_DIR, 'registry.json');
-const planPath = (id: string) => join(PLANS_DIR, `${id}.json`);
+const planPath = (id: string) => join(PLANS_DIR, `${id}.json.gz`);
 const snapshotsPath = (id: string) => join(PLANS_DIR, `${id}.snapshots.json.gz`);
 const checkpointsPath = (id: string) => join(PLANS_DIR, `${id}.checkpoints.json`);
 const stashPath = () => join(PLANS_DIR, 'stash.json');
@@ -207,11 +206,15 @@ export const fileStorage: StorageAdapter = {
   async getPlan(id: string): Promise<PlanData | null> {
     const path = planPath(id);
     if (!existsSync(path)) return null;
-    return readJson<PlanData | null>(path, null);
+    return readGzippedJson<PlanData | null>(path, null);
   },
 
   async savePlan(id: string, data: PlanData): Promise<void> {
-    writeJson(planPath(id), data);
+    // Save as gzipped (fast compression for minimal overhead)
+    ensureDir();
+    const json = JSON.stringify(data);
+    const compressed = gzipSync(json, { level: 1 }); // fast compression
+    writeFileSync(planPath(id), compressed);
 
     // Update registry
     const summary: PlanSummary = {
