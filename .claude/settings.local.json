@@ -53,7 +53,10 @@
       "Bash(__NEW_LINE__ python3 -c \"\nimport openpyxl\nwb = openpyxl.load_workbook\\(''Crop Plan 2025 V20.xlsm'', data_only=False\\)\nws = wb[''Crop Chart'']\n\n# Get headers from row 2\nheaders = []\nfor col in range\\(1, 80\\):\n    val = ws.cell\\(row=2, column=col\\).value\n    if val and isinstance\\(val, str\\) and len\\(val\\) < 40:\n        headers.append\\(val\\)\n\nprint\\(''EXCEL COLUMN NAMES:''\\)\nfor h in sorted\\(set\\(headers\\)\\):\n    print\\(f''  {h}''\\)\n\")",
       "WebSearch",
       "Skill(crop-data)",
-      "Skill(crop-data:*)"
+      "Skill(crop-data:*)",
+      "Skill(quality)",
+      "Skill(quality:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []
