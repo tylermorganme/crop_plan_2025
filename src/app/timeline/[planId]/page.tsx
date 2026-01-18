@@ -320,6 +320,7 @@ export default function TimelinePlanPage() {
         varieties={currentPlan?.varieties}
         seedMixes={currentPlan?.seedMixes}
         products={currentPlan?.products}
+        markets={currentPlan?.markets}
       />
     </div>
   );

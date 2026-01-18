@@ -83,12 +83,20 @@ export {
 export type { Market, MarketSplit, CreateMarketInput } from './entities/market';
 export {
   DEFAULT_MARKET_IDS,
+  DEFAULT_MARKET_SPLIT,
   createMarket,
   cloneMarket,
   cloneMarkets,
   createDefaultMarkets,
   getActiveMarkets,
   getDefaultMarket,
+  // Market split helpers
+  getMarketSplitTotal,
+  isMarketSplitValid,
+  normalizeMarketSplit,
+  getMarketAllocation,
+  formatMarketSplit,
+  validateMarketSplit,
 } from './entities/market';
 
 export type { Variety, DensityUnit, CreateVarietyInput } from './entities/variety';

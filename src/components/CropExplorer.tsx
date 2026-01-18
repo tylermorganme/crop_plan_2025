@@ -8,12 +8,75 @@ import type { Crop } from '@/lib/crops';
 import type { Planting } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
-import { type CropConfig } from '@/lib/entities/crop-config';
+import { type CropConfig, calculatePlantingMethod } from '@/lib/entities/crop-config';
 import { calculateConfigRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
+import { getMarketSplitTotal } from '@/lib/entities/market';
 import CropConfigCreator from './CropConfigCreator';
 import CropConfigEditor from './CropConfigEditor';
 import columnAnalysis from '@/data/column-analysis.json';
 import { Z_INDEX } from '@/lib/z-index';
+
+// =============================================================================
+// CONFIG VALIDATION
+// =============================================================================
+
+interface ConfigValidation {
+  /** 'error' = missing required data, 'warning' = potentially misconfigured, 'ok' = all good */
+  status: 'error' | 'warning' | 'ok';
+  /** Human-readable issues */
+  issues: string[];
+}
+
+/**
+ * Validate a crop config and return status + issues.
+ * Used to show visual indicators in the explorer.
+ */
+function validateCropConfig(crop: CropConfig): ConfigValidation {
+  const issues: string[] = [];
+
+  // Errors - missing required data
+  if (!crop.identifier?.trim()) {
+    issues.push('Missing identifier');
+  }
+  if (!crop.crop?.trim()) {
+    issues.push('Missing crop name');
+  }
+  if (!crop.productYields || crop.productYields.length === 0) {
+    issues.push('No products configured (required for timing)');
+  }
+
+  // If we have errors, return early
+  if (issues.length > 0) {
+    return { status: 'error', issues };
+  }
+
+  // Warnings - potentially misconfigured
+  const plantingMethod = calculatePlantingMethod(crop);
+  if (plantingMethod !== 'perennial' && !crop.normalMethod) {
+    issues.push('DTM measurement basis not set');
+  }
+
+  if (crop.defaultMarketSplit) {
+    const total = getMarketSplitTotal(crop.defaultMarketSplit);
+    if (Math.abs(total - 100) >= 0.01) {
+      issues.push(`Market split totals ${total}%, not 100%`);
+    }
+  }
+
+  // Check for products with zero DTM
+  if (crop.productYields) {
+    const zeroDtm = crop.productYields.filter(py => py.dtm === 0);
+    if (zeroDtm.length > 0) {
+      issues.push(`${zeroDtm.length} product(s) with DTM = 0`);
+    }
+  }
+
+  if (issues.length > 0) {
+    return { status: 'warning', issues };
+  }
+
+  return { status: 'ok', issues: [] };
+}
 
 // Build a map of column header -> source type
 const columnSourceTypes: Record<string, 'static' | 'calculated' | 'mixed' | 'empty'> = {};
@@ -195,6 +258,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const varieties = usePlanStore((state) => state.currentPlan?.varieties);
   const seedMixes = usePlanStore((state) => state.currentPlan?.seedMixes);
   const products = usePlanStore((state) => state.currentPlan?.products);
+  const markets = usePlanStore((state) => state.currentPlan?.markets);
   const catalogLoading = usePlanStore((state) => state.isLoading);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const addPlanting = usePlanStore((state) => state.addPlanting);
@@ -1418,6 +1482,12 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                         const isFrozen = frozenColumns.has(col);
                         const leftOffset = getFrozenLeftOffset(col, colIndex);
                         const isLastFrozen = isFrozen && colIndex === frozenColumnCount - 1;
+
+                        // For identifier column, add validation status indicator
+                        const isIdentifierCol = col === 'identifier';
+                        const validation = isIdentifierCol ? validateCropConfig(crop as CropConfig) : null;
+                        const hasIssues = validation && validation.status !== 'ok';
+
                         return (
                           <div
                             key={col}
@@ -1430,10 +1500,37 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                                 zIndex: 1,
                               }),
                             }}
-                            className={`px-3 py-2 text-sm text-gray-900 whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center ${getColumnBgClass(col)} ${isFrozen ? 'bg-white' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]' : ''}`}
-                            title={String(crop[col as keyof Crop] ?? '')}
+                            className={`px-3 py-2 text-sm whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center gap-1.5 ${getColumnBgClass(col)} ${isFrozen ? 'bg-white' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]' : ''} ${
+                              hasIssues
+                                ? validation.status === 'error'
+                                  ? 'text-red-700'
+                                  : 'text-amber-700'
+                                : 'text-gray-900'
+                            }`}
+                            title={hasIssues ? `${crop[col as keyof Crop]}\n\nIssues:\n• ${validation.issues.join('\n• ')}` : String(crop[col as keyof Crop] ?? '')}
                           >
-                            {formatValue(crop[col as keyof Crop], col)}
+                            {/* Validation indicator for identifier column */}
+                            {isIdentifierCol && hasIssues && (
+                              <span
+                                className={`shrink-0 ${
+                                  validation.status === 'error'
+                                    ? 'text-red-500'
+                                    : 'text-amber-500'
+                                }`}
+                                title={validation.issues.join('\n')}
+                              >
+                                {validation.status === 'error' ? (
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </span>
+                            )}
+                            <span className="truncate">{formatValue(crop[col as keyof Crop], col)}</span>
                           </div>
                         );
                       })}
@@ -1707,6 +1804,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         varieties={varieties}
         seedMixes={seedMixes}
         products={products}
+        markets={markets}
       />
 
       {/* Edit Config Modal */}
@@ -1720,6 +1818,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         varieties={varieties}
         seedMixes={seedMixes}
         products={products}
+        markets={markets}
       />
 
       {/* Delete Confirmation Modal */}

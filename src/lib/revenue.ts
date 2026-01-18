@@ -95,8 +95,11 @@ export interface ProductRevenueResult {
   productName: string;
   unit: string;
   yield: number;
+  /** Price used (weighted avg if split across markets) */
   price: number;
   revenue: number;
+  /** Revenue broken down by market (if market split applied) */
+  revenueByMarket?: Record<string, number>;
 }
 
 /** Revenue breakdown for a single planting */
@@ -109,6 +112,8 @@ export interface PlantingRevenueResult {
   daysInField: number;
   products: ProductRevenueResult[];
   totalRevenue: number;
+  /** Revenue broken down by market */
+  revenueByMarket: Record<string, number>;
   /** First harvest date (ISO string) */
   harvestStartDate: string | null;
 }
@@ -139,6 +144,8 @@ export interface MonthlyRevenueResult {
 /** Complete revenue report for a plan */
 export interface PlanRevenueReport {
   totalRevenue: number;
+  /** Revenue broken down by market */
+  revenueByMarket: Record<string, number>;
   plantingCount: number;
   byCrop: CropRevenueResult[];
   byMonth: MonthlyRevenueResult[];
@@ -252,25 +259,69 @@ export function calculateConfigRevenue(
 
 /**
  * Calculate total revenue for a planting across all its products.
+ * Uses market splits to calculate proper revenue by market.
  *
  * @param planting - The planting to calculate
  * @param config - The CropConfig for this planting
  * @param products - All products (to look up pricing)
- * @returns Revenue result for the planting
+ * @param markets - All markets for the plan (for market split calculations)
+ * @returns Revenue result for the planting with market breakdown
  */
 export function calculatePlantingRevenue(
   planting: Planting,
   config: CropConfig,
-  products: Record<string, Product>
+  products: Record<string, Product>,
+  markets: Record<string, Market> = {}
 ): PlantingRevenueResult {
   const productResults: ProductRevenueResult[] = [];
+  const revenueByMarket: Record<string, number> = {};
 
-  // Calculate revenue for each ProductYield
+  // Get effective market split for this planting
+  const marketSplit = getEffectiveMarketSplit(planting, config);
+
+  // Calculate revenue for each ProductYield with market breakdown
   for (const py of config.productYields ?? []) {
     const product = products[py.productId];
-    const result = calculateProductYieldRevenue(py, config, planting.bedFeet, product);
-    if (result) {
-      productResults.push(result);
+
+    // Use market-aware calculation if we have markets
+    if (Object.keys(markets).length > 0) {
+      const marketResult = calculateProductYieldRevenueByMarket(
+        py,
+        config,
+        planting.bedFeet,
+        product,
+        marketSplit,
+        markets
+      );
+      if (marketResult) {
+        // Calculate weighted average price for display
+        const yieldContext = buildYieldContext(config, planting.bedFeet);
+        yieldContext.harvests = py.numberOfHarvests ?? 1;
+        const yieldResult = evaluateYieldFormula(py.yieldFormula!, yieldContext);
+        const yieldAmount = yieldResult.value ?? 0;
+        const avgPrice = yieldAmount > 0 ? marketResult.total / yieldAmount : 0;
+
+        productResults.push({
+          productId: py.productId,
+          productName: product?.product ?? 'Unknown',
+          unit: product?.unit ?? '',
+          yield: yieldAmount,
+          price: avgPrice,
+          revenue: marketResult.total,
+          revenueByMarket: marketResult.byMarket,
+        });
+
+        // Aggregate market revenue
+        for (const [marketId, revenue] of Object.entries(marketResult.byMarket)) {
+          revenueByMarket[marketId] = (revenueByMarket[marketId] ?? 0) + revenue;
+        }
+      }
+    } else {
+      // Fallback to simple calculation (no markets defined)
+      const result = calculateProductYieldRevenue(py, config, planting.bedFeet, product);
+      if (result) {
+        productResults.push(result);
+      }
     }
   }
 
@@ -297,33 +348,43 @@ export function calculatePlantingRevenue(
     daysInField,
     products: productResults,
     totalRevenue,
+    revenueByMarket,
     harvestStartDate,
   };
 }
 
 /**
  * Generate a complete revenue report for a plan.
+ * Uses market splits to calculate revenue by market.
  *
  * @param plan - The plan to analyze
- * @returns Complete revenue breakdown
+ * @returns Complete revenue breakdown including market breakdown
  */
 export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
   const plantingResults: PlantingRevenueResult[] = [];
   const cropTotals = new Map<string, { revenue: number; bedFeet: number; bedFootDays: number; count: number }>();
   const monthlyTotals = new Map<string, number>();
   const monthByCrop = new Map<string, Record<string, number>>();
+  const revenueByMarket: Record<string, number> = {};
 
   const plantings = plan.plantings ?? [];
   const cropCatalog = plan.cropCatalog ?? {};
   const products = plan.products ?? {};
+  const markets = plan.markets ?? {};
 
   // Calculate revenue for each planting
   for (const planting of plantings) {
     const config = cropCatalog[planting.configId];
     if (!config) continue;
 
-    const result = calculatePlantingRevenue(planting, config, products);
+    // Pass markets for market-split-aware calculation
+    const result = calculatePlantingRevenue(planting, config, products, markets);
     plantingResults.push(result);
+
+    // Aggregate market revenue
+    for (const [marketId, revenue] of Object.entries(result.revenueByMarket)) {
+      revenueByMarket[marketId] = (revenueByMarket[marketId] ?? 0) + revenue;
+    }
 
     // Calculate bed-foot-days for this planting
     const bedFootDays = planting.bedFeet * result.daysInField;
@@ -342,10 +403,13 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
     if (planting.fieldStartDate) {
       const fieldStart = new Date(planting.fieldStartDate);
 
-      for (const py of config.productYields ?? []) {
-        const product = products[py.productId];
-        const productResult = calculateProductYieldRevenue(py, config, planting.bedFeet, product);
-        if (!productResult || productResult.revenue <= 0) continue;
+      // Use product revenues from our market-aware result
+      for (const productResult of result.products) {
+        if (productResult.revenue <= 0) continue;
+
+        // Find the matching ProductYield for timing info
+        const py = config.productYields?.find(p => p.productId === productResult.productId);
+        if (!py) continue;
 
         // Calculate harvest window for this product
         const harvestStart = new Date(fieldStart);
@@ -405,6 +469,7 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
 
   return {
     totalRevenue,
+    revenueByMarket,
     plantingCount: plantings.length,
     byCrop,
     byMonth,
@@ -445,9 +510,14 @@ export function formatMonth(month: string): string {
  * Get the effective market split for a planting.
  *
  * Resolution order:
- * 1. If useDefaultMarketSplit is false and marketSplit is set, use planting's marketSplit
- * 2. If useDefaultMarketSplit is true (default), use config's defaultMarketSplit
- * 3. If neither is set, returns undefined (all revenue goes to first active market by default)
+ * 1. If useDefaultMarketSplit is explicitly false → use planting's marketSplit (if set)
+ * 2. If useDefaultMarketSplit is true/undefined → use config's defaultMarketSplit
+ * 3. If neither is set, returns undefined (all revenue goes to first active market)
+ *
+ * Note: When useDefaultMarketSplit is true/undefined and config has no default,
+ * we do NOT fall back to planting.marketSplit - that would defeat the purpose
+ * of "use default". The planting's marketSplit is only used when explicitly
+ * opted out of using the default.
  *
  * @param planting - The planting to check
  * @param config - The crop config for fallback
@@ -457,13 +527,13 @@ export function getEffectiveMarketSplit(
   planting: Planting,
   config: CropConfig
 ): MarketSplit | undefined {
-  // If explicitly set to NOT use default and has override, use override
-  if (planting.useDefaultMarketSplit === false && planting.marketSplit) {
+  // If explicitly set to NOT use default, use planting's override
+  if (planting.useDefaultMarketSplit === false) {
     return planting.marketSplit;
   }
 
-  // Otherwise use config default (or planting override if useDefaultMarketSplit is undefined)
-  return config.defaultMarketSplit ?? planting.marketSplit;
+  // Otherwise (useDefaultMarketSplit is true or undefined), use config default
+  return config.defaultMarketSplit;
 }
 
 /** Revenue broken down by market */

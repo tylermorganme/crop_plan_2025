@@ -21,6 +21,12 @@ const fs = require('fs');
 const crops = JSON.parse(fs.readFileSync('./crops.json.old', 'utf8')).crops;
 const products = JSON.parse(fs.readFileSync('./products.json', 'utf8'));
 
+// Default market split: 100% Direct
+// Matches DEFAULT_MARKET_IDS from src/lib/entities/market.ts
+const DEFAULT_MARKET_SPLIT = {
+  'market-direct': 100,
+};
+
 // Build product lookup by crop+unit for matching
 const productLookup = new Map();
 for (const p of products) {
@@ -141,6 +147,9 @@ const cleanCrops = crops.map((c) => {
 
     // Scheduling - target field date for default planting schedule
     targetFieldDate,
+
+    // Default market split: 100% Direct for all imports
+    defaultMarketSplit: DEFAULT_MARKET_SPLIT,
   };
 
   // Detect postHarvestFieldDays from harvest window formula overrides

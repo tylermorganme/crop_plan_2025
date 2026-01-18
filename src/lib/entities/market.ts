@@ -143,3 +143,106 @@ export function createDefaultMarkets(): Record<string, Market> {
     },
   };
 }
+
+// =============================================================================
+// MARKET SPLIT HELPERS
+// =============================================================================
+
+/**
+ * Default market split - 100% Direct.
+ * Used when no split is specified.
+ */
+export const DEFAULT_MARKET_SPLIT: MarketSplit = {
+  [DEFAULT_MARKET_IDS.DIRECT]: 100,
+};
+
+/**
+ * Calculate the total of all percentages in a market split.
+ */
+export function getMarketSplitTotal(split: MarketSplit): number {
+  return Object.values(split).reduce((sum, pct) => sum + (pct || 0), 0);
+}
+
+/**
+ * Check if a market split totals exactly 100%.
+ */
+export function isMarketSplitValid(split: MarketSplit): boolean {
+  return Math.abs(getMarketSplitTotal(split) - 100) < 0.01;
+}
+
+/**
+ * Normalize a market split to always sum to 100%.
+ * Treats values as ratios - e.g., 50:30:140 becomes ~23:14:64.
+ *
+ * @param split - The market split to normalize
+ * @returns A new MarketSplit that sums to exactly 100
+ */
+export function normalizeMarketSplit(split: MarketSplit): MarketSplit {
+  const total = getMarketSplitTotal(split);
+  if (total === 0) {
+    // Avoid division by zero - return default split
+    return { ...DEFAULT_MARKET_SPLIT };
+  }
+
+  const normalized: MarketSplit = {};
+  for (const [marketId, pct] of Object.entries(split)) {
+    // Round to 2 decimal places to avoid floating point weirdness
+    normalized[marketId] = Math.round((pct / total) * 100 * 100) / 100;
+  }
+  return normalized;
+}
+
+/**
+ * Get the allocation for a specific market from a split.
+ * Returns a decimal (0-1) suitable for multiplication.
+ *
+ * If the split doesn't sum to 100%, values are treated as ratios.
+ *
+ * @param split - The market split
+ * @param marketId - The market to get allocation for
+ * @returns Decimal allocation (0-1)
+ */
+export function getMarketAllocation(split: MarketSplit, marketId: string): number {
+  const total = getMarketSplitTotal(split);
+  if (total === 0) return 0;
+
+  const pct = split[marketId] ?? 0;
+  return pct / total;
+}
+
+/**
+ * Format a market split for display.
+ * Shows warning icon if not exactly 100%.
+ *
+ * @param split - The market split
+ * @param markets - Available markets (for names)
+ * @returns Formatted string like "Direct: 60%, Wholesale: 40%"
+ */
+export function formatMarketSplit(
+  split: MarketSplit,
+  markets: Record<string, Market>
+): string {
+  const parts: string[] = [];
+  for (const [marketId, pct] of Object.entries(split)) {
+    if (pct > 0) {
+      const name = markets[marketId]?.name ?? marketId;
+      parts.push(`${name}: ${pct}%`);
+    }
+  }
+  return parts.join(', ') || 'None';
+}
+
+/**
+ * Get validation status for a market split.
+ * Returns null if valid, or a warning message.
+ */
+export function validateMarketSplit(split: MarketSplit): string | null {
+  const total = getMarketSplitTotal(split);
+  if (total === 0) {
+    return 'No market allocation specified';
+  }
+  if (Math.abs(total - 100) >= 0.01) {
+    return `Total is ${total}%, not 100% (will be treated as ratio)`;
+  }
+  return null;
+}

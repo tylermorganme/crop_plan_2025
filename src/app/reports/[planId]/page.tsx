@@ -45,6 +45,8 @@ import {
 } from '@/lib/seeds';
 import { createSeedOrder, type SeedOrder, type ProductUnit } from '@/lib/entities/seed-order';
 import type { Variety, DensityUnit } from '@/lib/entities/variety';
+import type { Market } from '@/lib/entities/market';
+import { getActiveMarkets } from '@/lib/entities/market';
 import { Z_INDEX } from '@/lib/z-index';
 
 // =============================================================================
@@ -287,7 +289,7 @@ const CROP_COLORS = [
   '#78716c', // stone
 ];
 
-function RevenueTab({ report }: { report: PlanRevenueReport }) {
+function RevenueTab({ report, markets }: { report: PlanRevenueReport; markets: Record<string, Market> }) {
   // Build crop color mapping (consistent across pie and area chart)
   const cropColors = useMemo(() => {
     const colors: Record<string, string> = {};
@@ -325,6 +327,10 @@ function RevenueTab({ report }: { report: PlanRevenueReport }) {
     return data;
   }, [report.byCrop, cropColors]);
 
+  // Get sorted market list for consistent display order
+  const activeMarkets = useMemo(() => getActiveMarkets(markets), [markets]);
+  const hasMarketData = Object.keys(report.revenueByMarket).length > 0;
+
   return (
     <div className="space-y-8">
       {/* Summary Cards */}
@@ -334,6 +340,24 @@ function RevenueTab({ report }: { report: PlanRevenueReport }) {
           <div className="text-3xl font-bold text-gray-900">
             {formatCurrency(report.totalRevenue)}
           </div>
+          {/* Market breakdown */}
+          {hasMarketData && activeMarkets.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
+              {activeMarkets.map((market) => {
+                const revenue = report.revenueByMarket[market.id] ?? 0;
+                const percent = report.totalRevenue > 0 ? (revenue / report.totalRevenue) * 100 : 0;
+                return (
+                  <div key={market.id} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">{market.name}</span>
+                    <span className="text-gray-900 font-medium">
+                      {formatCurrency(revenue)}
+                      <span className="text-gray-400 text-xs ml-1">({percent.toFixed(0)}%)</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="text-sm font-medium text-gray-500 mb-1">Plantings</div>
@@ -1552,7 +1576,7 @@ export default function ReportsPage() {
       {/* Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'revenue' && revenueReport && (
-          <RevenueTab report={revenueReport} />
+          <RevenueTab report={revenueReport} markets={currentPlan.markets ?? {}} />
         )}
         {activeTab === 'seeds' && seedReport && (
           <SeedsTab report={seedReport} planId={planId} />

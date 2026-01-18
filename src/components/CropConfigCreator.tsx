@@ -6,6 +6,7 @@ import { copyConfig } from '@/lib/entities/crop-config';
 import type { Variety } from '@/lib/entities/variety';
 import type { SeedMix } from '@/lib/entities/seed-mix';
 import type { Product } from '@/lib/entities/product';
+import type { Market } from '@/lib/entities/market';
 import CropConfigEditor from './CropConfigEditor';
 import { Z_INDEX } from '@/lib/z-index';
 
@@ -23,6 +24,8 @@ interface CropConfigCreatorProps {
   seedMixes?: Record<string, SeedMix>;
   /** Products available for yield/revenue linking */
   products?: Record<string, Product>;
+  /** Markets available for market split selection */
+  markets?: Record<string, Market>;
 }
 
 type Step = 'choose' | 'edit';
@@ -43,6 +46,7 @@ export default function CropConfigCreator({
   varieties,
   seedMixes,
   products,
+  markets,
 }: CropConfigCreatorProps) {
   const [step, setStep] = useState<Step>('choose');
   const [createMode, setCreateMode] = useState<CreateMode>('blank');
@@ -113,6 +117,7 @@ export default function CropConfigCreator({
         varieties={varieties}
         seedMixes={seedMixes}
         products={products}
+        markets={markets}
       />
     );
   }
