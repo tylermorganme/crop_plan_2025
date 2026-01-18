@@ -2,7 +2,7 @@
  * Build products.json from Excel data
  *
  * Extracts unique products (crop + product + unit combinations)
- * with their pricing information.
+ * with their pricing information stored as prices[marketId].
  *
  * Usage: node src/data/build-products.js
  */
@@ -10,6 +10,13 @@
 const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
+
+// Market IDs matching src/lib/entities/market.ts
+const MARKET_IDS = {
+  DIRECT: 'market-direct',
+  WHOLESALE: 'market-wholesale',
+  UPICK: 'market-upick',
+};
 
 // Column indices (1-based, matching Excel)
 const COLUMNS = {
@@ -71,6 +78,20 @@ function buildProducts() {
 
     const key = getProductKey(crop, product, unit);
 
+    // Build prices object
+    const prices = {};
+    if (typeof directPrice === 'number') {
+      prices[MARKET_IDS.DIRECT] = directPrice;
+      // Derive u-pick price as 70% of direct
+      prices[MARKET_IDS.UPICK] = Math.round(directPrice * 0.7 * 100) / 100;
+    }
+    if (typeof wholesalePrice === 'number') {
+      prices[MARKET_IDS.WHOLESALE] = wholesalePrice;
+    } else if (typeof directPrice === 'number') {
+      // Derive wholesale as 60% of direct if not specified
+      prices[MARKET_IDS.WHOLESALE] = Math.round(directPrice * 0.6 * 100) / 100;
+    }
+
     // Only add if we haven't seen this combination before
     // Or update if we have better price data
     const existing = productsMap.get(key);
@@ -80,16 +101,18 @@ function buildProducts() {
         crop: String(crop).trim(),
         product: String(product).trim(),
         unit: String(unit).trim(),
-        directPrice: typeof directPrice === 'number' ? directPrice : undefined,
-        wholesalePrice: typeof wholesalePrice === 'number' ? wholesalePrice : undefined,
+        prices,
       });
     } else {
       // Update if we found prices where there were none
-      if (!existing.directPrice && typeof directPrice === 'number') {
-        existing.directPrice = directPrice;
+      if (!existing.prices[MARKET_IDS.DIRECT] && prices[MARKET_IDS.DIRECT]) {
+        existing.prices[MARKET_IDS.DIRECT] = prices[MARKET_IDS.DIRECT];
       }
-      if (!existing.wholesalePrice && typeof wholesalePrice === 'number') {
-        existing.wholesalePrice = wholesalePrice;
+      if (!existing.prices[MARKET_IDS.WHOLESALE] && prices[MARKET_IDS.WHOLESALE]) {
+        existing.prices[MARKET_IDS.WHOLESALE] = prices[MARKET_IDS.WHOLESALE];
+      }
+      if (!existing.prices[MARKET_IDS.UPICK] && prices[MARKET_IDS.UPICK]) {
+        existing.prices[MARKET_IDS.UPICK] = prices[MARKET_IDS.UPICK];
       }
     }
   }
@@ -112,16 +135,21 @@ function buildProducts() {
   console.log(`Output: ${outputPath}`);
 
   // Summary stats
-  const withDirectPrice = products.filter(p => p.directPrice !== undefined).length;
-  const withWholesalePrice = products.filter(p => p.wholesalePrice !== undefined).length;
+  const withDirectPrice = products.filter(p => p.prices[MARKET_IDS.DIRECT] !== undefined).length;
+  const withWholesalePrice = products.filter(p => p.prices[MARKET_IDS.WHOLESALE] !== undefined).length;
+  const withUpickPrice = products.filter(p => p.prices[MARKET_IDS.UPICK] !== undefined).length;
   console.log(`\nPricing coverage:`);
   console.log(`  Direct price: ${withDirectPrice}/${products.length} (${Math.round(100 * withDirectPrice / products.length)}%)`);
   console.log(`  Wholesale price: ${withWholesalePrice}/${products.length} (${Math.round(100 * withWholesalePrice / products.length)}%)`);
+  console.log(`  U-Pick price: ${withUpickPrice}/${products.length} (${Math.round(100 * withUpickPrice / products.length)}%)`);
 
   // Sample output
   console.log(`\nSample products:`);
   products.slice(0, 5).forEach(p => {
-    console.log(`  ${p.crop} - ${p.product} (${p.unit}): D:$${p.directPrice ?? 'N/A'} W:$${p.wholesalePrice ?? 'N/A'}`);
+    const d = p.prices[MARKET_IDS.DIRECT];
+    const w = p.prices[MARKET_IDS.WHOLESALE];
+    const u = p.prices[MARKET_IDS.UPICK];
+    console.log(`  ${p.crop} - ${p.product} (${p.unit}): D:$${d ?? 'N/A'} W:$${w ?? 'N/A'} U:$${u ?? 'N/A'}`);
   });
 }
 

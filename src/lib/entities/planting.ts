@@ -95,6 +95,18 @@ export interface Planting {
    */
   useDefaultSeedSource?: boolean;
 
+  // ---- Market Split ----
+
+  /** Market split for this planting - maps marketId to percentage (0-100) */
+  marketSplit?: import('./market').MarketSplit;
+
+  /**
+   * When true, use the CropConfig's defaultMarketSplit instead of marketSplit.
+   * This allows the planting to automatically follow config updates.
+   * Defaults to true if not specified.
+   */
+  useDefaultMarketSplit?: boolean;
+
   // ---- Adjustments ----
 
   /** Overrides to default config timing */
@@ -164,6 +176,10 @@ export interface CreatePlantingInput {
   seedSource?: SeedSource;
   /** Optional: use config's default seed source */
   useDefaultSeedSource?: boolean;
+  /** Optional: market split for this planting */
+  marketSplit?: import('./market').MarketSplit;
+  /** Optional: use config's default market split */
+  useDefaultMarketSplit?: boolean;
   /** Optional: timing overrides */
   overrides?: PlantingOverrides;
   /** Optional: actual dates */
@@ -186,6 +202,8 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     followOffset: input.followOffset,
     seedSource: input.seedSource,
     useDefaultSeedSource: input.useDefaultSeedSource,
+    marketSplit: input.marketSplit,
+    useDefaultMarketSplit: input.useDefaultMarketSplit,
     overrides: input.overrides,
     actuals: input.actuals,
     notes: input.notes,
@@ -209,6 +227,9 @@ export function clonePlanting(
     followsPlantingId: source.followsPlantingId,
     followOffset: source.followOffset,
     seedSource: source.seedSource,
+    useDefaultSeedSource: source.useDefaultSeedSource,
+    marketSplit: source.marketSplit,
+    useDefaultMarketSplit: source.useDefaultMarketSplit,
     overrides: source.overrides,
     actuals: source.actuals,
     notes: source.notes,

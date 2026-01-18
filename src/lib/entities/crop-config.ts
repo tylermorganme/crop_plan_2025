@@ -225,6 +225,14 @@ export interface CropConfig {
    */
   defaultSeedSource?: import('./planting').SeedSource;
 
+  /**
+   * Default market split for this crop config.
+   * Defines how revenue is allocated across markets (Direct, Wholesale, U-Pick).
+   * When creating new plantings, this is auto-assigned if set.
+   * Can be overridden per-planting.
+   */
+  defaultMarketSplit?: import('./market').MarketSplit;
+
   // ---- Products & Timing ----
 
   /**

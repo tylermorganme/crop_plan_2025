@@ -3,7 +3,7 @@
  *
  * Calculates revenue from plantings based on:
  * - Product yields (from CropConfig.productYields)
- * - Product prices (from Product.directPrice/wholesalePrice)
+ * - Product prices (from Product.prices[marketId])
  * - Planting bed feet
  *
  * Supports aggregation by crop, month, and total.
@@ -13,6 +13,8 @@ import type { Plan } from './plan-types';
 import type { Planting } from './entities/planting';
 import type { CropConfig, ProductYield } from './entities/crop-config';
 import type { Product } from './entities/product';
+import type { Market, MarketSplit } from './entities/market';
+import { DEFAULT_MARKET_IDS, getDefaultMarket } from './entities/market';
 import { evaluateYieldFormula, buildYieldContext, calculateFieldOccupationDays } from './entities/crop-config';
 
 // =============================================================================
@@ -144,11 +146,32 @@ export interface PlanRevenueReport {
 }
 
 // =============================================================================
+// PRICE HELPERS
+// =============================================================================
+
+/**
+ * Get the price for a product at a specific market.
+ * Falls back to direct market price if the requested market has no price.
+ */
+export function getPrice(product: Product, marketId: string): number {
+  return product.prices[marketId] ?? product.prices[DEFAULT_MARKET_IDS.DIRECT] ?? 0;
+}
+
+/**
+ * Get the direct market price for a product.
+ * This is the default price used when no market is specified.
+ */
+export function getDirectPrice(product: Product): number {
+  return product.prices[DEFAULT_MARKET_IDS.DIRECT] ?? 0;
+}
+
+// =============================================================================
 // REVENUE CALCULATION FUNCTIONS
 // =============================================================================
 
 /**
  * Calculate revenue for a single ProductYield.
+ * Uses direct market price by default.
  *
  * @param py - The ProductYield to calculate
  * @param config - The CropConfig (for spacing/rows context)
@@ -178,7 +201,7 @@ export function calculateProductYieldRevenue(
     return null;
   }
 
-  const price = product.directPrice ?? 0;
+  const price = getDirectPrice(product);
   const revenue = result.value * price;
 
   return {
@@ -412,4 +435,111 @@ export function formatMonth(month: string): string {
   const [year, monthNum] = month.split('-');
   const date = new Date(parseInt(year), parseInt(monthNum) - 1);
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+// =============================================================================
+// MARKET SPLIT HELPERS
+// =============================================================================
+
+/**
+ * Get the effective market split for a planting.
+ *
+ * Resolution order:
+ * 1. If useDefaultMarketSplit is false and marketSplit is set, use planting's marketSplit
+ * 2. If useDefaultMarketSplit is true (default), use config's defaultMarketSplit
+ * 3. If neither is set, returns undefined (all revenue goes to first active market by default)
+ *
+ * @param planting - The planting to check
+ * @param config - The crop config for fallback
+ * @returns The effective market split, or undefined if none set
+ */
+export function getEffectiveMarketSplit(
+  planting: Planting,
+  config: CropConfig
+): MarketSplit | undefined {
+  // If explicitly set to NOT use default and has override, use override
+  if (planting.useDefaultMarketSplit === false && planting.marketSplit) {
+    return planting.marketSplit;
+  }
+
+  // Otherwise use config default (or planting override if useDefaultMarketSplit is undefined)
+  return config.defaultMarketSplit ?? planting.marketSplit;
+}
+
+/** Revenue broken down by market */
+export interface MarketRevenueBreakdown {
+  /** Market ID to revenue amount */
+  byMarket: Record<string, number>;
+  /** Total revenue across all markets */
+  total: number;
+}
+
+/**
+ * Calculate revenue for a product yield, broken down by market.
+ *
+ * Uses the market split to allocate revenue across markets,
+ * and applies the appropriate price for each market.
+ *
+ * @param py - The ProductYield to calculate
+ * @param config - The CropConfig (for spacing/rows context)
+ * @param bedFeet - The planting's bed feet
+ * @param product - The Product entity (for pricing)
+ * @param marketSplit - The market split to apply
+ * @param markets - All markets for the plan
+ * @returns Revenue breakdown by market
+ */
+export function calculateProductYieldRevenueByMarket(
+  py: ProductYield,
+  config: CropConfig,
+  bedFeet: number,
+  product: Product | undefined,
+  marketSplit: MarketSplit | undefined,
+  markets: Record<string, Market>
+): MarketRevenueBreakdown | null {
+  if (!py.yieldFormula || !product) {
+    return null;
+  }
+
+  // Build context for formula evaluation
+  const context = buildYieldContext(config, bedFeet);
+  context.harvests = py.numberOfHarvests ?? 1;
+  context.daysBetweenHarvest = py.daysBetweenHarvest ?? 7;
+
+  const result = evaluateYieldFormula(py.yieldFormula, context);
+  if (result.value === null) {
+    return null;
+  }
+
+  const yieldAmount = result.value;
+  const byMarket: Record<string, number> = {};
+  let total = 0;
+
+  // If no market split defined, all goes to first active market (usually Direct)
+  if (!marketSplit || Object.keys(marketSplit).length === 0) {
+    const defaultMarket = getDefaultMarket(markets);
+    const price = defaultMarket ? getPrice(product, defaultMarket.id) : getDirectPrice(product);
+    const revenue = yieldAmount * price;
+    if (defaultMarket) {
+      byMarket[defaultMarket.id] = revenue;
+    }
+    return { byMarket, total: revenue };
+  }
+
+  // Apply market split
+  for (const [marketId, percent] of Object.entries(marketSplit)) {
+    const market = markets[marketId];
+    if (!market || !market.active) continue;
+
+    // Get price for this market
+    const price = getPrice(product, marketId);
+
+    // Calculate revenue for this market's share
+    const marketYield = yieldAmount * (percent / 100);
+    const revenue = marketYield * price;
+
+    byMarket[marketId] = revenue;
+    total += revenue;
+  }
+
+  return { byMarket, total };
 }

@@ -12,6 +12,7 @@ import type { Variety } from './variety';
 import type { SeedMix } from './seed-mix';
 import type { Product } from './product';
 import type { SeedOrder } from './seed-order';
+import type { Market } from './market';
 
 // Re-export migration utilities for backwards compatibility
 export { CURRENT_SCHEMA_VERSION, migratePlan } from '../migrations';
@@ -127,6 +128,9 @@ export interface Plan {
 
   /** Seed orders (keyed by ID) - tracks ordering decisions per variety */
   seedOrders?: Record<string, SeedOrder>;
+
+  /** Markets for revenue split (keyed by ID) */
+  markets?: Record<string, Market>;
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];

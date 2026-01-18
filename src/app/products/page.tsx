@@ -4,15 +4,17 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { usePlanStore, initializePlanStore } from '@/lib/plan-store';
 import { createProduct, type Product, type CreateProductInput } from '@/lib/entities/product';
+import { getActiveMarkets, type Market } from '@/lib/entities/market';
 import { Z_INDEX } from '@/lib/z-index';
 
 // Stable empty object reference to avoid SSR hydration issues
 const EMPTY_PRODUCTS: Record<string, Product> = {};
+const EMPTY_MARKETS: Record<string, Market> = {};
 
 const ROW_HEIGHT = 32;
 const HEADER_HEIGHT = 36;
 
-type SortKey = 'crop' | 'product' | 'unit' | 'directPrice' | 'wholesalePrice';
+type SortKey = 'crop' | 'product' | 'unit' | string; // string for dynamic market IDs
 type SortDir = 'asc' | 'desc';
 
 // Toast notification component
@@ -35,13 +37,15 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
   );
 }
 
-// Product Editor Modal (compact)
+// Product Editor Modal with dynamic market prices
 function ProductEditor({
   product,
+  markets,
   onSave,
   onClose,
 }: {
   product: Product | null;
+  markets: Market[];
   onSave: (product: Product) => void;
   onClose: () => void;
 }) {
@@ -49,24 +53,40 @@ function ProductEditor({
     crop: product?.crop ?? '',
     product: product?.product ?? '',
     unit: product?.unit ?? '',
-    directPrice: product?.directPrice?.toString() ?? '',
-    wholesalePrice: product?.wholesalePrice?.toString() ?? '',
+    prices: product?.prices ?? {} as Record<string, string>,
+  });
+
+  // Initialize price form with string values
+  const [priceStrings, setPriceStrings] = useState<Record<string, string>>(() => {
+    const result: Record<string, string> = {};
+    for (const market of markets) {
+      result[market.id] = product?.prices?.[market.id]?.toString() ?? '';
+    }
+    return result;
   });
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!form.crop.trim() || !form.product.trim() || !form.unit.trim()) return;
 
+    // Convert price strings to numbers
+    const prices: Record<string, number> = {};
+    for (const [marketId, priceStr] of Object.entries(priceStrings)) {
+      const price = parseFloat(priceStr);
+      if (!isNaN(price) && price > 0) {
+        prices[marketId] = price;
+      }
+    }
+
     const newProduct = createProduct({
       crop: form.crop.trim(),
       product: form.product.trim(),
       unit: form.unit.trim(),
-      directPrice: form.directPrice ? parseFloat(form.directPrice) : undefined,
-      wholesalePrice: form.wholesalePrice ? parseFloat(form.wholesalePrice) : undefined,
+      prices,
     });
 
     onSave(newProduct);
-  }, [form, onSave]);
+  }, [form, priceStrings, onSave]);
 
   return (
     <div
@@ -109,30 +129,23 @@ function ProductEditor({
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Direct Price ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.directPrice}
-                onChange={(e) => setForm({ ...form, directPrice: e.target.value })}
-                className="w-full px-2 py-1.5 border rounded text-sm"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Wholesale Price ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.wholesalePrice}
-                onChange={(e) => setForm({ ...form, wholesalePrice: e.target.value })}
-                className="w-full px-2 py-1.5 border rounded text-sm"
-                placeholder="0.00"
-              />
+          <div className="border-t pt-3">
+            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Prices by Market</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {markets.map((market) => (
+                <div key={market.id}>
+                  <label className="block text-xs text-gray-500 mb-1">{market.name} ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={priceStrings[market.id] ?? ''}
+                    onChange={(e) => setPriceStrings({ ...priceStrings, [market.id]: e.target.value })}
+                    className="w-full px-2 py-1.5 border rounded text-sm"
+                    placeholder="0.00"
+                  />
+                </div>
+              ))}
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -167,11 +180,15 @@ export default function ProductsPage() {
 
   // Store hooks - using plan store
   const products = usePlanStore((state) => state.currentPlan?.products ?? EMPTY_PRODUCTS);
+  const marketsRecord = usePlanStore((state) => state.currentPlan?.markets ?? EMPTY_MARKETS);
   const hasPlan = usePlanStore((state) => state.currentPlan !== null);
   const addProduct = usePlanStore((state) => state.addProduct);
   const updateProduct = usePlanStore((state) => state.updateProduct);
   const deleteProduct = usePlanStore((state) => state.deleteProduct);
   const importProducts = usePlanStore((state) => state.importProducts);
+
+  // Get active markets sorted by display order
+  const activeMarkets = useMemo(() => getActiveMarkets(marketsRecord), [marketsRecord]);
 
   // Initialize store
   useEffect(() => {
@@ -216,8 +233,10 @@ export default function ProductsPage() {
         case 'crop': cmp = a.crop.localeCompare(b.crop); break;
         case 'product': cmp = a.product.localeCompare(b.product); break;
         case 'unit': cmp = a.unit.localeCompare(b.unit); break;
-        case 'directPrice': cmp = (a.directPrice || 0) - (b.directPrice || 0); break;
-        case 'wholesalePrice': cmp = (a.wholesalePrice || 0) - (b.wholesalePrice || 0); break;
+        default:
+          // Sort by market price (sortKey is market ID)
+          cmp = (a.prices?.[sortKey] || 0) - (b.prices?.[sortKey] || 0);
+          break;
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
@@ -269,7 +288,7 @@ export default function ProductsPage() {
   const handleLoadStock = useCallback(async () => {
     try {
       const response = await import('@/data/products.json');
-      const productList = response.default || [];
+      const productList = (response.default || []) as CreateProductInput[];
       const result = await importProducts(productList);
       setToast({ message: `Loaded ${result.added} products (${result.updated} updated)`, type: 'success' });
     } catch {
@@ -381,8 +400,11 @@ export default function ProductsPage() {
                 <div className="w-40 px-2"><SortHeader label="Crop" sortKeyName="crop" /></div>
                 <div className="w-48 px-2"><SortHeader label="Product" sortKeyName="product" /></div>
                 <div className="w-24 px-2"><SortHeader label="Unit" sortKeyName="unit" /></div>
-                <div className="w-28 px-2 text-right"><SortHeader label="Direct $" sortKeyName="directPrice" /></div>
-                <div className="w-28 px-2 text-right"><SortHeader label="Wholesale $" sortKeyName="wholesalePrice" /></div>
+                {activeMarkets.map((market) => (
+                  <div key={market.id} className="w-24 px-2 text-right">
+                    <SortHeader label={market.name} sortKeyName={market.id} />
+                  </div>
+                ))}
                 <div className="flex-1 px-2"></div>
                 <div className="w-20 px-2"></div>
               </div>
@@ -409,12 +431,11 @@ export default function ProductsPage() {
                       <div className="w-40 px-2 text-sm truncate" title={p.crop}>{p.crop}</div>
                       <div className="w-48 px-2 text-sm font-medium truncate" title={p.product}>{p.product}</div>
                       <div className="w-24 px-2 text-sm text-gray-600 truncate" title={p.unit}>{p.unit}</div>
-                      <div className="w-28 px-2 text-sm text-gray-700 text-right font-mono">
-                        {formatPrice(p.directPrice)}
-                      </div>
-                      <div className="w-28 px-2 text-sm text-gray-600 text-right font-mono">
-                        {formatPrice(p.wholesalePrice)}
-                      </div>
+                      {activeMarkets.map((market) => (
+                        <div key={market.id} className="w-24 px-2 text-sm text-gray-700 text-right font-mono">
+                          {formatPrice(p.prices?.[market.id])}
+                        </div>
+                      ))}
                       <div className="flex-1 px-2"></div>
                       <div className="w-20 px-2 flex gap-1 opacity-0 group-hover:opacity-100">
                         <button
@@ -442,6 +463,7 @@ export default function ProductsPage() {
       {isEditorOpen && (
         <ProductEditor
           product={editingProduct}
+          markets={activeMarkets}
           onSave={handleSaveProduct}
           onClose={() => { setIsEditorOpen(false); setEditingProduct(null); }}
         />

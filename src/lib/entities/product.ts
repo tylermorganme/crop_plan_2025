@@ -12,6 +12,7 @@
 
 /**
  * A product that can be sold from the farm.
+ * Prices are stored per market ID in the prices record.
  */
 export interface Product {
   /** Unique identifier (deterministic: derived from crop|product|unit) */
@@ -26,11 +27,8 @@ export interface Product {
   /** Unit of sale (e.g., "lb", "bunch", "pint") */
   unit: string;
 
-  /** Price for direct sales (farmers market, CSA) */
-  directPrice?: number;
-
-  /** Price for wholesale sales */
-  wholesalePrice?: number;
+  /** Prices per market - keys are market IDs, values are prices */
+  prices: Record<string, number>;
 }
 
 /**
@@ -40,8 +38,7 @@ export interface CreateProductInput {
   crop: string;
   product: string;
   unit: string;
-  directPrice?: number;
-  wholesalePrice?: number;
+  prices?: Record<string, number>;
 }
 
 // =============================================================================
@@ -76,8 +73,7 @@ export function createProduct(input: CreateProductInput): Product {
     crop: input.crop.trim(),
     product: input.product.trim(),
     unit: input.unit.trim(),
-    directPrice: input.directPrice,
-    wholesalePrice: input.wholesalePrice,
+    prices: input.prices ?? {},
   };
 }
 
@@ -86,7 +82,7 @@ export function createProduct(input: CreateProductInput): Product {
  * Products are immutable so this just returns a shallow copy.
  */
 export function cloneProduct(product: Product): Product {
-  return { ...product };
+  return { ...product, prices: { ...product.prices } };
 }
 
 /**
@@ -98,6 +94,27 @@ export function cloneProducts(products: Record<string, Product>): Record<string,
     cloned[id] = cloneProduct(product);
   }
   return cloned;
+}
+
+// =============================================================================
+// PRICE HELPERS
+// =============================================================================
+
+/**
+ * Get the price for a specific market.
+ * Returns the market-specific price or undefined if not set.
+ */
+export function getProductPrice(product: Product, marketId: string): number | undefined {
+  return product.prices[marketId];
+}
+
+/**
+ * Get the first available price (for display when no market specified).
+ * Returns the price from the first market that has a price set.
+ */
+export function getFirstPrice(product: Product): number | undefined {
+  const prices = Object.values(product.prices);
+  return prices.length > 0 ? prices[0] : undefined;
 }
 
 // =============================================================================

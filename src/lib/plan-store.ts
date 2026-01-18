@@ -37,13 +37,14 @@ import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities
 import { storage, onSyncMessage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
 import bedPlanData from '@/data/bed-plan.json';
 import { getAllCrops } from './crops';
-import { getStockVarieties, getStockSeedMixes, getStockProducts } from './stock-data';
+import { getStockVarieties, getStockSeedMixes, getStockProducts, getStockMarkets } from './stock-data';
 import type { CropConfig } from './entities/crop-config';
 import { cloneCropConfig, cloneCropCatalog } from './entities/crop-config';
 import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput, type DensityUnit } from './entities/variety';
 import { createSeedMix, getSeedMixKey, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
 import { createProduct, getProductKey, type Product, type CreateProductInput } from './entities/product';
 import { createSeedOrder, getSeedOrderId, type SeedOrder, type CreateSeedOrderInput } from './entities/seed-order';
+import { createMarket, getActiveMarkets as getActiveMarketsFromRecord, type Market } from './entities/market';
 
 /**
  * Raw variety input from JSON import.
@@ -137,6 +138,50 @@ function snapshotForUndo(state: { currentPlan: Plan | null; past: Plan[]; future
 
   // Clear redo stack on new change
   state.future = [];
+}
+
+// ============================================
+// Bed/Group Uniqueness Helpers
+// ============================================
+
+/**
+ * Check if a bed name already exists in a group (case-insensitive).
+ * Returns the existing bed if found, null otherwise.
+ */
+function findBedByNameInGroup(
+  beds: Record<string, Bed>,
+  groupId: string,
+  name: string,
+  excludeBedId?: string
+): Bed | null {
+  const normalizedName = name.toLowerCase().trim();
+  for (const bed of Object.values(beds)) {
+    if (bed.groupId === groupId &&
+        bed.name.toLowerCase().trim() === normalizedName &&
+        bed.id !== excludeBedId) {
+      return bed;
+    }
+  }
+  return null;
+}
+
+/**
+ * Check if a group name already exists (case-insensitive).
+ * Returns the existing group if found, null otherwise.
+ */
+function findGroupByName(
+  groups: Record<string, BedGroup>,
+  name: string,
+  excludeGroupId?: string
+): BedGroup | null {
+  const normalizedName = name.toLowerCase().trim();
+  for (const group of Object.values(groups)) {
+    if (group.name.toLowerCase().trim() === normalizedName &&
+        group.id !== excludeGroupId) {
+      return group;
+    }
+  }
+  return null;
 }
 
 // ============================================
@@ -528,8 +573,20 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   // ---- Bed Management ----
   /** Rename a bed */
   renameBed: (bedId: string, newName: string) => Promise<void>;
+  /** Update a bed's properties (name and/or length) */
+  updateBed: (bedId: string, updates: { name?: string; lengthFt?: number }) => Promise<void>;
   /** Add a new bed to a group */
   addBed: (groupId: string, name: string, lengthFt: number) => Promise<string>;
+  /**
+   * Batch upsert beds atomically (single save at the end).
+   * All changes succeed or none are persisted.
+   * @returns { added, updated, errors }
+   */
+  upsertBeds: (beds: { groupName: string; bedName: string; lengthFt: number }[]) => Promise<{
+    added: number;
+    updated: number;
+    errors: string[];
+  }>;
   /** Delete a bed (fails if plantings reference it) */
   deleteBed: (bedId: string) => Promise<void>;
   /** Delete a bed and handle its plantings */
@@ -546,6 +603,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   addBedGroup: (name: string) => Promise<string>;
   /** Delete an empty bed group */
   deleteBedGroup: (groupId: string) => Promise<void>;
+  /** Delete a bed group with all its beds, unassigning any plantings */
+  deleteBedGroupWithBeds: (groupId: string) => Promise<void>;
   /** Move a bed group to a new position */
   reorderBedGroup: (groupId: string, newDisplayOrder: number) => Promise<void>;
 
@@ -604,6 +663,20 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   getSeedOrderForVariety: (varietyId: string) => import('./entities/seed-order').SeedOrder | undefined;
   /** Get all seed orders */
   getAllSeedOrders: () => import('./entities/seed-order').SeedOrder[];
+
+  // ---- Market Management ----
+  /** Add a market to the plan */
+  addMarket: (name: string) => Promise<void>;
+  /** Update a market in the plan */
+  updateMarket: (id: string, updates: Partial<Omit<import('./entities/market').Market, 'id'>>) => Promise<void>;
+  /** Soft-delete a market (set active=false) */
+  deactivateMarket: (id: string) => Promise<void>;
+  /** Reactivate a deactivated market */
+  reactivateMarket: (id: string) => Promise<void>;
+  /** Get market by ID */
+  getMarket: (id: string) => import('./entities/market').Market | undefined;
+  /** Get all active markets */
+  getActiveMarkets: () => import('./entities/market').Market[];
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -678,6 +751,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       // Seed orders start empty - user enters them fresh
       if (!data.plan.seedOrders) {
         data.plan.seedOrders = {};
+      }
+      // Ensure markets exist (for plans created before markets feature)
+      if (!data.plan.markets || Object.keys(data.plan.markets).length === 0) {
+        data.plan.markets = getStockMarkets();
       }
 
       // Validate plan on load
@@ -790,10 +867,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         return p;
       });
 
-      // Load stock varieties, seed mixes, and products (seed orders start empty)
+      // Load stock varieties, seed mixes, products, and markets (seed orders start empty)
       const varieties = getStockVarieties();
       const seedMixes = getStockSeedMixes();
       const products = getStockProducts();
+      const markets = getStockMarkets();
 
       const plan: Plan = {
         id,
@@ -813,6 +891,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         seedMixes,
         products,
         seedOrders: {}, // Start empty - user enters fresh
+        markets,
         changeLog: [],
       };
 
@@ -1499,6 +1578,22 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     // ========================================
 
     renameBed: async (bedId: string, newName: string) => {
+      const state = get();
+      if (!state.currentPlan?.beds) {
+        throw new Error('No plan loaded');
+      }
+      const bed = state.currentPlan.beds[bedId];
+      if (!bed) {
+        throw new Error('Bed not found');
+      }
+
+      // Check uniqueness (exclude current bed)
+      const existingBed = findBedByNameInGroup(state.currentPlan.beds, bed.groupId, newName, bedId);
+      if (existingBed) {
+        const groupName = state.currentPlan.bedGroups?.[bed.groupId]?.name ?? 'Unknown';
+        throw new Error(`Bed "${newName}" already exists in group "${groupName}"`);
+      }
+
       set((state) => {
         if (!state.currentPlan?.beds) return;
         const bed = state.currentPlan.beds[bedId];
@@ -1530,12 +1625,87 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
+    updateBed: async (bedId: string, updates: { name?: string; lengthFt?: number }) => {
+      const state = get();
+      if (!state.currentPlan?.beds) {
+        throw new Error('No plan loaded');
+      }
+      const bed = state.currentPlan.beds[bedId];
+      if (!bed) {
+        throw new Error('Bed not found');
+      }
+
+      // Check uniqueness if name is being changed
+      if (updates.name !== undefined && updates.name !== bed.name) {
+        const existingBed = findBedByNameInGroup(state.currentPlan.beds, bed.groupId, updates.name, bedId);
+        if (existingBed) {
+          const groupName = state.currentPlan.bedGroups?.[bed.groupId]?.name ?? 'Unknown';
+          throw new Error(`Bed "${updates.name}" already exists in group "${groupName}"`);
+        }
+      }
+
+      set((state) => {
+        if (!state.currentPlan?.beds) return;
+        const bed = state.currentPlan.beds[bedId];
+        if (!bed) return;
+
+        snapshotForUndo(state);
+
+        const changes: string[] = [];
+        if (updates.name !== undefined && updates.name !== bed.name) {
+          bed.name = updates.name;
+          changes.push(`name to "${updates.name}"`);
+        }
+        if (updates.lengthFt !== undefined && updates.lengthFt !== bed.lengthFt) {
+          bed.lengthFt = updates.lengthFt;
+          changes.push(`length to ${updates.lengthFt}ft`);
+        }
+
+        if (changes.length > 0) {
+          state.currentPlan.metadata.lastModified = Date.now();
+          state.currentPlan.changeLog.push(
+            createChangeEntry('edit', `Updated bed: ${changes.join(', ')}`, [])
+          );
+          state.isDirty = true;
+          state.isSaving = true;
+          state.saveError = null;
+        }
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
     addBed: async (groupId: string, name: string, lengthFt: number) => {
+      const state = get();
+      if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) {
+        throw new Error('No plan loaded');
+      }
+      if (!state.currentPlan.bedGroups[groupId]) {
+        throw new Error('Group not found');
+      }
+
+      // Check uniqueness
+      const existingBed = findBedByNameInGroup(state.currentPlan.beds, groupId, name);
+      if (existingBed) {
+        const groupName = state.currentPlan.bedGroups[groupId]?.name ?? 'Unknown';
+        throw new Error(`Bed "${name}" already exists in group "${groupName}"`);
+      }
+
       let newBedId = '';
 
       set((state) => {
         if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) return;
-        if (!state.currentPlan.bedGroups[groupId]) return;
 
         snapshotForUndo(state);
 
@@ -1571,6 +1741,102 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       return newBedId;
+    },
+
+    upsertBeds: async (beds: { groupName: string; bedName: string; lengthFt: number }[]) => {
+      const state = get();
+      if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) {
+        throw new Error('No plan loaded');
+      }
+
+      let added = 0;
+      let updated = 0;
+      const errors: string[] = [];
+
+      // Single mutation for all changes
+      set((state) => {
+        if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) return;
+
+        snapshotForUndo(state);
+
+        // Track groups we create during this batch (by normalized name -> groupId)
+        const createdGroups = new Map<string, string>();
+
+        for (const { groupName, bedName, lengthFt } of beds) {
+          try {
+            const normalizedGroupName = groupName.toLowerCase().trim();
+            const normalizedBedName = bedName.toLowerCase().trim();
+
+            // Find or create group
+            let groupId = Object.values(state.currentPlan.bedGroups).find(
+              g => g.name.toLowerCase().trim() === normalizedGroupName
+            )?.id ?? createdGroups.get(normalizedGroupName);
+
+            if (!groupId) {
+              const maxGroupOrder = Object.values(state.currentPlan.bedGroups)
+                .reduce((max, g) => Math.max(max, g.displayOrder), -1);
+              const newGroup = createBedGroup(groupName.trim(), maxGroupOrder + 1);
+              groupId = newGroup.id;
+              state.currentPlan.bedGroups[newGroup.id] = newGroup;
+              createdGroups.set(normalizedGroupName, groupId);
+            }
+
+            // Find existing bed in this group
+            const existingBed = Object.values(state.currentPlan.beds).find(
+              b => b.groupId === groupId && b.name.toLowerCase().trim() === normalizedBedName
+            );
+
+            if (existingBed) {
+              // Update if length differs
+              if (existingBed.lengthFt !== lengthFt) {
+                existingBed.lengthFt = lengthFt;
+                updated++;
+              }
+            } else {
+              // Create new bed
+              const bedsInGroup = Object.values(state.currentPlan.beds).filter(b => b.groupId === groupId);
+              const maxOrder = bedsInGroup.reduce((max, b) => Math.max(max, b.displayOrder), -1);
+              const newBed = createBed(bedName.trim(), groupId, lengthFt, maxOrder + 1);
+              state.currentPlan.beds[newBed.id] = newBed;
+              added++;
+            }
+          } catch (e) {
+            errors.push(`${groupName}/${bedName}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+          }
+        }
+
+        if (added > 0 || updated > 0) {
+          state.currentPlan.metadata.lastModified = Date.now();
+          const parts = [];
+          if (added > 0) parts.push(`${added} added`);
+          if (updated > 0) parts.push(`${updated} updated`);
+          state.currentPlan.changeLog.push(
+            createChangeEntry('create', `Imported beds: ${parts.join(', ')}`, [])
+          );
+          state.isDirty = true;
+          state.isSaving = true;
+          state.saveError = null;
+        }
+      });
+
+      // Single save at the end
+      if (added > 0 || updated > 0) {
+        const currentState = get();
+        if (currentState.currentPlan) {
+          try {
+            await savePlanToLibrary(currentState.currentPlan);
+            set((state) => { state.isSaving = false; state.isDirty = false; });
+          } catch (e) {
+            set((state) => {
+              state.isSaving = false;
+              state.saveError = e instanceof Error ? e.message : 'Failed to save';
+            });
+            errors.push(`Save failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
+          }
+        }
+      }
+
+      return { added, updated, errors };
     },
 
     deleteBed: async (bedId: string) => {
@@ -1775,6 +2041,21 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     // ========================================
 
     renameBedGroup: async (groupId: string, newName: string) => {
+      const state = get();
+      if (!state.currentPlan?.bedGroups) {
+        throw new Error('No plan loaded');
+      }
+      const group = state.currentPlan.bedGroups[groupId];
+      if (!group) {
+        throw new Error('Group not found');
+      }
+
+      // Check uniqueness (exclude current group)
+      const existingGroup = findGroupByName(state.currentPlan.bedGroups, newName, groupId);
+      if (existingGroup) {
+        throw new Error(`Group "${newName}" already exists`);
+      }
+
       set((state) => {
         if (!state.currentPlan?.bedGroups) return;
         const group = state.currentPlan.bedGroups[groupId];
@@ -1807,6 +2088,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     },
 
     addBedGroup: async (name: string) => {
+      const state = get();
+      if (!state.currentPlan?.bedGroups) {
+        throw new Error('No plan loaded');
+      }
+
+      // Check uniqueness
+      const existingGroup = findGroupByName(state.currentPlan.bedGroups, name);
+      if (existingGroup) {
+        throw new Error(`Group "${name}" already exists`);
+      }
+
       let newGroupId = '';
 
       set((state) => {
@@ -1876,6 +2168,73 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.currentPlan.metadata.lastModified = Date.now();
         state.currentPlan.changeLog.push(
           createChangeEntry('delete', `Deleted group "${groupName}"`, [])
+        );
+        state.isDirty = true;
+        state.isSaving = true;
+        state.saveError = null;
+      });
+
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((state) => { state.isSaving = false; state.isDirty = false; });
+        } catch (e) {
+          set((state) => {
+            state.isSaving = false;
+            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+    },
+
+    deleteBedGroupWithBeds: async (groupId: string) => {
+      const state = get();
+      if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups || !state.currentPlan?.plantings) {
+        throw new Error('No plan loaded');
+      }
+
+      const group = state.currentPlan.bedGroups[groupId];
+      if (!group) {
+        throw new Error('Group not found');
+      }
+
+      // Find all beds in this group
+      const bedsInGroup = Object.values(state.currentPlan.beds).filter(
+        b => b.groupId === groupId
+      );
+      const bedIds = new Set(bedsInGroup.map(b => b.id));
+
+      set((state) => {
+        if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups || !state.currentPlan?.plantings) return;
+
+        snapshotForUndo(state);
+
+        // Unassign all plantings from beds in this group
+        let unassignedCount = 0;
+        for (const planting of state.currentPlan.plantings) {
+          if (planting.startBed && bedIds.has(planting.startBed)) {
+            planting.startBed = null;
+            unassignedCount++;
+          }
+        }
+
+        // Delete all beds in the group
+        for (const bedId of bedIds) {
+          delete state.currentPlan.beds[bedId];
+        }
+
+        // Delete the group
+        const groupName = state.currentPlan.bedGroups[groupId].name;
+        delete state.currentPlan.bedGroups[groupId];
+
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.currentPlan.changeLog.push(
+          createChangeEntry(
+            'delete',
+            `Deleted group "${groupName}" with ${bedIds.size} bed(s), unassigned ${unassignedCount} planting(s)`,
+            []
+          )
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2582,6 +2941,90 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     getAllSeedOrders: () => {
       const seedOrders = get().currentPlan?.seedOrders ?? {};
       return Object.values(seedOrders);
+    },
+
+    // ---- Market Management ----
+
+    addMarket: async (name: string) => {
+      const currentPlan = get().currentPlan;
+      if (!currentPlan) return;
+
+      // Get next display order
+      const markets = currentPlan.markets ?? {};
+      const maxOrder = Math.max(-1, ...Object.values(markets).map(m => m.displayOrder));
+
+      const market = createMarket({
+        name: name.trim(),
+        displayOrder: maxOrder + 1,
+        active: true,
+      });
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        snapshotForUndo(state);
+        if (!state.currentPlan.markets) {
+          state.currentPlan.markets = {};
+        }
+        state.currentPlan.markets[market.id] = market;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+    },
+
+    updateMarket: async (id: string, updates: Partial<Omit<Market, 'id'>>) => {
+      const currentPlan = get().currentPlan;
+      if (!currentPlan?.markets?.[id]) return;
+
+      set((state) => {
+        if (!state.currentPlan?.markets?.[id]) return;
+        snapshotForUndo(state);
+        Object.assign(state.currentPlan.markets[id], updates);
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+    },
+
+    deactivateMarket: async (id: string) => {
+      const currentPlan = get().currentPlan;
+      if (!currentPlan?.markets?.[id]) return;
+
+      set((state) => {
+        if (!state.currentPlan?.markets?.[id]) return;
+        snapshotForUndo(state);
+        state.currentPlan.markets[id].active = false;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+    },
+
+    reactivateMarket: async (id: string) => {
+      const currentPlan = get().currentPlan;
+      if (!currentPlan?.markets?.[id]) return;
+
+      set((state) => {
+        if (!state.currentPlan?.markets?.[id]) return;
+        snapshotForUndo(state);
+        state.currentPlan.markets[id].active = true;
+        state.currentPlan.metadata.lastModified = Date.now();
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+    },
+
+    getMarket: (id: string) => {
+      return get().currentPlan?.markets?.[id];
+    },
+
+    getActiveMarkets: () => {
+      const markets = get().currentPlan?.markets ?? {};
+      return getActiveMarketsFromRecord(markets);
     },
   }))
 );

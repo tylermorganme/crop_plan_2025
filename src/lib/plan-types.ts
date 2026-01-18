@@ -80,6 +80,17 @@ export {
   formatOrderCost,
 } from './entities/seed-order';
 
+export type { Market, MarketSplit, CreateMarketInput } from './entities/market';
+export {
+  DEFAULT_MARKET_IDS,
+  createMarket,
+  cloneMarket,
+  cloneMarkets,
+  createDefaultMarkets,
+  getActiveMarkets,
+  getDefaultMarket,
+} from './entities/market';
+
 export type { Variety, DensityUnit, CreateVarietyInput } from './entities/variety';
 export {
   getVarietyId,

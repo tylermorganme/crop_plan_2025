@@ -19,6 +19,7 @@ import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput } f
 import { createSeedMix, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
 import { createProduct, type Product, type CreateProductInput } from './entities/product';
 import { createSeedOrder, type SeedOrder, type CreateSeedOrderInput, type ProductUnit } from './entities/seed-order';
+import { createDefaultMarkets, type Market } from './entities/market';
 
 // =============================================================================
 // TYPES
@@ -104,6 +105,7 @@ let cachedVarieties: Record<string, Variety> | null = null;
 let cachedSeedMixes: Record<string, SeedMix> | null = null;
 let cachedProducts: Record<string, Product> | null = null;
 let cachedSeedOrders: Record<string, SeedOrder> | null = null;
+let cachedMarkets: Record<string, Market> | null = null;
 
 /** Valid density units */
 const VALID_DENSITY_UNITS = new Set(['g', 'oz', 'lb', 'ct']);
@@ -253,6 +255,18 @@ export function getStockSeedOrders(): Record<string, SeedOrder> {
 }
 
 /**
+ * Get all stock markets as a Record keyed by ID.
+ * Uses default markets (Direct, Wholesale, U-Pick).
+ * Creates on first access and caches the result.
+ */
+export function getStockMarkets(): Record<string, Market> {
+  if (cachedMarkets) return cachedMarkets;
+
+  cachedMarkets = createDefaultMarkets();
+  return cachedMarkets;
+}
+
+/**
  * Get stock data stats for debugging.
  */
 export function getStockDataStats() {
@@ -260,12 +274,14 @@ export function getStockDataStats() {
   const seedMixes = getStockSeedMixes();
   const products = getStockProducts();
   const seedOrders = getStockSeedOrders();
+  const markets = getStockMarkets();
 
   return {
     varietyCount: Object.keys(varieties).length,
     seedMixCount: Object.keys(seedMixes).length,
     productCount: Object.keys(products).length,
     seedOrderCount: Object.keys(seedOrders).length,
+    marketCount: Object.keys(markets).length,
     varietyCrops: new Set(Object.values(varieties).map((v) => v.crop)).size,
     seedMixCrops: new Set(Object.values(seedMixes).map((m) => m.crop)).size,
     productCrops: new Set(Object.values(products).map((p) => p.crop)).size,

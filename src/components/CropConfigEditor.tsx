@@ -700,8 +700,8 @@ export default function CropConfigEditor({
                             <span className="font-medium text-sm text-gray-900">
                               {product ? `${product.product} (${product.unit})` : py.productId}
                             </span>
-                            {product?.directPrice && (
-                              <span className="text-xs text-green-600">${product.directPrice}</span>
+                            {product && Object.values(product.prices)[0] != null && (
+                              <span className="text-xs text-green-600">${Object.values(product.prices)[0]}</span>
                             )}
                           </div>
                           <button
@@ -927,7 +927,7 @@ export default function CropConfigEditor({
                           <option value="" disabled>Select a product to add...</option>
                           {availableProducts.map((p) => (
                             <option key={p.id} value={p.id}>
-                              {p.product} ({p.unit}) - ${p.directPrice ?? 'N/A'}
+                              {p.product} ({p.unit}) - ${Object.values(p.prices)[0] ?? 'N/A'}
                             </option>
                           ))}
                         </select>
