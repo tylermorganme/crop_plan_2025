@@ -43,9 +43,9 @@ Track state structure changes for self-contained plan architecture.
 ## Design Principles
 
 1. **Plans are self-contained** - All data needed lives in the plan
-2. **Stock data is read-only** - `crops.json`, `bed-plan.json` are templates
+2. **Stock data is read-only** - `crop-config-template.json`, `bed-template.json` are templates
 3. **Validation throws** - Invalid state = throw error
-4. **No sacred data** - Test data is disposable
+4. **Data is sacred** - Use migrations for schema changes, import/export for enrichment
 5. **LLM-friendly** - Grepable, explicit, colocated
 
 ---

@@ -44,10 +44,10 @@ export default function AddToBedPanel({
     if (!searchQuery.trim()) return configs;
     const q = searchQuery.toLowerCase();
     return configs.filter(c =>
+      // Use searchText if available (materialized), otherwise fall back to fields
+      c.searchText?.toLowerCase().includes(q) ||
       c.identifier?.toLowerCase().includes(q) ||
       c.crop?.toLowerCase().includes(q) ||
-      c.variant?.toLowerCase().includes(q) ||
-      c.product?.toLowerCase().includes(q) ||
       c.category?.toLowerCase().includes(q)
     );
   }, [configs, searchQuery]);
@@ -176,13 +176,10 @@ export default function AddToBedPanel({
                       onMouseLeave={() => setHoveredConfig(null)}
                     >
                       <div className="text-sm font-medium text-gray-900 truncate">
-                        {config.crop}
-                        {config.variant && config.variant !== 'General' && (
-                          <span className="text-gray-600 font-normal"> ({config.variant})</span>
-                        )}
+                        {config.identifier}
                       </div>
                       <div className="text-xs text-gray-500 truncate">
-                        {config.product} · {config.growingStructure} · {calculatePlantingMethod(config)}
+                        {config.category} · {config.growingStructure} · {calculatePlantingMethod(config)}
                       </div>
                     </div>
                   ))}
@@ -200,16 +197,10 @@ export default function AddToBedPanel({
             {/* Config header */}
             <div className="p-4 border-b bg-white">
               <div className="font-semibold text-gray-900">
-                {hoveredConfig.crop}
-                {hoveredConfig.variant && hoveredConfig.variant !== 'General' && (
-                  <span className="font-normal text-gray-600"> ({hoveredConfig.variant})</span>
-                )}
+                {hoveredConfig.identifier}
               </div>
               <div className="text-sm text-gray-600 mt-1">
-                {hoveredConfig.product}
-              </div>
-              <div className="text-xs text-gray-500 mt-1 truncate" title={hoveredConfig.identifier}>
-                {hoveredConfig.identifier}
+                {hoveredConfig.category}
               </div>
             </div>
 

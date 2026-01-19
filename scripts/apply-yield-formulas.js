@@ -2,7 +2,7 @@
 /**
  * Apply yield formula shim data to crops.json
  *
- * Reads tmp/yield-formulas.json and updates src/data/crops.json
+ * Reads tmp/yield-formulas.json and updates src/data/crop-config-template.json
  * by adding yieldFormula to each matching config.
  *
  * Usage:

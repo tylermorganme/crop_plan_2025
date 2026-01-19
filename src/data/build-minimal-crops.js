@@ -1,5 +1,5 @@
 /**
- * Build minimal crops.json from the full Excel export.
+ * Build crop-config-template.json from the full Excel export.
  *
  * Based on notes from DAG reconciliation:
  * - Tray Size -> cellsPerTray (better name for tray size enum)
@@ -19,7 +19,7 @@
 
 const fs = require('fs');
 const crops = JSON.parse(fs.readFileSync('./crops.json.old', 'utf8')).crops;
-const products = JSON.parse(fs.readFileSync('./products.json', 'utf8'));
+const products = JSON.parse(fs.readFileSync('./products-template.json', 'utf8'));
 
 // Default market split: 100% Direct
 // Matches DEFAULT_MARKET_IDS from src/lib/entities/market.ts
@@ -106,15 +106,24 @@ const cleanCrops = crops.map((c) => {
     ? rawTargetDate.slice(5, 10)  // "04-01"
     : undefined;
 
+  // Build searchText from all searchable fields for efficient filtering
+  const searchTextParts = [
+    c.Identifier,
+    c.Crop,
+    c.Variety !== 'General' ? c.Variety : null,
+    c.Product,
+    c.Category,
+  ].filter(Boolean);
+  const searchText = searchTextParts.join(' ').toLowerCase();
+
   const crop = {
     id,
     identifier: c.Identifier,
     crop: c.Crop,
-    // "variant" might be better than "variety" per notes, but keeping for now
-    variant: c.Variety !== 'General' ? c.Variety : undefined,
-    product: c.Product,
     // Category should eventually be product-level
     category: c.Category || undefined,
+    // Materialized search text for efficient filtering
+    searchText,
     growingStructure: GROWING_STRUCTURE_MAP[c['Growing Structure']] || 'field',
     // normalMethod describes what DTM means, not how it's planted
     normalMethod: NORMAL_METHOD_MAP[c['Normal Method']] || 'total-time',
@@ -224,9 +233,9 @@ const cleanCrops = crops.map((c) => {
   return crop;
 }).filter(c => c !== null); // Remove skipped crops
 
-fs.writeFileSync('./crops.json', JSON.stringify({ crops: cleanCrops }, null, 2));
+fs.writeFileSync('./crop-config-template.json', JSON.stringify({ crops: cleanCrops }, null, 2));
 
-console.log('Created crops.json with', cleanCrops.length, 'crops');
+console.log('Created crop-config-template.json with', cleanCrops.length, 'crops');
 
 // Report skipped crops
 if (skippedCrops.length > 0) {

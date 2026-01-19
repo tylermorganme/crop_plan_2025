@@ -101,7 +101,7 @@ def main():
     print(f"Headers: {headers}")
 
     # Save to JSON
-    output_path = project_root / "crop-api" / "src" / "data" / "products.json"
+    output_path = project_root / "crop-api" / "src" / "data" / "products-template.json"
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump({
             "extractedAt": str(Path(workbook_path).stat().st_mtime),

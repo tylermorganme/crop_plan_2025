@@ -35,7 +35,7 @@ import {
 } from './entities/planting';
 import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities/bed';
 import { storage, onSyncMessage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
-import bedPlanData from '@/data/bed-plan.json';
+import bedPlanData from '@/data/bed-template.json';
 import { getAllCrops } from './crops';
 import { getStockVarieties, getStockSeedMixes, getStockProducts, getStockMarkets } from './stock-data';
 import type { CropConfig } from './entities/crop-config';

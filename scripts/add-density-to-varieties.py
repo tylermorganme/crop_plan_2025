@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Add density data from Excel Varieties sheet to varieties.json.
+Add density data from Excel Varieties sheet to varieties-template.json.
 
 This script:
 1. Reads density data from the Excel Varieties sheet
 2. Matches varieties by crop|name|supplier key
-3. Updates varieties.json with density and densityUnit fields
+3. Updates varieties-template.json with density and densityUnit fields
 """
 
 import openpyxl
@@ -92,7 +92,7 @@ def update_varieties_json(varieties_path: str, density_data: dict) -> dict:
 
 def main():
     excel_path = 'Crop Plan 2025 V20.xlsm'
-    varieties_path = 'src/data/varieties.json'
+    varieties_path = 'src/data/varieties-template.json'
 
     print(f'Extracting density data from {excel_path}...')
     density_data = extract_density_from_excel(excel_path)

@@ -117,7 +117,7 @@ interface CropExplorerProps {
   allHeaders?: string[];
 }
 
-// Default visible columns - using new camelCase field names from crops.json
+// Default visible columns - using new camelCase field names from crop config
 const DEFAULT_VISIBLE = [
   'identifier', 'crop', 'variant', 'product', 'category', 'growingStructure', 'normalMethod',
   'dtm', 'daysToGermination', 'daysBetweenHarvest', 'numberOfHarvests',
@@ -139,6 +139,7 @@ interface PersistedState {
   filterPaneWidth: number;
   scrollTop?: number;
   frozenColumnCount?: number;
+  showDeprecated?: boolean;
 }
 
 function loadPersistedState(): PersistedState | null {
@@ -365,6 +366,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       setFilterPaneOpen(persisted.filterPaneOpen ?? true);
       setFilterPaneWidth(persisted.filterPaneWidth ?? DEFAULT_FILTER_PANE_WIDTH);
       setFrozenColumnCount(persisted.frozenColumnCount ?? 1);
+      setShowDeprecated(persisted.showDeprecated ?? false);
       // Queue scroll restoration for after render
       if (persisted.scrollTop != null && persisted.scrollTop > 0) {
         setPendingScrollTop(persisted.scrollTop);
@@ -378,14 +380,8 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   const [columnFilter, setColumnFilter] = useState<'all' | 'visible' | 'hidden'>('all');
   const [sidebarColumnSearch, setSidebarColumnSearch] = useState('');
 
-  // Drag state for column reordering
-  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
-  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
-
-  // Resize state for columns
-  const [resizingColumn, setResizingColumn] = useState<string | null>(null);
-  const [resizeStartX, setResizeStartX] = useState(0);
-  const [resizeStartWidth, setResizeStartWidth] = useState(0);
+  // Show/hide deprecated crops toggle (default false, persisted)
+  const [showDeprecated, setShowDeprecated] = useState(false);
 
   // Resize state for filter pane
   const [resizingPane, setResizingPane] = useState(false);
@@ -404,8 +400,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       filterPaneOpen,
       filterPaneWidth,
       frozenColumnCount,
+      showDeprecated,
     });
-  }, [hydrated, visibleColumns, columnOrder, columnWidths, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth, frozenColumnCount]);
+  }, [hydrated, visibleColumns, columnOrder, columnWidths, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth, frozenColumnCount, showDeprecated]);
 
   // Clear filters for hidden columns
   useEffect(() => {
@@ -419,6 +416,11 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       return next;
     });
   }, [visibleColumns]);
+
+  // Count deprecated crops for the toggle label
+  const deprecatedCount = useMemo(() => {
+    return displayCrops.filter(c => c.deprecated).length;
+  }, [displayCrops]);
 
   // Columns to display (filtered by sidebar search if active)
   const displayColumns = useMemo(() => {
@@ -479,14 +481,15 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   // Filter crops
   const filteredCrops = useMemo(() => {
     return displayCrops.filter(crop => {
-      // Text search using new field names
+      // Hide deprecated crops if toggle is off
+      if (!showDeprecated && crop.deprecated) return false;
+
+      // Text search - use materialized searchText if available, otherwise key fields
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        const searchable = [
+        const searchable = crop.searchText?.toLowerCase() ?? [
           crop.identifier,
           crop.crop,
-          crop.variant,
-          crop.product,
           crop.category,
         ].filter(Boolean).join(' ').toLowerCase();
         if (!searchable.includes(q)) return false;
@@ -518,7 +521,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
       return true;
     });
-  }, [displayCrops, searchQuery, columnFilters, columnMeta]);
+  }, [displayCrops, searchQuery, columnFilters, columnMeta, showDeprecated]);
 
   // Sort crops
   const sortedCrops = useMemo(() => {
@@ -615,66 +618,6 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     filteredColumns.forEach(col => next.delete(col));
     setVisibleColumns(next);
   };
-
-  // Column drag handlers
-  const handleDragStart = (e: React.DragEvent, col: string) => {
-    setDraggedColumn(col);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', col);
-  };
-
-  const handleDragOver = (e: React.DragEvent, col: string) => {
-    e.preventDefault();
-    if (draggedColumn && draggedColumn !== col) setDragOverColumn(col);
-  };
-
-  const handleDragLeave = () => setDragOverColumn(null);
-
-  const handleDrop = (e: React.DragEvent, targetCol: string) => {
-    e.preventDefault();
-    if (draggedColumn && draggedColumn !== targetCol) {
-      const newOrder = [...columnOrder];
-      const draggedIdx = newOrder.indexOf(draggedColumn);
-      const targetIdx = newOrder.indexOf(targetCol);
-      if (draggedIdx !== -1 && targetIdx !== -1) {
-        newOrder.splice(draggedIdx, 1);
-        newOrder.splice(targetIdx, 0, draggedColumn);
-        setColumnOrder(newOrder);
-      }
-    }
-    setDraggedColumn(null);
-    setDragOverColumn(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedColumn(null);
-    setDragOverColumn(null);
-  };
-
-  // Column resize handlers
-  const handleResizeStart = (e: React.MouseEvent, col: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setResizingColumn(col);
-    setResizeStartX(e.clientX);
-    setResizeStartWidth(getColumnWidth(col));
-  };
-
-  useEffect(() => {
-    if (!resizingColumn) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const delta = e.clientX - resizeStartX;
-      const newWidth = Math.max(MIN_COL_WIDTH, resizeStartWidth + delta);
-      setColumnWidths(prev => ({ ...prev, [resizingColumn]: newWidth }));
-    };
-    const handleMouseUp = () => setResizingColumn(null);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [resizingColumn, resizeStartX, resizeStartWidth]);
 
   // Filter pane resize handlers
   const handlePaneResizeStart = (e: React.MouseEvent) => {
@@ -1246,7 +1189,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         {/* Toolbar */}
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
           <span className="text-sm text-gray-700">
-            {sortedCrops.length} of {displayCrops.length} · {displayColumns.length} columns
+            {sortedCrops.length} of {displayCrops.length}
           </span>
           {addingToPlan && (
             <span className="text-sm text-blue-600 animate-pulse">Adding to plan...</span>
@@ -1262,7 +1205,19 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
               </button>
             </span>
           )}
-          <span className="text-xs text-gray-600">Drag headers to reorder · Drag edges to resize</span>
+          {/* Show deprecated toggle */}
+          <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showDeprecated}
+              onChange={(e) => setShowDeprecated(e.target.checked)}
+              className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+            />
+            <span>Show deprecated</span>
+            {deprecatedCount > 0 && (
+              <span className="text-xs text-gray-400">({deprecatedCount})</span>
+            )}
+          </label>
           <div className="flex-1" />
           {/* Freeze columns control */}
           <div className="flex items-center gap-1.5 text-sm text-gray-700">
@@ -1343,12 +1298,6 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                   return (
                     <div
                       key={col}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, col)}
-                      onDragOver={(e) => handleDragOver(e, col)}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, col)}
-                      onDragEnd={handleDragEnd}
                       style={{
                         width: getColumnWidth(col),
                         minWidth: getColumnWidth(col),
@@ -1358,9 +1307,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                           zIndex: 2,
                         }),
                       }}
-                      className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
-                        dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : getColumnBgClass(col, true)
-                      } ${draggedColumn === col ? 'opacity-50' : ''} ${isFrozen ? 'bg-gray-100' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
+                      className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-pointer select-none flex items-center ${
+                        getColumnBgClass(col, true)
+                      } ${isFrozen ? 'bg-gray-100' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
                       onClick={() => handleSort(col)}
                     >
                       <span className="flex-1 truncate">{formatColumnHeader(col)}</span>
@@ -1376,12 +1325,6 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                       >
                         ×
                       </button>
-                      <div
-                        onMouseDown={(e) => handleResizeStart(e, col)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-green-400 group-hover:bg-gray-300"
-                        style={{ marginRight: -1 }}
-                      />
                     </div>
                   );
                 })}
@@ -1871,7 +1814,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       )}
 
       {/* Resize overlays */}
-      {(resizingColumn || resizingPane) && <div className="fixed inset-0 cursor-col-resize" style={{ zIndex: Z_INDEX.RESIZE_OVERLAY }} />}
+      {resizingPane && <div className="fixed inset-0 cursor-col-resize" style={{ zIndex: Z_INDEX.RESIZE_OVERLAY }} />}
     </div>
   );
 }

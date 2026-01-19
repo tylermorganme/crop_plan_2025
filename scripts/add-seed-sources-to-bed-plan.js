@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Add seed source data to bed-plan.json
+ * Add seed source data to bed-template.json
  *
  * Reads: tmp/seed_sources_from_excel.json
- * Updates: src/data/bed-plan.json
+ * Updates: src/data/bed-template.json
  *
  * Adds seedSourceName and seedSourceSupplier fields to each assignment.
  */
@@ -12,7 +12,7 @@ const fs = require('fs');
 const path = require('path');
 
 const SEED_SOURCES_PATH = path.join(__dirname, '..', 'tmp', 'seed_sources_from_excel.json');
-const BED_PLAN_PATH = path.join(__dirname, '..', 'src', 'data', 'bed-plan.json');
+const BED_PLAN_PATH = path.join(__dirname, '..', 'src', 'data', 'bed-template.json');
 
 function main() {
   // Read seed sources

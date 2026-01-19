@@ -278,7 +278,7 @@ export default function VarietiesPage() {
 
   const handleLoadStock = useCallback(async () => {
     try {
-      const response = await import('@/data/varieties.json');
+      const response = await import('@/data/varieties-template.json');
       const varietyList = response.varieties || [];
       const result = await importVarieties(varietyList);
       setToast({ message: `Loaded ${result.added} varieties (${result.updated} updated)`, type: 'success' });

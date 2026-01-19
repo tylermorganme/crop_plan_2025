@@ -178,7 +178,7 @@ function createTestPlan(): Plan {
       id: 'arugula-baby-leaf',
       identifier: 'Arugula - Baby Leaf | Field DS Sp',
       crop: 'Arugula',
-      product: 'Baby Leaf',
+      category: 'Green',
       dtm: 45,
     },
   };

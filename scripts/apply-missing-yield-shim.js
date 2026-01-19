@@ -2,7 +2,7 @@
 /**
  * Apply missing yield formula shim data to crops.json
  *
- * Reads tmp/missing-yield-shim.json and updates src/data/crops.json
+ * Reads tmp/missing-yield-shim.json and updates src/data/crop-config-template.json
  * by adding yieldFormula to each matching config that doesn't already have one.
  *
  * Usage:

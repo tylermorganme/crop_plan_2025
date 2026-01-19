@@ -547,24 +547,6 @@ export default function CropConfigEditor({
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Variant</label>
-                  <input
-                    type="text"
-                    value={formData.variant || ''}
-                    onChange={(e) => updateField('variant', e.target.value || undefined)}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Product</label>
-                  <input
-                    type="text"
-                    value={formData.product || ''}
-                    onChange={(e) => updateField('product', e.target.value || undefined)}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
               </div>
             </section>
 

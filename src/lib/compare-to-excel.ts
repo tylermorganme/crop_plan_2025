@@ -3,7 +3,7 @@
  *
  * Usage: npx tsx src/lib/compare-to-excel.ts <path-to-excel-export.json>
  *
- * This compares our crops.json (with calculated fields) against the raw
+ * This compares our crop-config-template.json (with calculated fields) against the raw
  * Excel export to verify parity.
  */
 
@@ -24,9 +24,9 @@ if (!excelExportPath) {
   process.exit(1);
 }
 
-// Load our crops.json
+// Load our crop-config-template.json
 const dataDir = path.join(__dirname, '../data');
-const ourCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crops.json'), 'utf8')).crops as CropConfig[];
+const ourCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crop-config-template.json'), 'utf8')).crops as CropConfig[];
 
 // Load fresh Excel export
 const excelCrops = JSON.parse(fs.readFileSync(excelExportPath, 'utf8')).crops;

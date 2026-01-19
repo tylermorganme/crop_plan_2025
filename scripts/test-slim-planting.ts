@@ -2,12 +2,12 @@
  * Parity Test Script for Slim Planting Computation
  *
  * Verifies that computeTimelineCrop() produces dates matching
- * the pre-computed values in bed-plan.json.
+ * the pre-computed values in bed-template.json.
  *
  * Run with: npx tsx scripts/test-slim-planting.ts
  */
 
-import bedPlanData from '../src/data/bed-plan.json';
+import bedPlanData from '../src/data/bed-template.json';
 import {
   computeTimelineCrop,
   extractSlimPlanting,

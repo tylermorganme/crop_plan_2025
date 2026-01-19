@@ -3,8 +3,8 @@
  */
 
 import { parseISO } from 'date-fns';
-import cropsData from '@/data/crops.json';
-import bedPlanData from '@/data/bed-plan.json';
+import cropsData from '@/data/crop-config-template.json';
+import bedPlanData from '@/data/bed-template.json';
 
 // Re-export types from plan-types for backwards compatibility
 export type { TimelineCrop, ResourceGroup, BedSpanInfo } from './plan-types';

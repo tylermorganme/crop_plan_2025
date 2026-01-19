@@ -1,5 +1,5 @@
 /**
- * Build products.json from Excel data
+ * Build products-template.json from Excel data
  *
  * Extracts unique products (crop + product + unit combinations)
  * with their pricing information stored as prices[marketId].
@@ -128,7 +128,7 @@ function buildProducts() {
   });
 
   // Write output
-  const outputPath = path.join(__dirname, 'products.json');
+  const outputPath = path.join(__dirname, 'products-template.json');
   fs.writeFileSync(outputPath, JSON.stringify(products, null, 2));
 
   console.log(`\nExtracted ${products.length} unique products`);

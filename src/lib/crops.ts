@@ -1,4 +1,4 @@
-import cropsData from '@/data/crops.json';
+import cropsData from '@/data/crop-config-template.json';
 import {
   type CropConfig,
   calculateDaysInCells,
@@ -46,14 +46,14 @@ export function getUniqueValues(field: keyof Crop): string[] {
   return Array.from(values).sort();
 }
 
-// Search crops by text across key fields
+// Search crops by text using searchText field or key fields
 export function searchCrops(query: string): Crop[] {
   const q = query.toLowerCase();
   return data.crops.filter(crop =>
+    // Use searchText if available (materialized), otherwise fall back to fields
+    crop.searchText?.toLowerCase().includes(q) ||
     crop.identifier?.toLowerCase().includes(q) ||
     crop.crop?.toLowerCase().includes(q) ||
-    crop.variant?.toLowerCase().includes(q) ||
-    crop.product?.toLowerCase().includes(q) ||
     crop.category?.toLowerCase().includes(q)
   );
 }

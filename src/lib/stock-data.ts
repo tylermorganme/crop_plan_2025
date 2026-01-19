@@ -11,9 +11,9 @@
  * 4. Creates Product entities with deterministic IDs
  */
 
-import varietiesData from '@/data/varieties.json';
-import seedMixesData from '@/data/seed-mixes.json';
-import productsData from '@/data/products.json';
+import varietiesData from '@/data/varieties-template.json';
+import seedMixesData from '@/data/seed-mixes-template.json';
+import productsData from '@/data/products-template.json';
 import seedOrdersData from '@/data/seed-orders.json';
 import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput } from './entities/variety';
 import { createSeedMix, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';

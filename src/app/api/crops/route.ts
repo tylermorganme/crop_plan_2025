@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { CropConfig } from '@/lib/entities/crop-config';
 
-const CROPS_FILE = join(process.cwd(), 'src/data/crops.json');
+const CROPS_FILE = join(process.cwd(), 'src/data/crop-config-template.json');
 
 interface CropsData {
   crops: CropConfig[];

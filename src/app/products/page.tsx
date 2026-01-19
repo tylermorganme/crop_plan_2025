@@ -287,7 +287,7 @@ export default function ProductsPage() {
 
   const handleLoadStock = useCallback(async () => {
     try {
-      const response = await import('@/data/products.json');
+      const response = await import('@/data/products-template.json');
       const productList = (response.default || []) as CreateProductInput[];
       const result = await importProducts(productList);
       setToast({ message: `Loaded ${result.added} products (${result.updated} updated)`, type: 'success' });

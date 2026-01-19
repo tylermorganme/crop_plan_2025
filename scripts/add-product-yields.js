@@ -1,5 +1,5 @@
 /**
- * Add productYields to crops.json by matching crop+yieldUnit to products.
+ * Add productYields to crop-config-template.json by matching crop+yieldUnit to products.
  *
  * This migrates legacy timing fields into the new productYields structure.
  */
@@ -8,8 +8,8 @@ const fs = require('fs');
 const path = require('path');
 
 const dataDir = path.join(__dirname, '../src/data');
-const cropsData = require(path.join(dataDir, 'crops.json'));
-const products = require(path.join(dataDir, 'products.json'));
+const cropsData = require(path.join(dataDir, 'crop-config-template.json'));
+const products = require(path.join(dataDir, 'products-template.json'));
 
 // Build product lookup by crop+unit
 const productLookup = new Map();

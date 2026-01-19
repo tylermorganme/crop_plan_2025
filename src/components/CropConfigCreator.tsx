@@ -79,10 +79,11 @@ export default function CropConfigCreator({
     const query = searchQuery.toLowerCase();
     return availableCrops
       .filter(c =>
+        // Use searchText if available, otherwise fall back to key fields
+        c.searchText?.toLowerCase().includes(query) ||
         c.identifier.toLowerCase().includes(query) ||
         c.crop.toLowerCase().includes(query) ||
-        (c.variant?.toLowerCase().includes(query)) ||
-        (c.product?.toLowerCase().includes(query))
+        c.category?.toLowerCase().includes(query)
       )
       .slice(0, 50);
   }, [availableCrops, searchQuery]);

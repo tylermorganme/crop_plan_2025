@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Build seed-mixes.json from extracted Excel data.
+ * Build seed-mixes-template.json from extracted Excel data.
  *
  * Reads: tmp/seed_mixes_from_excel.json
- * Writes: src/data/seed-mixes.json
+ * Writes: src/data/seed-mixes-template.json
  *
  * Transforms raw Excel seed mix data into CreateSeedMixInput format (no IDs).
  * Components store variety content keys that get resolved to IDs at import time.
@@ -18,7 +18,7 @@ const { normalizeCropName } = require('./crop-name-mapping');
 
 // Paths
 const inputPath = path.join(__dirname, '..', '..', 'tmp', 'seed_mixes_from_excel.json');
-const outputPath = path.join(__dirname, 'seed-mixes.json');
+const outputPath = path.join(__dirname, 'seed-mixes-template.json');
 
 // Generate a content key for deduplication (matches seed-mix.ts getSeedMixContentKey)
 function getMixContentKey(name, crop) {

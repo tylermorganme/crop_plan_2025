@@ -70,7 +70,7 @@ export interface ProductYield {
 }
 
 /**
- * Crop configuration - what we store in crops.json and plan.cropCatalog.
+ * Crop configuration - what we store in crop-config-template.json and plan.cropCatalog.
  *
  * This is the "planting recipe" - all the data needed to calculate
  * timing and display for a specific way of growing a crop variety.
@@ -85,14 +85,15 @@ export interface CropConfig {
   /** Crop family (e.g., "Arugula", "Tomato") */
   crop: string;
 
-  /** Variant/variety name */
-  variant?: string;
-
-  /** Product type (e.g., "Baby Leaf", "Slicing") */
-  product?: string;
-
   /** Category for color coding (e.g., "Green", "Brassica") */
   category?: string;
+
+  /**
+   * Materialized search text for efficient filtering.
+   * Contains concatenated searchable fields: identifier, crop, product names, category.
+   * Pre-computed at import/creation time to avoid repeated lookups during filtering.
+   */
+  searchText?: string;
 
   // ---- Spacing ----
 
@@ -1053,12 +1054,37 @@ export function calculateCropFields(crop: CropConfig): CropCalculated {
 }
 
 /**
+ * Get the primary product name from a CropConfig.
+ * Returns the first product's name from productYields, or 'General' if none.
+ *
+ * @param crop - The crop config
+ * @param products - Optional product lookup map (keyed by productId)
+ */
+export function getPrimaryProductName(
+  crop: CropConfig,
+  products?: Record<string, { product: string }>
+): string {
+  if (!crop.productYields?.length || !products) {
+    return 'General';
+  }
+  const firstYield = crop.productYields[0];
+  const product = products[firstYield.productId];
+  return product?.product ?? 'General';
+}
+
+/**
  * Get the config needed for timeline calculations from a crop.
  * Combines stored inputs with calculated values.
  *
  * Uses product-aware calculations if productYields exists.
+ *
+ * @param crop - The crop config
+ * @param products - Optional product lookup map for deriving product name
  */
-export function getTimelineConfig(crop: CropConfig): {
+export function getTimelineConfig(
+  crop: CropConfig,
+  products?: Record<string, { product: string }>
+): {
   crop: string;
   product: string;
   category: string;
@@ -1072,7 +1098,7 @@ export function getTimelineConfig(crop: CropConfig): {
 
   return {
     crop: crop.crop,
-    product: crop.product ?? 'General',
+    product: getPrimaryProductName(crop, products),
     category: crop.category ?? '',
     growingStructure: crop.growingStructure ?? 'field',
     plantingMethod: calculated.plantingMethod,
@@ -1105,8 +1131,6 @@ export function createBlankConfig(): CropConfig {
     id: generateConfigId(),
     identifier: '',
     crop: '',
-    variant: '',
-    product: '',
     category: '',
     growingStructure: 'field',
     normalMethod: 'from-seeding',

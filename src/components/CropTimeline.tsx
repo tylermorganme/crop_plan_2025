@@ -48,7 +48,7 @@ interface TimelineCrop {
   bedCapacityFt?: number;
   /** Short planting ID from bed plan (e.g., "PEP004") */
   plantingId?: string;
-  /** Crop config identifier matching crops.json */
+  /** Crop config identifier matching the plan's crop catalog */
   cropConfigId?: string;
   /** Harvest start date (ISO date) - when harvest window begins */
   harvestStartDate?: string;
@@ -1514,10 +1514,9 @@ export default function CropTimeline({
     const endDate = new Date(fieldStart);
     endDate.setDate(endDate.getDate() + calculated.seedToHarvest + calculated.harvestWindow - calculated.daysInCells);
 
-    // Build display name
-    const name = config.product && config.product !== 'General'
-      ? `${config.crop} (${config.product})`
-      : config.crop;
+    // Build display name for preview - use crop name only since we don't have products in scope
+    // The actual timeline display will show product from ProductYields lookup
+    const name = config.crop;
 
     return {
       id: '__preview__',

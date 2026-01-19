@@ -1,14 +1,14 @@
 /**
  * Catalog Parity Test
  *
- * Verifies that config values from crops.json catalog match
- * the embedded values in bed-plan.json assignments.
+ * Verifies that config values from crop-config-template.json catalog match
+ * the embedded values in bed-template.json assignments.
  *
  * Run with: npx tsx scripts/test-catalog-parity.ts
  */
 
-import cropsData from '../src/data/crops.json';
-import bedPlanData from '../src/data/bed-plan.json';
+import cropsData from '../src/data/crop-config-template.json';
+import bedPlanData from '../src/data/bed-template.json';
 import {
   lookupConfigFromCatalog,
   type CropCatalogEntry,

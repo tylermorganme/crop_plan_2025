@@ -14,6 +14,7 @@ import {
   calculatePlantingMethod,
   getPrimarySeedToHarvest,
   calculateAggregateHarvestWindow,
+  getPrimaryProductName,
   type CropConfig,
 } from './entities/crop-config';
 import { createPlanting } from './entities/planting';
@@ -98,7 +99,7 @@ export interface PlantingConfigLookup {
 }
 
 /**
- * Raw crop entry from crops.json catalog.
+ * Raw crop entry from crop catalog (template or plan-specific).
  * This matches the CropConfig type from entities/crop-config.ts
  */
 export type CropCatalogEntry = CropConfig;
@@ -107,12 +108,14 @@ export type CropCatalogEntry = CropConfig;
  * Look up planting config from the crops catalog by identifier.
  *
  * @param cropIdentifier - The crop identifier (e.g., "Arugula - Baby Leaf 1X | Field DS Sp")
- * @param catalog - Array of crop entries from crops.json
+ * @param catalog - Array of crop entries from the crop catalog
+ * @param products - Optional product lookup map for deriving product name
  * @returns PlantingConfigLookup or null if not found
  */
 export function lookupConfigFromCatalog(
   cropIdentifier: string,
-  catalog: CropCatalogEntry[]
+  catalog: CropCatalogEntry[],
+  products?: Record<string, { product: string }>
 ): PlantingConfigLookup | null {
   // Trim both to handle trailing whitespace in legacy data
   const trimmedId = cropIdentifier.trim();
@@ -128,7 +131,7 @@ export function lookupConfigFromCatalog(
 
   return {
     crop: entry.crop,
-    product: entry.product || 'General',
+    product: getPrimaryProductName(entry, products),
     category: entry.category ?? '',
     growingStructure: entry.growingStructure || 'field',
     plantingMethod,
@@ -251,7 +254,7 @@ export function computeTimelineCrop(
   // Calculate feet needed from legacy bedsCount format
   const feetNeeded = planting.bedsCount * LEGACY_IMPORT_BED_FT;
 
-  // Build display name
+  // Build display name - include product if not 'General'
   const name = config.product && config.product !== 'General'
     ? `${config.crop} (${config.product})`
     : config.crop;

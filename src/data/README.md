@@ -4,15 +4,18 @@
 
 | File | Purpose | Updated By |
 |------|---------|------------|
-| `crops.json` | Stock crop catalog (339 configs) | `build-minimal-crops.js` |
-| `bed-plan.json` | Default bed layout (92 beds) | Manual or import |
+| `crop-config-template.json` | Stock crop catalog (339 configs) | `build-minimal-crops.js` |
+| `bed-template.json` | Default bed layout (92 beds) | Manual or import |
+| `products-template.json` | Product catalog with pricing | `build-products.js` |
+| `varieties-template.json` | Variety catalog | `build-varieties.js` |
+| `seed-mixes-template.json` | Seed mix definitions | `build-seed-mixes.js` |
 | `column-analysis.json` | Display column metadata (used by CropExplorer) | One-time analysis |
 
 ## Build Script
 
 | File | Purpose |
 |------|---------|
-| `build-minimal-crops.js` | Transforms `crops_from_excel.json` → `crops.json` |
+| `build-minimal-crops.js` | Transforms `crops_from_excel.json` → `crop-config-template.json` |
 
 ## Data Flow
 
@@ -23,7 +26,7 @@ Excel Workbook (Crop Plan 2025 V20.xlsm)
 tmp/crops_from_excel.json (raw dump, not used by app)
     │
     ▼ build-minimal-crops.js
-crops.json (PRODUCTION - used by app)
+crop-config-template.json (PRODUCTION - used by app)
     │
     ▼ Plan creation (cloneCropCatalog)
 plan.cropCatalog (per-plan snapshot, stored in IndexedDB + data/plans/)
@@ -31,7 +34,7 @@ plan.cropCatalog (per-plan snapshot, stored in IndexedDB + data/plans/)
 
 ## Key Distinction: Stock vs Plan Data
 
-**Stock data** (`crops.json`):
+**Stock data** (`crop-config-template.json`):
 - Template for new plans
 - Shared across all new plans
 - Changes here affect NEW plans only
@@ -44,11 +47,14 @@ plan.cropCatalog (per-plan snapshot, stored in IndexedDB + data/plans/)
 ## Directory Structure
 
 ```
-src/data/                    # Production data (imported by app)
-├── crops.json               # Stock crop catalog
-├── bed-plan.json            # Default bed layout
-├── column-analysis.json     # UI display metadata
-└── build-minimal-crops.js   # Build script
+src/data/                         # Production data (imported by app)
+├── crop-config-template.json     # Stock crop catalog
+├── bed-template.json             # Default bed layout
+├── products-template.json        # Product catalog
+├── varieties-template.json       # Variety catalog
+├── seed-mixes-template.json      # Seed mix definitions
+├── column-analysis.json          # UI display metadata
+└── build-*.js                    # Build scripts
 
 data/plans/                  # Saved plan files (backup of IndexedDB)
 

@@ -129,14 +129,14 @@ for prefix, group_beds in sorted(bed_groups.items()):
     print(f"  {prefix}: {group_beds}")
 
 # Save to JSON
-with open("crop-api/src/data/bed-plan.json", "w") as f:
+with open("crop-api/src/data/bed-template.json", "w") as f:
     json.dump({
         "assignments": bed_assignments,
         "beds": beds,
         "bedGroups": {k: v for k, v in sorted(bed_groups.items())}
     }, f, indent=2, cls=DateTimeEncoder)
 
-print(f"\nSaved to crop-api/src/data/bed-plan.json")
+print(f"\nSaved to crop-api/src/data/bed-template.json")
 
 # Show sample assignments with timing
 print("\nSample assignments with ALL timing adjustments:")

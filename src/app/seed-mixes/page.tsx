@@ -502,13 +502,13 @@ export default function SeedMixesPage() {
       // Load varieties first (if not already loaded) so seed mix references resolve
       const varietyCount = Object.keys(varieties).length;
       if (varietyCount === 0) {
-        const varietyResponse = await import('@/data/varieties.json');
+        const varietyResponse = await import('@/data/varieties-template.json');
         const varietyList = varietyResponse.varieties || [];
         await importVarieties(varietyList);
       }
 
       // Now load seed mixes
-      const response = await import('@/data/seed-mixes.json');
+      const response = await import('@/data/seed-mixes-template.json');
       const mixList = response.seedMixes || [];
       const result = await importSeedMixes(mixList);
 

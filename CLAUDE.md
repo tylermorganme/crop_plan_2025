@@ -8,9 +8,9 @@ This is a **crop planning webapp** for a small organic farm (1.5 acres, 92 beds)
 
 Reference data was originally sourced from an Excel workbook (`Crop Plan 2025 V20.xlsm`) containing ~340 planting configurations.
 
-## Prototype
+## Production Status
 
-This is a prototype. No data or code is sacred. Don't waste time on doing migrations.
+This is production software. Data is sacred - don't lose it. Use migrations for schema changes.
 
 ## Development Commands
 
@@ -68,7 +68,7 @@ CropTimeline Component
 
 **IMPORTANT**: There are TWO independent data systems:
 
-1. **Stock data** (`src/data/crops.json`)
+1. **Stock data** (`src/data/crop-config-template.json`)
    - Template for new plans
    - Generated from Excel via build pipeline
    - Changes ONLY affect newly created plans
@@ -79,7 +79,7 @@ CropTimeline Component
    - Independent after creation - edits don't affect stock or other plans
 
 ```
-src/data/crops.json (STOCK - template for new plans)
+src/data/crop-config-template.json (STOCK - template for new plans)
     │
     ▼ cloneCropCatalog() at plan creation
 plan.cropCatalog (LIVE - per-plan snapshot, editable)
@@ -87,9 +87,9 @@ plan.cropCatalog (LIVE - per-plan snapshot, editable)
 
 ### Excel Import Pipeline
 
-crops.json is generated from Excel via:
+crop-config-template.json is generated from Excel via:
 1. `extract-crops.py` → `crops_from_excel.json` (raw dump, NOT used by app)
-2. `src/data/build-minimal-crops.js` → `crops.json` (normalized, used by app)
+2. `src/data/build-minimal-crops.js` → `crop-config-template.json` (normalized, used by app)
 
 When adding new fields to CropConfig, update build-minimal-crops.js.
 
@@ -97,13 +97,16 @@ When adding new fields to CropConfig, update build-minimal-crops.js.
 
 ```
 src/data/
-├── crops.json           # PRODUCTION - stock crop catalog
-├── bed-plan.json        # PRODUCTION - default bed layout
-├── column-analysis.json # PRODUCTION - display metadata
-├── crops_from_excel.json  # Pipeline artifact (can regenerate)
-├── crops.json.old         # Pipeline artifact (backup)
-├── normalized.json        # Pipeline artifact (debugging)
-└── *.json                 # Other files are analysis artifacts
+├── crop-config-template.json  # PRODUCTION - stock crop catalog
+├── bed-template.json          # PRODUCTION - default bed layout
+├── products-template.json     # PRODUCTION - product catalog with pricing
+├── varieties-template.json    # PRODUCTION - variety catalog
+├── seed-mixes-template.json   # PRODUCTION - seed mix definitions
+├── column-analysis.json       # PRODUCTION - display metadata
+├── crops_from_excel.json      # Pipeline artifact (can regenerate)
+├── crops.json.old             # Pipeline artifact (backup)
+├── normalized.json            # Pipeline artifact (debugging)
+└── *.json                     # Other files are analysis artifacts
 
 data/plans/              # Saved plan files (backup of IndexedDB)
 tmp/                     # Temporary working files (gitignored)
@@ -119,7 +122,7 @@ scripts/                 # Utility scripts (most are one-time use)
 | `src/lib/slim-planting.ts` | `computeTimelineCrop()` - timing calculations |
 | `src/lib/entities/` | Entity types and CRUD functions |
 | `src/components/CropTimeline.tsx` | Main timeline visualization |
-| `src/data/crops.json` | Crop catalog (340 configurations) |
+| `src/data/crop-config-template.json` | Crop catalog (340 configurations) |
 
 ### Entity CRUD Pattern
 
@@ -143,3 +146,39 @@ Clone functions compose on create (e.g., `clonePlanting` calls `createPlanting` 
 - **CropConfig**: Static configuration (DTM, spacing, seasons) from the crop catalog
 - **Bed**: A 50-foot growing bed (92 total on the farm)
 - **Crop Year**: Plans span crop years, not calendar years - overwintering crops carry forward
+
+## Data Evolution Strategy
+
+### Migrations (Schema Changes)
+
+For structural changes to the Plan schema, use the migration system in `src/lib/migrations/index.ts`:
+
+- **Automatic**: Migrations run on plan load (IndexedDB and disk files)
+- **Append-only**: Never modify existing migrations
+- **Versioned**: `schemaVersion` tracks which migrations have run
+- **Pure functions**: Each migration is `(plan: unknown) => unknown`
+
+To add a migration:
+1. Create function in migrations/index.ts
+2. Append to `migrations` array
+3. `CURRENT_SCHEMA_VERSION` auto-increments
+
+### Data Enrichment (Import/Export)
+
+For enriching existing data with new values (e.g., pulling data from Excel):
+
+- **Export**: Plan JSON files include full `cropCatalog`
+- **Enrich externally**: Edit JSON, run scripts, or use Excel
+- **Import**: Merge enriched configs back into plan via import feature
+
+This keeps the app simple - no special "shim" code paths. Enrichment happens outside the app using whatever tools make sense.
+
+**Import modes:**
+- **Merge**: Update existing configs, add new ones, preserve user edits to unlisted fields
+- **Replace**: Wholesale replacement of catalog (use with caution)
+
+### Template vs Plan Data
+
+Remember the two-tier system:
+1. **Template** (`crop-config-template.json`) - edit directly for new plans
+2. **Plan catalogs** - use import/export for existing plans

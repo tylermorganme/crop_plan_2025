@@ -118,8 +118,11 @@ switch (normalMethod) {
 
 | File | Purpose | Used by App? |
 |------|---------|--------------|
-| `src/data/crops.json` | Stock crop catalog (339 configs) | YES |
-| `src/data/bed-plan.json` | Default bed layout | YES |
+| `src/data/crop-config-template.json` | Stock crop catalog (339 configs) | YES |
+| `src/data/bed-template.json` | Default bed layout | YES |
+| `src/data/products-template.json` | Product catalog with pricing | YES |
+| `src/data/varieties-template.json` | Variety catalog | YES |
+| `src/data/seed-mixes-template.json` | Seed mix definitions | YES |
 | `src/data/column-analysis.json` | Display column metadata | YES |
 | `src/data/crops_from_excel.json` | Raw Excel dump | NO (pipeline artifact) |
 | `src/data/crops.json.old` | Backup | NO (pipeline artifact) |

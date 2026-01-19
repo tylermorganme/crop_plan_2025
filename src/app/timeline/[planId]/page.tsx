@@ -15,7 +15,7 @@ import {
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
 import { Z_INDEX } from '@/lib/z-index';
-import bedPlanData from '@/data/bed-plan.json';
+import bedPlanData from '@/data/bed-template.json';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -230,7 +230,7 @@ export default function TimelinePlanPage() {
 
   const handleSaveCropConfig = useCallback(async (updated: CropConfig) => {
     try {
-      // Update the config in the plan's catalog (not global crops.json)
+      // Update the config in the plan's catalog (not the template)
       const affectedCount = await updateCropConfig(updated);
 
       setConfigEditorOpen(false);
