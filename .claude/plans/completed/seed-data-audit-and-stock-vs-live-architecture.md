@@ -1,4 +1,6 @@
-# Session State Dump - 2025-01-05
+# Session State Dump - 2025-01-05 (ARCHIVED)
+
+> **Note**: File names in this doc are outdated. `crops.json` → `crop-config-template.json`, `bed-plan.json` → `bed-template.json`, etc. See CLAUDE.md for current naming.
 
 ## What Was Done This Session
 
