@@ -69,6 +69,11 @@ function validateCropConfig(crop: CropConfig): ConfigValidation {
     if (zeroDtm.length > 0) {
       issues.push(`${zeroDtm.length} product(s) with DTM = 0`);
     }
+    // Check for products with no yield formula
+    const noYield = crop.productYields.filter(py => !py.yieldFormula);
+    if (noYield.length > 0) {
+      issues.push(`${noYield.length} product(s) missing yield formula`);
+    }
   }
 
   if (issues.length > 0) {

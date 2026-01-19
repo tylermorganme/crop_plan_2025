@@ -156,10 +156,22 @@ For structural changes to the Plan schema, use the migration system in `src/lib/
 - **Versioned**: `schemaVersion` tracks which migrations have run
 - **Pure functions**: Each migration is `(plan: unknown) => unknown`
 
-To add a migration:
-1. Create function in migrations/index.ts
+**When you need a migration:**
+- Renaming a field (e.g., `foo` → `bar`)
+- Changing field type (e.g., `string` → `number`)
+- Restructuring data (e.g., flat → nested)
+- Removing a required field
+
+**When you DON'T need a migration:**
+- Adding a new optional field (code handles `undefined`)
+- Adding a new entity type with empty default
+
+**To add a migration:**
+1. Create function in `migrations/index.ts`
 2. Append to `migrations` array
 3. `CURRENT_SCHEMA_VERSION` auto-increments
+
+**Testing:** After any schema change, verify old plans still load by opening the app with existing data.
 
 ### Data Enrichment (Import/Export)
 
@@ -178,5 +190,10 @@ This keeps the app simple - no special "shim" code paths. Enrichment happens out
 ### Template vs Plan Data
 
 Remember the two-tier system:
-1. **Template** (`crop-config-template.json`) - edit directly for new plans
-2. **Plan catalogs** - use import/export for existing plans
+1. **Template** (`*-template.json`) - edit directly, affects only NEW plans
+2. **Live plan data** - stored in IndexedDB (browser), backed up to `data/plans/`
+
+**IMPORTANT:** Claude cannot directly access IndexedDB - it's browser-only storage. The `data/plans/*.json` files are backups/exports. To modify live plan data:
+- Use the app's UI
+- Export → edit JSON → import
+- Write a migration (for schema changes)
