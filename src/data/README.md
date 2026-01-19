@@ -9,6 +9,7 @@
 | `products-template.json` | Product catalog with pricing | `build-products.js` |
 | `varieties-template.json` | Variety catalog | `build-varieties.js` |
 | `seed-mixes-template.json` | Seed mix definitions | `build-seed-mixes.js` |
+| `seed-orders.json` | Seed order data | Manual |
 | `column-analysis.json` | Display column metadata (used by CropExplorer) | One-time analysis |
 
 ## Build Script
@@ -53,6 +54,7 @@ src/data/                         # Production data (imported by app)
 ├── products-template.json        # Product catalog
 ├── varieties-template.json       # Variety catalog
 ├── seed-mixes-template.json      # Seed mix definitions
+├── seed-orders.json              # Seed order data
 ├── column-analysis.json          # UI display metadata
 └── build-*.js                    # Build scripts
 

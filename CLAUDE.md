@@ -54,13 +54,13 @@ CropTimeline Component
 
 ## Data Philosophy
 
-**First-class workflows**: Users create their own data or ingest their own data. Import and manual creation are production paths, not dev conveniences.
+**Data is sacred**: User plan data must never be lost. Schema changes use migrations. Stock templates are separate from live data.
 
 **Import = shim + ingest**: Raw external data gets transformed into the expected format, then ingested through the same CRUD functions used for manual creation. Never bypass production code for import - this prevents "import-only" bugs.
 
 **No parallel pipelines**: If there's a `createPlanting()` for manual use, import must use it too. Clone functions (`clonePlanting`, `cloneCropConfig`, etc.) compose on top of create functions.
 
-**Current state**: We reimport base data during development. Eventually stock data may ship pre-transformed, but imports still go through production ingestion.
+**Stock vs Live**: Stock templates (`*-template.json`) seed new plans. Each plan gets an independent snapshot that evolves via migrations. Excel pipeline is for regenerating templates, not a continuous feed.
 
 ## Data Pipeline
 
@@ -97,20 +97,18 @@ When adding new fields to CropConfig, update build-minimal-crops.js.
 
 ```
 src/data/
-├── crop-config-template.json  # PRODUCTION - stock crop catalog
-├── bed-template.json          # PRODUCTION - default bed layout
-├── products-template.json     # PRODUCTION - product catalog with pricing
-├── varieties-template.json    # PRODUCTION - variety catalog
-├── seed-mixes-template.json   # PRODUCTION - seed mix definitions
-├── column-analysis.json       # PRODUCTION - display metadata
-├── crops_from_excel.json      # Pipeline artifact (can regenerate)
-├── crops.json.old             # Pipeline artifact (backup)
-├── normalized.json            # Pipeline artifact (debugging)
-└── *.json                     # Other files are analysis artifacts
+├── crop-config-template.json  # Stock crop catalog (339 configs)
+├── bed-template.json          # Default bed layout (92 beds)
+├── products-template.json     # Product catalog with pricing
+├── varieties-template.json    # Variety catalog
+├── seed-mixes-template.json   # Seed mix definitions
+├── seed-orders.json           # Seed order data
+├── column-analysis.json       # UI display metadata
+└── build-*.js                 # Scripts to regenerate templates from Excel
 
 data/plans/              # Saved plan files (backup of IndexedDB)
-tmp/                     # Temporary working files (gitignored)
-scripts/                 # Utility scripts (most are one-time use)
+tmp/                     # Pipeline artifacts & working files (gitignored)
+scripts/                 # Utility scripts
 ```
 
 ### Key Files
