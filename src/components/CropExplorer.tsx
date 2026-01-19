@@ -708,73 +708,32 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   // Track current scroll position for restoration after data updates
   const lastScrollTopRef = useRef<number>(0);
   const lastScrollLeftRef = useRef<number>(0);
-  // Track if we're in the middle of restoring scroll (to avoid loops)
-  const isRestoringScrollRef = useRef(false);
 
   const rowVirtualizer = useVirtualizer({
     count: sortedCrops.length,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => ROW_HEIGHT,
     overscan: 10,
-    // Restore scroll position when virtualizer updates due to data changes
-    onChange: (instance) => {
-      // If we have a saved scroll position and the virtualizer scrolled to a different position,
-      // restore it (unless we're already restoring or this is initial load)
-      if (
-        scrollRestoredRef.current &&
-        lastScrollTopRef.current > 0 &&
-        !isRestoringScrollRef.current &&
-        instance.scrollOffset !== lastScrollTopRef.current
-      ) {
-        isRestoringScrollRef.current = true;
-        // Restore synchronously to avoid flash - set scrollTop directly on the container
-        const container = tableContainerRef.current;
-        if (container) {
-          container.scrollTop = lastScrollTopRef.current;
-        }
-        isRestoringScrollRef.current = false;
-      }
-    },
   });
 
   const totalWidth = useMemo(() => {
     return displayColumns.reduce((sum, col) => sum + getColumnWidth(col), 0);
   }, [displayColumns, getColumnWidth]);
 
-  // Restore scroll position synchronously before paint when data changes
-  // useLayoutEffect runs synchronously after DOM mutations but before browser paint
-  useLayoutEffect(() => {
-    if (scrollRestoredRef.current) {
-      const container = tableContainerRef.current;
-      const header = headerContainerRef.current;
-
-      // Restore vertical scroll
-      if (container && lastScrollTopRef.current > 0 && container.scrollTop !== lastScrollTopRef.current) {
-        container.scrollTop = lastScrollTopRef.current;
-        // Also update virtualizer's internal scroll offset so it renders correct rows
-        (rowVirtualizer as unknown as { scrollOffset: number }).scrollOffset = lastScrollTopRef.current;
-      }
-
-      // Restore horizontal scroll
-      if (container && lastScrollLeftRef.current > 0 && container.scrollLeft !== lastScrollLeftRef.current) {
-        container.scrollLeft = lastScrollLeftRef.current;
-        if (header) {
-          header.scrollLeft = lastScrollLeftRef.current;
-        }
-      }
-    }
-  }, [sortedCrops, rowVirtualizer]); // Re-run when data changes
-
-  // Restore scroll position after hydration (once)
+  // Restore scroll position after hydration (once) - use RAF to avoid flushSync during render
   useEffect(() => {
     if (pendingScrollTop !== null && !scrollRestoredRef.current && sortedCrops.length > 0) {
-      // Use virtualizer's scrollToOffset for reliable positioning
-      rowVirtualizer.scrollToOffset(pendingScrollTop);
-      scrollRestoredRef.current = true;
-      lastScrollTopRef.current = pendingScrollTop;
-      setPendingScrollTop(null);
+      requestAnimationFrame(() => {
+        const container = tableContainerRef.current;
+        if (container) {
+          container.scrollTop = pendingScrollTop;
+        }
+        scrollRestoredRef.current = true;
+        lastScrollTopRef.current = pendingScrollTop;
+        setPendingScrollTop(null);
+      });
     }
-  }, [pendingScrollTop, sortedCrops.length, rowVirtualizer]);
+  }, [pendingScrollTop, sortedCrops.length]);
 
   // Debounced scroll position save
   const scrollSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);

@@ -62,9 +62,12 @@ export default function CropConfigCreator({
   useEffect(() => {
     if (isOpen && initialSourceConfig != null) {
       openedWithSourceRef.current = true;
-      setCreateMode('copy');
-      setSourceConfig(copyConfig(initialSourceConfig));
-      setStep('edit');
+      // Use RAF to defer state updates and avoid flushSync warnings
+      requestAnimationFrame(() => {
+        setCreateMode('copy');
+        setSourceConfig(copyConfig(initialSourceConfig));
+        setStep('edit');
+      });
     } else if (isOpen && initialSourceConfig == null) {
       openedWithSourceRef.current = false;
     }
