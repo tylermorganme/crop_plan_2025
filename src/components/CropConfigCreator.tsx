@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import { copyConfig } from '@/lib/entities/crop-config';
 import type { Variety } from '@/lib/entities/variety';
@@ -26,6 +26,8 @@ interface CropConfigCreatorProps {
   products?: Record<string, Product>;
   /** Markets available for market split selection */
   markets?: Record<string, Market>;
+  /** Optional: Pre-select a config to copy (skips the choose step) */
+  initialSourceConfig?: CropConfig | null;
 }
 
 type Step = 'choose' | 'edit';
@@ -47,11 +49,26 @@ export default function CropConfigCreator({
   seedMixes,
   products,
   markets,
+  initialSourceConfig,
 }: CropConfigCreatorProps) {
   const [step, setStep] = useState<Step>('choose');
   const [createMode, setCreateMode] = useState<CreateMode>('blank');
   const [sourceConfig, setSourceConfig] = useState<CropConfig | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  // Track if we opened with a pre-selected source (affects back button behavior)
+  const openedWithSourceRef = useRef(false);
+
+  // Handle initialSourceConfig changes - when provided, skip to edit step
+  useEffect(() => {
+    if (isOpen && initialSourceConfig != null) {
+      openedWithSourceRef.current = true;
+      setCreateMode('copy');
+      setSourceConfig(copyConfig(initialSourceConfig));
+      setStep('edit');
+    } else if (isOpen && initialSourceConfig == null) {
+      openedWithSourceRef.current = false;
+    }
+  }, [isOpen, initialSourceConfig]);
 
   // Filter crops for copy selection
   const filteredCrops = useMemo(() => {
@@ -73,6 +90,7 @@ export default function CropConfigCreator({
     setCreateMode('blank');
     setSourceConfig(null);
     setSearchQuery('');
+    openedWithSourceRef.current = false;
     onClose();
   };
 
@@ -96,10 +114,15 @@ export default function CropConfigCreator({
     handleClose();
   };
 
-  // Handle going back to choose step
+  // Handle going back to choose step (or close if opened with initial source)
   const handleBack = () => {
-    setStep('choose');
-    setSourceConfig(null);
+    if (openedWithSourceRef.current) {
+      // Opened via Copy button - close instead of going back
+      handleClose();
+    } else {
+      setStep('choose');
+      setSourceConfig(null);
+    }
   };
 
   if (!isOpen) return null;

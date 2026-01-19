@@ -241,6 +241,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
   // Create custom config state
   const [showCreateConfig, setShowCreateConfig] = useState(false);
+  const [copySourceConfig, setCopySourceConfig] = useState<Crop | null>(null);
 
   // Edit config state
   const [showEditConfig, setShowEditConfig] = useState(false);
@@ -1144,6 +1145,22 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     setConfigsToDelete([]);
   }, []);
 
+  // Handle copy config (from selection bar - single item only)
+  const handleCopySelected = useCallback(() => {
+    if (!activePlanId) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'Select an active plan first to copy configs',
+      });
+      return;
+    }
+    if (selectedCropIds.size !== 1) return;
+    const cropToCopy = sortedCrops.find(c => selectedCropIds.has(c.id));
+    if (!cropToCopy) return;
+    setCopySourceConfig(cropToCopy);
+    setShowCreateConfig(true);
+  }, [activePlanId, selectedCropIds, sortedCrops]);
+
   return (
     <div className="flex h-full">
       {/* Collapsible Filter Pane */}
@@ -1753,6 +1770,14 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
           >
             Add to Plan
           </button>
+          {selectedCropIds.size === 1 && (
+            <button
+              onClick={handleCopySelected}
+              className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-700 rounded transition-colors"
+            >
+              Copy
+            </button>
+          )}
           <button
             onClick={handleBulkDelete}
             className="px-3 py-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 rounded transition-colors"
@@ -1797,7 +1822,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       {/* Create Custom Config Modal */}
       <CropConfigCreator
         isOpen={showCreateConfig}
-        onClose={() => setShowCreateConfig(false)}
+        onClose={() => { setShowCreateConfig(false); setCopySourceConfig(null); }}
         onSave={handleSaveCustomConfig}
         availableCrops={displayCrops as CropConfig[]}
         existingIdentifiers={existingIdentifiers}
@@ -1805,6 +1830,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
         seedMixes={seedMixes}
         products={products}
         markets={markets}
+        initialSourceConfig={copySourceConfig as CropConfig | null}
       />
 
       {/* Edit Config Modal */}
