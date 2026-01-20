@@ -119,6 +119,23 @@ export {
 // =============================================================================
 
 import type { Plan, TimelineCrop } from './entities/plan';
+import type { Patch } from 'immer';
+
+// =============================================================================
+// PATCH-BASED UNDO/REDO TYPES
+// =============================================================================
+
+/** Entry in the patch-based undo history */
+export interface PatchEntry {
+  /** Forward patches (to redo) */
+  patches: Patch[];
+  /** Inverse patches (to undo) */
+  inversePatches: Patch[];
+  /** Human-readable description of the change */
+  description: string;
+  /** Timestamp of when the change was made */
+  timestamp: number;
+}
 
 /** Info about each bed in a span, including how much is used */
 export interface BedSpanInfo {
@@ -131,10 +148,14 @@ export interface BedSpanInfo {
 export interface PlanState {
   /** Current plan being edited */
   currentPlan: Plan | null;
-  /** Past plan states for undo (full Plan snapshots) */
+  /** Past plan states for undo (full Plan snapshots) - LEGACY */
   past: Plan[];
-  /** Future plan states for redo (full Plan snapshots) */
+  /** Future plan states for redo (full Plan snapshots) - LEGACY */
   future: Plan[];
+  /** Patch-based undo history (replaces past[]) */
+  patchHistory: PatchEntry[];
+  /** Patch-based redo history (replaces future[]) */
+  patchFuture: PatchEntry[];
   /** Whether there are unsaved changes */
   isDirty: boolean;
   /** Loading/saving state */

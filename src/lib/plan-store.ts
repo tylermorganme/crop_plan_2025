@@ -8,6 +8,7 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { enablePatches, produceWithPatches, applyPatches } from 'immer';
 import { addYears, addMonths, format, parseISO, isValid } from 'date-fns';
 import type {
   Plan,
@@ -21,7 +22,11 @@ import type {
   HistoryEntry,
   Bed,
   Planting,
+  PatchEntry,
 } from './plan-types';
+
+// Enable immer patches globally
+enablePatches();
 import {
   CURRENT_SCHEMA_VERSION,
   validatePlan,
@@ -34,7 +39,7 @@ import {
   clonePlanting,
 } from './entities/planting';
 import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities/bed';
-import { storage, onSyncMessage, type PlanSummary, type PlanSnapshot, type PlanData } from './storage-adapter';
+import { storage, onSyncMessage, type PlanSummary, type PlanData } from './sqlite-client';
 import bedPlanData from '@/data/bed-template.json';
 import { getAllCrops } from './crops';
 import { getStockVarieties, getStockSeedMixes, getStockProducts, getStockMarkets } from './stock-data';
@@ -107,7 +112,7 @@ export interface RawSeedMixInput {
 }
 
 // Re-export types for consumers
-export type { PlanSummary, PlanSnapshot, PlanData };
+export type { PlanSummary, PlanData };
 
 // Active plan ID key (shared with components that need it)
 export const ACTIVE_PLAN_KEY = 'crop-explorer-active-plan';
@@ -138,6 +143,53 @@ function snapshotForUndo(state: { currentPlan: Plan | null; past: Plan[]; future
 
   // Clear redo stack on new change
   state.future = [];
+}
+
+/**
+ * Apply a mutation to the current plan using immer patches.
+ * This creates a patch entry for undo/redo support.
+ *
+ * @param state - The store state (with patchHistory/patchFuture)
+ * @param mutator - Function that mutates the plan draft
+ * @param description - Human-readable description of the change
+ * @returns The updated plan, or null if no plan was loaded
+ */
+function mutateWithPatches(
+  state: {
+    currentPlan: Plan | null;
+    patchHistory: PatchEntry[];
+    patchFuture: PatchEntry[];
+  },
+  mutator: (draft: Plan) => void,
+  description: string
+): Plan | null {
+  if (!state.currentPlan) return null;
+
+  const [nextPlan, patches, inversePatches] = produceWithPatches(
+    state.currentPlan,
+    mutator
+  );
+
+  // Update current plan
+  state.currentPlan = nextPlan;
+
+  // Add to patch history
+  state.patchHistory.push({
+    patches,
+    inversePatches,
+    description,
+    timestamp: Date.now(),
+  });
+
+  // Limit history size
+  if (state.patchHistory.length > MAX_HISTORY_SIZE) {
+    state.patchHistory.shift();
+  }
+
+  // Clear redo stack on new change
+  state.patchFuture = [];
+
+  return nextPlan;
 }
 
 // ============================================
@@ -199,11 +251,7 @@ export async function getPlanList(): Promise<PlanSummary[]> {
  * Save plan to library
  */
 export async function savePlanToLibrary(plan: Plan): Promise<void> {
-  const data: PlanData = {
-    plan,
-    past: [],  // Don't persist undo history per-plan
-    future: [],
-  };
+  const data: PlanData = { plan };
   return storage.savePlan(plan.id, data);
 }
 
@@ -445,77 +493,37 @@ export async function clearStash(): Promise<void> {
 
 /**
  * Create a named checkpoint for the current plan.
- * Checkpoints are saved to file storage for durability.
+ * TODO: Re-implement with SQLite patches.
  */
-export async function createCheckpoint(name: string, description?: string): Promise<Checkpoint> {
-  const state = usePlanStore.getState();
-  if (!state.currentPlan) {
-    throw new Error('No plan loaded');
-  }
-
-  const checkpoint: Checkpoint = {
-    id: generateId(),
-    planId: state.currentPlan.id,
-    name,
-    description,
-    timestamp: Date.now(),
-    plan: JSON.parse(JSON.stringify(state.currentPlan)), // Deep clone
-  };
-
-  const response = await fetch(`/api/plans/${checkpoint.planId}/checkpoints`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ checkpoint }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to save checkpoint');
-  }
-
-  return checkpoint;
+export async function createCheckpoint(_name: string, _description?: string): Promise<Checkpoint> {
+  console.warn('createCheckpoint: Not yet implemented with SQLite storage');
+  throw new Error('Checkpoints not yet implemented with SQLite storage');
 }
 
 /**
- * Get all checkpoints for a plan
+ * Get all checkpoints for a plan.
+ * TODO: Re-implement with SQLite patches.
  */
-export async function getCheckpoints(planId?: string): Promise<Checkpoint[]> {
-  const id = planId ?? usePlanStore.getState().currentPlan?.id;
-  if (!id) return [];
-
-  const response = await fetch(`/api/plans/${id}/checkpoints`);
-  if (!response.ok) return [];
-
-  const data = await response.json();
-  return data.checkpoints ?? [];
+export async function getCheckpoints(_planId?: string): Promise<Checkpoint[]> {
+  console.warn('getCheckpoints: Not yet implemented with SQLite storage');
+  return [];
 }
 
 /**
- * Delete a checkpoint
+ * Delete a checkpoint.
+ * TODO: Re-implement with SQLite patches.
  */
-export async function deleteCheckpoint(checkpointId: string, planId?: string): Promise<void> {
-  const id = planId ?? usePlanStore.getState().currentPlan?.id;
-  if (!id) return;
-
-  await fetch(`/api/plans/${id}/checkpoints`, {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ checkpointId }),
-  });
+export async function deleteCheckpoint(_checkpointId: string, _planId?: string): Promise<void> {
+  console.warn('deleteCheckpoint: Not yet implemented with SQLite storage');
 }
 
 /**
  * Get unified history combining checkpoints, auto-saves, and stash entries.
- * Fetched from file storage via API.
+ * TODO: Re-implement with SQLite patches.
  */
-export async function getHistory(planId?: string): Promise<HistoryEntry[]> {
-  const id = planId ?? usePlanStore.getState().currentPlan?.id;
-  if (!id) return [];
-
-  const response = await fetch(`/api/plans/${id}/history`);
-  if (!response.ok) return [];
-
-  const data = await response.json();
-  return data.history ?? [];
+export async function getHistory(_planId?: string): Promise<HistoryEntry[]> {
+  console.warn('getHistory: Not yet implemented with SQLite storage');
+  return [];
 }
 
 /**
@@ -691,6 +699,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     currentPlan: null,
     past: [],
     future: [],
+    patchHistory: [],
+    patchFuture: [],
     isDirty: false,
     isLoading: false,
     isSaving: false,
@@ -705,6 +715,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.currentPlan = plan;
         state.past = [];
         state.future = [];
+        state.patchHistory = [];
+        state.patchFuture = [];
         state.isDirty = false;
         state.isLoading = false;
       });
@@ -939,49 +951,63 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     // NOTE: newResource is a bed NAME from the timeline, not a UUID.
     // We convert to UUID for storage.
     moveCrop: async (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => {
-      set((state) => {
-        if (!state.currentPlan?.plantings || !state.currentPlan.beds) return;
+      // Pre-validate before mutation
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings || !currentPlan.beds) return;
 
-        // Snapshot for undo before any mutations
-        snapshotForUndo(state);
+      const planting = currentPlan.plantings.find(p => p.id === groupId);
+      if (!planting) return;
 
-        // Find the planting (groupId = planting.id in new format)
-        const planting = state.currentPlan.plantings.find(p => p.id === groupId);
-        if (!planting) return;
-
-        const now = Date.now();
-
-        if (newResource === '' || newResource === 'Unassigned' || !bedSpanInfo || bedSpanInfo.length === 0) {
-          // Moving to Unassigned
-          planting.startBed = null;
-          // Keep existing bedFeet
-        } else {
-          // Convert bed name to UUID for storage
-          const bedUuid = bedNameToUuid(newResource, state.currentPlan.beds!);
-          if (!bedUuid) {
-            console.warn(`[moveCrop] Bed not found: ${newResource}`);
-            return;
-          }
-          planting.startBed = bedUuid;
-          planting.bedFeet = bedSpanInfo.reduce((sum, b) => sum + b.feetUsed, 0);
+      // Resolve bed UUID before mutation
+      let bedUuid: string | null = null;
+      if (newResource !== '' && newResource !== 'Unassigned' && bedSpanInfo && bedSpanInfo.length > 0) {
+        bedUuid = bedNameToUuid(newResource, currentPlan.beds);
+        if (!bedUuid) {
+          console.warn(`[moveCrop] Bed not found: ${newResource}`);
+          return;
         }
-        planting.lastModified = now;
+      }
 
-        // Update metadata
-        state.currentPlan.metadata.lastModified = now;
-        state.currentPlan.changeLog.push(
-          createChangeEntry('move', `Moved ${groupId} to ${newResource || 'unassigned'}`, [groupId])
+      const totalBedFeet = bedSpanInfo?.reduce((sum, b) => sum + b.feetUsed, 0) ?? planting.bedFeet;
+
+      set((state) => {
+        // Use patch-based mutation
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const p = plan.plantings?.find(p => p.id === groupId);
+            if (!p) return;
+
+            const now = Date.now();
+
+            if (!bedUuid) {
+              // Moving to Unassigned
+              p.startBed = null;
+            } else {
+              p.startBed = bedUuid;
+              p.bedFeet = totalBedFeet;
+            }
+            p.lastModified = now;
+
+            // Update metadata
+            plan.metadata.lastModified = now;
+            plan.changeLog.push(
+              createChangeEntry('move', `Moved ${groupId} to ${newResource || 'unassigned'}`, [groupId])
+            );
+          },
+          `Move ${groupId} to ${newResource || 'unassigned'}`
         );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
       });
 
       // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
+      const newState = get();
+      if (newState.currentPlan) {
         try {
-          await savePlanToLibrary(currentState.currentPlan);
+          await savePlanToLibrary(newState.currentPlan);
           set((state) => {
             state.isSaving = false;
             state.isDirty = false;
@@ -995,37 +1021,46 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
-    updateCropDates: async (groupId: string, startDate: string, endDate: string) => {
+    updateCropDates: async (groupId: string, startDate: string, _endDate: string) => {
+      // Pre-validate
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings) return;
+
+      const planting = currentPlan.plantings.find(p => p.id === groupId);
+      if (!planting) return;
+
       set((state) => {
-        if (!state.currentPlan?.plantings) return;
+        // Use patch-based mutation
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const p = plan.plantings?.find(p => p.id === groupId);
+            if (!p) return;
 
-        // Snapshot for undo before any mutations
-        snapshotForUndo(state);
+            const now = Date.now();
+            // Only fieldStartDate is stored; endDate is computed from config
+            // TODO: If user drags endDate, may need to store override
+            p.fieldStartDate = startDate;
+            p.lastModified = now;
 
-        // Find the planting
-        const planting = state.currentPlan.plantings.find(p => p.id === groupId);
-        if (!planting) return;
-
-        const now = Date.now();
-        // Only fieldStartDate is stored; endDate is computed from config
-        // TODO: If user drags endDate, may need to store override
-        planting.fieldStartDate = startDate;
-        planting.lastModified = now;
-
-        state.currentPlan.metadata.lastModified = now;
-        state.currentPlan.changeLog.push(
-          createChangeEntry('date_change', `Updated dates for ${groupId}`, [groupId])
+            plan.metadata.lastModified = now;
+            plan.changeLog.push(
+              createChangeEntry('date_change', `Updated dates for ${groupId}`, [groupId])
+            );
+          },
+          `Update dates for ${groupId}`
         );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
       });
 
       // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
+      const newState = get();
+      if (newState.currentPlan) {
         try {
-          await savePlanToLibrary(currentState.currentPlan);
+          await savePlanToLibrary(newState.currentPlan);
           set((state) => {
             state.isSaving = false;
             state.isDirty = false;
@@ -1040,31 +1075,41 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     },
 
     deleteCrop: async (groupId: string) => {
+      // Pre-validate
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings) return;
+
       set((state) => {
-        if (!state.currentPlan?.plantings) return;
+        // Use patch-based mutation
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.plantings) return;
 
-        // Snapshot for undo before any mutations
-        snapshotForUndo(state);
+            // Remove the planting
+            const index = plan.plantings.findIndex(p => p.id === groupId);
+            if (index !== -1) {
+              plan.plantings.splice(index, 1);
+            }
 
-        // Remove the planting
-        state.currentPlan.plantings = state.currentPlan.plantings.filter(
-          p => p.id !== groupId
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('delete', `Deleted ${groupId}`, [groupId])
+            );
+          },
+          `Delete ${groupId}`
         );
 
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('delete', `Deleted ${groupId}`, [groupId])
-        );
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
       });
 
       // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
+      const newState = get();
+      if (newState.currentPlan) {
         try {
-          await savePlanToLibrary(currentState.currentPlan);
+          await savePlanToLibrary(newState.currentPlan);
           set((state) => {
             state.isSaving = false;
             state.isDirty = false;
@@ -1081,59 +1126,71 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     // NOTE: planting.startBed may be a bed NAME from the timeline.
     // We convert to UUID for storage.
     addPlanting: async (planting: Planting) => {
+      // Pre-validate
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings || !currentPlan.beds) return;
+
+      // Convert bed name to UUID if needed (before mutation)
+      let startBedUuid = planting.startBed;
+      if (startBedUuid && startBedUuid !== 'Unassigned') {
+        // Check if it's already a UUID (exists as key in beds)
+        if (!currentPlan.beds[startBedUuid]) {
+          // It's a name, convert to UUID
+          const uuid = bedNameToUuid(startBedUuid, currentPlan.beds);
+          startBedUuid = uuid;
+        }
+      } else {
+        startBedUuid = null;
+      }
+
+      // Check if planting should use default seed source
+      let shouldUseDefaultSeedSource = false;
+      if (!planting.seedSource && planting.useDefaultSeedSource === undefined &&
+          planting.configId && currentPlan.cropCatalog) {
+        const config = currentPlan.cropCatalog[planting.configId];
+        if (config?.defaultSeedSource) {
+          shouldUseDefaultSeedSource = true;
+        }
+      }
+
       set((state) => {
-        if (!state.currentPlan?.plantings || !state.currentPlan.beds) return;
+        // Use patch-based mutation
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.plantings) return;
 
-        // Snapshot for undo before any mutations
-        snapshotForUndo(state);
+            const now = Date.now();
+            const newPlanting: Planting = {
+              ...planting,
+              startBed: startBedUuid,
+              lastModified: now,
+            };
 
-        // Convert bed name to UUID if needed
-        let startBedUuid = planting.startBed;
-        if (startBedUuid && startBedUuid !== 'Unassigned') {
-          // Check if it's already a UUID (exists as key in beds)
-          if (!state.currentPlan.beds[startBedUuid]) {
-            // It's a name, convert to UUID
-            const uuid = bedNameToUuid(startBedUuid, state.currentPlan.beds);
-            startBedUuid = uuid;
-          }
-        } else {
-          startBedUuid = null;
-        }
+            if (shouldUseDefaultSeedSource) {
+              newPlanting.useDefaultSeedSource = true;
+            }
 
-        // Add the new planting
-        const now = Date.now();
-        const newPlanting: Planting = {
-          ...planting,
-          startBed: startBedUuid,
-          lastModified: now,
-        };
+            plan.plantings.push(newPlanting);
 
-        // If planting has no seed source and config has a default, set useDefaultSeedSource=true
-        // so the planting follows the config's default (rather than copying a snapshot)
-        if (!newPlanting.seedSource && newPlanting.useDefaultSeedSource === undefined &&
-            newPlanting.configId && state.currentPlan.cropCatalog) {
-          const config = state.currentPlan.cropCatalog[newPlanting.configId];
-          if (config?.defaultSeedSource) {
-            newPlanting.useDefaultSeedSource = true;
-          }
-        }
-
-        state.currentPlan.plantings.push(newPlanting);
-
-        state.currentPlan.metadata.lastModified = now;
-        state.currentPlan.changeLog.push(
-          createChangeEntry('create', `Added planting ${planting.id}`, [planting.id])
+            plan.metadata.lastModified = now;
+            plan.changeLog.push(
+              createChangeEntry('create', `Added planting ${planting.id}`, [planting.id])
+            );
+          },
+          `Add planting ${planting.id}`
         );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
       });
 
       // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
+      const newState = get();
+      if (newState.currentPlan) {
         try {
-          await savePlanToLibrary(currentState.currentPlan);
+          await savePlanToLibrary(newState.currentPlan);
           set((state) => {
             state.isSaving = false;
             state.isDirty = false;
@@ -1168,55 +1225,64 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     },
 
     updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource'>>) => {
+      // Pre-validate
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings) return;
+
+      const planting = currentPlan.plantings.find(p => p.id === plantingId);
+      if (!planting) return;
+
       set((state) => {
-        if (!state.currentPlan?.plantings) return;
+        // Use patch-based mutation
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const p = plan.plantings?.find(p => p.id === plantingId);
+            if (!p) return;
 
-        // Find the planting
-        const planting = state.currentPlan.plantings.find(p => p.id === plantingId);
-        if (!planting) return;
+            const now = Date.now();
 
-        // Snapshot for undo before any mutations
-        snapshotForUndo(state);
+            // Apply updates
+            if (updates.bedFeet !== undefined) {
+              p.bedFeet = updates.bedFeet;
+            }
+            if (updates.overrides !== undefined) {
+              // Merge overrides (shallow merge)
+              p.overrides = {
+                ...p.overrides,
+                ...updates.overrides,
+              };
+            }
+            if (updates.notes !== undefined) {
+              p.notes = updates.notes || undefined; // Clear if empty string
+            }
+            if (updates.seedSource !== undefined) {
+              p.seedSource = updates.seedSource || undefined; // Clear if null
+            }
+            if (updates.useDefaultSeedSource !== undefined) {
+              p.useDefaultSeedSource = updates.useDefaultSeedSource;
+            }
 
-        const now = Date.now();
+            p.lastModified = now;
 
-        // Apply updates
-        if (updates.bedFeet !== undefined) {
-          planting.bedFeet = updates.bedFeet;
-        }
-        if (updates.overrides !== undefined) {
-          // Merge overrides (shallow merge)
-          planting.overrides = {
-            ...planting.overrides,
-            ...updates.overrides,
-          };
-        }
-        if (updates.notes !== undefined) {
-          planting.notes = updates.notes || undefined; // Clear if empty string
-        }
-        if (updates.seedSource !== undefined) {
-          planting.seedSource = updates.seedSource || undefined; // Clear if null
-        }
-        if (updates.useDefaultSeedSource !== undefined) {
-          planting.useDefaultSeedSource = updates.useDefaultSeedSource;
-        }
-
-        planting.lastModified = now;
-
-        state.currentPlan.metadata.lastModified = now;
-        state.currentPlan.changeLog.push(
-          createChangeEntry('edit', `Updated planting ${plantingId}`, [plantingId])
+            plan.metadata.lastModified = now;
+            plan.changeLog.push(
+              createChangeEntry('edit', `Updated planting ${plantingId}`, [plantingId])
+            );
+          },
+          `Update planting ${plantingId}`
         );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
       });
 
       // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
+      const newState = get();
+      if (newState.currentPlan) {
         try {
-          await savePlanToLibrary(currentState.currentPlan);
+          await savePlanToLibrary(newState.currentPlan);
           set((state) => {
             state.isSaving = false;
             state.isDirty = false;
@@ -1448,19 +1514,33 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return existingIdentifiers.length;
     },
 
-    // History - now stores full Plan snapshots
+    // History - uses patches if available, falls back to snapshots for legacy compatibility
     undo: async () => {
       set((state) => {
-        if (!state.currentPlan || state.past.length === 0) return;
+        if (!state.currentPlan) return;
 
-        const previous = state.past.pop()!;
-        // Push current to future, restore previous
-        state.future.push(deepCopyPlan(state.currentPlan));
-        state.currentPlan = deepCopyPlan(previous);
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
+        // Prefer patch-based undo
+        if (state.patchHistory.length > 0) {
+          const entry = state.patchHistory.pop()!;
+          state.currentPlan = applyPatches(state.currentPlan, entry.inversePatches);
+          state.patchFuture.push(entry);
+          state.currentPlan.metadata.lastModified = Date.now();
+          state.isDirty = true;
+          state.isSaving = true;
+          state.saveError = null;
+          return;
+        }
+
+        // Fall back to snapshot-based undo (legacy)
+        if (state.past.length > 0) {
+          const previous = state.past.pop()!;
+          state.future.push(deepCopyPlan(state.currentPlan));
+          state.currentPlan = deepCopyPlan(previous);
+          state.currentPlan.metadata.lastModified = Date.now();
+          state.isDirty = true;
+          state.isSaving = true;
+          state.saveError = null;
+        }
       });
 
       // Save to library
@@ -1483,16 +1563,30 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
     redo: async () => {
       set((state) => {
-        if (!state.currentPlan || state.future.length === 0) return;
+        if (!state.currentPlan) return;
 
-        const next = state.future.pop()!;
-        // Push current to past, restore next
-        state.past.push(deepCopyPlan(state.currentPlan));
-        state.currentPlan = deepCopyPlan(next);
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
+        // Prefer patch-based redo
+        if (state.patchFuture.length > 0) {
+          const entry = state.patchFuture.pop()!;
+          state.currentPlan = applyPatches(state.currentPlan, entry.patches);
+          state.patchHistory.push(entry);
+          state.currentPlan.metadata.lastModified = Date.now();
+          state.isDirty = true;
+          state.isSaving = true;
+          state.saveError = null;
+          return;
+        }
+
+        // Fall back to snapshot-based redo (legacy)
+        if (state.future.length > 0) {
+          const next = state.future.pop()!;
+          state.past.push(deepCopyPlan(state.currentPlan));
+          state.currentPlan = deepCopyPlan(next);
+          state.currentPlan.metadata.lastModified = Date.now();
+          state.isDirty = true;
+          state.isSaving = true;
+          state.saveError = null;
+        }
       });
 
       // Save to library
@@ -1515,12 +1609,12 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
     canUndo: () => {
       const state = get();
-      return state.past.length > 0;
+      return state.patchHistory.length > 0 || state.past.length > 0;
     },
 
     canRedo: () => {
       const state = get();
-      return state.future.length > 0;
+      return state.patchFuture.length > 0 || state.future.length > 0;
     },
 
     // Persistence helpers

@@ -56,7 +56,8 @@
       "Skill(crop-data:*)",
       "Skill(quality)",
       "Skill(quality:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npm run test:run:*)"
     ],
     "deny": [],
     "ask": []
