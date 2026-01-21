@@ -11,7 +11,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { applyPatches } from 'immer';
+import { applyPatches, enablePatches } from 'immer';
+
+// Enable Immer patches plugin
+enablePatches();
 import {
   loadPlan,
   savePlan,

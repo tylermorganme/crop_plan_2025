@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import PlanDropdown from './PlanDropdown';
-import CopyPlanModal from './CopyPlanModal';
+import SaveAsModal from './SaveAsModal';
 import { usePlanStore, useUndoRedo, copyPlan } from '@/lib/plan-store';
 import { Z_INDEX } from '@/lib/z-index';
-import type { CopyPlanOptions } from './CopyPlanModal';
 
 interface AppHeaderProps {
   /** Optional toolbar content to render below the main nav */
@@ -27,17 +26,6 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
 
   // Modal state
   const [showCopyModal, setShowCopyModal] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Save handler - now just shows confirmation since saving is automatic
-  const handleSave = useCallback(async () => {
-    if (isSaving) return;
-    setIsSaving(true);
-    // With SQLite storage, all changes are auto-saved on each mutation.
-    // Ctrl+S / Save button just provides user feedback that everything is saved.
-    await new Promise((resolve) => setTimeout(resolve, 200)); // Brief visual feedback
-    setIsSaving(false);
-  }, [isSaving]);
 
   // Global keyboard shortcuts for undo/redo
   useEffect(() => {
@@ -61,13 +49,13 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        handleSave();
+        setShowCopyModal(true);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canUndo, canRedo, undo, redo, handleSave]);
+  }, [canUndo, canRedo, undo, redo]);
 
   // Determine which tab is active
   const isExplorerActive = pathname === '/';
@@ -254,25 +242,15 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           </div>
         )}
 
-        {/* Save/History buttons - only show when a plan is active */}
+        {/* Copy plan button - only show when a plan is active */}
         {activePlanId && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:text-gray-400 disabled:bg-gray-50 disabled:cursor-not-allowed"
-              title="Save checkpoint - Ctrl+S"
-            >
-              {isSaving ? '...' : '💾'}
-            </button>
-            <button
-              onClick={() => setShowCopyModal(true)}
-              className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-              title="Save As (copy plan)"
-            >
-              📋
-            </button>
-          </div>
+          <button
+            onClick={() => setShowCopyModal(true)}
+            className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
+            title="Copy plan - Ctrl+S"
+          >
+            💾
+          </button>
         )}
 
         {/* Plan Dropdown */}
@@ -289,12 +267,18 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
 
     {/* Modals/Panels - outside header to avoid stacking context issues */}
     {showCopyModal && (
-      <CopyPlanModal
+      <SaveAsModal
         isOpen={showCopyModal}
         currentPlanName={currentPlanName}
         onClose={() => setShowCopyModal(false)}
-        onCopy={async (options: CopyPlanOptions) => {
-          await copyPlan(options);
+        onSave={async (newName: string) => {
+          await copyPlan({
+            newName,
+            shiftDates: false,
+            shiftAmount: 0,
+            shiftUnit: 'years',
+            unassignAll: false,
+          });
           await refreshPlanList();
           setShowCopyModal(false);
         }}

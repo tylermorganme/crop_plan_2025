@@ -29,6 +29,13 @@ export interface PlanSummary {
   schemaVersion?: number;
 }
 
+/** Checkpoint metadata */
+export interface CheckpointInfo {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
 // =============================================================================
 // API CLIENT
 // =============================================================================
@@ -263,6 +270,88 @@ export class SQLiteClientAdapter {
       localStorage.setItem(key, value);
     } catch (e) {
       console.warn('Failed to set flag:', e);
+    }
+  }
+
+  // ----------------------------------------
+  // Checkpoints
+  // ----------------------------------------
+
+  /**
+   * Create a checkpoint (full database copy).
+   * Returns the checkpoint ID.
+   */
+  async createCheckpoint(planId: string, name: string): Promise<string | null> {
+    try {
+      const response = await fetch(`/api/sqlite/${planId}/checkpoints`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        console.warn('Failed to create checkpoint:', data.error || response.statusText);
+        return null;
+      }
+      const data = await response.json();
+      return data.checkpointId ?? null;
+    } catch (e) {
+      console.error('Failed to create checkpoint:', e);
+      return null;
+    }
+  }
+
+  /**
+   * List all checkpoints for a plan.
+   */
+  async listCheckpoints(planId: string): Promise<CheckpointInfo[]> {
+    try {
+      const response = await fetch(`/api/sqlite/${planId}/checkpoints`);
+      if (!response.ok) {
+        return [];
+      }
+      const data = await response.json();
+      return data.checkpoints ?? [];
+    } catch (e) {
+      console.warn('Failed to list checkpoints:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Restore a checkpoint (overwrites current plan).
+   * Returns the restored plan.
+   */
+  async restoreCheckpoint(planId: string, checkpointId: string): Promise<Plan | null> {
+    try {
+      const response = await fetch(`/api/sqlite/${planId}/checkpoints/${checkpointId}/restore`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        console.warn('Failed to restore checkpoint:', data.error || response.statusText);
+        return null;
+      }
+      const data = await response.json();
+      return data.plan ?? null;
+    } catch (e) {
+      console.error('Failed to restore checkpoint:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Delete a checkpoint.
+   */
+  async deleteCheckpoint(planId: string, checkpointId: string): Promise<boolean> {
+    try {
+      const response = await fetch(`/api/sqlite/${planId}/checkpoints/${checkpointId}`, {
+        method: 'DELETE',
+      });
+      return response.ok;
+    } catch (e) {
+      console.warn('Failed to delete checkpoint:', e);
+      return false;
     }
   }
 }

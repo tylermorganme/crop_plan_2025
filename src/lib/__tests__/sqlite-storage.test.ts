@@ -17,6 +17,11 @@ import {
   loadPlanIndex,
   savePlanIndex,
   PlanFromFutureError,
+  createCheckpoint,
+  listCheckpoints,
+  restoreCheckpoint,
+  deleteCheckpoint,
+  deleteAllCheckpoints,
 } from '../sqlite-storage';
 import { CURRENT_SCHEMA_VERSION } from '../migrations';
 import type { Plan } from '../entities/plan';
@@ -57,10 +62,12 @@ function cleanupTestPlan(): void {
   const dbPath = join(PLANS_DIR, `${TEST_PLAN_ID}.db`);
   const walPath = `${dbPath}-wal`;
   const shmPath = `${dbPath}-shm`;
+  const checkpointsDir = join(PLANS_DIR, `${TEST_PLAN_ID}.checkpoints`);
 
   if (existsSync(dbPath)) rmSync(dbPath);
   if (existsSync(walPath)) rmSync(walPath);
   if (existsSync(shmPath)) rmSync(shmPath);
+  if (existsSync(checkpointsDir)) rmSync(checkpointsDir, { recursive: true });
 }
 
 // =============================================================================
@@ -421,6 +428,123 @@ describe('sqlite-storage', () => {
       const index = loadPlanIndex();
       const entry = index.find((p) => p.id === TEST_PLAN_ID);
       expect(entry).toBeUndefined();
+    });
+  });
+
+  describe('checkpoints', () => {
+    beforeEach(() => {
+      // Create a plan to work with
+      const plan = createTestPlan();
+      savePlan(TEST_PLAN_ID, plan);
+    });
+
+    it('createCheckpoint creates a checkpoint database copy', () => {
+      const checkpointId = createCheckpoint(TEST_PLAN_ID, 'First Checkpoint');
+
+      expect(checkpointId).toMatch(/^\d{4}-\d{2}-\d{2}_first-checkpoint$/);
+
+      const checkpointPath = join(PLANS_DIR, `${TEST_PLAN_ID}.checkpoints`, `${checkpointId}.db`);
+      expect(existsSync(checkpointPath)).toBe(true);
+    });
+
+    it('listCheckpoints returns all checkpoints', () => {
+      createCheckpoint(TEST_PLAN_ID, 'Checkpoint 1');
+      createCheckpoint(TEST_PLAN_ID, 'Checkpoint 2');
+
+      const checkpoints = listCheckpoints(TEST_PLAN_ID);
+
+      expect(checkpoints).toHaveLength(2);
+      expect(checkpoints[0].name).toBe('Checkpoint 2'); // Newest first
+      expect(checkpoints[1].name).toBe('Checkpoint 1');
+    });
+
+    it('restoreCheckpoint overwrites plan with checkpoint data', () => {
+      // Save initial state
+      const initialPlan = createTestPlan({ plantings: [] });
+      savePlan(TEST_PLAN_ID, initialPlan);
+
+      // Create checkpoint
+      const checkpointId = createCheckpoint(TEST_PLAN_ID, 'Before Changes');
+
+      // Modify the plan
+      const modifiedPlan = createTestPlan({
+        plantings: [{ id: 'test-planting', configId: 'test-config' } as never],
+      });
+      savePlan(TEST_PLAN_ID, modifiedPlan);
+
+      // Verify modification
+      const afterModify = loadPlan(TEST_PLAN_ID);
+      expect(afterModify?.plantings).toHaveLength(1);
+
+      // Restore checkpoint
+      const restored = restoreCheckpoint(TEST_PLAN_ID, checkpointId);
+
+      expect(restored.plantings).toHaveLength(0);
+
+      // Verify the database was overwritten
+      const afterRestore = loadPlan(TEST_PLAN_ID);
+      expect(afterRestore?.plantings).toHaveLength(0);
+    });
+
+    it('deleteCheckpoint removes a checkpoint', () => {
+      const checkpointId = createCheckpoint(TEST_PLAN_ID, 'To Delete');
+
+      const before = listCheckpoints(TEST_PLAN_ID);
+      expect(before).toHaveLength(1);
+
+      deleteCheckpoint(TEST_PLAN_ID, checkpointId);
+
+      const after = listCheckpoints(TEST_PLAN_ID);
+      expect(after).toHaveLength(0);
+
+      const checkpointPath = join(PLANS_DIR, `${TEST_PLAN_ID}.checkpoints`, `${checkpointId}.db`);
+      expect(existsSync(checkpointPath)).toBe(false);
+    });
+
+    it('deleteAllCheckpoints removes all checkpoints', () => {
+      createCheckpoint(TEST_PLAN_ID, 'Checkpoint 1');
+      createCheckpoint(TEST_PLAN_ID, 'Checkpoint 2');
+      createCheckpoint(TEST_PLAN_ID, 'Checkpoint 3');
+
+      const before = listCheckpoints(TEST_PLAN_ID);
+      expect(before).toHaveLength(3);
+
+      deleteAllCheckpoints(TEST_PLAN_ID);
+
+      const after = listCheckpoints(TEST_PLAN_ID);
+      expect(after).toHaveLength(0);
+    });
+
+    it('createCheckpoint throws for non-existent plan', () => {
+      expect(() => createCheckpoint('non-existent-plan', 'Test')).toThrow('Plan non-existent-plan not found');
+    });
+
+    it('restoreCheckpoint throws for non-existent checkpoint', () => {
+      expect(() => restoreCheckpoint(TEST_PLAN_ID, 'non-existent-checkpoint')).toThrow(
+        'Checkpoint non-existent-checkpoint not found'
+      );
+    });
+
+    it('checkpoint includes undo/redo history', () => {
+      // Add some patches
+      appendPatch(TEST_PLAN_ID, { patches: [], inversePatches: [], description: 'Edit 1' });
+      appendPatch(TEST_PLAN_ID, { patches: [], inversePatches: [], description: 'Edit 2' });
+
+      // Create checkpoint (should include patches)
+      const checkpointId = createCheckpoint(TEST_PLAN_ID, 'With History');
+
+      // Clear patches from live plan
+      clearPatches(TEST_PLAN_ID);
+      expect(getPatches(TEST_PLAN_ID)).toHaveLength(0);
+
+      // Restore checkpoint
+      restoreCheckpoint(TEST_PLAN_ID, checkpointId);
+
+      // Patches should be restored
+      const patches = getPatches(TEST_PLAN_ID);
+      expect(patches).toHaveLength(2);
+      expect(patches[0].description).toBe('Edit 1');
+      expect(patches[1].description).toBe('Edit 2');
     });
   });
 });

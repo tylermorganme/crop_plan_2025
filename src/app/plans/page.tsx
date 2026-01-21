@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation';
 import {
   usePlanStore,
   deletePlanFromLibrary,
+  copyPlan,
 } from '@/lib/plan-store';
 import { getTimelineCrops, collapseToPlantings } from '@/lib/timeline-data';
 import { Z_INDEX } from '@/lib/z-index';
+import CopyPlanModal from '@/components/CopyPlanModal';
+import type { CopyPlanOptions } from '@/components/CopyPlanModal';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -42,12 +45,14 @@ function formatDate(timestamp: number): string {
 export default function PlansPage() {
   const router = useRouter();
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
+  const [copyModalPlan, setCopyModalPlan] = useState<{ id: string; name: string } | null>(null);
 
   // Use centralized store state - automatically syncs across tabs
   const plans = usePlanStore((state) => state.planList);
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const createNewPlan = usePlanStore((state) => state.createNewPlan);
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
+  const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const refreshPlanList = usePlanStore((state) => state.refreshPlanList);
 
   // Ensure plan list is loaded (may already be from PlanStoreProvider)
@@ -121,6 +126,19 @@ export default function PlansPage() {
     setActivePlanId(planId);
     router.push(`/timeline/${planId}`);
   }, [router, setActivePlanId]);
+
+  const handleCopyPlan = useCallback(async (planId: string, planName: string) => {
+    // Load the plan first so copyPlan has it as currentPlan
+    await loadPlanById(planId);
+    setCopyModalPlan({ id: planId, name: planName });
+  }, [loadPlanById]);
+
+  const handleCopyConfirm = useCallback(async (options: CopyPlanOptions) => {
+    await copyPlan(options);
+    await refreshPlanList();
+    setCopyModalPlan(null);
+    setToast({ message: `Copied to "${options.newName}"`, type: 'success' });
+  }, [refreshPlanList]);
 
   return (
     <div className="min-h-[calc(100vh-60px)] bg-gray-50">
@@ -212,6 +230,13 @@ export default function PlansPage() {
                       Open
                     </button>
                     <button
+                      onClick={() => handleCopyPlan(plan.id, plan.name)}
+                      className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded"
+                      title="Copy plan"
+                    >
+                      Copy
+                    </button>
+                    <button
                       onClick={() => handleDelete(plan.id, plan.name)}
                       className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
                       title="Delete plan"
@@ -232,6 +257,16 @@ export default function PlansPage() {
           message={toast.message}
           type={toast.type}
           onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Copy Plan Modal */}
+      {copyModalPlan && (
+        <CopyPlanModal
+          isOpen={true}
+          currentPlanName={copyModalPlan.name}
+          onClose={() => setCopyModalPlan(null)}
+          onCopy={handleCopyConfirm}
         />
       )}
     </div>

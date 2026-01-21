@@ -11,7 +11,7 @@
 
 import Database from 'better-sqlite3';
 import { join } from 'path';
-import { existsSync, mkdirSync, unlinkSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, unlinkSync, readdirSync, readFileSync, writeFileSync, copyFileSync } from 'fs';
 import type { Plan } from './entities/plan';
 import { CURRENT_SCHEMA_VERSION, migratePlan } from './migrations';
 import type { Patch } from 'immer';
@@ -672,4 +672,160 @@ export function rebuildPlanIndex(): PlanSummary[] {
 
   savePlanIndex(index);
   return index;
+}
+
+// =============================================================================
+// CHECKPOINTS (full database copies)
+// =============================================================================
+
+/** Checkpoint metadata */
+export interface CheckpointInfo {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
+/** Get path to a plan's checkpoints directory */
+function getCheckpointsDir(planId: string): string {
+  return join(PLANS_DIR, `${planId}.checkpoints`);
+}
+
+/** Get path to checkpoints index file */
+function getCheckpointsIndexPath(planId: string): string {
+  return join(getCheckpointsDir(planId), 'index.json');
+}
+
+/** Get path to a specific checkpoint database */
+function getCheckpointDbPath(planId: string, checkpointId: string): string {
+  return join(getCheckpointsDir(planId), `${checkpointId}.db`);
+}
+
+/** Ensure checkpoints directory exists for a plan */
+function ensureCheckpointsDir(planId: string): void {
+  const dir = getCheckpointsDir(planId);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
+}
+
+/** Load checkpoints index for a plan */
+function loadCheckpointsIndex(planId: string): CheckpointInfo[] {
+  const indexPath = getCheckpointsIndexPath(planId);
+  if (!existsSync(indexPath)) {
+    return [];
+  }
+  try {
+    return JSON.parse(readFileSync(indexPath, 'utf-8'));
+  } catch {
+    return [];
+  }
+}
+
+/** Save checkpoints index for a plan */
+function saveCheckpointsIndex(planId: string, index: CheckpointInfo[]): void {
+  ensureCheckpointsDir(planId);
+  writeFileSync(getCheckpointsIndexPath(planId), JSON.stringify(index, null, 2));
+}
+
+/**
+ * Create a checkpoint (copy of the plan's database).
+ * Returns the checkpoint ID.
+ */
+export function createCheckpoint(planId: string, name: string): string {
+  if (!planExists(planId)) {
+    throw new Error(`Plan ${planId} not found`);
+  }
+
+  ensureCheckpointsDir(planId);
+
+  // Generate checkpoint ID from timestamp and sanitized name
+  const timestamp = Date.now();
+  const safeName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const checkpointId = `${new Date(timestamp).toISOString().slice(0, 10)}_${safeName || 'checkpoint'}`;
+
+  // Copy the database file
+  const srcPath = getDbPath(planId);
+  const destPath = getCheckpointDbPath(planId, checkpointId);
+  copyFileSync(srcPath, destPath);
+
+  // Update index
+  const index = loadCheckpointsIndex(planId);
+  index.push({ id: checkpointId, name, createdAt: timestamp });
+  index.sort((a, b) => b.createdAt - a.createdAt); // Newest first
+  saveCheckpointsIndex(planId, index);
+
+  return checkpointId;
+}
+
+/**
+ * List all checkpoints for a plan.
+ */
+export function listCheckpoints(planId: string): CheckpointInfo[] {
+  const checkpoints = loadCheckpointsIndex(planId);
+  // Return newest first
+  return checkpoints.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/**
+ * Restore a checkpoint (overwrites the plan's database with the checkpoint).
+ * Returns the restored plan.
+ */
+export function restoreCheckpoint(planId: string, checkpointId: string): Plan {
+  const checkpointPath = getCheckpointDbPath(planId, checkpointId);
+  if (!existsSync(checkpointPath)) {
+    throw new Error(`Checkpoint ${checkpointId} not found`);
+  }
+
+  const destPath = getDbPath(planId);
+
+  // Copy checkpoint over current database
+  copyFileSync(checkpointPath, destPath);
+
+  // Load and return the restored plan
+  const plan = loadPlan(planId);
+  if (!plan) {
+    throw new Error('Failed to load restored plan');
+  }
+
+  return plan;
+}
+
+/**
+ * Delete a checkpoint.
+ */
+export function deleteCheckpoint(planId: string, checkpointId: string): void {
+  const checkpointPath = getCheckpointDbPath(planId, checkpointId);
+  if (existsSync(checkpointPath)) {
+    unlinkSync(checkpointPath);
+  }
+
+  // Update index
+  const index = loadCheckpointsIndex(planId);
+  const filtered = index.filter((c) => c.id !== checkpointId);
+  saveCheckpointsIndex(planId, filtered);
+}
+
+/**
+ * Delete all checkpoints for a plan.
+ * Called when deleting a plan.
+ */
+export function deleteAllCheckpoints(planId: string): void {
+  const dir = getCheckpointsDir(planId);
+  if (!existsSync(dir)) {
+    return;
+  }
+
+  // Delete all files in the checkpoints directory
+  const files = readdirSync(dir);
+  for (const file of files) {
+    unlinkSync(join(dir, file));
+  }
+
+  // Remove the directory
+  try {
+    const { rmdirSync } = require('fs');
+    rmdirSync(dir);
+  } catch {
+    // Directory might not be empty or already removed
+  }
 }
