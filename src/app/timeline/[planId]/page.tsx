@@ -273,9 +273,9 @@ export default function TimelinePlanPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-51px)] flex flex-col">
+    <div className="h-[calc(100vh-51px)] flex flex-col overflow-hidden">
       {/* Timeline */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <CropTimeline
           crops={getTimelineCropsFromPlan(currentPlan)}
           resources={getResources(currentPlan)}

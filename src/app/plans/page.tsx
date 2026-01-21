@@ -141,7 +141,7 @@ export default function PlansPage() {
   }, [refreshPlanList]);
 
   return (
-    <div className="min-h-[calc(100vh-60px)] bg-gray-50">
+    <div className="h-[calc(100vh-51px)] overflow-auto bg-gray-50">
       {/* Toolbar */}
       <div className="bg-white border-b px-6 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -219,6 +219,7 @@ export default function PlansPage() {
                     </div>
                     <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                       <span>{plan.cropCount} crops</span>
+                      <span>Created {formatDate(plan.createdAt)}</span>
                       <span>Modified {formatDate(plan.lastModified)}</span>
                     </div>
                   </button>

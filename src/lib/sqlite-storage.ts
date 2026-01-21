@@ -62,6 +62,7 @@ export interface PlanSummary {
   id: string;
   name: string;
   version?: number;
+  createdAt: number;
   lastModified: number;
   cropCount: number;
   year: number;
@@ -616,6 +617,7 @@ export function updatePlanIndex(plan: Plan): void {
     id: plan.id,
     name: plan.metadata?.name ?? plan.id,
     version: plan.metadata?.version,
+    createdAt: plan.metadata?.createdAt ?? Date.now(),
     lastModified: plan.metadata?.lastModified ?? Date.now(),
     cropCount: plan.plantings?.length ?? 0,
     year: plan.metadata?.year ?? new Date().getFullYear(),
@@ -655,6 +657,7 @@ export function rebuildPlanIndex(): PlanSummary[] {
           id: planId,
           name: plan.metadata?.name ?? planId,
           version: plan.metadata?.version,
+          createdAt: plan.metadata?.createdAt ?? Date.now(),
           lastModified: plan.metadata?.lastModified ?? Date.now(),
           cropCount: plan.plantings?.length ?? 0,
           year: plan.metadata?.year ?? new Date().getFullYear(),

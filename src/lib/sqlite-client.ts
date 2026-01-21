@@ -21,6 +21,7 @@ export interface PlanSummary {
   id: string;
   name: string;
   version?: number;
+  createdAt: number;
   lastModified: number;
   cropCount: number;
   /** Target year for new plantings */

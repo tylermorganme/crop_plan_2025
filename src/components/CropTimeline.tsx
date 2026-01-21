@@ -1534,9 +1534,9 @@ export default function CropTimeline({
   }, [hoverPreview, addToBedId]);
 
   return (
-    <div className="flex h-full bg-gray-100">
+    <div className="flex h-full bg-gray-100 overflow-hidden">
       {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
       {/* Controls */}
       <div className="flex items-center gap-3 p-2 bg-white border-b">
         {/* View mode toggle */}
@@ -2105,19 +2105,66 @@ export default function CropTimeline({
           />
         </div>
       ) : selectedCropsData && selectedCropsData.length > 0 ? (
-        <div className="w-80 bg-white border-l flex flex-col shrink-0">
+        <div className="w-80 bg-white border-l flex flex-col shrink-0 h-full overflow-hidden">
           {/* Inspector Header */}
-          <div className="p-3 border-b bg-gray-50 flex items-center justify-between">
-            <h3 className="font-semibold text-sm">
-              {selectedGroupIds.size === 1 ? 'Planting Details' : `${selectedGroupIds.size} Plantings Selected`}
+          <div className="p-3 border-b bg-gray-50 flex items-center justify-between sticky top-0 z-10">
+            <h3 className="font-semibold text-sm min-w-0 flex-1">
+              {selectedGroupIds.size === 1 && selectedCropsData[0]
+                ? (
+                  <span className="flex items-center gap-2">
+                    <span className="truncate">{selectedCropsData[0].name}</span>
+                    {selectedCropsData[0].plantingId && (
+                      <span className="text-gray-500 font-normal shrink-0">{selectedCropsData[0].plantingId}</span>
+                    )}
+                  </span>
+                )
+                : `${selectedGroupIds.size} Plantings Selected`}
             </h3>
             <button
               onClick={() => setSelectedGroupIds(new Set())}
-              className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+              className="text-gray-400 hover:text-gray-600 text-lg leading-none ml-2 shrink-0"
             >
               &times;
             </button>
           </div>
+
+          {/* Sticky Actions Bar - Single selection */}
+          {selectedGroupIds.size === 1 && selectedCropsData[0] && (
+            <div className="p-3 border-b bg-white sticky top-[49px] z-10 flex flex-wrap gap-2">
+              {onEditCropConfig && selectedCropsData[0].plantingId && (
+                <button
+                  onClick={() => onEditCropConfig(selectedCropsData[0].plantingId!)}
+                  className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                >
+                  Edit Config
+                </button>
+              )}
+              {onDuplicateCrop && (
+                <button
+                  onClick={async () => {
+                    const newId = await onDuplicateCrop(selectedCropsData[0].groupId);
+                    if (newId) {
+                      setSelectedGroupIds(new Set([newId]));
+                    }
+                  }}
+                  className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
+                >
+                  Duplicate
+                </button>
+              )}
+              {onDeleteCrop && (
+                <button
+                  onClick={() => {
+                    onDeleteCrop([selectedCropsData[0].groupId]);
+                    setSelectedGroupIds(new Set());
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Inspector Content */}
           <div className="flex-1 overflow-auto p-3">
@@ -2197,9 +2244,6 @@ export default function CropTimeline({
 
               // Single selection: show detailed view
               const crop = selectedCropsData[0];
-              const colors = crop.bgColor
-                ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
-                : getColorForCategory(crop.category);
               const duration = getDuration(crop.startDate, crop.endDate);
               // Get all bed entries for this single group
               const groupCrops = selectedCropsData.filter(c => c.groupId === crop.groupId);
@@ -2229,84 +2273,93 @@ export default function CropTimeline({
 
               return (
                 <div className="space-y-4">
-                  {/* Crop Name with Color */}
-                  <div>
-                    <div
-                      className="inline-block px-2 py-1 rounded text-sm font-semibold"
-                      style={{ backgroundColor: colors.bg, color: colors.text }}
-                    >
-                      {crop.name}
+                  {/* Bed, Length - compact row */}
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Bed</div>
+                      {crop.resource ? (
+                        <div className="text-sm text-gray-900 truncate py-1" title={groupCrops.length > 1 ? groupCrops.map(c => c.resource).join(', ') : crop.resource}>
+                          {groupCrops.length === 1 ? crop.resource : `${groupCrops.length} beds`}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-amber-600 py-1">Unassigned</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Length</div>
+                      {onUpdatePlanting ? (
+                        <input
+                          type="number"
+                          min={1}
+                          step={25}
+                          defaultValue={crop.feetNeeded || 50}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val > 0 && val !== (crop.feetNeeded || 50)) {
+                              onUpdatePlanting(crop.groupId, { bedFeet: val });
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                        />
+                      ) : (
+                        <div className="text-sm text-gray-900 py-1">{crop.feetNeeded || 50}&apos;</div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Category */}
-                  {crop.category && (
-                    <div>
-                      <div className="text-xs text-gray-600 mb-1">Category</div>
-                      <div className="text-sm text-gray-900">{crop.category}</div>
-                    </div>
-                  )}
+                  {/* Dates - Seeding, Field (editable), Remove */}
+                  {(() => {
+                    const fieldDate = new Date(crop.startDate);
+                    const daysInCells = effectiveValues?.daysInCells || 0;
+                    const seedingDate = daysInCells > 0
+                      ? new Date(fieldDate.getTime() - daysInCells * 24 * 60 * 60 * 1000)
+                      : fieldDate;
+                    const removeDate = new Date(crop.endDate);
 
-                  {/* Dates */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-xs text-gray-600 mb-1">Start Date</div>
-                      <div className="text-sm text-gray-900">{new Date(crop.startDate).toLocaleDateString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-600 mb-1">End Date</div>
-                      <div className="text-sm text-gray-900">{new Date(crop.endDate).toLocaleDateString()}</div>
-                    </div>
-                  </div>
+                    // Format date for input (YYYY-MM-DD)
+                    const formatForInput = (d: Date) => d.toISOString().split('T')[0];
 
-                  {/* Duration */}
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">Duration</div>
-                    <div className="text-sm text-gray-900">{duration} days</div>
-                  </div>
-
-                  {/* Bed Assignment */}
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">Bed Assignment</div>
-                    {crop.resource ? (
-                      <div className="text-sm text-gray-900">
-                        {groupCrops.length === 1 ? (
-                          <span>{crop.resource}</span>
-                        ) : (
-                          <span>{groupCrops.map(c => c.resource).join(', ')}</span>
-                        )}
+                    return (
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <div className="text-xs text-gray-600 mb-1">Seeding</div>
+                          <div className="text-sm text-gray-900 py-0.5">{seedingDate.toLocaleDateString()}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-600 mb-1">Field</div>
+                          {onCropDateChange ? (
+                            <input
+                              type="date"
+                              defaultValue={formatForInput(fieldDate)}
+                              onChange={(e) => {
+                                const newFieldDate = e.target.value;
+                                if (newFieldDate) {
+                                  // End date shifts by the same delta
+                                  const oldField = new Date(crop.startDate);
+                                  const newField = new Date(newFieldDate + 'T00:00:00');
+                                  const deltaDays = Math.round((newField.getTime() - oldField.getTime()) / (24 * 60 * 60 * 1000));
+                                  const newEnd = new Date(removeDate.getTime() + deltaDays * 24 * 60 * 60 * 1000);
+                                  onCropDateChange(crop.groupId, newFieldDate + 'T00:00:00', newEnd.toISOString().split('T')[0] + 'T00:00:00');
+                                }
+                              }}
+                              className="w-full px-1 py-0.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                            />
+                          ) : (
+                            <div className="text-sm text-gray-900 py-0.5">{fieldDate.toLocaleDateString()}</div>
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-600 mb-1">Remove</div>
+                          <div className="text-sm text-gray-900 py-0.5">{removeDate.toLocaleDateString()}</div>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="text-sm text-amber-600">Unassigned</div>
-                    )}
-                  </div>
-
-                  {/* Bed Feet - Editable */}
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">Bed Feet</div>
-                    {onUpdatePlanting ? (
-                      <input
-                        type="number"
-                        min={1}
-                        step={25}
-                        defaultValue={crop.feetNeeded || 50}
-                        onBlur={(e) => {
-                          const val = parseInt(e.target.value, 10);
-                          if (!isNaN(val) && val > 0 && val !== (crop.feetNeeded || 50)) {
-                            onUpdatePlanting(crop.groupId, { bedFeet: val });
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            (e.target as HTMLInputElement).blur();
-                          }
-                        }}
-                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <div className="text-sm text-gray-900">{crop.feetNeeded || 50}&apos;</div>
-                    )}
-                  </div>
+                    );
+                  })()}
 
                   {/* Multi-bed info */}
                   {groupCrops.length > 1 && (
@@ -2328,156 +2381,98 @@ export default function CropTimeline({
                     </div>
                   )}
 
-                  {/* Timing Adjustments - Editable with effective values */}
+                  {/* Timing Adjustments - 4-column grid: row labels + Greenhouse, Maturity, Harvest */}
                   {onUpdatePlanting && (
                     <div className="pt-3 border-t">
-                      <div className="text-xs font-semibold text-gray-600 mb-2">Timing Adjustments</div>
-                      <div className="space-y-3">
-                        {/* Days to Maturity */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-gray-600">Days to Maturity</span>
-                            <div className="flex items-center gap-1">
-                              <input
-                                key={`dtm-${crop.groupId}-${crop.overrides?.additionalDaysInField || 0}`}
-                                type="number"
-                                defaultValue={crop.overrides?.additionalDaysInField || 0}
-                                onBlur={(e) => {
-                                  let val = parseInt(e.target.value, 10);
-                                  if (!isNaN(val)) {
-                                    val = Math.max(minAdjustments.dtm, val);
-                                    e.target.value = val.toString();
-                                    onUpdatePlanting(crop.groupId, {
-                                      overrides: { additionalDaysInField: val }
-                                    });
-                                  }
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                                }}
-                                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
-                              />
-                              <button
-                                onClick={() => onUpdatePlanting(crop.groupId, { overrides: { additionalDaysInField: 0 } })}
-                                className={`w-5 h-5 flex items-center justify-center rounded ${
-                                  (crop.overrides?.additionalDaysInField || 0) !== 0
-                                    ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                                    : 'invisible'
-                                }`}
-                                title="Reset to 0"
-                                tabIndex={-1}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </div>
-                          {effectiveValues && (
-                            <div className="text-xs text-gray-500 text-right">
-                              = {effectiveValues.dtm} days total
-                              {baseValues && effectiveValues.dtm !== baseValues.dtm && (
-                                <span className="text-gray-400"> (base: {baseValues.dtm})</span>
-                              )}
-                            </div>
-                          )}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-gray-600">Timing Adjustments (days)</span>
+                        <span className="text-xs text-gray-600">Total: <span className="font-semibold">{duration}d</span></span>
+                      </div>
+                      <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-x-2 gap-y-1 items-center">
+                        {/* Header row */}
+                        <div></div>
+                        <div className="text-xs text-gray-600 text-center">Greenhouse</div>
+                        <div className="text-xs text-gray-600 text-center">Maturity</div>
+                        <div className="text-xs text-gray-600 text-center">Harvest</div>
+
+                        {/* Adjustment row */}
+                        <div className="text-xs text-gray-500 text-right pr-1">Adj</div>
+                        <div className={`flex justify-center ${baseValues && baseValues.daysInCells > 0 ? '' : 'opacity-30'}`}>
+                          <input
+                            key={`gh-${crop.groupId}-${crop.overrides?.additionalDaysInCells || 0}`}
+                            type="number"
+                            defaultValue={crop.overrides?.additionalDaysInCells || 0}
+                            disabled={!baseValues || baseValues.daysInCells === 0}
+                            onBlur={(e) => {
+                              let val = parseInt(e.target.value, 10);
+                              if (!isNaN(val)) {
+                                val = Math.max(minAdjustments.daysInCells, val);
+                                e.target.value = val.toString();
+                                onUpdatePlanting(crop.groupId, {
+                                  overrides: { additionalDaysInCells: val }
+                                });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                            }}
+                            className="w-14 px-1 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                        <div className="flex justify-center">
+                          <input
+                            key={`dtm-${crop.groupId}-${crop.overrides?.additionalDaysInField || 0}`}
+                            type="number"
+                            defaultValue={crop.overrides?.additionalDaysInField || 0}
+                            onBlur={(e) => {
+                              let val = parseInt(e.target.value, 10);
+                              if (!isNaN(val)) {
+                                val = Math.max(minAdjustments.dtm, val);
+                                e.target.value = val.toString();
+                                onUpdatePlanting(crop.groupId, {
+                                  overrides: { additionalDaysInField: val }
+                                });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                            }}
+                            className="w-14 px-1 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                          />
+                        </div>
+                        <div className="flex justify-center">
+                          <input
+                            key={`harvest-${crop.groupId}-${crop.overrides?.additionalDaysOfHarvest || 0}`}
+                            type="number"
+                            defaultValue={crop.overrides?.additionalDaysOfHarvest || 0}
+                            onBlur={(e) => {
+                              let val = parseInt(e.target.value, 10);
+                              if (!isNaN(val)) {
+                                val = Math.max(minAdjustments.harvestWindow, val);
+                                e.target.value = val.toString();
+                                onUpdatePlanting(crop.groupId, {
+                                  overrides: { additionalDaysOfHarvest: val }
+                                });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                            }}
+                            className="w-14 px-1 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                          />
                         </div>
 
-                        {/* Harvest Window */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs text-gray-600">Harvest Window</span>
-                            <div className="flex items-center gap-1">
-                              <input
-                                key={`harvest-${crop.groupId}-${crop.overrides?.additionalDaysOfHarvest || 0}`}
-                                type="number"
-                                defaultValue={crop.overrides?.additionalDaysOfHarvest || 0}
-                                onBlur={(e) => {
-                                  let val = parseInt(e.target.value, 10);
-                                  if (!isNaN(val)) {
-                                    val = Math.max(minAdjustments.harvestWindow, val);
-                                    e.target.value = val.toString();
-                                    onUpdatePlanting(crop.groupId, {
-                                      overrides: { additionalDaysOfHarvest: val }
-                                    });
-                                  }
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                                }}
-                                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
-                              />
-                              <button
-                                onClick={() => onUpdatePlanting(crop.groupId, { overrides: { additionalDaysOfHarvest: 0 } })}
-                                className={`w-5 h-5 flex items-center justify-center rounded ${
-                                  (crop.overrides?.additionalDaysOfHarvest || 0) !== 0
-                                    ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                                    : 'invisible'
-                                }`}
-                                title="Reset to 0"
-                                tabIndex={-1}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </div>
-                          {effectiveValues && (
-                            <div className="text-xs text-gray-500 text-right">
-                              = {effectiveValues.harvestWindow} days total
-                              {baseValues && effectiveValues.harvestWindow !== baseValues.harvestWindow && (
-                                <span className="text-gray-400"> (base: {baseValues.harvestWindow})</span>
-                              )}
-                            </div>
-                          )}
+                        {/* Total row */}
+                        <div className="text-xs text-gray-500 text-right pr-1">Total</div>
+                        <div className={`text-xs text-gray-500 text-center ${baseValues && baseValues.daysInCells > 0 ? '' : 'opacity-30'}`}>
+                          {effectiveValues ? effectiveValues.daysInCells : '-'}
                         </div>
-
-                        {/* Greenhouse Days - only show if crop uses greenhouse */}
-                        {baseValues && baseValues.daysInCells > 0 && (
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-gray-600">Greenhouse Days</span>
-                              <div className="flex items-center gap-1">
-                                <input
-                                  key={`gh-${crop.groupId}-${crop.overrides?.additionalDaysInCells || 0}`}
-                                  type="number"
-                                  defaultValue={crop.overrides?.additionalDaysInCells || 0}
-                                  onBlur={(e) => {
-                                    let val = parseInt(e.target.value, 10);
-                                    if (!isNaN(val)) {
-                                      val = Math.max(minAdjustments.daysInCells, val);
-                                      e.target.value = val.toString();
-                                      onUpdatePlanting(crop.groupId, {
-                                        overrides: { additionalDaysInCells: val }
-                                      });
-                                    }
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                                  }}
-                                  className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
-                                />
-                                <button
-                                  onClick={() => onUpdatePlanting(crop.groupId, { overrides: { additionalDaysInCells: 0 } })}
-                                  className={`w-5 h-5 flex items-center justify-center rounded ${
-                                    (crop.overrides?.additionalDaysInCells || 0) !== 0
-                                      ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                                      : 'invisible'
-                                  }`}
-                                  title="Reset to 0"
-                                  tabIndex={-1}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            </div>
-                            {effectiveValues && (
-                              <div className="text-xs text-gray-500 text-right">
-                                = {effectiveValues.daysInCells} days total
-                                {baseValues && effectiveValues.daysInCells !== baseValues.daysInCells && (
-                                  <span className="text-gray-400"> (base: {baseValues.daysInCells})</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        <div className="text-xs text-gray-500 text-center">
+                          {effectiveValues ? effectiveValues.dtm : '-'}
+                        </div>
+                        <div className="text-xs text-gray-500 text-center">
+                          {effectiveValues ? effectiveValues.harvestWindow : '-'}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2531,57 +2526,18 @@ export default function CropTimeline({
                     </div>
                   )}
 
-                  {/* Planting ID */}
-                  {crop.plantingId && (
+                  {/* IDs - Planting ID and Group ID on same row */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {crop.plantingId && (
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">Planting ID</div>
+                        <div className="font-mono text-xs text-gray-900">{crop.plantingId}</div>
+                      </div>
+                    )}
                     <div>
-                      <div className="text-xs text-gray-600 mb-1">Planting ID</div>
-                      <div className="font-mono text-xs text-gray-900">{crop.plantingId}</div>
+                      <div className="text-xs text-gray-600 mb-1">Group ID</div>
+                      <div className="font-mono text-xs text-gray-900">{crop.groupId}</div>
                     </div>
-                  )}
-
-                  {/* Group ID */}
-                  <div>
-                    <div className="text-xs text-gray-600 mb-1">Group ID</div>
-                    <div className="font-mono text-xs text-gray-900">{crop.groupId}</div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="pt-3 border-t space-y-2">
-                    {onEditCropConfig && crop.plantingId && (
-                      <button
-                        onClick={() => {
-                          onEditCropConfig(crop.plantingId!);
-                        }}
-                        className="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                      >
-                        Edit Crop Config
-                      </button>
-                    )}
-                    {onDuplicateCrop && (
-                      <button
-                        onClick={async () => {
-                          const newId = await onDuplicateCrop(crop.groupId);
-                          if (newId) {
-                            // Select the new planting so user can duplicate again
-                            setSelectedGroupIds(new Set([newId]));
-                          }
-                        }}
-                        className="w-full px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                      >
-                        Duplicate Planting
-                      </button>
-                    )}
-                    {onDeleteCrop && (
-                      <button
-                        onClick={() => {
-                          onDeleteCrop([crop.groupId]);
-                          setSelectedGroupIds(new Set());
-                        }}
-                        className="w-full px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                      >
-                        Delete Planting
-                      </button>
-                    )}
                   </div>
                 </div>
               );

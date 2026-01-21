@@ -137,6 +137,7 @@ interface PersistedState {
   visibleColumns: string[];
   columnOrder: string[];
   columnWidths: Record<string, number>;
+  columnFilters?: Record<string, FilterValue>;
   sortColumn: string | null;
   sortDirection: SortDirection;
   filterPaneOpen: boolean;
@@ -367,6 +368,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         setColumnOrder(order);
       }
       setColumnWidths(persisted.columnWidths ?? {});
+      setColumnFilters(persisted.columnFilters ?? {});
       setSortColumn(persisted.sortColumn ?? 'identifier');
       setSortDirection(persisted.sortDirection ?? 'asc');
       setFilterPaneOpen(persisted.filterPaneOpen ?? true);
@@ -410,6 +412,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       visibleColumns: Array.from(visibleColumns),
       columnOrder,
       columnWidths,
+      columnFilters,
       sortColumn,
       sortDirection,
       filterPaneOpen,
@@ -417,20 +420,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       frozenColumnCount,
       showDeprecated,
     });
-  }, [hydrated, visibleColumns, columnOrder, columnWidths, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth, frozenColumnCount, showDeprecated]);
-
-  // Clear filters for hidden columns
-  useEffect(() => {
-    setColumnFilters(prev => {
-      const next: Record<string, FilterValue> = {};
-      Object.keys(prev).forEach(col => {
-        if (visibleColumns.has(col)) {
-          next[col] = prev[col];
-        }
-      });
-      return next;
-    });
-  }, [visibleColumns]);
+  }, [hydrated, visibleColumns, columnOrder, columnWidths, columnFilters, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth, frozenColumnCount, showDeprecated]);
 
   // Count deprecated crops for the toggle label
   const deprecatedCount = useMemo(() => {
@@ -474,10 +464,10 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     return width;
   }, [frozenColumnCount, displayColumns, columnWidths]);
 
-  // Column metadata (type, options, range)
+  // Column metadata (type, options, range) for ALL columns
   const columnMeta = useMemo(() => {
     const meta: Record<string, { type: 'boolean' | 'number' | 'categorical' | 'text'; options?: string[]; range?: { min: number; max: number } }> = {};
-    displayColumns.forEach(col => {
+    allColumns.forEach(col => {
       const type = getColumnType(displayCrops, col);
       meta[col] = { type };
       if (type === 'categorical') {
@@ -487,7 +477,13 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       }
     });
     return meta;
-  }, [displayCrops, displayColumns]);
+  }, [displayCrops, allColumns]);
+
+  // Columns for filter pane: visible first, then hidden
+  const filterPaneColumns = useMemo(() => {
+    const hidden = allColumns.filter(col => !visibleColumns.has(col));
+    return [...displayColumns, ...hidden];
+  }, [allColumns, displayColumns, visibleColumns]);
 
   const getColumnWidth = useCallback((col: string) => {
     return columnWidths[col] ?? getDefaultColumnWidth(col);
@@ -1215,24 +1211,33 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
               )}
             </div>
 
-            {/* Filter list */}
+            {/* Filter list - visible columns first, then hidden */}
             <div className="flex-1 overflow-y-auto">
-              {displayColumns.map(col => {
+              {filterPaneColumns.map((col, idx) => {
                 const meta = columnMeta[col];
                 if (!meta) return null;
+                const isVisible = visibleColumns.has(col);
+                const isFirstHidden = !isVisible && (idx === 0 || visibleColumns.has(filterPaneColumns[idx - 1]));
 
                 return (
-                  <div key={col} className="px-3 py-2 border-b border-gray-50">
-                    <label className="block text-xs font-medium text-gray-600 mb-1 truncate" title={col}>
-                      {col}
-                    </label>
-                    <FilterInput
-                      type={meta.type}
-                      options={meta.options}
-                      range={meta.range}
-                      value={columnFilters[col]}
-                      onChange={(v) => updateColumnFilter(col, v)}
-                    />
+                  <div key={col}>
+                    {isFirstHidden && (
+                      <div className="px-3 py-2 bg-gray-100 border-y border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Hidden Columns
+                      </div>
+                    )}
+                    <div className={`px-3 py-2 border-b border-gray-50 ${!isVisible ? 'bg-gray-50' : ''}`}>
+                      <label className={`block text-xs font-medium mb-1 truncate ${isVisible ? 'text-gray-600' : 'text-gray-400'}`} title={col}>
+                        {col}
+                      </label>
+                      <FilterInput
+                        type={meta.type}
+                        options={meta.options}
+                        range={meta.range}
+                        value={columnFilters[col]}
+                        onChange={(v) => updateColumnFilter(col, v)}
+                      />
+                    </div>
                   </div>
                 );
               })}
