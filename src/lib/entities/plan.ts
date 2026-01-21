@@ -41,6 +41,8 @@ export interface PlanMetadata {
   parentPlanId?: string;
   /** Version of parent plan when copied */
   parentVersion?: number;
+  /** IANA timezone identifier (e.g., "America/Los_Angeles"). Defaults to "America/Los_Angeles" */
+  timezone?: string;
 }
 
 /** A single change entry for history/undo */

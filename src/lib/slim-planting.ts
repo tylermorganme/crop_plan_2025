@@ -18,6 +18,7 @@ import {
   type CropConfig,
 } from './entities/crop-config';
 import { createPlanting } from './entities/planting';
+import { parseLocalDate } from './date-utils';
 
 // =============================================================================
 // SLIM PLANTING TYPES
@@ -223,22 +224,22 @@ export function computeTimelineCrop(
     harvestWindow: effective.harvestWindow,
     daysInCells: effective.daysInCells,
     fixedFieldStartDate: planting.fixedFieldStartDate
-      ? new Date(planting.fixedFieldStartDate)
+      ? parseLocalDate(planting.fixedFieldStartDate)
       : undefined,
     followsCrop: planting.followsCrop,
     followOffset: planting.followOffset ?? 0,
     additionalDaysOfHarvest: 0, // Already applied via resolveEffectiveTiming
     actualGreenhouseDate: planting.actuals?.greenhouseDate
-      ? new Date(planting.actuals.greenhouseDate)
+      ? parseLocalDate(planting.actuals.greenhouseDate)
       : undefined,
     actualTpOrDsDate: planting.actuals?.tpOrDsDate
-      ? new Date(planting.actuals.tpOrDsDate)
+      ? parseLocalDate(planting.actuals.tpOrDsDate)
       : undefined,
     actualBeginningOfHarvest: planting.actuals?.beginningOfHarvest
-      ? new Date(planting.actuals.beginningOfHarvest)
+      ? parseLocalDate(planting.actuals.beginningOfHarvest)
       : undefined,
     actualEndOfHarvest: planting.actuals?.endOfHarvest
-      ? new Date(planting.actuals.endOfHarvest)
+      ? parseLocalDate(planting.actuals.endOfHarvest)
       : undefined,
     getFollowedCropEndDate,
   };

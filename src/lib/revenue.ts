@@ -9,6 +9,7 @@
  * Supports aggregation by crop, month, and total.
  */
 
+import { parseISO, addDays } from 'date-fns';
 import type { Plan } from './plan-types';
 import type { Planting } from './entities/planting';
 import type { CropConfig, ProductYield } from './entities/crop-config';
@@ -16,6 +17,7 @@ import type { Product } from './entities/product';
 import type { Market, MarketSplit } from './entities/market';
 import { DEFAULT_MARKET_IDS, getDefaultMarket } from './entities/market';
 import { evaluateYieldFormula, buildYieldContext, calculateFieldOccupationDays } from './entities/crop-config';
+import { formatDateOnly } from './date-utils';
 
 // =============================================================================
 // CONSTANTS
@@ -335,9 +337,9 @@ export function calculatePlantingRevenue(
   if (planting.fieldStartDate && config.productYields?.length) {
     // Use the earliest product's DTM
     const minDtm = Math.min(...config.productYields.map(py => py.dtm));
-    const fieldStart = new Date(planting.fieldStartDate);
-    fieldStart.setDate(fieldStart.getDate() + minDtm);
-    harvestStartDate = fieldStart.toISOString().slice(0, 10);
+    const fieldStart = parseISO(planting.fieldStartDate);
+    const harvestDate = addDays(fieldStart, minDtm);
+    harvestStartDate = formatDateOnly(harvestDate);
   }
 
   return {
@@ -401,7 +403,7 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
 
     // Distribute revenue across harvest windows for each product
     if (planting.fieldStartDate) {
-      const fieldStart = new Date(planting.fieldStartDate);
+      const fieldStart = parseISO(planting.fieldStartDate);
 
       // Use product revenues from our market-aware result
       for (const productResult of result.products) {
@@ -412,13 +414,11 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
         if (!py) continue;
 
         // Calculate harvest window for this product
-        const harvestStart = new Date(fieldStart);
-        harvestStart.setDate(harvestStart.getDate() + py.dtm);
+        const harvestStart = addDays(fieldStart, py.dtm);
 
-        const harvestEnd = new Date(harvestStart);
         const numHarvests = py.numberOfHarvests ?? 1;
         const daysBetween = py.daysBetweenHarvest ?? 7;
-        harvestEnd.setDate(harvestEnd.getDate() + (numHarvests - 1) * daysBetween);
+        const harvestEnd = addDays(harvestStart, (numHarvests - 1) * daysBetween);
 
         // Distribute this product's revenue across the harvest window
         const monthlyRevenue = distributeRevenueAcrossWindow(

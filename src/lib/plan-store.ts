@@ -745,7 +745,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const yearCounts = new Map<number, number>();
         for (const p of plantings) {
           if (p.fieldStartDate) {
-            const year = new Date(p.fieldStartDate).getFullYear();
+            const year = parseISO(p.fieldStartDate).getFullYear();
             yearCounts.set(year, (yearCounts.get(year) || 0) + 1);
           }
         }

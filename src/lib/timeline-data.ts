@@ -367,7 +367,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
   }
 
   return timelineCrops.sort((a, b) =>
-    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+    parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime()
   );
 }
 
@@ -575,7 +575,7 @@ export function expandPlantingsToTimelineCrops(
   }
 
   return result.sort((a, b) =>
-    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+    parseISO(a.startDate).getTime() - parseISO(b.startDate).getTime()
   );
 }
 
