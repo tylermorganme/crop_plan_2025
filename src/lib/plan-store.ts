@@ -486,6 +486,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   addCropConfig: (config: import('./entities/crop-config').CropConfig) => Promise<void>;
   /** Delete crop configs from the plan's catalog by their identifiers */
   deleteCropConfigs: (identifiers: string[]) => Promise<number>;
+  /** Toggle a crop config's favorite status */
+  toggleConfigFavorite: (identifier: string) => Promise<void>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -1449,6 +1451,60 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       return existingIdentifiers.length;
+    },
+
+    toggleConfigFavorite: async (identifier: string) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (!state.currentPlan.cropCatalog) {
+        throw new Error('Plan has no crop catalog');
+      }
+
+      const config = state.currentPlan.cropCatalog[identifier];
+      if (!config) {
+        throw new Error(`Config "${identifier}" not found`);
+      }
+
+      const newValue = !config.isFavorite;
+      const description = newValue
+        ? `Add "${identifier}" to favorites`
+        : `Remove "${identifier}" from favorites`;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.cropCatalog) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            plan.cropCatalog![identifier].isFavorite = newValue;
+            plan.metadata.lastModified = Date.now();
+          },
+          description
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
     },
 
     // History - uses SQLite as single source of truth

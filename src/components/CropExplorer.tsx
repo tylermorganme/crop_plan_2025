@@ -145,6 +145,7 @@ interface PersistedState {
   scrollTop?: number;
   frozenColumnCount?: number;
   showDeprecated?: boolean;
+  showFavoritesOnly?: boolean;
 }
 
 function loadPersistedState(): PersistedState | null {
@@ -272,6 +273,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
   const addCropConfig = usePlanStore((state) => state.addCropConfig);
   const deleteCropConfigs = usePlanStore((state) => state.deleteCropConfigs);
+  const toggleConfigFavorite = usePlanStore((state) => state.toggleConfigFavorite);
   const activePlanId = usePlanStore((state) => state.activePlanId);
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
   const planList = usePlanStore((state) => state.planList);
@@ -375,6 +377,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       setFilterPaneWidth(persisted.filterPaneWidth ?? DEFAULT_FILTER_PANE_WIDTH);
       setFrozenColumnCount(persisted.frozenColumnCount ?? 1);
       setShowDeprecated(persisted.showDeprecated ?? false);
+      setShowFavoritesOnly(persisted.showFavoritesOnly ?? false);
       // Queue scroll restoration for after render
       if (persisted.scrollTop != null && persisted.scrollTop > 0) {
         setPendingScrollTop(persisted.scrollTop);
@@ -390,6 +393,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
 
   // Show/hide deprecated crops toggle (default false, persisted)
   const [showDeprecated, setShowDeprecated] = useState(false);
+
+  // Show only favorites toggle (default false, persisted)
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // Drag state for column reordering
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
@@ -419,12 +425,18 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       filterPaneWidth,
       frozenColumnCount,
       showDeprecated,
+      showFavoritesOnly,
     });
-  }, [hydrated, visibleColumns, columnOrder, columnWidths, columnFilters, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth, frozenColumnCount, showDeprecated]);
+  }, [hydrated, visibleColumns, columnOrder, columnWidths, columnFilters, sortColumn, sortDirection, filterPaneOpen, filterPaneWidth, frozenColumnCount, showDeprecated, showFavoritesOnly]);
 
   // Count deprecated crops for the toggle label
   const deprecatedCount = useMemo(() => {
     return displayCrops.filter(c => c.deprecated).length;
+  }, [displayCrops]);
+
+  // Count favorite crops for the toggle label
+  const favoritesCount = useMemo(() => {
+    return displayCrops.filter(c => c.isFavorite).length;
   }, [displayCrops]);
 
   // Columns to display (filtered by sidebar search if active)
@@ -495,6 +507,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       // Hide deprecated crops if toggle is off
       if (!showDeprecated && crop.deprecated) return false;
 
+      // Show only favorites if toggle is on
+      if (showFavoritesOnly && !crop.isFavorite) return false;
+
       // Text search - use materialized searchText if available, otherwise key fields
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -532,7 +547,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
 
       return true;
     });
-  }, [displayCrops, searchQuery, columnFilters, columnMeta, showDeprecated]);
+  }, [displayCrops, searchQuery, columnFilters, columnMeta, showDeprecated, showFavoritesOnly]);
 
   // Sort crops
   const sortedCrops = useMemo(() => {
@@ -1285,6 +1300,22 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
               </button>
             </span>
           )}
+          {/* Favorites filter toggle */}
+          <button
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            className={`flex items-center gap-1.5 px-2 py-1 text-sm rounded transition-colors ${
+              showFavoritesOnly
+                ? 'bg-amber-100 text-amber-700'
+                : 'text-gray-600 hover:bg-gray-100'
+            }`}
+            title={showFavoritesOnly ? 'Show all configs' : 'Show only favorites'}
+          >
+            <span className={showFavoritesOnly ? 'text-amber-500' : 'text-gray-400'}>★</span>
+            <span>Favorites</span>
+            {favoritesCount > 0 && (
+              <span className="text-xs text-gray-400">({favoritesCount})</span>
+            )}
+          </button>
           {/* Show deprecated toggle */}
           <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
             <input
@@ -1531,6 +1562,23 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                             }`}
                             title={hasIssues ? `${crop[col as keyof Crop]}\n\nIssues:\n• ${validation.issues.join('\n• ')}` : String(crop[col as keyof Crop] ?? '')}
                           >
+                            {/* Favorite star for identifier column */}
+                            {isIdentifierCol && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleConfigFavorite(crop.identifier);
+                                }}
+                                className={`shrink-0 transition-colors ${
+                                  crop.isFavorite
+                                    ? 'text-amber-400 hover:text-amber-500'
+                                    : 'text-gray-300 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                                }`}
+                                title={crop.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                              >
+                                ★
+                              </button>
+                            )}
                             {/* Validation indicator for identifier column */}
                             {isIdentifierCol && hasIssues && (
                               <span

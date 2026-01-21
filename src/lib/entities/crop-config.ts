@@ -234,6 +234,14 @@ export interface CropConfig {
    */
   defaultMarketSplit?: import('./market').MarketSplit;
 
+  // ---- User Preferences ----
+
+  /**
+   * Whether this config is marked as a favorite.
+   * Favorites can be filtered in the Explorer for quick access.
+   */
+  isFavorite?: boolean;
+
   // ---- Products & Timing ----
 
   /**
