@@ -58,7 +58,8 @@
       "Skill(quality:*)",
       "Bash(npm run lint:*)",
       "Bash(npm run test:run:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(claude --version:*)"
     ],
     "deny": [],
     "ask": []

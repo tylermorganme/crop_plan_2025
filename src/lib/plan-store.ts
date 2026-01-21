@@ -479,6 +479,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk delete multiple plantings (single undo step) */
   bulkDeletePlantings: (plantingIds: string[]) => Promise<number>;
   addPlanting: (planting: Planting) => Promise<void>;
+  /** Bulk add multiple plantings (single undo step) */
+  bulkAddPlantings: (plantings: Planting[]) => Promise<number>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
   updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>>) => Promise<void>;
   /** Assign a seed variety or mix to a planting */
@@ -1188,6 +1190,92 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           });
         }
       }
+    },
+
+    bulkAddPlantings: async (plantings: Planting[]) => {
+      const state = get();
+      if (!state.currentPlan?.plantings || !state.currentPlan.beds) {
+        return 0;
+      }
+
+      if (plantings.length === 0) {
+        return 0;
+      }
+
+      // Pre-process plantings: convert bed names to UUIDs and check default seed sources
+      const processedPlantings: Planting[] = plantings.map(planting => {
+        let startBedUuid = planting.startBed;
+        if (startBedUuid && startBedUuid !== 'Unassigned') {
+          if (!state.currentPlan!.beds![startBedUuid]) {
+            startBedUuid = bedNameToUuid(startBedUuid, state.currentPlan!.beds!);
+          }
+        } else {
+          startBedUuid = null;
+        }
+
+        const processed: Planting = {
+          ...planting,
+          startBed: startBedUuid,
+          lastModified: Date.now(),
+        };
+
+        // Check for default seed source
+        if (!planting.seedSource && planting.useDefaultSeedSource === undefined &&
+            planting.configId && state.currentPlan!.cropCatalog) {
+          const config = state.currentPlan!.cropCatalog[planting.configId];
+          if (config?.defaultSeedSource) {
+            processed.useDefaultSeedSource = true;
+          }
+        }
+
+        return processed;
+      });
+
+      const description = `Add ${processedPlantings.length} planting${processedPlantings.length !== 1 ? 's' : ''}`;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.plantings) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (!plan.plantings) return;
+
+            const now = Date.now();
+            for (const planting of processedPlantings) {
+              plan.plantings.push(planting);
+            }
+
+            plan.metadata.lastModified = now;
+            plan.changeLog.push(
+              createChangeEntry('batch', description, processedPlantings.map(p => p.id))
+            );
+          },
+          description
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library (single save for all additions)
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return processedPlantings.length;
     },
 
     duplicatePlanting: async (plantingId: string) => {

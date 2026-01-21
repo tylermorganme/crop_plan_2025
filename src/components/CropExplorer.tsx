@@ -269,7 +269,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const markets = usePlanStore((state) => state.currentPlan?.markets);
   const catalogLoading = usePlanStore((state) => state.isLoading);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
-  const addPlanting = usePlanStore((state) => state.addPlanting);
+  const bulkAddPlantings = usePlanStore((state) => state.bulkAddPlantings);
   const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
   const addCropConfig = usePlanStore((state) => state.addCropConfig);
   const deleteCropConfigs = usePlanStore((state) => state.deleteCropConfigs);
@@ -854,18 +854,15 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         await loadPlanById(activePlanId);
       }
 
-      // Add each crop as a planting via the store (supports undo/redo)
-      for (const crop of cropsToAddNow) {
-        const newPlanting = createPlantingFromConfig(crop);
-        await addPlanting(newPlanting);
-      }
+      // Add all crops as plantings in a single transaction
+      const newPlantings = cropsToAddNow.map(crop => createPlantingFromConfig(crop));
+      const addedCount = await bulkAddPlantings(newPlantings);
 
-      const cropCount = cropsToAddNow.length;
       setAddToPlanMessage({
         type: 'success',
-        text: cropCount === 1
+        text: addedCount === 1
           ? `Added "${cropsToAddNow[0].crop}" to "${activePlan?.name}"`
-          : `Added ${cropCount} crops to "${activePlan?.name}"`,
+          : `Added ${addedCount} crops to "${activePlan?.name}"`,
         planId: activePlanId,
       });
       setSelectedCropIds(new Set());
@@ -877,7 +874,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [activePlanId, activePlan?.name, currentPlanId, loadPlanById, addPlanting]);
+  }, [activePlanId, activePlan?.name, currentPlanId, loadPlanById, bulkAddPlantings]);
 
   // Quick add single crop to plan (from row button)
   const handleQuickAdd = useCallback((crop: Crop, event: React.MouseEvent) => {
@@ -920,11 +917,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         await loadPlanById(planId);
       }
 
-      // Add each crop as a planting via the store (supports undo/redo)
-      for (const crop of cropsToAdd) {
-        const newPlanting = createPlantingFromConfig(crop);
-        await addPlanting(newPlanting);
-      }
+      // Add all crops as plantings in a single transaction
+      const newPlantings = cropsToAdd.map(crop => createPlantingFromConfig(crop));
+      const addedCount = await bulkAddPlantings(newPlantings);
 
       // Set this as the active plan for future adds (store handles localStorage sync)
       setActivePlanId(planId);
@@ -932,12 +927,11 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       // Get plan name from the store's current plan
       const plan = planList.find(p => p.id === planId);
       const planName = usePlanStore.getState().currentPlan?.metadata.name || plan?.name || 'Plan';
-      const cropCount = cropsToAdd.length;
       setAddToPlanMessage({
         type: 'success',
-        text: cropCount === 1
+        text: addedCount === 1
           ? `Added "${cropsToAdd[0].crop}" to "${planName}"`
-          : `Added ${cropCount} crops to "${planName}"`,
+          : `Added ${addedCount} crops to "${planName}"`,
         planId,
       });
       setShowAddToPlan(false);
@@ -952,7 +946,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [cropsToAdd, planList, currentPlanId, loadPlanById, addPlanting, setActivePlanId]);
+  }, [cropsToAdd, planList, currentPlanId, loadPlanById, bulkAddPlantings, setActivePlanId]);
 
   // Clear message after a timeout
   useEffect(() => {
