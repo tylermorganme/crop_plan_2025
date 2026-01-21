@@ -601,6 +601,10 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   getMarket: (id: string) => import('./entities/market').Market | undefined;
   /** Get all active markets */
   getActiveMarkets: () => import('./entities/market').Market[];
+
+  // ---- Plan Metadata ----
+  /** Update plan metadata (name, description, year, timezone, etc.) */
+  updatePlanMetadata: (updates: Partial<Omit<import('./entities/plan').PlanMetadata, 'id' | 'createdAt' | 'lastModified'>>) => Promise<void>;
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -3184,6 +3188,32 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     getActiveMarkets: () => {
       const markets = get().currentPlan?.markets ?? {};
       return getActiveMarketsFromRecord(markets);
+    },
+
+    // ---- Plan Metadata ----
+    updatePlanMetadata: async (updates) => {
+      const { currentPlan } = get();
+      if (!currentPlan) return;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            Object.assign(plan.metadata, updates);
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update plan settings`
+        );
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+
+      // If name changed, update the plan list
+      if (updates.name) {
+        await get().refreshPlanList();
+      }
     },
   }))
 );

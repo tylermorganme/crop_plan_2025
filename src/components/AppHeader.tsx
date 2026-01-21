@@ -63,6 +63,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const isBedsActive = pathname.startsWith('/beds/');
   const isOverviewActive = pathname.startsWith('/overview/');
   const isReportsActive = pathname.startsWith('/reports/');
+  const isSettingsActive = pathname.startsWith('/settings/');
   const isVarietiesActive = pathname === '/varieties';
   const isSeedMixesActive = pathname === '/seed-mixes';
   const isProductsActive = pathname === '/products';
@@ -73,6 +74,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const bedsHref = activePlanId ? `/beds/${activePlanId}` : '/plans';
   const overviewHref = activePlanId ? `/overview/${activePlanId}` : '/plans';
   const reportsHref = activePlanId ? `/reports/${activePlanId}` : '/plans';
+  const settingsHref = activePlanId ? `/settings/${activePlanId}` : '/plans';
 
   return (
     <>
@@ -165,6 +167,16 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                   </div>
                 </div>
               </div>
+              <Link
+                href={settingsHref}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  isSettingsActive
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                Settings
+              </Link>
             </>
           )}
 
