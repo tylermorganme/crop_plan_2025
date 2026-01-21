@@ -47,6 +47,8 @@ export default function PlansPage() {
   const router = useRouter();
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [copyModalPlan, setCopyModalPlan] = useState<{ id: string; name: string } | null>(null);
+  const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
+  const [notesValue, setNotesValue] = useState('');
 
   // Use centralized store state - automatically syncs across tabs
   const plans = usePlanStore((state) => state.planList);
@@ -55,6 +57,7 @@ export default function PlansPage() {
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const refreshPlanList = usePlanStore((state) => state.refreshPlanList);
+  const updatePlanNotes = usePlanStore((state) => state.updatePlanNotes);
 
   // Ensure plan list is loaded (may already be from PlanStoreProvider)
   useEffect(() => {
@@ -140,6 +143,26 @@ export default function PlansPage() {
     setCopyModalPlan(null);
     setToast({ message: `Copied to "${options.newName}"`, type: 'success' });
   }, [refreshPlanList]);
+
+  const handleEditNotes = useCallback(async (planId: string, currentNotes: string | undefined) => {
+    // Load the plan first so we can update it
+    await loadPlanById(planId);
+    setEditingNotesId(planId);
+    setNotesValue(currentNotes ?? '');
+  }, [loadPlanById]);
+
+  const handleSaveNotes = useCallback(async () => {
+    if (!editingNotesId) return;
+    await updatePlanNotes(notesValue);
+    setEditingNotesId(null);
+    setNotesValue('');
+    setToast({ message: 'Notes saved', type: 'success' });
+  }, [editingNotesId, notesValue, updatePlanNotes]);
+
+  const handleCancelNotes = useCallback(() => {
+    setEditingNotesId(null);
+    setNotesValue('');
+  }, []);
 
   return (
     <div className="h-[calc(100vh-51px)] overflow-auto bg-gray-50">
@@ -246,6 +269,52 @@ export default function PlansPage() {
                       Delete
                     </button>
                   </div>
+                </div>
+                {/* Notes section */}
+                <div className="px-4 pb-4 pt-0">
+                  {editingNotesId === plan.id ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={notesValue}
+                        onChange={(e) => setNotesValue(e.target.value)}
+                        placeholder="Add notes about this plan..."
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        rows={3}
+                        autoFocus
+                      />
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleSaveNotes}
+                          className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelNotes}
+                          className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-700"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2">
+                      {plan.notes ? (
+                        <p className="flex-1 text-sm text-gray-600 whitespace-pre-wrap">{plan.notes}</p>
+                      ) : (
+                        <p className="flex-1 text-sm text-gray-400 italic">No notes</p>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditNotes(plan.id, plan.notes);
+                        }}
+                        className="shrink-0 px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+                      >
+                        {plan.notes ? 'Edit' : 'Add notes'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

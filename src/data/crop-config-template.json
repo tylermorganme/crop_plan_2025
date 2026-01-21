@@ -201,7 +201,8 @@
           "daysBetweenHarvest": 10,
           "yieldFormula": "(bedFeet / 100) * 45.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_a1df6515",
@@ -347,7 +348,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.5"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_7d56abb9",
@@ -379,7 +381,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "bedFeet"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_17095df8",
@@ -568,7 +571,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.125 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_a33f3bde",
@@ -609,7 +613,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.125 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_e214cf8b",
@@ -722,7 +727,8 @@
           "daysBetweenHarvest": 21,
           "yieldFormula": "plantingsPerBed * 0.25 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_dadf4cb3",
@@ -843,7 +849,8 @@
           "daysBetweenHarvest": 3,
           "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_2303a0bd",
@@ -1186,7 +1193,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.6666666666666666"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_534f0a11",
@@ -1225,7 +1233,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.6666666666666666"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_282d6b85",
@@ -1514,7 +1523,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_b5e39b45",
@@ -1759,7 +1769,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_97a950f7",
@@ -1803,7 +1814,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_1dc79ff8",
@@ -1847,7 +1859,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_fa65527a",
@@ -1891,7 +1904,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_439e3d6f",
@@ -2023,7 +2037,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_4da2baf5",
@@ -2365,7 +2380,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.03571428571428571"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_9c18dede",
@@ -2399,7 +2415,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.03571428571428571"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_bb36edb9",
@@ -2433,7 +2450,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.0375"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_26d62969",
@@ -2549,7 +2567,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_7c71fe3c",
@@ -2679,7 +2698,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_094615d5",
@@ -2722,7 +2742,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.5714285714285714 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_d9a06249",
@@ -3034,7 +3055,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.3333333333333333"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_8f75114c",
@@ -3139,7 +3161,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.03333333333333333 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_faffd1f8",
@@ -3355,7 +3378,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.4 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_76ccb3f5",
@@ -3543,7 +3567,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_6aeee63d",
@@ -3949,7 +3974,8 @@
           "daysBetweenHarvest": 2,
           "yieldFormula": "plantingsPerBed * 2.0 * (daysBetweenHarvest / 7) * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_9e54bacf",
@@ -3989,7 +4015,8 @@
           "daysBetweenHarvest": 2,
           "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_088dd7b2",
@@ -4068,7 +4095,8 @@
           "daysBetweenHarvest": 2,
           "yieldFormula": "plantingsPerBed * 4.0 * (daysBetweenHarvest / 7) * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_945af650",
@@ -4147,7 +4175,8 @@
           "daysBetweenHarvest": 2,
           "yieldFormula": "(bedFeet / 100) * 20.0 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_63cfcc05",
@@ -4174,7 +4203,8 @@
           "numberOfHarvests": 1,
           "harvestBufferDays": 7
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_f40458ef",
@@ -4357,7 +4387,8 @@
           "daysBetweenHarvest": 10,
           "yieldFormula": "plantingsPerBed * 0.4 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_4c989315",
@@ -4396,7 +4427,8 @@
           "daysBetweenHarvest": 10,
           "yieldFormula": "plantingsPerBed * 0.4 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_0986ff36",
@@ -4702,7 +4734,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 200.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_999f9fbe",
@@ -4883,7 +4916,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_fe09db21",
@@ -5010,7 +5044,8 @@
           "harvestBufferDays": 7,
           "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_9cb81c1e",
@@ -5044,7 +5079,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_9f2cb1e5",
@@ -5078,7 +5114,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_ed5f8966",
@@ -5176,7 +5213,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 8.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_5e07104b",
@@ -5684,7 +5722,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.5 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_f8de0552",
@@ -5764,7 +5803,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_ed8c9e81",
@@ -5803,7 +5843,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_ab0cfe5e",
@@ -6191,7 +6232,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_41908655",
@@ -6271,7 +6313,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 8.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_5a1f71de",
@@ -6364,7 +6407,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_61704cb8",
@@ -6404,7 +6448,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_c8a9bf67",
@@ -7005,7 +7050,8 @@
           "daysBetweenHarvest": 10,
           "yieldFormula": "0.5 + (harvests - 1) * 0.25 * plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_dcd2abec",
@@ -7044,7 +7090,8 @@
           "daysBetweenHarvest": 10,
           "yieldFormula": "0.75 + (harvests - 1) * 0.25 * plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_bd4e677a",
@@ -7083,7 +7130,8 @@
           "daysBetweenHarvest": 10,
           "yieldFormula": "0.5 + (harvests - 1) * 0.25 * plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_5db0a2f6",
@@ -7185,7 +7233,8 @@
           "harvestBufferDays": 7,
           "daysBetweenHarvest": 14
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_824f0476",
@@ -7289,7 +7338,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.125 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_6e70d50b",
@@ -7708,7 +7758,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 12.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_2f6a684c",
@@ -8153,7 +8204,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 1.375"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_6e47e854",
@@ -8193,7 +8245,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_83d071ea",
@@ -8233,7 +8286,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_bc8a372a",
@@ -8424,7 +8478,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.5 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_ca8b579a",
@@ -8717,7 +8772,8 @@
           "daysBetweenHarvest": 2,
           "yieldFormula": "(bedFeet / 100) * 50.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_aa64b3ad",
@@ -8826,7 +8882,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.28125 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_cf51d613",
@@ -8870,7 +8927,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.5625 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_5e56aaa0",
@@ -8914,7 +8972,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.140625 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_275e22c0",
@@ -8958,7 +9017,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.140625 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_1f9c1356",
@@ -9032,7 +9092,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 1.4"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_72c704d6",
@@ -9066,7 +9127,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 1.75 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_2e89aaf1",
@@ -9214,7 +9276,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_9843b5ee",
@@ -9324,7 +9387,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "(bedFeet / 100) * 125.0 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_561c3612",
@@ -9359,7 +9423,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "(bedFeet / 100) * 125.0 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_3fb91792",
@@ -9476,7 +9541,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 3.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_245edf8f",
@@ -9510,7 +9576,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.14285714285714285"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_ed838265",
@@ -9891,7 +9958,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_43edd4be",
@@ -10143,7 +10211,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.3333333333333333"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_82041d60",
@@ -10331,7 +10400,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.5"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_0a5b6873",
@@ -10666,7 +10736,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 0.14285714285714285 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_b6c95053",
@@ -10996,7 +11067,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 200.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_a93a2916",
@@ -11036,7 +11108,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "plantingsPerBed * 9.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_a2de67c4",
@@ -11313,7 +11386,8 @@
           "daysBetweenHarvest": 2,
           "yieldFormula": "plantingsPerBed * (daysBetweenHarvest / 7) * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_e8366a09",
@@ -11387,7 +11461,8 @@
           "daysBetweenHarvest": 2,
           "yieldFormula": "plantingsPerBed * 1.25 * (daysBetweenHarvest / 7) * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_8d107958",
@@ -11626,7 +11701,8 @@
           "daysBetweenHarvest": 4,
           "yieldFormula": "plantingsPerBed * 0.25 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_51f6deee",
@@ -11775,7 +11851,8 @@
           "daysBetweenHarvest": 9,
           "yieldFormula": "plantingsPerBed * 8.0"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_177422e9",
@@ -11823,7 +11900,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_fe3a957e",
@@ -11871,7 +11949,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_15b33e14",
@@ -11919,7 +11998,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 11.904761904761905 * daysBetweenHarvest * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_d5de36a2",
@@ -12015,7 +12095,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_6f618279",
@@ -12111,7 +12192,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 5.9523809523809526 * daysBetweenHarvest * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_ce03afc6",
@@ -12159,7 +12241,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_652819c4",
@@ -12207,7 +12290,8 @@
           "daysBetweenHarvest": 7,
           "yieldFormula": "(bedFeet / 100) * 9.523809523809524 * daysBetweenHarvest * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_4e395088",
@@ -12362,7 +12446,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.03125 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_293c2581",
@@ -12396,7 +12481,8 @@
           "daysBetweenHarvest": 14,
           "yieldFormula": "plantingsPerBed * 0.03125 * harvests"
         }
-      ]
+      ],
+      "isFavorite": true
     },
     {
       "id": "crop_9636bdb3",

@@ -28,6 +28,8 @@ export interface PlanSummary {
   year: number;
   /** Schema version of the plan */
   schemaVersion?: number;
+  /** Optional notes about this plan */
+  notes?: string;
 }
 
 /** Checkpoint metadata */

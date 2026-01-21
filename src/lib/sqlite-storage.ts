@@ -67,6 +67,7 @@ export interface PlanSummary {
   cropCount: number;
   year: number;
   schemaVersion?: number;
+  notes?: string;
 }
 
 /** Error thrown when plan is from a newer schema version */
@@ -622,6 +623,7 @@ export function updatePlanIndex(plan: Plan): void {
     cropCount: plan.plantings?.length ?? 0,
     year: plan.metadata?.year ?? new Date().getFullYear(),
     schemaVersion: plan.schemaVersion,
+    notes: plan.notes,
   };
 
   if (existing >= 0) {
@@ -662,6 +664,7 @@ export function rebuildPlanIndex(): PlanSummary[] {
           cropCount: plan.plantings?.length ?? 0,
           year: plan.metadata?.year ?? new Date().getFullYear(),
           schemaVersion: plan.schemaVersion ?? CURRENT_SCHEMA_VERSION,
+          notes: plan.notes,
         });
       }
     } catch (e) {

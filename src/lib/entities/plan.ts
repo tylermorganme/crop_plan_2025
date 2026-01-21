@@ -138,6 +138,9 @@ export interface Plan {
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];
+
+  /** Optional notes about this plan */
+  notes?: string;
 }
 
 // =============================================================================

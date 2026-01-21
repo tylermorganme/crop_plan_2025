@@ -607,6 +607,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   // ---- Plan Metadata ----
   /** Update plan metadata (name, description, year, timezone, etc.) */
   updatePlanMetadata: (updates: Partial<Omit<import('./entities/plan').PlanMetadata, 'id' | 'createdAt' | 'lastModified'>>) => Promise<void>;
+  /** Update plan notes */
+  updatePlanNotes: (notes: string) => Promise<void>;
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -3286,6 +3288,27 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       if (updates.name) {
         await get().refreshPlanList();
       }
+    },
+
+    updatePlanNotes: async (notes: string) => {
+      const { currentPlan } = get();
+      if (!currentPlan) return;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.notes = notes;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update plan notes`
+        );
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+      await get().refreshPlanList();
     },
   }))
 );
