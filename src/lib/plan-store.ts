@@ -114,6 +114,16 @@ export type { PlanSummary, PlanData };
 // Active plan ID key (shared with components that need it)
 export const ACTIVE_PLAN_KEY = 'crop-explorer-active-plan';
 
+// Get initial activePlanId synchronously from localStorage to avoid flash on HMR/reload
+function getInitialActivePlanId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(ACTIVE_PLAN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Apply a mutation to the current plan using immer patches.
  * Patches are persisted to SQLite for undo/redo support.
@@ -611,7 +621,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     saveError: null,
     lastSaved: null,
     planList: [],
-    activePlanId: null,
+    activePlanId: getInitialActivePlanId(),
 
     // Plan lifecycle
     loadPlan: (plan: Plan) => {
