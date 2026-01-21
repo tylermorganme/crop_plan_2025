@@ -22,9 +22,7 @@ export interface CropTimingInputs {
   daysInCells: number;            // Days in greenhouse (0 = direct seed)
 
   // Scheduling inputs
-  fixedFieldStartDate?: Date;     // When crop goes in field (or null if follows)
-  followsCrop?: string;           // Identifier of crop this follows
-  followOffset?: number;          // Days after followed crop ends
+  fixedFieldStartDate?: Date;     // When crop goes in field
 
   // User adjustments (extend/modify defaults)
   // Note: These are applied via resolveEffectiveTiming() before calling this function
@@ -35,10 +33,8 @@ export interface CropTimingInputs {
   // Actual dates (override planned)
   actualGreenhouseDate?: Date;
   actualTpOrDsDate?: Date;
-  actualBeginningOfHarvest?: Date;
-  actualEndOfHarvest?: Date;
 
-  // For succession planting - lookup function
+  // For succession planting - lookup function (legacy, unused)
   getFollowedCropEndDate?: (identifier: string) => Date | null;
 }
 
@@ -82,36 +78,18 @@ export function calculateCropTiming(inputs: CropTimingInputs): CropTimingOutput 
     harvestWindow,
     daysInCells,
     fixedFieldStartDate,
-    followsCrop,
-    followOffset = 0,
     additionalDaysOfHarvest = 0,
     actualGreenhouseDate,
     actualTpOrDsDate,
-    actualBeginningOfHarvest,
-    actualEndOfHarvest,
-    getFollowedCropEndDate,
   } = inputs;
 
   const isTransplant = daysInCells > 0;
 
-  // Resolve the base field date (either fixed or from followed crop)
-  let baseFieldDate: Date;
-
-  if (followsCrop && getFollowedCropEndDate) {
-    const followedEnd = getFollowedCropEndDate(followsCrop);
-    if (followedEnd) {
-      // Field date = followed crop's end + 1 + offset
-      baseFieldDate = addDays(followedEnd, 1 + followOffset);
-    } else if (fixedFieldStartDate) {
-      baseFieldDate = fixedFieldStartDate;
-    } else {
-      throw new Error(`Crop follows ${followsCrop} but no end date found and no fallback`);
-    }
-  } else if (fixedFieldStartDate) {
-    baseFieldDate = fixedFieldStartDate;
-  } else {
-    throw new Error('Crop must have either fixedFieldStartDate or followsCrop');
+  // Field date is required
+  if (!fixedFieldStartDate) {
+    throw new Error('Crop must have fixedFieldStartDate');
   }
+  const baseFieldDate = fixedFieldStartDate;
 
   // [17] Planned Greenhouse Start Date
   // = Field Date - Days in Cells (for transplants only)
@@ -148,8 +126,8 @@ export function calculateCropTiming(inputs: CropTimingInputs): CropTimingOutput 
     : addDays(tpOrDsDate, dtm);
 
   // [30] Beginning of Harvest
-  // = COALESCE(Actual Begin, Expected Begin)
-  const beginningOfHarvest = actualBeginningOfHarvest || expectedBeginningOfHarvest;
+  // = Expected Beginning of Harvest (no actual tracking for harvest dates)
+  const beginningOfHarvest = expectedBeginningOfHarvest;
 
   // [31] Expected End of Harvest
   // = Expected Begin + Harvest Window + Additional Days of Harvest
@@ -162,8 +140,8 @@ export function calculateCropTiming(inputs: CropTimingInputs): CropTimingOutput 
   );
 
   // [36] End of Harvest
-  // = COALESCE(Actual End, Expected End)
-  const endOfHarvest = actualEndOfHarvest || expectedEndOfHarvest;
+  // = Expected End (no actual tracking for harvest dates)
+  const endOfHarvest = expectedEndOfHarvest;
 
   // [16] Start Date (for display - earliest activity)
   // = COALESCE(Planned GH Start, Planned TP/DS)
@@ -204,9 +182,6 @@ export interface BedPlanAssignment {
 
   // Inputs
   fixedFieldStartDate?: string;
-  followsCrop?: string;
-  followOffset?: number;
-
   // Adjustments
   additionalDaysOfHarvest?: number;
   additionalDaysInField?: number;
@@ -214,9 +189,7 @@ export interface BedPlanAssignment {
 
   // Actuals
   actualGreenhouseDate?: string;
-  actualTpOrDsDate?: string;
-  actualBeginningOfHarvest?: string;
-  actualEndOfHarvest?: string;
+  actualFieldDate?: string;
 }
 
 /**
@@ -232,21 +205,16 @@ function parseDate(dateStr?: string | null): Date | undefined {
  * Calculate timing from a bed plan assignment
  */
 export function calculateFromBedPlanAssignment(
-  assignment: BedPlanAssignment,
-  getFollowedCropEndDate?: (id: string) => Date | null
+  assignment: BedPlanAssignment
 ): CropTimingOutput | null {
   const {
     dtm,
     harvestWindow,
     daysInCells,
     fixedFieldStartDate,
-    followsCrop,
-    followOffset,
     additionalDaysOfHarvest,
     actualGreenhouseDate,
-    actualTpOrDsDate,
-    actualBeginningOfHarvest,
-    actualEndOfHarvest,
+    actualFieldDate,
   } = assignment;
 
   // Need at least DTM and harvest window
@@ -255,7 +223,7 @@ export function calculateFromBedPlanAssignment(
 
   // Need a starting point
   const fixedDate = parseDate(fixedFieldStartDate);
-  if (!fixedDate && !followsCrop) return null;
+  if (!fixedDate) return null;
 
   try {
     return calculateCropTiming({
@@ -263,14 +231,9 @@ export function calculateFromBedPlanAssignment(
       harvestWindow,
       daysInCells: daysInCells || 0,
       fixedFieldStartDate: fixedDate,
-      followsCrop: followsCrop || undefined,
-      followOffset: followOffset || 0,
       additionalDaysOfHarvest: additionalDaysOfHarvest || 0,
       actualGreenhouseDate: parseDate(actualGreenhouseDate),
-      actualTpOrDsDate: parseDate(actualTpOrDsDate),
-      actualBeginningOfHarvest: parseDate(actualBeginningOfHarvest),
-      actualEndOfHarvest: parseDate(actualEndOfHarvest),
-      getFollowedCropEndDate,
+      actualTpOrDsDate: parseDate(actualFieldDate),
     });
   } catch {
     return null;

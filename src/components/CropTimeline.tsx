@@ -25,6 +25,13 @@ interface SeedSource {
   id: string;
 }
 
+/** Actuals tracking for a planting */
+interface PlantingActuals {
+  greenhouseDate?: string;
+  fieldDate?: string;
+  failed?: boolean;
+}
+
 interface TimelineCrop {
   id: string;
   name: string;
@@ -66,6 +73,8 @@ interface TimelineCrop {
   useDefaultSeedSource?: boolean;
   /** Crop name (for filtering varieties/mixes) */
   crop?: string;
+  /** Actuals tracking data (actual dates, failed status) */
+  actuals?: PlantingActuals;
 }
 
 interface ResourceGroup {
@@ -91,13 +100,14 @@ interface CropTimelineProps {
   planYear?: number;
   /** Callback when user adds a planting from timeline */
   onAddPlanting?: (configId: string, fieldStartDate: string, bedId: string) => Promise<string | void>;
-  /** Callback when user updates planting fields (bedFeet, overrides, notes, seedSource, useDefaultSeedSource) */
+  /** Callback when user updates planting fields (bedFeet, overrides, notes, seedSource, useDefaultSeedSource, actuals) */
   onUpdatePlanting?: (plantingId: string, updates: {
     bedFeet?: number;
     overrides?: PlantingOverrides;
     notes?: string;
     seedSource?: SeedSource | null;
     useDefaultSeedSource?: boolean;
+    actuals?: PlantingActuals;
   }) => Promise<void>;
   /** Varieties available in the plan (for seed source picker) */
   varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
@@ -2363,6 +2373,40 @@ export default function CropTimeline({
                     );
                   })()}
 
+                  {/* Actual Dates - only show in edit mode */}
+                  {onUpdatePlanting && (
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">Actual Greenhouse</div>
+                        <input
+                          type="date"
+                          defaultValue={crop.actuals?.greenhouseDate?.split('T')[0] || ''}
+                          onChange={(e) => {
+                            const val = e.target.value || undefined;
+                            onUpdatePlanting(crop.groupId, {
+                              actuals: { ...crop.actuals, greenhouseDate: val }
+                            });
+                          }}
+                          className="w-full px-1 py-0.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                        />
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-600 mb-1">Actual Field</div>
+                        <input
+                          type="date"
+                          defaultValue={crop.actuals?.fieldDate?.split('T')[0] || ''}
+                          onChange={(e) => {
+                            const val = e.target.value || undefined;
+                            onUpdatePlanting(crop.groupId, {
+                              actuals: { ...crop.actuals, fieldDate: val }
+                            });
+                          }}
+                          className="w-full px-1 py-0.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Multi-bed info */}
                   {groupCrops.length > 1 && (
                     <div>
@@ -2525,6 +2569,30 @@ export default function CropTimeline({
                     <div>
                       <div className="text-xs text-gray-600 mb-1">Notes</div>
                       <div className="text-sm text-gray-900 whitespace-pre-wrap">{crop.notes}</div>
+                    </div>
+                  )}
+
+                  {/* Failed checkbox - only show in edit mode */}
+                  {onUpdatePlanting && (
+                    <div className="pt-3 border-t">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={crop.actuals?.failed || false}
+                          onChange={(e) => {
+                            onUpdatePlanting(crop.groupId, {
+                              actuals: { ...crop.actuals, failed: e.target.checked }
+                            });
+                          }}
+                          className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                        />
+                        <span className="text-sm text-gray-700">Planting failed</span>
+                      </label>
+                      {crop.actuals?.failed && (
+                        <p className="text-xs text-gray-500 mt-1 ml-6">
+                          This planting is marked as failed (disease, pests, weather, etc.)
+                        </p>
+                      )}
                     </div>
                   )}
 

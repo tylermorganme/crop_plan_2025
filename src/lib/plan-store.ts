@@ -476,7 +476,7 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   deleteCrop: (groupId: string) => Promise<void>;
   addPlanting: (planting: Planting) => Promise<void>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource'>>) => Promise<void>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>>) => Promise<void>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
   recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
@@ -1134,7 +1134,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlanting.id;
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource'>>) => {
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'actuals'>>) => {
       // Pre-validate
       const { currentPlan } = get();
       if (!currentPlan?.plantings) return;
@@ -1171,6 +1171,13 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             }
             if (updates.useDefaultSeedSource !== undefined) {
               p.useDefaultSeedSource = updates.useDefaultSeedSource;
+            }
+            if (updates.actuals !== undefined) {
+              // Merge actuals (shallow merge)
+              p.actuals = {
+                ...p.actuals,
+                ...updates.actuals,
+              };
             }
 
             p.lastModified = now;

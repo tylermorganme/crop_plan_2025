@@ -510,14 +510,9 @@ export function formatMonth(month: string): string {
  * Get the effective market split for a planting.
  *
  * Resolution order:
- * 1. If useDefaultMarketSplit is explicitly false → use planting's marketSplit (if set)
- * 2. If useDefaultMarketSplit is true/undefined → use config's defaultMarketSplit
+ * 1. If planting has a marketSplit set, use it
+ * 2. Otherwise, fall back to config's defaultMarketSplit
  * 3. If neither is set, returns undefined (all revenue goes to first active market)
- *
- * Note: When useDefaultMarketSplit is true/undefined and config has no default,
- * we do NOT fall back to planting.marketSplit - that would defeat the purpose
- * of "use default". The planting's marketSplit is only used when explicitly
- * opted out of using the default.
  *
  * @param planting - The planting to check
  * @param config - The crop config for fallback
@@ -527,12 +522,12 @@ export function getEffectiveMarketSplit(
   planting: Planting,
   config: CropConfig
 ): MarketSplit | undefined {
-  // If explicitly set to NOT use default, use planting's override
-  if (planting.useDefaultMarketSplit === false) {
+  // Planting-level market split takes precedence
+  if (planting.marketSplit) {
     return planting.marketSplit;
   }
 
-  // Otherwise (useDefaultMarketSplit is true or undefined), use config default
+  // Fall back to config default
   return config.defaultMarketSplit;
 }
 

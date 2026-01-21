@@ -28,14 +28,10 @@ export interface PlantingOverrides {
  * Used for in-season tracking against planned dates.
  */
 export interface PlantingActuals {
-  /** Actual greenhouse seeding date */
+  /** Actual greenhouse seeding date (ISO date string) */
   greenhouseDate?: string;
-  /** Actual transplant or direct seed date */
-  tpOrDsDate?: string;
-  /** Actual first harvest date */
-  beginningOfHarvest?: string;
-  /** Actual last harvest date */
-  endOfHarvest?: string;
+  /** Actual transplant or direct seed date (ISO date string) */
+  fieldDate?: string;
   /** Whether the planting failed (disease, pests, etc.) */
   failed?: boolean;
 }
@@ -70,12 +66,6 @@ export interface Planting {
   /** When crop enters field (ISO date string) */
   fieldStartDate: string;
 
-  /** Reference to another Planting.id for succession scheduling */
-  followsPlantingId?: string;
-
-  /** Days after followed planting ends before this one starts */
-  followOffset?: number;
-
   // ---- Bed Assignment ----
 
   /** Starting bed ID, or null if unassigned */
@@ -97,15 +87,11 @@ export interface Planting {
 
   // ---- Market Split ----
 
-  /** Market split for this planting - maps marketId to percentage (0-100) */
-  marketSplit?: import('./market').MarketSplit;
-
   /**
-   * When true, use the CropConfig's defaultMarketSplit instead of marketSplit.
-   * This allows the planting to automatically follow config updates.
-   * Defaults to true if not specified.
+   * Market split for this planting - maps marketId to percentage (0-100).
+   * If not set, falls back to CropConfig's defaultMarketSplit.
    */
-  useDefaultMarketSplit?: boolean;
+  marketSplit?: import('./market').MarketSplit;
 
   // ---- Adjustments ----
 
@@ -168,18 +154,12 @@ export interface CreatePlantingInput {
   startBed: string | null;
   /** Total feet needed */
   bedFeet: number;
-  /** Optional: planting this follows */
-  followsPlantingId?: string;
-  /** Optional: days after followed crop */
-  followOffset?: number;
   /** Optional: seed variety or mix reference */
   seedSource?: SeedSource;
   /** Optional: use config's default seed source */
   useDefaultSeedSource?: boolean;
-  /** Optional: market split for this planting */
+  /** Optional: market split for this planting (falls back to config if not set) */
   marketSplit?: import('./market').MarketSplit;
-  /** Optional: use config's default market split */
-  useDefaultMarketSplit?: boolean;
   /** Optional: timing overrides */
   overrides?: PlantingOverrides;
   /** Optional: actual dates */
@@ -198,12 +178,9 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     fieldStartDate: input.fieldStartDate,
     startBed: input.startBed,
     bedFeet: input.bedFeet,
-    followsPlantingId: input.followsPlantingId,
-    followOffset: input.followOffset,
     seedSource: input.seedSource,
     useDefaultSeedSource: input.useDefaultSeedSource,
     marketSplit: input.marketSplit,
-    useDefaultMarketSplit: input.useDefaultMarketSplit,
     overrides: input.overrides,
     actuals: input.actuals,
     notes: input.notes,
@@ -224,12 +201,9 @@ export function clonePlanting(
     fieldStartDate: source.fieldStartDate,
     startBed: overrides?.startBed !== undefined ? overrides.startBed : source.startBed,
     bedFeet: source.bedFeet,
-    followsPlantingId: source.followsPlantingId,
-    followOffset: source.followOffset,
     seedSource: source.seedSource,
     useDefaultSeedSource: source.useDefaultSeedSource,
     marketSplit: source.marketSplit,
-    useDefaultMarketSplit: source.useDefaultMarketSplit,
     overrides: source.overrides,
     actuals: source.actuals,
     notes: source.notes,

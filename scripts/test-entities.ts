@@ -240,29 +240,7 @@ test('validatePlan allows null startBed (unassigned)', () => {
   validatePlan(plan); // Should not throw
 });
 
-test('validatePlan throws for missing followsPlantingId', () => {
-  const plan = createTestPlan();
-  plan.plantings![0].followsPlantingId = 'nonexistent-planting';
-
-  assertThrows(() => validatePlan(plan), PlanValidationError);
-});
-
-test('validatePlan passes for valid followsPlantingId', () => {
-  const plan = createTestPlan();
-
-  // Add a second planting that follows the first
-  plan.plantings!.push({
-    id: 'P2',
-    configId: 'arugula-baby-leaf',
-    fieldStartDate: '2025-06-01',
-    startBed: 'A2',
-    bedFeet: 50,
-    followsPlantingId: 'P1',
-    lastModified: Date.now(),
-  });
-
-  validatePlan(plan); // Should not throw
-});
+// followsPlantingId tests removed - succession scheduling no longer supported
 
 // =============================================================================
 // SUMMARY

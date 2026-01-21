@@ -50,17 +50,13 @@ interface BedAssignment {
   daysInCells?: number;
   // Input fields (for computation)
   fixedFieldStartDate?: string | null;
-  followsCrop?: string | null;
-  followOffset?: number | null;
   // Override fields
   additionalDaysOfHarvest?: number | string | null;
   additionalDaysInField?: number | string | null;
   additionalDaysInCells?: number | string | null;
   // Actual fields
   actualGreenhouseDate?: string | null;
-  actualTpOrDsDate?: string | null;
-  actualBeginningOfHarvest?: string | null;
-  actualEndOfHarvest?: string | null;
+  actualFieldDate?: string | null;
   failed?: boolean | null;
   // Additional metadata
   category?: string | number;
@@ -507,8 +503,6 @@ function plantingToSlim(planting: Planting, uuidToName: Record<string, string>):
     bed: bedName,
     bedsCount: planting.bedFeet / LEGACY_IMPORT_BED_FT,
     fixedFieldStartDate: planting.fieldStartDate,
-    followsCrop: planting.followsPlantingId,
-    followOffset: planting.followOffset,
     overrides: planting.overrides,
     actuals: planting.actuals,
   };

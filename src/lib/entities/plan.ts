@@ -92,6 +92,8 @@ export interface TimelineCrop {
   seedsNeeded?: number;
   /** Crop name (for filtering varieties/mixes in picker) */
   crop?: string;
+  /** Actuals tracking data (actual dates, failed status) */
+  actuals?: import('./planting').PlantingActuals;
 }
 
 /**
@@ -152,7 +154,6 @@ export class PlanValidationError extends Error {
       plantingId?: string;
       configId?: string;
       bedId?: string;
-      followsPlantingId?: string;
     }
   ) {
     super(message);
@@ -173,7 +174,6 @@ export function isValidPlan(plan: Plan): boolean {
  * Throws PlanValidationError if:
  * - A planting references a missing config
  * - A planting references a missing bed
- * - A planting's followsPlantingId references a missing planting
  *
  * Call this on plan load and before save to catch bugs early.
  */
@@ -181,8 +181,6 @@ export function validatePlan(plan: Plan): void {
   if (!plan.plantings || !plan.beds) {
     return; // Empty plan is valid
   }
-
-  const plantingIds = new Set(plan.plantings.map(p => p.id));
 
   for (const planting of plan.plantings) {
     // Check config reference
@@ -198,14 +196,6 @@ export function validatePlan(plan: Plan): void {
       throw new PlanValidationError(
         `Planting ${planting.id} references missing bed ${planting.startBed}`,
         { plantingId: planting.id, bedId: planting.startBed }
-      );
-    }
-
-    // Check followsPlantingId reference
-    if (planting.followsPlantingId && !plantingIds.has(planting.followsPlantingId)) {
-      throw new PlanValidationError(
-        `Planting ${planting.id} follows missing planting ${planting.followsPlantingId}`,
-        { plantingId: planting.id, followsPlantingId: planting.followsPlantingId }
       );
     }
   }

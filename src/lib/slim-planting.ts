@@ -44,12 +44,6 @@ export interface SlimPlanting {
   /** Fixed field start date (ISO string) - when crop enters field */
   fixedFieldStartDate?: string;
 
-  /** ID of crop this follows (for succession planting) */
-  followsCrop?: string;
-
-  /** Days after followed crop ends before this one starts */
-  followOffset?: number;
-
   /** Overrides to default config values */
   overrides?: {
     additionalDaysOfHarvest?: number;
@@ -60,9 +54,7 @@ export interface SlimPlanting {
   /** Actual dates (for tracking variance from plan) */
   actuals?: {
     greenhouseDate?: string;
-    tpOrDsDate?: string;
-    beginningOfHarvest?: string;
-    endOfHarvest?: string;
+    fieldDate?: string;
     failed?: boolean;
   };
 }
@@ -226,20 +218,12 @@ export function computeTimelineCrop(
     fixedFieldStartDate: planting.fixedFieldStartDate
       ? parseLocalDate(planting.fixedFieldStartDate)
       : undefined,
-    followsCrop: planting.followsCrop,
-    followOffset: planting.followOffset ?? 0,
     additionalDaysOfHarvest: 0, // Already applied via resolveEffectiveTiming
     actualGreenhouseDate: planting.actuals?.greenhouseDate
       ? parseLocalDate(planting.actuals.greenhouseDate)
       : undefined,
-    actualTpOrDsDate: planting.actuals?.tpOrDsDate
-      ? parseLocalDate(planting.actuals.tpOrDsDate)
-      : undefined,
-    actualBeginningOfHarvest: planting.actuals?.beginningOfHarvest
-      ? parseLocalDate(planting.actuals.beginningOfHarvest)
-      : undefined,
-    actualEndOfHarvest: planting.actuals?.endOfHarvest
-      ? parseLocalDate(planting.actuals.endOfHarvest)
+    actualTpOrDsDate: planting.actuals?.fieldDate
+      ? parseLocalDate(planting.actuals.fieldDate)
       : undefined,
     getFollowedCropEndDate,
   };
@@ -278,6 +262,7 @@ export function computeTimelineCrop(
       bedIndex: 1,
       groupId: planting.id,
       plantingMethod: config.plantingMethod,
+      actuals: planting.actuals,
     }];
   }
 
@@ -303,6 +288,7 @@ export function computeTimelineCrop(
     feetUsed: info.feetUsed,
     bedCapacityFt: info.bedCapacityFt,
     plantingMethod: config.plantingMethod,
+    actuals: planting.actuals,
   }));
 }
 
@@ -416,15 +402,11 @@ export function extractSlimPlanting(assignment: {
   bed: string;
   bedsCount?: number;
   fixedFieldStartDate?: string | null;
-  followsCrop?: string | null;
-  followOffset?: number | null;
   additionalDaysOfHarvest?: number | string | null;
   additionalDaysInField?: number | string | null;
   additionalDaysInCells?: number | string | null;
   actualGreenhouseDate?: string | null;
-  actualTpOrDsDate?: string | null;
-  actualBeginningOfHarvest?: string | null;
-  actualEndOfHarvest?: string | null;
+  actualFieldDate?: string | null;
   failed?: boolean | null;
 }): SlimPlanting {
   return {
@@ -433,8 +415,6 @@ export function extractSlimPlanting(assignment: {
     bed: assignment.bed || null,
     bedsCount: assignment.bedsCount ?? 1,
     fixedFieldStartDate: assignment.fixedFieldStartDate ?? undefined,
-    followsCrop: assignment.followsCrop ?? undefined,
-    followOffset: assignment.followOffset ?? undefined,
     overrides: {
       additionalDaysOfHarvest: safeParseNumber(assignment.additionalDaysOfHarvest),
       additionalDaysInField: safeParseNumber(assignment.additionalDaysInField),
@@ -442,9 +422,7 @@ export function extractSlimPlanting(assignment: {
     },
     actuals: {
       greenhouseDate: assignment.actualGreenhouseDate ?? undefined,
-      tpOrDsDate: assignment.actualTpOrDsDate ?? undefined,
-      beginningOfHarvest: assignment.actualBeginningOfHarvest ?? undefined,
-      endOfHarvest: assignment.actualEndOfHarvest ?? undefined,
+      fieldDate: assignment.actualFieldDate ?? undefined,
       failed: assignment.failed ?? undefined,
     },
   };
