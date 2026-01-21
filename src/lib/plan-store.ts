@@ -158,13 +158,8 @@ function mutateWithPatches(
   // The API also clears the redo stack when a new patch is appended
   const planId = state.currentPlan.id;
   if (planId) {
-    console.log('[mutateWithPatches] Sending patch to server:', description, 'patches:', entry.patches.length, 'inverse:', entry.inversePatches.length);
-    storage.appendPatch(planId, entry).then((id) => {
-      console.log('[mutateWithPatches] Patch saved with id:', id);
-    }).catch((e) => {
+    storage.appendPatch(planId, entry).catch((e) => {
       console.warn('Failed to persist patch:', e);
-      // The patch is already counted optimistically, but SQLite has the truth
-      // On next load, counts will be accurate from SQLite
     });
   }
 

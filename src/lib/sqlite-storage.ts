@@ -738,10 +738,8 @@ export function createCheckpoint(planId: string, name: string): string {
 
   ensureCheckpointsDir(planId);
 
-  // Generate checkpoint ID from timestamp and sanitized name
   const timestamp = Date.now();
-  const safeName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const checkpointId = `${new Date(timestamp).toISOString().slice(0, 10)}_${safeName || 'checkpoint'}`;
+  const checkpointId = crypto.randomUUID();
 
   // Copy the database file
   const srcPath = getDbPath(planId);
@@ -751,7 +749,8 @@ export function createCheckpoint(planId: string, name: string): string {
   // Update index
   const index = loadCheckpointsIndex(planId);
   index.push({ id: checkpointId, name, createdAt: timestamp });
-  index.sort((a, b) => b.createdAt - a.createdAt); // Newest first
+  // Sort newest first, with ID as tiebreaker for same timestamp
+  index.sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id));
   saveCheckpointsIndex(planId, index);
 
   return checkpointId;
@@ -762,8 +761,8 @@ export function createCheckpoint(planId: string, name: string): string {
  */
 export function listCheckpoints(planId: string): CheckpointInfo[] {
   const checkpoints = loadCheckpointsIndex(planId);
-  // Return newest first
-  return checkpoints.sort((a, b) => b.createdAt - a.createdAt);
+  // Return newest first, with ID as tiebreaker for same timestamp
+  return checkpoints.sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id));
 }
 
 /**

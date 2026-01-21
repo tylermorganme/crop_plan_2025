@@ -441,14 +441,18 @@ describe('sqlite-storage', () => {
     it('createCheckpoint creates a checkpoint database copy', () => {
       const checkpointId = createCheckpoint(TEST_PLAN_ID, 'First Checkpoint');
 
-      expect(checkpointId).toMatch(/^\d{4}-\d{2}-\d{2}_first-checkpoint$/);
+      // ID is a UUID
+      expect(checkpointId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
 
       const checkpointPath = join(PLANS_DIR, `${TEST_PLAN_ID}.checkpoints`, `${checkpointId}.db`);
       expect(existsSync(checkpointPath)).toBe(true);
     });
 
-    it('listCheckpoints returns all checkpoints', () => {
+    it('listCheckpoints returns all checkpoints sorted by creation time', () => {
       createCheckpoint(TEST_PLAN_ID, 'Checkpoint 1');
+      // Small delay to ensure different timestamps
+      const start = Date.now();
+      while (Date.now() === start) { /* spin until next millisecond */ }
       createCheckpoint(TEST_PLAN_ID, 'Checkpoint 2');
 
       const checkpoints = listCheckpoints(TEST_PLAN_ID);
