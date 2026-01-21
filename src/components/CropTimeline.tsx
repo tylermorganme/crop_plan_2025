@@ -75,6 +75,10 @@ interface TimelineCrop {
   crop?: string;
   /** Actuals tracking data (actual dates, failed status) */
   actuals?: PlantingActuals;
+  /** Sequence ID if planting is part of a succession sequence */
+  sequenceId?: string;
+  /** Position in sequence (0 = anchor, 1+ = follower) */
+  sequenceIndex?: number;
 }
 
 interface ResourceGroup {
@@ -115,6 +119,10 @@ interface CropTimelineProps {
   seedMixes?: Record<string, { id: string; crop: string; name: string }>;
   /** Initial state for no-variety filter (set via URL param) */
   initialNoVarietyFilter?: boolean;
+  /** Callback when user wants to create a sequence from a planting */
+  onCreateSequence?: (plantingId: string, cropName: string, fieldStartDate: string) => void;
+  /** Callback when user wants to unlink a planting from its sequence */
+  onUnlinkFromSequence?: (plantingId: string) => void;
 }
 
 // =============================================================================
@@ -513,6 +521,8 @@ export default function CropTimeline({
   varieties,
   seedMixes,
   initialNoVarietyFilter,
+  onCreateSequence,
+  onUnlinkFromSequence,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -1282,6 +1292,9 @@ export default function CropTimeline({
       };
       tooltip += `\n${methodNames[crop.plantingMethod] || crop.plantingMethod}`;
     }
+    if (crop.sequenceId !== undefined && crop.sequenceIndex !== undefined) {
+      tooltip += `\nSequence #${crop.sequenceIndex + 1}${crop.sequenceIndex === 0 ? ' (anchor)' : ''}`;
+    }
 
     return (
       <React.Fragment key={crop.id}>
@@ -1438,6 +1451,19 @@ export default function CropTimeline({
                         </div>
                       );
                     })()}
+                    {/* Sequence indicator badge */}
+                    {crop.sequenceId !== undefined && crop.sequenceIndex !== undefined && (
+                      <div
+                        className="text-[9px] px-1 rounded font-bold"
+                        style={{
+                          backgroundColor: '#7c3aed', // Purple for sequences
+                          color: '#ffffff',
+                        }}
+                        title={`Sequence ${crop.sequenceIndex + 1}${crop.sequenceIndex === 0 ? ' (anchor)' : ''}`}
+                      >
+                        S{crop.sequenceIndex + 1}
+                      </div>
+                    )}
                   </div>
                   {/* Main content */}
                   <div className="flex-1 min-w-0">
@@ -2424,6 +2450,53 @@ export default function CropTimeline({
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Sequence Info */}
+                  {crop.sequenceId !== undefined && crop.sequenceIndex !== undefined && (
+                    <div className="pt-3 border-t">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-gray-600">Sequence</span>
+                        <span
+                          className="px-2 py-0.5 rounded text-xs font-bold"
+                          style={{ backgroundColor: '#7c3aed', color: '#ffffff' }}
+                        >
+                          #{crop.sequenceIndex + 1}{crop.sequenceIndex === 0 ? ' (anchor)' : ''}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        This planting is part of a succession sequence.
+                        {crop.sequenceIndex === 0 ? (
+                          <span className="block mt-1 text-purple-600">
+                            As the anchor, dragging this will shift all other plantings in the sequence.
+                          </span>
+                        ) : (
+                          <span className="block mt-1 text-purple-600">
+                            Dragging or moving this planting will unlink it from the sequence.
+                          </span>
+                        )}
+                      </div>
+                      {onUnlinkFromSequence && crop.sequenceIndex !== 0 && (
+                        <button
+                          onClick={() => onUnlinkFromSequence(crop.groupId)}
+                          className="mt-2 w-full px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 rounded hover:bg-purple-100 transition-colors"
+                        >
+                          Break from Sequence
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Create Sequence Action - only show if not already in a sequence */}
+                  {crop.sequenceId === undefined && onCreateSequence && (
+                    <div className="pt-3 border-t">
+                      <button
+                        onClick={() => onCreateSequence(crop.groupId, crop.name, crop.startDate)}
+                        className="w-full px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 rounded hover:bg-purple-100 transition-colors"
+                      >
+                        Create Succession Sequence
+                      </button>
                     </div>
                   )}
 

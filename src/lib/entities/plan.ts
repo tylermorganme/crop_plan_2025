@@ -13,6 +13,7 @@ import type { SeedMix } from './seed-mix';
 import type { Product } from './product';
 import type { SeedOrder } from './seed-order';
 import type { Market } from './market';
+import type { PlantingSequence } from './planting-sequence';
 
 // Re-export migration utilities for backwards compatibility
 export { CURRENT_SCHEMA_VERSION, migratePlan } from '../migrations';
@@ -94,6 +95,10 @@ export interface TimelineCrop {
   crop?: string;
   /** Actuals tracking data (actual dates, failed status) */
   actuals?: import('./planting').PlantingActuals;
+  /** Sequence ID if planting is part of a succession sequence */
+  sequenceId?: string;
+  /** Position in sequence (0 = anchor, 1+ = follower) */
+  sequenceIndex?: number;
 }
 
 /**
@@ -135,6 +140,9 @@ export interface Plan {
 
   /** Markets for revenue split (keyed by ID) */
   markets?: Record<string, Market>;
+
+  /** Planting sequences for succession planting (keyed by ID) */
+  sequences?: Record<string, PlantingSequence>;
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];

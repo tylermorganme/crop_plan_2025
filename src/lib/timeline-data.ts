@@ -557,6 +557,10 @@ export function expandPlantingsToTimelineCrops(
       // Store crop name for filtering varieties/mixes in picker
       crop.crop = config.crop;
 
+      // Add sequence membership info
+      crop.sequenceId = planting.sequenceId;
+      crop.sequenceIndex = planting.sequenceIndex;
+
       // Calculate seeds needed based on CropConfig.seedsPerBed
       if (config.seedsPerBed && planting.bedFeet) {
         // seedsPerBed is per 50ft bed, scale to actual feet

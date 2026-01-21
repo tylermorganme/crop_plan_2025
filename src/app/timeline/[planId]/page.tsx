@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import CropConfigEditor from '@/components/CropConfigEditor';
+import CreateSequenceModal, { type CreateSequenceOptions } from '@/components/CreateSequenceModal';
 import { type CropConfig } from '@/lib/entities/crop-config';
 // useSnapshotScheduler removed - SQLite storage handles persistence directly
 import { calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
@@ -51,6 +52,12 @@ export default function TimelinePlanPage() {
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [configEditorOpen, setConfigEditorOpen] = useState(false);
   const [editingCrop, setEditingCrop] = useState<CropConfig | null>(null);
+  const [sequenceModalOpen, setSequenceModalOpen] = useState(false);
+  const [sequenceModalData, setSequenceModalData] = useState<{
+    plantingId: string;
+    cropName: string;
+    fieldStartDate: string;
+  } | null>(null);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
@@ -64,6 +71,10 @@ export default function TimelinePlanPage() {
   const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
   const addPlanting = usePlanStore((state) => state.addPlanting);
   const updatePlanting = usePlanStore((state) => state.updatePlanting);
+
+  // Sequence actions from store
+  const createSequenceFromPlanting = usePlanStore((state) => state.createSequenceFromPlanting);
+  const unlinkFromSequence = usePlanStore((state) => state.unlinkFromSequence);
 
   // Helper to get crop config from plan's catalog (falls back to master)
   const getCropByIdentifier = useCallback((identifier: string) => {
@@ -242,6 +253,43 @@ export default function TimelinePlanPage() {
     }
   }, [updateCropConfig]);
 
+  // Sequence handlers
+  const handleCreateSequence = useCallback((plantingId: string, cropName: string, fieldStartDate: string) => {
+    setSequenceModalData({ plantingId, cropName, fieldStartDate });
+    setSequenceModalOpen(true);
+  }, []);
+
+  const handleConfirmCreateSequence = useCallback(async (options: CreateSequenceOptions) => {
+    if (!sequenceModalData) return;
+
+    try {
+      const result = await createSequenceFromPlanting(sequenceModalData.plantingId, options);
+      setSequenceModalOpen(false);
+      setSequenceModalData(null);
+      setToast({
+        message: `Created sequence with ${result.plantingIds.length} plantings`,
+        type: 'success',
+      });
+    } catch (e) {
+      setToast({
+        message: `Failed to create sequence: ${e instanceof Error ? e.message : 'Unknown error'}`,
+        type: 'error',
+      });
+    }
+  }, [sequenceModalData, createSequenceFromPlanting]);
+
+  const handleUnlinkFromSequence = useCallback(async (plantingId: string) => {
+    try {
+      await unlinkFromSequence(plantingId);
+      setToast({ message: 'Planting unlinked from sequence', type: 'success' });
+    } catch (e) {
+      setToast({
+        message: `Failed to unlink: ${e instanceof Error ? e.message : 'Unknown error'}`,
+        type: 'error',
+      });
+    }
+  }, [unlinkFromSequence]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-51px)]">
@@ -289,6 +337,8 @@ export default function TimelinePlanPage() {
           varieties={currentPlan.varieties}
           seedMixes={currentPlan.seedMixes}
           initialNoVarietyFilter={initialNoVarietyFilter}
+          onCreateSequence={handleCreateSequence}
+          onUnlinkFromSequence={handleUnlinkFromSequence}
         />
       </div>
 
@@ -314,6 +364,18 @@ export default function TimelinePlanPage() {
         seedMixes={currentPlan?.seedMixes}
         products={currentPlan?.products}
         markets={currentPlan?.markets}
+      />
+
+      {/* Create sequence modal */}
+      <CreateSequenceModal
+        isOpen={sequenceModalOpen}
+        anchorFieldStartDate={sequenceModalData?.fieldStartDate || ''}
+        cropName={sequenceModalData?.cropName || ''}
+        onClose={() => {
+          setSequenceModalOpen(false);
+          setSequenceModalData(null);
+        }}
+        onCreate={handleConfirmCreateSequence}
       />
     </div>
   );

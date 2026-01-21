@@ -104,6 +104,21 @@ export interface Planting {
   /** User notes about this planting */
   notes?: string;
 
+  // ---- Sequence Membership ----
+
+  /**
+   * ID of the sequence this planting belongs to (if any).
+   * Sequences link multiple plantings temporally (succession planting).
+   */
+  sequenceId?: string;
+
+  /**
+   * 0-based position in the sequence.
+   * - Index 0 = anchor (owns its own fieldStartDate)
+   * - Index > 0 = follower (date calculated from anchor + offset)
+   */
+  sequenceIndex?: number;
+
   // ---- Metadata ----
 
   /** Timestamp of last modification */
@@ -166,6 +181,10 @@ export interface CreatePlantingInput {
   actuals?: PlantingActuals;
   /** Optional: user notes */
   notes?: string;
+  /** Optional: sequence ID (for succession plantings) */
+  sequenceId?: string;
+  /** Optional: position in sequence (0 = anchor) */
+  sequenceIndex?: number;
 }
 
 /**
@@ -184,6 +203,8 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     overrides: input.overrides,
     actuals: input.actuals,
     notes: input.notes,
+    sequenceId: input.sequenceId,
+    sequenceIndex: input.sequenceIndex,
     lastModified: Date.now(),
   };
 }
@@ -191,6 +212,9 @@ export function createPlanting(input: CreatePlantingInput): Planting {
 /**
  * Clone a planting with a new ID.
  * Use this for duplicating plantings within a plan.
+ *
+ * NOTE: By default, sequence fields (sequenceId, sequenceIndex) are NOT
+ * copied. Pass them explicitly in overrides if needed for sequence operations.
  */
 export function clonePlanting(
   source: Planting,
@@ -207,6 +231,8 @@ export function clonePlanting(
     overrides: source.overrides,
     actuals: source.actuals,
     notes: source.notes,
+    // NOTE: Do NOT copy sequence fields by default - they must be explicitly provided
+    // sequenceId and sequenceIndex are intentionally omitted
     ...overrides,
   });
 }

@@ -9,7 +9,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { enablePatches, produceWithPatches } from 'immer';
-import { addYears, addMonths, format, parseISO, isValid } from 'date-fns';
+import { addYears, addMonths, addDays, format, parseISO, isValid } from 'date-fns';
 import type {
   Plan,
   PlanMetadata,
@@ -34,8 +34,10 @@ import type { BedGroup } from './plan-types';
 import {
   initializePlantingIdCounter,
   clonePlanting,
+  createPlanting,
 } from './entities/planting';
 import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities/bed';
+import { createSequence, type PlantingSequence } from './entities/planting-sequence';
 import { storage, onSyncMessage, type PlanSummary, type PlanData } from './sqlite-client';
 import bedPlanData from '@/data/bed-template.json';
 import { getAllCrops } from './crops';
@@ -619,6 +621,51 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   updatePlanMetadata: (updates: Partial<Omit<import('./entities/plan').PlanMetadata, 'id' | 'createdAt' | 'lastModified'>>) => Promise<void>;
   /** Update plan notes */
   updatePlanNotes: (notes: string) => Promise<void>;
+
+  // ---- Sequence Management (Succession Planting) ----
+  /**
+   * Create a sequence from an existing planting.
+   * The original planting becomes the anchor (index 0).
+   * New plantings are cloned with staggered fieldStartDate values.
+   */
+  createSequenceFromPlanting: (
+    plantingId: string,
+    options: {
+      /** Total number of plantings in the sequence (2-20) */
+      count: number;
+      /** Days between each planting's fieldStartDate (1-90) */
+      offsetDays: number;
+      /** Optional name for the sequence */
+      name?: string;
+      /** Bed assignment for new plantings: 'same' keeps original bed, 'unassigned' sets to null */
+      bedAssignment: 'same' | 'unassigned';
+    }
+  ) => Promise<{ sequenceId: string; plantingIds: string[] }>;
+
+  /**
+   * Update a sequence's offset days.
+   * This recalculates all follower fieldStartDates based on the anchor.
+   */
+  updateSequenceOffset: (sequenceId: string, newOffsetDays: number) => Promise<void>;
+
+  /**
+   * Remove a planting from its sequence (becomes standalone).
+   * If removing the anchor, the next planting becomes the new anchor.
+   * If only one planting remains, the sequence is dissolved.
+   */
+  unlinkFromSequence: (plantingId: string) => Promise<void>;
+
+  /**
+   * Delete an entire sequence and all its plantings.
+   * Returns the number of plantings deleted.
+   */
+  deleteSequence: (sequenceId: string) => Promise<number>;
+
+  /** Get a sequence by ID */
+  getSequence: (sequenceId: string) => PlantingSequence | undefined;
+
+  /** Get all plantings in a sequence, sorted by index */
+  getSequencePlantings: (sequenceId: string) => Planting[];
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -919,6 +966,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             }
             p.lastModified = now;
 
+            // NOTE: Moving a sequence member does NOT unlink it from the sequence.
+            // Sequence membership is based on fieldStartDate offsets, not bed assignment.
+            // Use "Break from Sequence" to explicitly unlink.
+
             // Update metadata
             plan.metadata.lastModified = now;
             plan.changeLog.push(
@@ -959,6 +1010,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const planting = currentPlan.plantings.find(p => p.id === groupId);
       if (!planting) return;
 
+      // Check if this planting is part of a sequence - if so, move ALL members together
+      const sequenceId = planting.sequenceId;
+      const sequence = sequenceId && currentPlan.sequences ? currentPlan.sequences[sequenceId] : null;
+
       set((state) => {
         // Use patch-based mutation
         mutateWithPatches(
@@ -968,10 +1023,34 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             if (!p) return;
 
             const now = Date.now();
-            // Only fieldStartDate is stored; endDate is computed from config
-            // TODO: If user drags endDate, may need to store override
-            p.fieldStartDate = startDate;
-            p.lastModified = now;
+
+            // If this planting is in a sequence, move all sequence members together
+            if (sequence && sequenceId && plan.plantings) {
+              const newDraggedDate = parseISO(startDate);
+              const oldDraggedDate = parseISO(p.fieldStartDate);
+
+              if (isValid(newDraggedDate) && isValid(oldDraggedDate)) {
+                // Calculate the delta (how many days the user dragged)
+                const deltaDays = Math.round(
+                  (newDraggedDate.getTime() - oldDraggedDate.getTime()) / (1000 * 60 * 60 * 24)
+                );
+
+                // Apply the same delta to ALL sequence members
+                const sequenceMembers = plan.plantings.filter(sp => sp.sequenceId === sequenceId);
+                for (const member of sequenceMembers) {
+                  const memberDate = parseISO(member.fieldStartDate);
+                  if (isValid(memberDate)) {
+                    const newMemberDate = addDays(memberDate, deltaDays);
+                    member.fieldStartDate = format(newMemberDate, 'yyyy-MM-dd');
+                    member.lastModified = now;
+                  }
+                }
+              }
+            } else {
+              // Not in a sequence - just update this planting
+              p.fieldStartDate = startDate;
+              p.lastModified = now;
+            }
 
             plan.metadata.lastModified = now;
             plan.changeLog.push(
@@ -3614,6 +3693,318 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       await savePlanToLibrary(get().currentPlan!);
       await get().refreshPlanList();
+    },
+
+    // ---- Sequence Management (Succession Planting) ----
+
+    createSequenceFromPlanting: async (plantingId, options) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings) {
+        throw new Error('No plan loaded');
+      }
+
+      // Validate options
+      if (options.count < 2 || options.count > 20) {
+        throw new Error('Sequence count must be between 2 and 20');
+      }
+      if (options.offsetDays < 1 || options.offsetDays > 90) {
+        throw new Error('Offset days must be between 1 and 90');
+      }
+
+      // Find the original planting
+      const original = currentPlan.plantings.find(p => p.id === plantingId);
+      if (!original) {
+        throw new Error(`Planting not found: ${plantingId}`);
+      }
+
+      // Check if already in a sequence
+      if (original.sequenceId) {
+        throw new Error('Planting is already part of a sequence');
+      }
+
+      // Create the sequence entity
+      const sequence = createSequence({
+        name: options.name,
+        offsetDays: options.offsetDays,
+      });
+
+      // Calculate dates for all plantings
+      const anchorDate = parseISO(original.fieldStartDate);
+      if (!isValid(anchorDate)) {
+        throw new Error('Invalid anchor date');
+      }
+
+      // Create new plantings (indices 1 to count-1)
+      const newPlantingIds: string[] = [];
+      const newPlantings: Planting[] = [];
+
+      for (let i = 1; i < options.count; i++) {
+        const offsetDate = addDays(anchorDate, i * options.offsetDays);
+        const newPlanting = createPlanting({
+          configId: original.configId,
+          fieldStartDate: format(offsetDate, 'yyyy-MM-dd'),
+          startBed: options.bedAssignment === 'same' ? original.startBed : null,
+          bedFeet: original.bedFeet,
+          seedSource: original.seedSource,
+          useDefaultSeedSource: original.useDefaultSeedSource,
+          marketSplit: original.marketSplit,
+          overrides: original.overrides,
+          notes: original.notes,
+          sequenceId: sequence.id,
+          sequenceIndex: i,
+        });
+        newPlantings.push(newPlanting);
+        newPlantingIds.push(newPlanting.id);
+      }
+
+      const allPlantingIds = [plantingId, ...newPlantingIds];
+      const description = `Create sequence "${options.name || 'Succession'}" with ${options.count} plantings`;
+
+      set((state) => {
+        if (!state.currentPlan?.plantings) return;
+
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const now = Date.now();
+
+            // Initialize sequences if needed
+            if (!plan.sequences) {
+              plan.sequences = {};
+            }
+
+            // Add the sequence
+            plan.sequences[sequence.id] = sequence;
+
+            // Update the original planting to be the anchor
+            const anchor = plan.plantings?.find(p => p.id === plantingId);
+            if (anchor) {
+              anchor.sequenceId = sequence.id;
+              anchor.sequenceIndex = 0;
+              anchor.lastModified = now;
+            }
+
+            // Add all new plantings
+            for (const planting of newPlantings) {
+              plan.plantings?.push(planting);
+            }
+
+            plan.metadata.lastModified = now;
+            plan.changeLog.push(
+              createChangeEntry('create', description, allPlantingIds)
+            );
+          },
+          description
+        );
+
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+
+      return { sequenceId: sequence.id, plantingIds: allPlantingIds };
+    },
+
+    updateSequenceOffset: async (sequenceId, newOffsetDays) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings || !currentPlan.sequences) return;
+
+      const sequence = currentPlan.sequences[sequenceId];
+      if (!sequence) {
+        throw new Error(`Sequence not found: ${sequenceId}`);
+      }
+
+      if (newOffsetDays < 1 || newOffsetDays > 90) {
+        throw new Error('Offset days must be between 1 and 90');
+      }
+
+      // Find anchor planting
+      const anchor = currentPlan.plantings.find(
+        p => p.sequenceId === sequenceId && p.sequenceIndex === 0
+      );
+      if (!anchor) {
+        throw new Error('Sequence anchor not found');
+      }
+
+      const anchorDate = parseISO(anchor.fieldStartDate);
+      if (!isValid(anchorDate)) {
+        throw new Error('Invalid anchor date');
+      }
+
+      set((state) => {
+        if (!state.currentPlan?.plantings || !state.currentPlan.sequences) return;
+
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const now = Date.now();
+
+            // Update the sequence offset
+            if (plan.sequences?.[sequenceId]) {
+              plan.sequences[sequenceId].offsetDays = newOffsetDays;
+            }
+
+            // Find and update all followers
+            const followers = plan.plantings?.filter(
+              p => p.sequenceId === sequenceId && p.sequenceIndex !== undefined && p.sequenceIndex > 0
+            ) ?? [];
+
+            for (const follower of followers) {
+              const offsetDate = addDays(anchorDate, follower.sequenceIndex! * newOffsetDays);
+              follower.fieldStartDate = format(offsetDate, 'yyyy-MM-dd');
+              follower.lastModified = now;
+            }
+
+            plan.metadata.lastModified = now;
+          },
+          `Update sequence offset to ${newOffsetDays} days`
+        );
+
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+    },
+
+    unlinkFromSequence: async (plantingId) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings || !currentPlan.sequences) return;
+
+      const planting = currentPlan.plantings.find(p => p.id === plantingId);
+      if (!planting || !planting.sequenceId) {
+        return; // Not in a sequence, nothing to do
+      }
+
+      const sequenceId = planting.sequenceId;
+      const sequence = currentPlan.sequences[sequenceId];
+      if (!sequence) return;
+
+      // Get all plantings in this sequence
+      const sequencePlantings = currentPlan.plantings
+        .filter(p => p.sequenceId === sequenceId)
+        .sort((a, b) => (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0));
+
+      const isAnchor = planting.sequenceIndex === 0;
+      const remainingCount = sequencePlantings.length - 1;
+
+      set((state) => {
+        if (!state.currentPlan?.plantings || !state.currentPlan.sequences) return;
+
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const now = Date.now();
+            const p = plan.plantings?.find(p => p.id === plantingId);
+            if (!p) return;
+
+            // Clear sequence membership from this planting
+            delete p.sequenceId;
+            delete p.sequenceIndex;
+            p.lastModified = now;
+
+            if (remainingCount <= 1) {
+              // Only one planting left - dissolve the sequence entirely
+              const lastPlanting = plan.plantings?.find(
+                p => p.sequenceId === sequenceId && p.id !== plantingId
+              );
+              if (lastPlanting) {
+                delete lastPlanting.sequenceId;
+                delete lastPlanting.sequenceIndex;
+                lastPlanting.lastModified = now;
+              }
+              // Remove the sequence
+              delete plan.sequences?.[sequenceId];
+            } else if (isAnchor) {
+              // Removing anchor - promote next planting to anchor
+              // The new anchor keeps its current fieldStartDate (no recalculation)
+              const remaining = plan.plantings?.filter(
+                p => p.sequenceId === sequenceId && p.id !== plantingId
+              ).sort((a, b) => (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0)) ?? [];
+
+              // Reindex: new anchor becomes index 0, others decrement
+              for (let i = 0; i < remaining.length; i++) {
+                remaining[i].sequenceIndex = i;
+                remaining[i].lastModified = now;
+              }
+            } else {
+              // Removing a follower - reindex remaining
+              const remaining = plan.plantings?.filter(
+                p => p.sequenceId === sequenceId && p.id !== plantingId
+              ).sort((a, b) => (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0)) ?? [];
+
+              for (let i = 0; i < remaining.length; i++) {
+                remaining[i].sequenceIndex = i;
+                remaining[i].lastModified = now;
+              }
+            }
+
+            plan.metadata.lastModified = now;
+          },
+          `Unlink planting from sequence`
+        );
+
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+    },
+
+    deleteSequence: async (sequenceId) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings || !currentPlan.sequences) return 0;
+
+      const sequence = currentPlan.sequences[sequenceId];
+      if (!sequence) return 0;
+
+      // Find all plantings to delete
+      const toDelete = currentPlan.plantings.filter(p => p.sequenceId === sequenceId);
+      const count = toDelete.length;
+      const idsToDelete = toDelete.map(p => p.id);
+
+      if (count === 0) return 0;
+
+      set((state) => {
+        if (!state.currentPlan?.plantings || !state.currentPlan.sequences) return;
+
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const now = Date.now();
+
+            // Remove all plantings in the sequence
+            plan.plantings = plan.plantings?.filter(p => p.sequenceId !== sequenceId);
+
+            // Remove the sequence itself
+            delete plan.sequences?.[sequenceId];
+
+            plan.metadata.lastModified = now;
+            plan.changeLog.push(
+              createChangeEntry('delete', `Delete sequence with ${count} plantings`, idsToDelete)
+            );
+          },
+          `Delete sequence (${count} plantings)`
+        );
+
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+
+      return count;
+    },
+
+    getSequence: (sequenceId) => {
+      const { currentPlan } = get();
+      return currentPlan?.sequences?.[sequenceId];
+    },
+
+    getSequencePlantings: (sequenceId) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings) return [];
+
+      return currentPlan.plantings
+        .filter(p => p.sequenceId === sequenceId)
+        .sort((a, b) => (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0));
     },
   }))
 );
