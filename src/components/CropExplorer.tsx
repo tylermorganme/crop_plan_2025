@@ -274,6 +274,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const addCropConfig = usePlanStore((state) => state.addCropConfig);
   const deleteCropConfigs = usePlanStore((state) => state.deleteCropConfigs);
   const toggleConfigFavorite = usePlanStore((state) => state.toggleConfigFavorite);
+  const bulkSetFavorites = usePlanStore((state) => state.bulkSetFavorites);
   const activePlanId = usePlanStore((state) => state.activePlanId);
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
   const planList = usePlanStore((state) => state.planList);
@@ -1149,7 +1150,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     setShowCreateConfig(true);
   }, [activePlanId, selectedCropIds, sortedCrops]);
 
-  // Handle bulk favorite (add all selected to favorites)
+  // Handle bulk favorite (add all selected to favorites - single transaction)
   const handleBulkFavorite = useCallback(async () => {
     if (!activePlanId) {
       setAddToPlanMessage({
@@ -1159,26 +1160,23 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       return;
     }
     const selectedConfigs = sortedCrops.filter(c => selectedCropIds.has(c.id));
-    const unfavoritedConfigs = selectedConfigs.filter(c => !c.isFavorite);
+    const identifiers = selectedConfigs.map(c => c.identifier);
 
-    if (unfavoritedConfigs.length === 0) {
+    const updatedCount = await bulkSetFavorites(identifiers, true);
+
+    if (updatedCount === 0) {
       setAddToPlanMessage({
         type: 'success',
         text: 'All selected configs are already favorites',
       });
-      return;
+    } else {
+      setAddToPlanMessage({
+        type: 'success',
+        text: `Added ${updatedCount} config${updatedCount !== 1 ? 's' : ''} to favorites`,
+      });
     }
-
-    for (const config of unfavoritedConfigs) {
-      await toggleConfigFavorite(config.identifier);
-    }
-
-    setAddToPlanMessage({
-      type: 'success',
-      text: `Added ${unfavoritedConfigs.length} config${unfavoritedConfigs.length !== 1 ? 's' : ''} to favorites`,
-    });
     deselectAll();
-  }, [activePlanId, selectedCropIds, sortedCrops, toggleConfigFavorite, deselectAll]);
+  }, [activePlanId, selectedCropIds, sortedCrops, bulkSetFavorites, deselectAll]);
 
   return (
     <div className="flex h-full">

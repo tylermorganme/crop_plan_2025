@@ -488,6 +488,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   deleteCropConfigs: (identifiers: string[]) => Promise<number>;
   /** Toggle a crop config's favorite status */
   toggleConfigFavorite: (identifier: string) => Promise<void>;
+  /** Bulk set favorite status for multiple configs (single undo step) */
+  bulkSetFavorites: (identifiers: string[], isFavorite: boolean) => Promise<number>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -1507,6 +1509,68 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           });
         }
       }
+    },
+
+    bulkSetFavorites: async (identifiers: string[], isFavorite: boolean) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (!state.currentPlan.cropCatalog) {
+        throw new Error('Plan has no crop catalog');
+      }
+
+      // Filter to only configs that exist and need to change
+      const toUpdate = identifiers.filter(id => {
+        const config = state.currentPlan!.cropCatalog![id];
+        return config && config.isFavorite !== isFavorite;
+      });
+
+      if (toUpdate.length === 0) {
+        return 0;
+      }
+
+      const description = isFavorite
+        ? `Add ${toUpdate.length} config${toUpdate.length !== 1 ? 's' : ''} to favorites`
+        : `Remove ${toUpdate.length} config${toUpdate.length !== 1 ? 's' : ''} from favorites`;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.cropCatalog) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            for (const id of toUpdate) {
+              plan.cropCatalog![id].isFavorite = isFavorite;
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          description
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library (single save for all changes)
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return toUpdate.length;
     },
 
     // History - uses SQLite as single source of truth
