@@ -476,7 +476,7 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   deleteCrop: (groupId: string) => Promise<void>;
   addPlanting: (planting: Planting) => Promise<void>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>>) => Promise<void>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>>) => Promise<void>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
   recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
@@ -702,11 +702,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       set((state) => {
         state.currentPlan = data.plan;
+        state.activePlanId = planId;
         state.undoCount = undoCount;
         state.redoCount = redoCount;
         state.isDirty = false;
         state.isLoading = false;
       });
+
+      // Sync to localStorage for cross-tab via storage events
+      try {
+        localStorage.setItem(ACTIVE_PLAN_KEY, planId);
+      } catch { /* ignore */ }
     },
 
     renamePlan: async (newName: string) => {
@@ -1134,7 +1140,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlanting.id;
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'actuals'>>) => {
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'actuals'>>) => {
       // Pre-validate
       const { currentPlan } = get();
       if (!currentPlan?.plantings) return;
@@ -1153,6 +1159,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             const now = Date.now();
 
             // Apply updates
+            if ('startBed' in updates) {
+              p.startBed = updates.startBed ?? null;
+            }
             if (updates.bedFeet !== undefined) {
               p.bedFeet = updates.bedFeet;
             }

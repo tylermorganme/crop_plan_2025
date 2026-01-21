@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import { parseISO, format, addDays } from 'date-fns';
 import { usePlanStore } from '@/lib/plan-store';
@@ -11,6 +12,7 @@ import {
   getPrimarySeedToHarvest,
   calculateAggregateHarvestWindow,
 } from '@/lib/entities/crop-config';
+import { calculateRowSpan } from '@/lib/timeline-data';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import type { Planting } from '@/lib/entities/planting';
 
@@ -24,20 +26,24 @@ const MIN_COL_WIDTH = 60;
 
 // Frozen columns (always visible and sticky on left, in order)
 // These are rendered separately and cannot be hidden or reordered
-const FROZEN_COLUMNS: Set<ColumnId> = new Set(['crop', 'id']);
+const FROZEN_COLUMNS: Set<ColumnId> = new Set(['crop', 'id', 'bed']);
 
 // All available columns (frozen columns first, then the rest)
 const ALL_COLUMNS = [
   'crop',
   'id',
+  'bed',
+  'beds',
   'category',
   'identifier',
   'fieldStartDate',
   'ghDate',
   'harvestStart',
   'harvestEnd',
-  'bed',
   'bedFeet',
+  'rows',
+  'spacing',
+  'plants',
   'dtm',
   'harvestWindow',
   'method',
@@ -59,10 +65,10 @@ type ColumnId = (typeof ALL_COLUMNS)[number];
 const DEFAULT_VISIBLE: ColumnId[] = [
   'crop',
   'id',
+  'bed',
   'category',
   'fieldStartDate',
   'ghDate',
-  'bed',
   'bedFeet',
   'method',
   'notes',
@@ -79,7 +85,11 @@ const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
   harvestStart: 110,
   harvestEnd: 110,
   bed: 90,
+  beds: 120,
   bedFeet: 70,
+  rows: 60,
+  spacing: 70,
+  plants: 70,
   dtm: 60,
   harvestWindow: 80,
   method: 100,
@@ -106,7 +116,11 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
   harvestStart: 'Harvest Start',
   harvestEnd: 'Harvest End',
   bed: 'Bed',
+  beds: 'Beds',
   bedFeet: 'Feet',
+  rows: 'Rows',
+  spacing: 'Spacing',
+  plants: 'Plants',
   dtm: 'DTM',
   harvestWindow: 'Harvest Days',
   method: 'Method',
@@ -130,13 +144,22 @@ const SORTABLE_COLUMNS: Set<ColumnId> = new Set([
   'harvestWindow', 'method', 'id', 'configId', 'lastModified',
 ]);
 
+// Editable columns (have inline editing or interactive controls)
+const EDITABLE_COLUMNS: Set<ColumnId> = new Set([
+  'fieldStartDate', 'bed', 'bedFeet', 'notes', 'failed',
+  'actualGhDate', 'actualFieldDate',
+  'addlDaysHarvest', 'addlDaysField', 'addlDaysCells',
+]);
+
 type SortDirection = 'asc' | 'desc';
+
+type AssignmentFilter = 'all' | 'assigned' | 'unassigned';
 
 interface PersistedState {
   sortColumn: ColumnId;
   sortDirection: SortDirection;
   searchQuery: string;
-  showUnassigned: boolean;
+  assignmentFilter: AssignmentFilter;
   showFailed: boolean;
   columnOrder: ColumnId[];
   columnWidths: Partial<Record<ColumnId, number>>;
@@ -280,21 +303,49 @@ interface BedSelectorProps {
 
 function BedSelector({ value, beds, bedGroups, onSelect }: BedSelectorProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [filter, setFilter] = useState('');
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
+        setFilter('');
       }
     };
     if (open) {
       document.addEventListener('mousedown', handleClick);
+      // Focus input when opening
+      setTimeout(() => inputRef.current?.focus(), 0);
       return () => document.removeEventListener('mousedown', handleClick);
     }
   }, [open]);
 
+  const handleOpen = () => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setOpen(!open);
+    if (open) setFilter('');
+  };
+
+  const handleSelect = (bedId: string | null) => {
+    onSelect(bedId);
+    setOpen(false);
+    setFilter('');
+  };
+
   const currentBed = value ? beds[value] : null;
+
+  // Filter beds by search term (case-insensitive)
+  const filterLower = filter.toLowerCase();
 
   const groupedBeds = useMemo(() => {
     const groups: Record<string, { name: string; order: number; beds: { id: string; name: string }[] }> = {};
@@ -311,30 +362,86 @@ function BedSelector({ value, beds, bedGroups, onSelect }: BedSelectorProps) {
       .map(g => ({ ...g, beds: g.beds.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })) }));
   }, [beds, bedGroups]);
 
+  // Apply filter to grouped beds
+  const filteredGroupedBeds = useMemo(() => {
+    if (!filterLower) return groupedBeds;
+    return groupedBeds
+      .map(group => ({
+        ...group,
+        beds: group.beds.filter(bed => bed.name.toLowerCase().includes(filterLower)),
+      }))
+      .filter(group => group.beds.length > 0);
+  }, [groupedBeds, filterLower]);
+
+  // Check if "unassigned" matches filter
+  const showUnassigned = !filterLower || 'unassigned'.includes(filterLower);
+
   return (
-    <div ref={ref} className="relative">
-      <div onClick={() => setOpen(!open)} className="cursor-pointer hover:bg-blue-50 rounded truncate">
+    <>
+      <div ref={triggerRef} onClick={handleOpen} className="cursor-pointer hover:bg-blue-50 rounded truncate">
         {currentBed ? currentBed.name : <span className="text-amber-600 italic">Unassigned</span>}
       </div>
-      {open && (
-        <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 max-h-64 overflow-auto min-w-[140px]" style={{ zIndex: Z_INDEX.DROPDOWN }}>
-          <button onClick={() => { onSelect(null); setOpen(false); }} className={`w-full text-left px-3 py-1 text-sm hover:bg-gray-100 ${!value ? 'bg-blue-50 text-blue-700' : 'text-amber-600 italic'}`}>
-            Unassigned
-          </button>
-          <div className="border-t border-gray-100 my-1" />
-          {groupedBeds.map((group) => (
-            <div key={group.name}>
-              <div className="px-3 py-0.5 text-xs font-medium text-gray-500 uppercase">{group.name}</div>
-              {group.beds.map((bed) => (
-                <button key={bed.id} onClick={() => { onSelect(bed.id); setOpen(false); }} className={`w-full text-left px-3 py-0.5 text-sm hover:bg-gray-100 ${value === bed.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}>
-                  {bed.name}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+      {open && dropdownPos && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[180px]"
+          style={{ zIndex: Z_INDEX.DROPDOWN, top: dropdownPos.top, left: dropdownPos.left }}
+        >
+          {/* Search input */}
+          <div className="px-2 pb-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Search beds..."
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  setOpen(false);
+                  setFilter('');
+                } else if (e.key === 'Enter') {
+                  e.preventDefault();
+                  // Select first match (unassigned if shown, otherwise first bed)
+                  if (showUnassigned && filteredGroupedBeds.length === 0) {
+                    handleSelect(null);
+                  } else if (filteredGroupedBeds.length > 0 && filteredGroupedBeds[0].beds.length > 0) {
+                    handleSelect(filteredGroupedBeds[0].beds[0].id);
+                  } else if (showUnassigned) {
+                    handleSelect(null);
+                  }
+                }
+              }}
+            />
+          </div>
+          {/* Options */}
+          <div className="max-h-56 overflow-auto">
+            {showUnassigned && (
+              <button onClick={() => handleSelect(null)} className={`w-full text-left px-3 py-1 text-sm hover:bg-gray-100 ${!value ? 'bg-blue-50 text-blue-700' : 'text-amber-600 italic'}`}>
+                Unassigned
+              </button>
+            )}
+            {showUnassigned && filteredGroupedBeds.length > 0 && (
+              <div className="border-t border-gray-100 my-1" />
+            )}
+            {filteredGroupedBeds.map((group) => (
+              <div key={group.name}>
+                <div className="px-3 py-0.5 text-xs font-medium text-gray-500 uppercase">{group.name}</div>
+                {group.beds.map((bed) => (
+                  <button key={bed.id} onClick={() => handleSelect(bed.id)} className={`w-full text-left px-3 py-0.5 text-sm hover:bg-gray-100 ${value === bed.id ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}>
+                    {bed.name}
+                  </button>
+                ))}
+              </div>
+            ))}
+            {!showUnassigned && filteredGroupedBeds.length === 0 && (
+              <div className="px-3 py-2 text-sm text-gray-500 italic">No matches</div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
 
@@ -403,11 +510,15 @@ interface EnrichedPlanting extends Planting {
   category: string;
   identifier: string;
   bedName: string;
+  bedsDisplay: string;  // All beds spanned, e.g. "A1, A2, A3 (12')"
   isUnassigned: boolean;
   isFailed: boolean;
   dtm: number;
   harvestWindow: number;
   method: string;
+  rows: number | null;
+  spacing: number | null;
+  plants: number | null;
   seedSourceDisplay: string;
   ghDate: string | null;
   harvestStart: string | null;
@@ -427,7 +538,6 @@ export default function PlantingsPage() {
     loadPlanById,
     updatePlanting,
     updateCropDates,
-    moveCrop,
     deleteCrop,
   } = usePlanStore();
 
@@ -444,7 +554,7 @@ export default function PlantingsPage() {
   const [sortColumn, setSortColumn] = useState<ColumnId>('fieldStartDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showUnassigned, setShowUnassigned] = useState(true);
+  const [assignmentFilter, setAssignmentFilter] = useState<AssignmentFilter>('all');
   const [showFailed, setShowFailed] = useState(true);
   const [hydrated, setHydrated] = useState(false);
 
@@ -454,6 +564,9 @@ export default function PlantingsPage() {
   // Drag state for column reordering
   const [draggedColumn, setDraggedColumn] = useState<ColumnId | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<ColumnId | null>(null);
+  const dragOverColumnRef = useRef<ColumnId | null>(null); // Track current value to avoid redundant state updates
+  const dragPreviewRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Resize state
   const [resizingColumn, setResizingColumn] = useState<ColumnId | null>(null);
@@ -467,7 +580,13 @@ export default function PlantingsPage() {
       setSortColumn(persisted.sortColumn);
       setSortDirection(persisted.sortDirection);
       setSearchQuery(persisted.searchQuery);
-      setShowUnassigned(persisted.showUnassigned);
+      // Handle migration from old showUnassigned boolean to new assignmentFilter
+      if ('assignmentFilter' in persisted) {
+        setAssignmentFilter(persisted.assignmentFilter);
+      } else if ('showUnassigned' in persisted) {
+        // Migrate old format: showUnassigned=true -> 'all', showUnassigned=false -> 'assigned'
+        setAssignmentFilter((persisted as { showUnassigned: boolean }).showUnassigned ? 'all' : 'assigned');
+      }
       setShowFailed(persisted.showFailed);
       if (persisted.columnOrder) {
         const validOrder = persisted.columnOrder.filter((c): c is ColumnId => ALL_COLUMNS.includes(c as ColumnId));
@@ -487,13 +606,13 @@ export default function PlantingsPage() {
       sortColumn,
       sortDirection,
       searchQuery,
-      showUnassigned,
+      assignmentFilter,
       showFailed,
       columnOrder,
       columnWidths,
       visibleColumns: Array.from(visibleColumns) as ColumnId[],
     });
-  }, [hydrated, sortColumn, sortDirection, searchQuery, showUnassigned, showFailed, columnOrder, columnWidths, visibleColumns]);
+  }, [hydrated, sortColumn, sortDirection, searchQuery, assignmentFilter, showFailed, columnOrder, columnWidths, visibleColumns]);
 
   // Load plan on mount
   useEffect(() => {
@@ -501,6 +620,7 @@ export default function PlantingsPage() {
       loadPlanById(planId).finally(() => setIsLoading(false));
     }
   }, [planId, loadPlanById]);
+
 
   // Lookups
   const bedsLookup = useMemo(() => currentPlan?.beds ?? {}, [currentPlan?.beds]);
@@ -513,6 +633,38 @@ export default function PlantingsPage() {
   const getColumnWidth = useCallback((col: ColumnId) => {
     return columnWidths[col] ?? DEFAULT_WIDTHS[col] ?? 100;
   }, [columnWidths]);
+
+  // Build bed name groups for calculateRowSpan (keyed by row letter, e.g., { A: ['A1', 'A2'], B: ['B1'] })
+  const bedNameGroups = useMemo(() => {
+    const groups: Record<string, string[]> = {};
+    for (const bed of Object.values(bedsLookup)) {
+      const group = bedGroupsLookup[bed.groupId];
+      if (!group) continue;
+      // Extract the letter prefix from bed name (e.g., "A" from "A1")
+      const match = bed.name.match(/^([A-Za-z]+)/);
+      const groupKey = match ? match[1] : group.name;
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(bed.name);
+    }
+    // Sort beds within each group numerically
+    for (const key of Object.keys(groups)) {
+      groups[key].sort((a, b) => {
+        const numA = parseInt(a.replace(/[^0-9]/g, '')) || 0;
+        const numB = parseInt(b.replace(/[^0-9]/g, '')) || 0;
+        return numA - numB;
+      });
+    }
+    return groups;
+  }, [bedsLookup, bedGroupsLookup]);
+
+  // Map bed names to lengths
+  const bedLengths = useMemo(() => {
+    const lengths: Record<string, number> = {};
+    for (const bed of Object.values(bedsLookup)) {
+      lengths[bed.name] = bed.lengthFt;
+    }
+    return lengths;
+  }, [bedsLookup]);
 
   // Enrich plantings with computed data
   const enrichedPlantings = useMemo((): EnrichedPlanting[] => {
@@ -558,24 +710,54 @@ export default function PlantingsPage() {
         }
       }
 
+      // Compute plant count: (bedFeet * 12 / spacing) * rows
+      const rows = config?.rows ?? null;
+      const spacing = config?.spacing ?? null;
+      const plants = rows && spacing && spacing > 0
+        ? Math.round((p.bedFeet * 12 / spacing) * rows)
+        : null;
+
+      // Compute beds display (all beds spanned)
+      let bedsDisplay = '';
+      if (bed?.name) {
+        const { bedSpanInfo } = calculateRowSpan(p.bedFeet, bed.name, bedNameGroups);
+        if (bedSpanInfo.length > 0) {
+          // Format: "A1, A2, A3 (12')" where partial bed shows feet used
+          const parts = bedSpanInfo.map((info, idx) => {
+            const bedLength = bedLengths[info.bed] ?? 50;
+            const isPartial = info.feetUsed < bedLength;
+            // Only show feet on the last bed if it's partial
+            if (idx === bedSpanInfo.length - 1 && isPartial) {
+              return `${info.bed} (${info.feetUsed}')`;
+            }
+            return info.bed;
+          });
+          bedsDisplay = parts.join(', ');
+        }
+      }
+
       return {
         ...p,
         cropName: config?.crop ?? p.configId,
         category: config?.category ?? '',
         identifier: config?.identifier ?? p.configId,
         bedName: bed?.name ?? '',
+        bedsDisplay,
         isUnassigned: !p.startBed,
         isFailed: p.actuals?.failed ?? false,
         dtm,
         harvestWindow,
         method: method === 'transplant' ? 'TP' : method === 'direct-seed' ? 'DS' : 'P',
+        rows,
+        spacing,
+        plants,
         seedSourceDisplay,
         ghDate,
         harvestStart,
         harvestEnd,
       };
     });
-  }, [currentPlan?.plantings, catalogLookup, bedsLookup, varietiesLookup, seedMixesLookup]);
+  }, [currentPlan?.plantings, catalogLookup, bedsLookup, bedNameGroups, bedLengths, varietiesLookup, seedMixesLookup]);
 
   // Display columns (visible and ordered)
   const displayColumns = useMemo(() => {
@@ -586,7 +768,11 @@ export default function PlantingsPage() {
   const displayPlantings = useMemo(() => {
     let result = enrichedPlantings;
 
-    if (!showUnassigned) result = result.filter((p) => !p.isUnassigned);
+    // Apply assignment filter
+    if (assignmentFilter === 'assigned') result = result.filter((p) => !p.isUnassigned);
+    else if (assignmentFilter === 'unassigned') result = result.filter((p) => p.isUnassigned);
+    // 'all' shows everything
+
     if (!showFailed) result = result.filter((p) => !p.isFailed);
 
     if (searchQuery) {
@@ -624,7 +810,7 @@ export default function PlantingsPage() {
     });
 
     return result;
-  }, [enrichedPlantings, showUnassigned, showFailed, searchQuery, sortColumn, sortDirection]);
+  }, [enrichedPlantings, assignmentFilter, showFailed, searchQuery, sortColumn, sortDirection]);
 
   // Handlers
   const handleSort = (col: ColumnId) => {
@@ -647,11 +833,11 @@ export default function PlantingsPage() {
 
   const handleBedChange = useCallback(async (plantingId: string, newBedId: string | null) => {
     try {
-      await moveCrop(plantingId, newBedId ?? '');
+      await updatePlanting(plantingId, { startBed: newBedId });
     } catch {
       setToast({ message: 'Failed to update bed', type: 'error' });
     }
-  }, [moveCrop]);
+  }, [updatePlanting]);
 
   const handleFeetChange = useCallback(async (plantingId: string, newFeet: string) => {
     const feet = parseInt(newFeet, 10);
@@ -739,18 +925,115 @@ export default function PlantingsPage() {
     });
   };
 
+  // Auto-scroll while dragging near edges
+  const SCROLL_EDGE_SIZE = 200; // pixels from edge to trigger scroll
+  const SCROLL_SPEED = 8; // pixels per frame
+  const scrollDirectionRef = useRef<'left' | 'right' | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+
+  const scrollLoop = useCallback(() => {
+    const container = scrollContainerRef.current;
+    const direction = scrollDirectionRef.current;
+    if (!container || !direction) return;
+
+    container.scrollLeft += direction === 'right' ? SCROLL_SPEED : -SCROLL_SPEED;
+    rafIdRef.current = requestAnimationFrame(scrollLoop);
+  }, []);
+
+  const stopAutoScroll = useCallback(() => {
+    scrollDirectionRef.current = null;
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+  }, []);
+
+  const startAutoScroll = useCallback((direction: 'left' | 'right') => {
+    if (scrollDirectionRef.current === direction) return; // Already scrolling this direction
+    scrollDirectionRef.current = direction;
+    if (!rafIdRef.current) {
+      rafIdRef.current = requestAnimationFrame(scrollLoop);
+    }
+  }, [scrollLoop]);
+
+  // Cleanup auto-scroll on unmount
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
+
   // Column drag handlers
   const handleDragStart = (e: React.DragEvent, col: ColumnId) => {
     setDraggedColumn(col);
     e.dataTransfer.effectAllowed = 'move';
+    // Hide default drag image by using a transparent 1x1 pixel
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(emptyImg, 0, 0);
+    // Set initial preview position using transform (GPU-accelerated, no reflow)
+    if (dragPreviewRef.current) {
+      dragPreviewRef.current.style.transform = `translate(${e.clientX + 12}px, ${e.clientY - 16}px) rotate(-2deg)`;
+    }
   };
+
+  // Use document dragover for smooth drag preview tracking and edge scrolling
+  useEffect(() => {
+    if (!draggedColumn) return;
+    const handleDocumentDragOver = (e: DragEvent) => {
+      // Update drag preview position
+      if (dragPreviewRef.current) {
+        dragPreviewRef.current.style.transform = `translate(${e.clientX + 12}px, ${e.clientY - 16}px) rotate(-2deg)`;
+      }
+
+      // Auto-scroll when near edges
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const mouseX = e.clientX;
+      const viewportWidth = window.innerWidth;
+
+      // Calculate left edge: right edge of frozen columns
+      // Frozen columns: checkbox (32px) + crop + id + bed
+      const frozenWidth = 32 + getColumnWidth('crop') + getColumnWidth('id') + getColumnWidth('bed');
+
+      // Scroll left when within 200px of the frozen columns edge
+      // Scroll right when within 200px of the right edge of the screen
+      if (mouseX < frozenWidth + SCROLL_EDGE_SIZE) {
+        startAutoScroll('left');
+      } else if (mouseX > viewportWidth - SCROLL_EDGE_SIZE) {
+        startAutoScroll('right');
+      } else {
+        stopAutoScroll();
+      }
+    };
+    document.addEventListener('dragover', handleDocumentDragOver);
+    return () => {
+      document.removeEventListener('dragover', handleDocumentDragOver);
+      stopAutoScroll();
+    };
+  }, [draggedColumn, startAutoScroll, stopAutoScroll, getColumnWidth]);
+
   const handleDragOver = (e: React.DragEvent, col: ColumnId) => {
     e.preventDefault();
-    if (draggedColumn && draggedColumn !== col) setDragOverColumn(col);
+    // Only update state if the value actually changed (avoids redundant re-renders)
+    if (draggedColumn && draggedColumn !== col && dragOverColumnRef.current !== col) {
+      dragOverColumnRef.current = col;
+      setDragOverColumn(col);
+    }
+    // Auto-scroll is handled by the document-level dragover listener
   };
-  const handleDragLeave = () => setDragOverColumn(null);
+
+  const handleDragLeave = () => {
+    // Don't clear immediately - let handleDragOver on next column handle it
+    // This prevents flicker when moving between columns
+  };
+
   const handleDrop = (e: React.DragEvent, targetCol: ColumnId) => {
     e.preventDefault();
+    stopAutoScroll();
     if (draggedColumn && draggedColumn !== targetCol) {
       const newOrder = [...columnOrder];
       const draggedIdx = newOrder.indexOf(draggedColumn);
@@ -763,8 +1046,32 @@ export default function PlantingsPage() {
     }
     setDraggedColumn(null);
     setDragOverColumn(null);
+    dragOverColumnRef.current = null;
   };
-  const handleDragEnd = () => { setDraggedColumn(null); setDragOverColumn(null); };
+
+  const handleDragEnd = () => {
+    stopAutoScroll();
+    setDraggedColumn(null);
+    setDragOverColumn(null);
+    dragOverColumnRef.current = null;
+  };
+
+  // Set grabbing cursor on body during drag to prevent browser resize cursor at edges
+  useEffect(() => {
+    if (draggedColumn) {
+      document.body.style.cursor = 'grabbing';
+      // Also add !important via a style element to override browser defaults
+      const style = document.createElement('style');
+      style.id = 'drag-cursor-override';
+      style.textContent = '* { cursor: grabbing !important; }';
+      document.head.appendChild(style);
+      return () => {
+        document.body.style.cursor = '';
+        const existing = document.getElementById('drag-cursor-override');
+        if (existing) existing.remove();
+      };
+    }
+  }, [draggedColumn]);
 
   // Column resize handlers
   const handleResizeStart = (e: React.MouseEvent, col: ColumnId) => {
@@ -836,10 +1143,18 @@ export default function PlantingsPage() {
             className="text-right"
           />
         );
+      case 'beds':
+        return <span className="text-gray-600 truncate" title={planting.bedsDisplay}>{planting.bedsDisplay || '—'}</span>;
       case 'dtm':
         return <span className="text-gray-600">{planting.dtm || '—'}</span>;
       case 'harvestWindow':
         return <span className="text-gray-600">{planting.harvestWindow || '—'}</span>;
+      case 'rows':
+        return <span className="text-gray-600 text-right">{planting.rows ?? '—'}</span>;
+      case 'spacing':
+        return <span className="text-gray-600 text-right">{planting.spacing ? `${planting.spacing}"` : '—'}</span>;
+      case 'plants':
+        return <span className="text-gray-600 text-right">{planting.plants?.toLocaleString() ?? '—'}</span>;
       case 'method':
         return (
           <span className={`px-1.5 py-0.5 text-xs rounded ${
@@ -966,10 +1281,27 @@ export default function PlantingsPage() {
           className="w-64 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          <input type="checkbox" checked={showUnassigned} onChange={(e) => setShowUnassigned(e.target.checked)} className="rounded border-gray-300 text-blue-600" />
-          Unassigned ({unassignedCount})
-        </label>
+        <div className="flex items-center gap-1 text-sm">
+          <span className="text-gray-500 mr-1">Show:</span>
+          <button
+            onClick={() => setAssignmentFilter('all')}
+            className={`px-2 py-1 rounded ${assignmentFilter === 'all' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setAssignmentFilter('assigned')}
+            className={`px-2 py-1 rounded ${assignmentFilter === 'assigned' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            Assigned ({enrichedPlantings.length - unassignedCount})
+          </button>
+          <button
+            onClick={() => setAssignmentFilter('unassigned')}
+            className={`px-2 py-1 rounded ${assignmentFilter === 'unassigned' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            Unassigned ({unassignedCount})
+          </button>
+        </div>
 
         <label className="flex items-center gap-2 text-sm text-gray-600">
           <input type="checkbox" checked={showFailed} onChange={(e) => setShowFailed(e.target.checked)} className="rounded border-gray-300 text-blue-600" />
@@ -997,7 +1329,7 @@ export default function PlantingsPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-auto">
         <table className="border-collapse text-sm" style={{ minWidth: 'max-content' }}>
           <thead className="bg-gray-100 sticky top-0" style={{ zIndex: 20 }}>
             <tr>
@@ -1032,7 +1364,7 @@ export default function PlantingsPage() {
               <th
                 onClick={() => handleSort('id')}
                 style={{ width: getColumnWidth('id'), minWidth: getColumnWidth('id'), left: 32 + getColumnWidth('crop'), zIndex: 21 }}
-                className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase border-b border-gray-200 border-r border-r-gray-300 cursor-pointer hover:bg-gray-200 select-none group sticky bg-gray-100"
+                className="px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase border-b border-gray-200 cursor-pointer hover:bg-gray-200 select-none group sticky bg-gray-100"
               >
                 <div className="flex items-center gap-1">
                   <span className="truncate flex-1">{COLUMN_HEADERS['id']}</span>
@@ -1046,38 +1378,65 @@ export default function PlantingsPage() {
                   className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400 opacity-0 group-hover:opacity-100"
                 />
               </th>
+              {/* Bed column - sticky (editable) */}
+              <th
+                onClick={() => handleSort('bed')}
+                style={{ width: getColumnWidth('bed'), minWidth: getColumnWidth('bed'), left: 32 + getColumnWidth('crop') + getColumnWidth('id'), zIndex: 21 }}
+                className="px-2 py-2 text-left text-xs font-medium text-gray-300 uppercase border-b border-gray-200 border-r border-r-gray-300 cursor-pointer hover:bg-gray-700 select-none group sticky bg-gray-600"
+              >
+                <div className="flex items-center gap-1">
+                  <span className="truncate flex-1">{COLUMN_HEADERS['bed']}</span>
+                  <span className="flex-shrink-0">
+                    {sortColumn === 'bed' ? (sortDirection === 'asc' ? '↑' : '↓') : <span className="text-gray-500">↕</span>}
+                  </span>
+                </div>
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, 'bed')}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400 opacity-0 group-hover:opacity-100"
+                />
+              </th>
               {/* Scrollable columns */}
-              {displayColumns.filter(col => col !== 'crop' && col !== 'id').map((col) => (
-                <th
-                  key={col}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, col)}
-                  onDragOver={(e) => handleDragOver(e, col)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, col)}
-                  onDragEnd={handleDragEnd}
-                  onClick={() => handleSort(col)}
-                  style={{ width: getColumnWidth(col), minWidth: getColumnWidth(col) }}
-                  className={`relative px-2 py-2 text-left text-xs font-medium text-gray-600 uppercase border-b border-gray-200 select-none group ${
-                    SORTABLE_COLUMNS.has(col) ? 'cursor-pointer hover:bg-gray-200' : ''
-                  } ${dragOverColumn === col ? 'bg-blue-100 border-l-2 border-l-blue-500' : ''} ${draggedColumn === col ? 'opacity-50' : ''}`}
-                >
-                  <div className="flex items-center gap-1">
-                    <span className="truncate flex-1">{COLUMN_HEADERS[col]}</span>
-                    {SORTABLE_COLUMNS.has(col) && (
-                      <span className="flex-shrink-0">
-                        {sortColumn === col ? (sortDirection === 'asc' ? '↑' : '↓') : <span className="text-gray-300">↕</span>}
-                      </span>
-                    )}
-                  </div>
-                  {/* Resize handle */}
-                  <div
-                    onMouseDown={(e) => handleResizeStart(e, col)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400 opacity-0 group-hover:opacity-100"
-                  />
-                </th>
-              ))}
+              {displayColumns.filter(col => !FROZEN_COLUMNS.has(col)).map((col) => {
+                const isEditable = EDITABLE_COLUMNS.has(col);
+                return (
+                  <th
+                    key={col}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, col)}
+                    onDragOver={(e) => handleDragOver(e, col)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, col)}
+                    onDragEnd={handleDragEnd}
+                    onClick={() => handleSort(col)}
+                    style={{ width: getColumnWidth(col), minWidth: getColumnWidth(col) }}
+                    className={`relative px-2 py-2 text-left text-xs font-medium uppercase border-b border-gray-200 select-none group ${
+                      isEditable ? 'bg-gray-600 text-gray-300' : 'text-gray-600'
+                    } ${
+                      SORTABLE_COLUMNS.has(col) ? (isEditable ? 'cursor-pointer hover:bg-gray-700' : 'cursor-pointer hover:bg-gray-200') : ''
+                    } ${
+                      dragOverColumn === col ? 'bg-blue-100 shadow-[inset_2px_0_0_0_#3b82f6]' : ''
+                    } ${
+                      draggedColumn === col ? 'opacity-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span className="truncate flex-1">{COLUMN_HEADERS[col]}</span>
+                      {SORTABLE_COLUMNS.has(col) && (
+                        <span className="flex-shrink-0">
+                          {sortColumn === col ? (sortDirection === 'asc' ? '↑' : '↓') : <span className={isEditable ? 'text-gray-500' : 'text-gray-300'}>↕</span>}
+                        </span>
+                      )}
+                    </div>
+                    {/* Resize handle */}
+                    <div
+                      onMouseDown={(e) => handleResizeStart(e, col)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400 opacity-0 group-hover:opacity-100"
+                    />
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody className="bg-white">
@@ -1094,11 +1453,15 @@ export default function PlantingsPage() {
                     {renderCellValue(planting, 'crop')}
                   </td>
                   {/* ID - sticky */}
-                  <td className={`px-2 py-1 sticky ${rowBg} border-r border-r-gray-200`} style={{ left: 32 + getColumnWidth('crop'), width: getColumnWidth('id'), minWidth: getColumnWidth('id') }}>
+                  <td className={`px-2 py-1 sticky ${rowBg}`} style={{ left: 32 + getColumnWidth('crop'), width: getColumnWidth('id'), minWidth: getColumnWidth('id') }}>
                     {renderCellValue(planting, 'id')}
                   </td>
+                  {/* Bed - sticky */}
+                  <td className={`px-2 py-1 sticky ${rowBg} border-r border-r-gray-200`} style={{ left: 32 + getColumnWidth('crop') + getColumnWidth('id'), width: getColumnWidth('bed'), minWidth: getColumnWidth('bed') }}>
+                    {renderCellValue(planting, 'bed')}
+                  </td>
                   {/* Scrollable columns */}
-                  {displayColumns.filter(col => col !== 'crop' && col !== 'id').map((col) => (
+                  {displayColumns.filter(col => !FROZEN_COLUMNS.has(col)).map((col) => (
                     <td key={col} className="px-2 py-1" style={{ width: getColumnWidth(col), minWidth: getColumnWidth(col) }}>
                       {renderCellValue(planting, col)}
                     </td>
@@ -1133,6 +1496,24 @@ export default function PlantingsPage() {
 
       {/* Resize overlay */}
       {resizingColumn && <div className="fixed inset-0 cursor-col-resize" style={{ zIndex: Z_INDEX.RESIZE_OVERLAY ?? 9999 }} />}
+
+
+      {/* Drag preview - positioned via transform for GPU-accelerated compositing */}
+      {draggedColumn && createPortal(
+        <div
+          ref={dragPreviewRef}
+          className="fixed pointer-events-none px-3 py-2 bg-white/90 border border-blue-400 rounded shadow-lg text-xs font-medium text-gray-700 uppercase will-change-transform"
+          style={{
+            left: 0,
+            top: 0,
+            zIndex: Z_INDEX.DROPDOWN + 10,
+            minWidth: getColumnWidth(draggedColumn),
+          }}
+        >
+          {COLUMN_HEADERS[draggedColumn]}
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
