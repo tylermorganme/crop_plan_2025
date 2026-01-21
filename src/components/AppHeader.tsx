@@ -60,6 +60,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   // Determine which tab is active
   const isExplorerActive = pathname === '/';
   const isTimelineActive = pathname.startsWith('/timeline/');
+  const isPlantingsActive = pathname.startsWith('/plantings/');
   const isBedsActive = pathname.startsWith('/beds/');
   const isOverviewActive = pathname.startsWith('/overview/');
   const isReportsActive = pathname.startsWith('/reports/');
@@ -69,8 +70,12 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const isProductsActive = pathname === '/products';
   const isMarketsActive = pathname === '/markets';
 
+  // Config dropdown is active if any of its sub-pages are active
+  const isConfigActive = isBedsActive || isVarietiesActive || isSeedMixesActive || isProductsActive || isMarketsActive || isSettingsActive;
+
   // Links - go to active plan's views
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
+  const plantingsHref = activePlanId ? `/plantings/${activePlanId}` : '/plans';
   const bedsHref = activePlanId ? `/beds/${activePlanId}` : '/plans';
   const overviewHref = activePlanId ? `/overview/${activePlanId}` : '/plans';
   const reportsHref = activePlanId ? `/reports/${activePlanId}` : '/plans';
@@ -89,7 +94,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           Crop Planner
         </Link>
 
-        {/* View Tabs - plan views when plan selected, global views always */}
+        {/* View Tabs - plan views when plan selected */}
         <nav className="flex items-center gap-1">
           {/* Plan-specific tabs - only show when a plan is selected */}
           {activePlanId && (
@@ -115,14 +120,14 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                 Timeline
               </Link>
               <Link
-                href={bedsHref}
+                href={plantingsHref}
                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  isBedsActive
+                  isPlantingsActive
                     ? 'bg-blue-100 text-blue-700'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                 }`}
               >
-                Beds
+                Plantings
               </Link>
               <Link
                 href={overviewHref}
@@ -167,63 +172,87 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                   </div>
                 </div>
               </div>
-              <Link
-                href={settingsHref}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  isSettingsActive
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                Settings
-              </Link>
             </>
           )}
 
-          {/* Separator */}
-          <div className="w-px h-5 bg-gray-300 mx-1" />
-
-          {/* Global pages - always visible */}
-          <Link
-            href="/varieties"
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              isVarietiesActive
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            Varieties
-          </Link>
-          <Link
-            href="/seed-mixes"
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              isSeedMixesActive
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            Mixes
-          </Link>
-          <Link
-            href="/products"
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              isProductsActive
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            Products
-          </Link>
-          <Link
-            href="/markets"
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              isMarketsActive
-                ? 'bg-blue-100 text-blue-700'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            Markets
-          </Link>
+          {/* Config dropdown - always visible */}
+          <div className="relative group">
+            <button
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors inline-flex items-center gap-1 ${
+                isConfigActive
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              Config
+              <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {/* Dropdown menu */}
+            <div className="absolute left-0 top-full pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150" style={{ zIndex: Z_INDEX.DROPDOWN }}>
+              <div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[140px]">
+                {activePlanId && (
+                  <>
+                    <Link
+                      href={bedsHref}
+                      className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
+                        isBedsActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                      }`}
+                    >
+                      Beds
+                    </Link>
+                    <div className="border-t border-gray-100 my-1" />
+                  </>
+                )}
+                <Link
+                  href="/varieties"
+                  className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
+                    isVarietiesActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                  }`}
+                >
+                  Varieties
+                </Link>
+                <Link
+                  href="/seed-mixes"
+                  className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
+                    isSeedMixesActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                  }`}
+                >
+                  Seed Mixes
+                </Link>
+                <Link
+                  href="/products"
+                  className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
+                    isProductsActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                  }`}
+                >
+                  Products
+                </Link>
+                <Link
+                  href="/markets"
+                  className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
+                    isMarketsActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                  }`}
+                >
+                  Markets
+                </Link>
+                {activePlanId && (
+                  <>
+                    <div className="border-t border-gray-100 my-1" />
+                    <Link
+                      href={settingsHref}
+                      className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
+                        isSettingsActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                      }`}
+                    >
+                      Settings
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </nav>
 
         {/* Spacer */}
