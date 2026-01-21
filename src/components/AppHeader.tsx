@@ -89,7 +89,8 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
 
         {/* View Tabs - plan views when plan selected, global views always */}
         <nav className="flex items-center gap-1">
-          {activePlanId ? (
+          {/* Plan-specific tabs - only show when a plan is selected */}
+          {activePlanId && (
             <>
               <Link
                 href="/"
@@ -165,10 +166,6 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                 </div>
               </div>
             </>
-          ) : (
-            <span className="px-3 py-1.5 text-sm text-gray-500">
-              Select a plan to get started
-            </span>
           )}
 
           {/* Separator */}

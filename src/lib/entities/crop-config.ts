@@ -1147,14 +1147,28 @@ export function createBlankConfig(): CropConfig {
 }
 
 /**
+ * Generate a suggested name for a copied config.
+ * If name ends with (N), increments to (N+1). Otherwise appends (1).
+ */
+function generateCopyName(name: string): string {
+  const match = name.match(/^(.+?)\s*\((\d+)\)$/);
+  if (match) {
+    const base = match[1];
+    const num = parseInt(match[2], 10);
+    return `${base} (${num + 1})`;
+  }
+  return `${name} (1)`;
+}
+
+/**
  * Create a copy of an existing CropConfig for modification.
- * Generates a new ID and clears the identifier (user must provide a new one).
+ * Generates a new ID and suggests a new identifier with (N) suffix.
  */
 export function copyConfig(source: CropConfig): CropConfig {
   return {
     ...source,
     id: generateConfigId(),
-    identifier: '', // User must provide a unique identifier
+    identifier: generateCopyName(source.identifier),
   };
 }
 

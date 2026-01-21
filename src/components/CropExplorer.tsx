@@ -112,8 +112,7 @@ function getColumnBgClass(col: string, isHeader: boolean = false): string {
 }
 
 interface CropExplorerProps {
-  crops: Crop[];
-  filterOptions: {
+  filterOptions?: {
     crops: string[];
     categories: string[];
     growingStructures: string[];
@@ -231,7 +230,7 @@ function createPlantingFromConfig(crop: Crop): Planting {
   });
 }
 
-export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
+export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCropId, setSelectedCropId] = useState<string | null>(null);
@@ -291,15 +290,17 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
   // Dynamic filters keyed by column name
   const [columnFilters, setColumnFilters] = useState<Record<string, FilterValue>>({});
 
-  // Use plan's catalog when active, otherwise fall back to master list (crops prop)
+  // Check if a plan is properly loaded
+  const isPlanLoaded = activePlanId && currentPlanId === activePlanId && planCatalog.length > 0;
+
+  // Only use plan's catalog - never fall back to template data
   const baseCrops = useMemo(() => {
-    // Check if the store has the active plan loaded
-    if (activePlanId && currentPlanId === activePlanId && planCatalog.length > 0) {
+    if (isPlanLoaded) {
       return planCatalog as Crop[];
     }
-    // No active plan or catalog not loaded yet - use master list as fallback
-    return crops;
-  }, [activePlanId, currentPlanId, planCatalog, crops]);
+    // No plan loaded - return empty array
+    return [];
+  }, [isPlanLoaded, planCatalog]);
 
   // Extend type to include computed revenue field
   type CropWithRevenue = Crop & { revenuePerBed?: number | null };
@@ -387,6 +388,15 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
 
   // Show/hide deprecated crops toggle (default false, persisted)
   const [showDeprecated, setShowDeprecated] = useState(false);
+
+  // Drag state for column reordering
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+
+  // Resize state for columns
+  const [resizingColumn, setResizingColumn] = useState<string | null>(null);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartWidth, setResizeStartWidth] = useState(0);
 
   // Resize state for filter pane
   const [resizingPane, setResizingPane] = useState(false);
@@ -623,6 +633,66 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
     filteredColumns.forEach(col => next.delete(col));
     setVisibleColumns(next);
   };
+
+  // Column drag handlers
+  const handleDragStart = (e: React.DragEvent, col: string) => {
+    setDraggedColumn(col);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', col);
+  };
+
+  const handleDragOver = (e: React.DragEvent, col: string) => {
+    e.preventDefault();
+    if (draggedColumn && draggedColumn !== col) setDragOverColumn(col);
+  };
+
+  const handleDragLeave = () => setDragOverColumn(null);
+
+  const handleDrop = (e: React.DragEvent, targetCol: string) => {
+    e.preventDefault();
+    if (draggedColumn && draggedColumn !== targetCol) {
+      const newOrder = [...columnOrder];
+      const draggedIdx = newOrder.indexOf(draggedColumn);
+      const targetIdx = newOrder.indexOf(targetCol);
+      if (draggedIdx !== -1 && targetIdx !== -1) {
+        newOrder.splice(draggedIdx, 1);
+        newOrder.splice(targetIdx, 0, draggedColumn);
+        setColumnOrder(newOrder);
+      }
+    }
+    setDraggedColumn(null);
+    setDragOverColumn(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedColumn(null);
+    setDragOverColumn(null);
+  };
+
+  // Column resize handlers
+  const handleResizeStart = (e: React.MouseEvent, col: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingColumn(col);
+    setResizeStartX(e.clientX);
+    setResizeStartWidth(getColumnWidth(col));
+  };
+
+  useEffect(() => {
+    if (!resizingColumn) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientX - resizeStartX;
+      const newWidth = Math.max(MIN_COL_WIDTH, resizeStartWidth + delta);
+      setColumnWidths(prev => ({ ...prev, [resizingColumn]: newWidth }));
+    };
+    const handleMouseUp = () => setResizingColumn(null);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [resizingColumn, resizeStartX, resizeStartWidth]);
 
   // Filter pane resize handlers
   const handlePaneResizeStart = (e: React.MouseEvent) => {
@@ -1303,6 +1373,12 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                   return (
                     <div
                       key={col}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, col)}
+                      onDragOver={(e) => handleDragOver(e, col)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, col)}
+                      onDragEnd={handleDragEnd}
                       style={{
                         width: getColumnWidth(col),
                         minWidth: getColumnWidth(col),
@@ -1312,9 +1388,9 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                           zIndex: 2,
                         }),
                       }}
-                      className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-pointer select-none flex items-center ${
-                        getColumnBgClass(col, true)
-                      } ${isFrozen ? 'bg-gray-100' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
+                      className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
+                        dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : getColumnBgClass(col, true)
+                      } ${draggedColumn === col ? 'opacity-50' : ''} ${isFrozen ? 'bg-gray-100' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
                       onClick={() => handleSort(col)}
                     >
                       <span className="flex-1 truncate">{formatColumnHeader(col)}</span>
@@ -1330,6 +1406,13 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
                       >
                         ×
                       </button>
+                      {/* Resize handle */}
+                      <div
+                        onMouseDown={(e) => handleResizeStart(e, col)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-green-400 group-hover:bg-gray-300"
+                        style={{ marginRight: -1 }}
+                      />
                     </div>
                   );
                 })}
@@ -1347,6 +1430,16 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
             {catalogLoading ? (
               <div className="flex items-center justify-center text-gray-600 h-full">
                 <span className="animate-pulse">Loading catalog...</span>
+              </div>
+            ) : !isPlanLoaded ? (
+              <div className="flex flex-col items-center justify-center text-gray-600 h-full gap-4">
+                <p>Select a plan to view crop configurations</p>
+                <button
+                  onClick={() => router.push('/plans')}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Go to Plans
+                </button>
               </div>
             ) : sortedCrops.length === 0 ? (
               <div className="flex items-center justify-center text-gray-600 h-full">
@@ -1819,6 +1912,7 @@ export default function CropExplorer({ crops, allHeaders }: CropExplorerProps) {
       )}
 
       {/* Resize overlays */}
+      {resizingColumn && <div className="fixed inset-0 cursor-col-resize" style={{ zIndex: Z_INDEX.RESIZE_OVERLAY }} />}
       {resizingPane && <div className="fixed inset-0 cursor-col-resize" style={{ zIndex: Z_INDEX.RESIZE_OVERLAY }} />}
     </div>
   );
