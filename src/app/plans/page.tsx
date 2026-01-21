@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { parseISO } from 'date-fns';
 import {
   usePlanStore,
   deletePlanFromLibrary,
@@ -77,7 +78,7 @@ export default function PlansPage() {
     const yearCounts = new Map<number, number>();
     for (const crop of timelineCrops) {
       if (crop.startDate) {
-        const year = new Date(crop.startDate).getFullYear();
+        const year = parseISO(crop.startDate).getFullYear();
         yearCounts.set(year, (yearCounts.get(year) || 0) + 1);
       }
     }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { parseISO } from 'date-fns';
 import {
   usePlanStore,
   loadPlanFromLibrary,
@@ -79,7 +80,7 @@ interface BedGroupSection {
  * Jan 1 = 0%, Dec 31 = 100%
  */
 function dateToYearPercent(dateStr: string, year: number): number {
-  const date = new Date(dateStr);
+  const date = parseISO(dateStr);
   const yearStart = new Date(year, 0, 1);
   const yearEnd = new Date(year, 11, 31, 23, 59, 59);
   const yearDuration = yearEnd.getTime() - yearStart.getTime();
@@ -488,7 +489,7 @@ export default function OverviewPage() {
     const yearCounts = new Map<number, number>();
     for (const crop of crops) {
       if (crop.startDate) {
-        const year = new Date(crop.startDate).getFullYear();
+        const year = parseISO(crop.startDate).getFullYear();
         yearCounts.set(year, (yearCounts.get(year) || 0) + 1);
       }
     }

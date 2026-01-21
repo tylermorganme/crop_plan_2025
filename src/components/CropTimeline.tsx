@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from 'date-fns';
 import { getBedGroup, getBedNumber, getBedLengthFromId } from '@/lib/plan-types';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import { calculateCropFields, calculateDaysInCells, calculateSeedToHarvest, calculateHarvestWindow } from '@/lib/entities/crop-config';
@@ -363,12 +363,12 @@ function getColorForCategory(category?: string): { bg: string; text: string } {
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return '?';
-  const d = new Date(dateStr);
+  const d = parseISO(dateStr);
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 function parseDate(dateStr: string): Date {
-  return new Date(dateStr);
+  return parseISO(dateStr);
 }
 
 
@@ -781,9 +781,11 @@ export default function CropTimeline({
 
     while (current <= timelineEnd) {
       const monthStart = new Date(current);
-      const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+      // Get midnight of the first day of NEXT month (end boundary, exclusive)
+      const nextMonthStart = new Date(current.getFullYear(), current.getMonth() + 1, 1);
       const startMs = monthStart.getTime() - timelineStart.getTime();
-      const endMs = Math.min(monthEnd.getTime(), timelineEnd.getTime()) - timelineStart.getTime();
+      // Include the full last day by using nextMonthStart as the end boundary
+      const endMs = Math.min(nextMonthStart.getTime(), timelineEnd.getTime() + msPerDay) - timelineStart.getTime();
       const days = (endMs - startMs) / msPerDay;
 
       headers.push({
@@ -927,7 +929,7 @@ export default function CropTimeline({
 
   // Helper to offset a date by days
   const offsetDate = useCallback((dateStr: string, days: number): string => {
-    const date = new Date(dateStr);
+    const date = parseISO(dateStr);
     date.setDate(date.getDate() + days);
     return date.toISOString().split('T')[0];
   }, []);
@@ -2314,12 +2316,12 @@ export default function CropTimeline({
 
                   {/* Dates - Seeding, Field (editable), Remove */}
                   {(() => {
-                    const fieldDate = new Date(crop.startDate);
+                    const fieldDate = parseISO(crop.startDate);
                     const daysInCells = effectiveValues?.daysInCells || 0;
                     const seedingDate = daysInCells > 0
                       ? new Date(fieldDate.getTime() - daysInCells * 24 * 60 * 60 * 1000)
                       : fieldDate;
-                    const removeDate = new Date(crop.endDate);
+                    const removeDate = parseISO(crop.endDate);
 
                     // Format date for input (YYYY-MM-DD)
                     const formatForInput = (d: Date) => d.toISOString().split('T')[0];
@@ -2340,8 +2342,8 @@ export default function CropTimeline({
                                 const newFieldDate = e.target.value;
                                 if (newFieldDate) {
                                   // End date shifts by the same delta
-                                  const oldField = new Date(crop.startDate);
-                                  const newField = new Date(newFieldDate + 'T00:00:00');
+                                  const oldField = parseISO(crop.startDate);
+                                  const newField = parseISO(newFieldDate);
                                   const deltaDays = Math.round((newField.getTime() - oldField.getTime()) / (24 * 60 * 60 * 1000));
                                   const newEnd = new Date(removeDate.getTime() + deltaDays * 24 * 60 * 60 * 1000);
                                   onCropDateChange(crop.groupId, newFieldDate + 'T00:00:00', newEnd.toISOString().split('T')[0] + 'T00:00:00');
