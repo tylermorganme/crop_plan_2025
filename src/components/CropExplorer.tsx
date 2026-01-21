@@ -1525,7 +1525,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                       >
                         <button
                           onClick={(e) => handleQuickAdd(crop, e)}
-                          className="w-6 h-6 flex items-center justify-center rounded bg-blue-100 text-blue-600 opacity-0 group-hover:opacity-100 hover:bg-blue-200 transition-opacity text-sm font-medium"
+                          className="w-6 h-6 flex items-center justify-center rounded bg-blue-100 text-blue-600 hover:bg-blue-200 text-sm font-medium"
                           title={`Add ${crop.crop} to plan`}
                         >
                           +
@@ -1572,7 +1572,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 className={`shrink-0 transition-colors ${
                                   crop.isFavorite
                                     ? 'text-amber-400 hover:text-amber-500'
-                                    : 'text-gray-300 hover:text-amber-400 opacity-0 group-hover:opacity-100'
+                                    : 'text-gray-300 hover:text-gray-500'
                                 }`}
                                 title={crop.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                               >
