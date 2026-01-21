@@ -1149,6 +1149,37 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     setShowCreateConfig(true);
   }, [activePlanId, selectedCropIds, sortedCrops]);
 
+  // Handle bulk favorite (add all selected to favorites)
+  const handleBulkFavorite = useCallback(async () => {
+    if (!activePlanId) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'Select an active plan first to favorite configs',
+      });
+      return;
+    }
+    const selectedConfigs = sortedCrops.filter(c => selectedCropIds.has(c.id));
+    const unfavoritedConfigs = selectedConfigs.filter(c => !c.isFavorite);
+
+    if (unfavoritedConfigs.length === 0) {
+      setAddToPlanMessage({
+        type: 'success',
+        text: 'All selected configs are already favorites',
+      });
+      return;
+    }
+
+    for (const config of unfavoritedConfigs) {
+      await toggleConfigFavorite(config.identifier);
+    }
+
+    setAddToPlanMessage({
+      type: 'success',
+      text: `Added ${unfavoritedConfigs.length} config${unfavoritedConfigs.length !== 1 ? 's' : ''} to favorites`,
+    });
+    deselectAll();
+  }, [activePlanId, selectedCropIds, sortedCrops, toggleConfigFavorite, deselectAll]);
+
   return (
     <div className="flex h-full">
       {/* Collapsible Filter Pane */}
@@ -1822,6 +1853,12 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
             className="px-3 py-1.5 text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded transition-colors"
           >
             Add to Plan
+          </button>
+          <button
+            onClick={handleBulkFavorite}
+            className="px-3 py-1.5 text-sm font-medium bg-amber-500 hover:bg-amber-600 rounded transition-colors"
+          >
+            ★ Favorite
           </button>
           {selectedCropIds.size === 1 && (
             <button
