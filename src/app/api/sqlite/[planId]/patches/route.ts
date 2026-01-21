@@ -11,6 +11,7 @@ import {
   appendPatch,
   getPatches,
   clearPatches,
+  clearRedoStack,
   planExists,
   toStoredPatch,
   fromStoredPatch,
@@ -56,6 +57,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (!entry || !entry.patches || !entry.inversePatches) {
       return NextResponse.json({ error: 'Invalid patch data' }, { status: 400 });
     }
+
+    // Clear redo stack when new mutation is made (invalidates redo history)
+    clearRedoStack(planId);
 
     const id = appendPatch(planId, toStoredPatch(entry));
     return NextResponse.json({ ok: true, id });

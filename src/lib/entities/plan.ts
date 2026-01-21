@@ -283,34 +283,3 @@ export interface PlanFile {
   /** The plan data */
   plan: Plan;
 }
-
-/** Stash entry for safety saves before destructive operations */
-export interface StashEntry {
-  id: string;
-  timestamp: number;
-  reason: string;
-  plan: Plan;
-}
-
-/** User-created named checkpoint */
-export interface Checkpoint {
-  id: string;
-  /** Which plan this checkpoint belongs to */
-  planId: string;
-  /** User-provided name */
-  name: string;
-  /** Optional description */
-  description?: string;
-  timestamp: number;
-  /** Full plan state at checkpoint time */
-  plan: Plan;
-}
-
-/** Unified history entry for display */
-export interface HistoryEntry {
-  id: string;
-  type: 'checkpoint' | 'auto-save' | 'stash';
-  name: string;
-  timestamp: number;
-  plan: Plan;
-}

@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import PlanDropdown from './PlanDropdown';
 import CopyPlanModal from './CopyPlanModal';
-import HistoryPanel from './HistoryPanel';
-import { usePlanStore, useUndoRedo, createCheckpoint, copyPlan } from '@/lib/plan-store';
+import { usePlanStore, useUndoRedo, copyPlan } from '@/lib/plan-store';
 import { Z_INDEX } from '@/lib/z-index';
 import type { CopyPlanOptions } from './CopyPlanModal';
 
@@ -26,23 +25,18 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   // Undo/redo from store
   const { canUndo, canRedo, undo, redo, undoCount, redoCount } = useUndoRedo();
 
-  // Modal/panel state
+  // Modal state
   const [showCopyModal, setShowCopyModal] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Save checkpoint handler
+  // Save handler - now just shows confirmation since saving is automatic
   const handleSave = useCallback(async () => {
     if (isSaving) return;
     setIsSaving(true);
-    try {
-      const timestamp = new Date().toLocaleString();
-      await createCheckpoint(`Manual save - ${timestamp}`);
-    } catch (err) {
-      console.error('Failed to save checkpoint:', err);
-    } finally {
-      setIsSaving(false);
-    }
+    // With SQLite storage, all changes are auto-saved on each mutation.
+    // Ctrl+S / Save button just provides user feedback that everything is saved.
+    await new Promise((resolve) => setTimeout(resolve, 200)); // Brief visual feedback
+    setIsSaving(false);
   }, [isSaving]);
 
   // Global keyboard shortcuts for undo/redo
@@ -278,13 +272,6 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
             >
               📋
             </button>
-            <button
-              onClick={() => setShowHistory(true)}
-              className="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded hover:bg-gray-200"
-              title="History"
-            >
-              🕐
-            </button>
           </div>
         )}
 
@@ -314,15 +301,6 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
       />
     )}
 
-    {activePlanId && (
-      <HistoryPanel
-        isOpen={showHistory}
-        planId={activePlanId}
-        onClose={() => setShowHistory(false)}
-        onRestore={(msg) => console.log(msg)}
-        onError={(msg) => console.error(msg)}
-      />
-    )}
   </>
   );
 }

@@ -73,9 +73,6 @@ export type {
   PlanChange,
   Plan,
   PlanFile,
-  StashEntry,
-  Checkpoint,
-  HistoryEntry,
   TimelineCrop,
 } from './plan';
 export {

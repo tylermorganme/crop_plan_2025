@@ -5,7 +5,7 @@
  * Replaces the IndexedDB adapter for plan storage.
  */
 
-import type { Plan, StashEntry, PatchEntry } from './plan-types';
+import type { Plan, PatchEntry } from './plan-types';
 
 // =============================================================================
 // TYPES (matching what storage-adapter.ts exported)
@@ -167,42 +167,82 @@ export class SQLiteClientAdapter {
   }
 
   // ----------------------------------------
-  // Stash (kept in localStorage for now - simple key-value)
+  // Undo/Redo (server-side operations)
   // ----------------------------------------
 
-  private readonly STASH_KEY = 'crop-plan-stash';
-  private readonly MAX_STASH_ENTRIES = 10;
-
-  async getStash(): Promise<StashEntry[]> {
+  /**
+   * Perform undo operation.
+   * Server pops from patches, applies inverse, pushes to redo stack.
+   * Returns the restored plan state.
+   */
+  async undo(planId: string): Promise<{ ok: boolean; plan: Plan | null; canUndo: boolean; canRedo: boolean; description?: string }> {
     try {
-      const data = localStorage.getItem(this.STASH_KEY);
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
+      const response = await fetch(`/api/sqlite/${planId}/undo`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        console.warn('Undo failed:', data.error || response.statusText);
+        return { ok: false, plan: null, canUndo: false, canRedo: false };
+      }
+      const data = await response.json();
+      return {
+        ok: true,
+        plan: data.plan,
+        canUndo: data.canUndo,
+        canRedo: data.canRedo,
+        description: data.description,
+      };
+    } catch (e) {
+      console.error('Undo failed:', e);
+      return { ok: false, plan: null, canUndo: false, canRedo: false };
     }
   }
 
-  async saveToStash(entry: StashEntry): Promise<void> {
-    const entries = await this.getStash();
-    entries.push(entry);
-
-    // Keep only the last MAX_STASH_ENTRIES
-    while (entries.length > this.MAX_STASH_ENTRIES) {
-      entries.shift();
-    }
-
+  /**
+   * Perform redo operation.
+   * Server pops from redo stack, applies forward patches, pushes back to patches.
+   * Returns the restored plan state.
+   */
+  async redo(planId: string): Promise<{ ok: boolean; plan: Plan | null; canUndo: boolean; canRedo: boolean; description?: string }> {
     try {
-      localStorage.setItem(this.STASH_KEY, JSON.stringify(entries));
+      const response = await fetch(`/api/sqlite/${planId}/redo`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        console.warn('Redo failed:', data.error || response.statusText);
+        return { ok: false, plan: null, canUndo: false, canRedo: false };
+      }
+      const data = await response.json();
+      return {
+        ok: true,
+        plan: data.plan,
+        canUndo: data.canUndo,
+        canRedo: data.canRedo,
+        description: data.description,
+      };
     } catch (e) {
-      console.warn('Failed to save stash entry:', e);
+      console.error('Redo failed:', e);
+      return { ok: false, plan: null, canUndo: false, canRedo: false };
     }
   }
 
-  async clearStash(): Promise<void> {
+  /**
+   * Get undo/redo counts for a plan.
+   * Returns { undoCount, redoCount } for checking if operations are available.
+   */
+  async getUndoRedoCounts(planId: string): Promise<{ undoCount: number; redoCount: number }> {
     try {
-      localStorage.removeItem(this.STASH_KEY);
+      const response = await fetch(`/api/sqlite/${planId}/undo-redo-counts`);
+      if (!response.ok) {
+        return { undoCount: 0, redoCount: 0 };
+      }
+      const data = await response.json();
+      return { undoCount: data.undoCount ?? 0, redoCount: data.redoCount ?? 0 };
     } catch (e) {
-      console.warn('Failed to clear stash:', e);
+      console.warn('Failed to get undo/redo counts:', e);
+      return { undoCount: 0, redoCount: 0 };
     }
   }
 

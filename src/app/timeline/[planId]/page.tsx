@@ -6,7 +6,7 @@ import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import CropConfigEditor from '@/components/CropConfigEditor';
 import { type CropConfig } from '@/lib/entities/crop-config';
-import { useSnapshotScheduler } from '@/hooks/useSnapshotScheduler';
+// useSnapshotScheduler removed - SQLite storage handles persistence directly
 import { calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
@@ -104,11 +104,7 @@ export default function TimelinePlanPage() {
     loadPlan();
   }, [planId, loadPlanById]);
 
-  // Snapshot scheduler - creates tiered snapshots to file storage (every 15 min)
-  useSnapshotScheduler({
-    plan: currentPlan,
-    enabled: !loading && !error,
-  });
+  // Note: Snapshot scheduler removed - SQLite storage handles persistence directly
 
   // Keyboard shortcuts for undo/redo are now handled in AppHeader
 

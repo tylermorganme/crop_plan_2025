@@ -8,7 +8,7 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { enablePatches, produceWithPatches, applyPatches } from 'immer';
+import { enablePatches, produceWithPatches } from 'immer';
 import { addYears, addMonths, format, parseISO, isValid } from 'date-fns';
 import type {
   Plan,
@@ -17,9 +17,6 @@ import type {
   PlanActions,
   PlanChange,
   BedSpanInfo,
-  StashEntry,
-  Checkpoint,
-  HistoryEntry,
   Bed,
   Planting,
   PatchEntry,
@@ -117,21 +114,11 @@ export type { PlanSummary, PlanData };
 // Active plan ID key (shared with components that need it)
 export const ACTIVE_PLAN_KEY = 'crop-explorer-active-plan';
 
-const MAX_HISTORY_SIZE = 50;
-
-/**
- * Deep copy a plan for undo stack.
- * Must create new objects to avoid immer draft reference issues.
- */
-function deepCopyPlan(plan: Plan): Plan {
-  return JSON.parse(JSON.stringify(plan));
-}
-
 /**
  * Apply a mutation to the current plan using immer patches.
- * This creates a patch entry for undo/redo support.
+ * Patches are persisted to SQLite for undo/redo support.
  *
- * @param state - The store state (with patchHistory/patchFuture)
+ * @param state - The store state (with undoCount/redoCount)
  * @param mutator - Function that mutates the plan draft
  * @param description - Human-readable description of the change
  * @returns The updated plan, or null if no plan was loaded
@@ -139,8 +126,8 @@ function deepCopyPlan(plan: Plan): Plan {
 function mutateWithPatches(
   state: {
     currentPlan: Plan | null;
-    patchHistory: PatchEntry[];
-    patchFuture: PatchEntry[];
+    undoCount: number;
+    redoCount: number;
   },
   mutator: (draft: Plan) => void,
   description: string
@@ -163,24 +150,18 @@ function mutateWithPatches(
     timestamp: Date.now(),
   };
 
-  // Add to patch history
-  state.patchHistory.push(entry);
-
-  // Limit history size
-  if (state.patchHistory.length > MAX_HISTORY_SIZE) {
-    state.patchHistory.shift();
-  }
-
-  // Clear redo stack on new change
-  state.patchFuture = [];
+  // Increment undo count (optimistically), reset redo count
+  state.undoCount += 1;
+  state.redoCount = 0;
 
   // Persist patch to SQLite (fire-and-forget, non-blocking)
-  // This enables session recovery - undo history survives page reload
+  // The API also clears the redo stack when a new patch is appended
   const planId = state.currentPlan.id;
   if (planId) {
     storage.appendPatch(planId, entry).catch((e) => {
       console.warn('Failed to persist patch:', e);
-      // Non-fatal - in-memory undo still works
+      // The patch is already counted optimistically, but SQLite has the truth
+      // On next load, counts will be accurate from SQLite
     });
   }
 
@@ -465,74 +446,6 @@ function createChangeEntry(
 }
 
 // ============================================
-// Stash Functions (async, use adapter)
-// ============================================
-
-export async function getStash(): Promise<StashEntry[]> {
-  return storage.getStash();
-}
-
-export async function restoreFromStash(stashId: string): Promise<Plan | null> {
-  const entries = await storage.getStash();
-  const entry = entries.find(e => e.id === stashId);
-  return entry?.plan ?? null;
-}
-
-export async function clearStash(): Promise<void> {
-  return storage.clearStash();
-}
-
-// ============================================
-// Checkpoint Functions (use file storage API)
-// ============================================
-
-/**
- * Create a named checkpoint for the current plan.
- * TODO: Re-implement with SQLite patches.
- */
-export async function createCheckpoint(_name: string, _description?: string): Promise<Checkpoint> {
-  console.warn('createCheckpoint: Not yet implemented with SQLite storage');
-  throw new Error('Checkpoints not yet implemented with SQLite storage');
-}
-
-/**
- * Get all checkpoints for a plan.
- * TODO: Re-implement with SQLite patches.
- */
-export async function getCheckpoints(_planId?: string): Promise<Checkpoint[]> {
-  console.warn('getCheckpoints: Not yet implemented with SQLite storage');
-  return [];
-}
-
-/**
- * Delete a checkpoint.
- * TODO: Re-implement with SQLite patches.
- */
-export async function deleteCheckpoint(_checkpointId: string, _planId?: string): Promise<void> {
-  console.warn('deleteCheckpoint: Not yet implemented with SQLite storage');
-}
-
-/**
- * Get unified history combining checkpoints, auto-saves, and stash entries.
- * TODO: Re-implement with SQLite patches.
- */
-export async function getHistory(_planId?: string): Promise<HistoryEntry[]> {
-  console.warn('getHistory: Not yet implemented with SQLite storage');
-  return [];
-}
-
-/**
- * Restore from any history entry.
- * The entry already contains the full plan data.
- */
-export async function restoreFromHistory(entry: HistoryEntry): Promise<void> {
-  const state = usePlanStore.getState();
-
-  // Load the plan from the history entry
-  state.loadPlan(entry.plan);
-}
-
-// ============================================
 // Extended State and Actions with isSaving
 // ============================================
 
@@ -692,10 +605,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
   immer((set, get) => ({
     // Initial state
     currentPlan: null,
-    past: [],
-    future: [],
-    patchHistory: [],
-    patchFuture: [],
+    undoCount: 0,
+    redoCount: 0,
     isDirty: false,
     isLoading: false,
     isSaving: false,
@@ -708,10 +619,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     loadPlan: (plan: Plan) => {
       set((state) => {
         state.currentPlan = plan;
-        state.past = [];
-        state.future = [];
-        state.patchHistory = [];
-        state.patchFuture = [];
+        state.undoCount = 0;
+        state.redoCount = 0;
         state.isDirty = false;
         state.isLoading = false;
       });
@@ -776,26 +685,13 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const existingIds = (data.plan.plantings ?? []).map(p => p.id);
       initializePlantingIdCounter(existingIds);
 
-      // Load patch history from SQLite for session recovery
-      const storedPatches = await storage.getPatches(planId);
+      // Load undo/redo counts from SQLite
+      const { undoCount, redoCount } = await storage.getUndoRedoCounts(planId);
 
       set((state) => {
-        // Only clear undo/redo history if loading a different plan
-        const isNewPlan = state.currentPlan?.id !== data.plan.id;
-
         state.currentPlan = data.plan;
-
-        if (isNewPlan) {
-          // Restore patch history from SQLite (enables undo after page reload)
-          state.patchHistory = storedPatches;
-          state.patchFuture = []; // Redo stack not persisted - always starts empty
-
-          // Clear legacy snapshot-based history
-          state.past = [];
-          state.future = [];
-        }
-        // If same plan, preserve in-memory undo/redo history
-
+        state.undoCount = undoCount;
+        state.redoCount = redoCount;
         state.isDirty = false;
         state.isLoading = false;
       });
@@ -918,8 +814,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       set((state) => {
         state.currentPlan = plan;
-        state.past = [];
-        state.future = [];
+        state.undoCount = 0;
+        state.redoCount = 0;
         state.isDirty = false;
         state.isLoading = false;
         state.isSaving = true;
@@ -943,8 +839,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     resetPlan: () => {
       set((state) => {
         state.currentPlan = null;
-        state.past = [];
-        state.future = [];
+        state.undoCount = 0;
+        state.redoCount = 0;
         state.isDirty = false;
       });
     },
@@ -1527,107 +1423,85 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return existingIdentifiers.length;
     },
 
-    // History - uses patches if available, falls back to snapshots for legacy compatibility
+    // History - uses SQLite as single source of truth
     undo: async () => {
+      const { currentPlan } = get();
+      if (!currentPlan) return;
+
       set((state) => {
-        if (!state.currentPlan) return;
-
-        // Prefer patch-based undo
-        if (state.patchHistory.length > 0) {
-          const entry = state.patchHistory.pop()!;
-          state.currentPlan = applyPatches(state.currentPlan, entry.inversePatches);
-          state.patchFuture.push(entry);
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.isDirty = true;
-          state.isSaving = true;
-          state.saveError = null;
-          return;
-        }
-
-        // Fall back to snapshot-based undo (legacy)
-        if (state.past.length > 0) {
-          const previous = state.past.pop()!;
-          state.future.push(deepCopyPlan(state.currentPlan));
-          state.currentPlan = deepCopyPlan(previous);
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.isDirty = true;
-          state.isSaving = true;
-          state.saveError = null;
-        }
+        state.isSaving = true;
+        state.saveError = null;
       });
 
-      // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
+      try {
+        // Call server to perform undo - server handles patch application and plan save
+        const result = await storage.undo(currentPlan.id);
+
+        if (result.ok && result.plan) {
           set((state) => {
+            state.currentPlan = result.plan;
+            state.undoCount = result.canUndo ? state.undoCount - 1 : 0;
+            state.redoCount = state.redoCount + 1;
             state.isSaving = false;
             state.isDirty = false;
           });
-        } catch (e) {
+        } else {
           set((state) => {
             state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+            state.saveError = 'Nothing to undo';
           });
         }
+      } catch (e) {
+        set((state) => {
+          state.isSaving = false;
+          state.saveError = e instanceof Error ? e.message : 'Undo failed';
+        });
       }
     },
 
     redo: async () => {
+      const { currentPlan } = get();
+      if (!currentPlan) return;
+
       set((state) => {
-        if (!state.currentPlan) return;
-
-        // Prefer patch-based redo
-        if (state.patchFuture.length > 0) {
-          const entry = state.patchFuture.pop()!;
-          state.currentPlan = applyPatches(state.currentPlan, entry.patches);
-          state.patchHistory.push(entry);
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.isDirty = true;
-          state.isSaving = true;
-          state.saveError = null;
-          return;
-        }
-
-        // Fall back to snapshot-based redo (legacy)
-        if (state.future.length > 0) {
-          const next = state.future.pop()!;
-          state.past.push(deepCopyPlan(state.currentPlan));
-          state.currentPlan = deepCopyPlan(next);
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.isDirty = true;
-          state.isSaving = true;
-          state.saveError = null;
-        }
+        state.isSaving = true;
+        state.saveError = null;
       });
 
-      // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
+      try {
+        // Call server to perform redo - server handles patch application and plan save
+        const result = await storage.redo(currentPlan.id);
+
+        if (result.ok && result.plan) {
           set((state) => {
+            state.currentPlan = result.plan;
+            state.undoCount = state.undoCount + 1;
+            state.redoCount = result.canRedo ? state.redoCount - 1 : 0;
             state.isSaving = false;
             state.isDirty = false;
           });
-        } catch (e) {
+        } else {
           set((state) => {
             state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
+            state.saveError = 'Nothing to redo';
           });
         }
+      } catch (e) {
+        set((state) => {
+          state.isSaving = false;
+          state.saveError = e instanceof Error ? e.message : 'Redo failed';
+        });
       }
     },
 
     canUndo: () => {
       const state = get();
-      return state.patchHistory.length > 0 || state.past.length > 0;
+      return state.undoCount > 0;
     },
 
     canRedo: () => {
       const state = get();
-      return state.patchFuture.length > 0 || state.future.length > 0;
+      return state.redoCount > 0;
     },
 
     // Persistence helpers
@@ -3367,13 +3241,13 @@ export function usePlanMetadata(): PlanMetadata | null {
  * Helper hook for undo/redo state
  */
 export function useUndoRedo() {
-  // Use patch-based history (primary) with fallback to legacy snapshots
-  const canUndo = usePlanStore((state) => state.patchHistory.length > 0 || state.past.length > 0);
-  const canRedo = usePlanStore((state) => state.patchFuture.length > 0 || state.future.length > 0);
+  // Undo/redo state is tracked in SQLite, counts are synced to store
+  const canUndo = usePlanStore((state) => state.undoCount > 0);
+  const canRedo = usePlanStore((state) => state.redoCount > 0);
   const undo = usePlanStore((state) => state.undo);
   const redo = usePlanStore((state) => state.redo);
-  const undoCount = usePlanStore((state) => state.patchHistory.length + state.past.length);
-  const redoCount = usePlanStore((state) => state.patchFuture.length + state.future.length);
+  const undoCount = usePlanStore((state) => state.undoCount);
+  const redoCount = usePlanStore((state) => state.redoCount);
 
   return { canUndo, canRedo, undo, redo, undoCount, redoCount };
 }

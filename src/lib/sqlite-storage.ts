@@ -113,7 +113,17 @@ const SCHEMA = `
     updated_at TEXT DEFAULT (datetime('now'))
   );
 
+  -- Undo history: patches applied to get to current state
   CREATE TABLE IF NOT EXISTS patches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patches JSON NOT NULL,
+    inverse_patches JSON NOT NULL,
+    description TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  -- Redo stack: patches that were undone (LIFO order by id DESC)
+  CREATE TABLE IF NOT EXISTS redo_stack (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     patches JSON NOT NULL,
     inverse_patches JSON NOT NULL,
@@ -386,6 +396,175 @@ export function clearPatches(planId: string): void {
   const db = openPlanDb(planId);
   try {
     db.prepare('DELETE FROM patches').run();
+  } finally {
+    db.close();
+  }
+}
+
+// =============================================================================
+// REDO STACK OPERATIONS
+// =============================================================================
+
+/**
+ * Push a patch entry to the redo stack.
+ * Used when undoing an action.
+ */
+export function pushToRedoStack(planId: string, entry: Omit<StoredPatchEntry, 'id' | 'createdAt'>): number {
+  const db = openPlanDb(planId);
+  try {
+    const stmt = db.prepare(`
+      INSERT INTO redo_stack (patches, inverse_patches, description)
+      VALUES (?, ?, ?)
+    `);
+    const result = stmt.run(
+      JSON.stringify(entry.patches),
+      JSON.stringify(entry.inversePatches),
+      entry.description
+    );
+    return result.lastInsertRowid as number;
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Pop the most recent entry from the redo stack (LIFO).
+ * Returns null if redo stack is empty.
+ */
+export function popFromRedoStack(planId: string): StoredPatchEntry | null {
+  if (!planExists(planId)) {
+    return null;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    // Get the most recent entry
+    const row = db
+      .prepare(`
+        SELECT id, patches, inverse_patches, description, created_at
+        FROM redo_stack
+        ORDER BY id DESC
+        LIMIT 1
+      `)
+      .get() as {
+        id: number;
+        patches: string;
+        inverse_patches: string;
+        description: string | null;
+        created_at: string;
+      } | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    // Delete it
+    db.prepare('DELETE FROM redo_stack WHERE id = ?').run(row.id);
+
+    return {
+      id: row.id,
+      patches: JSON.parse(row.patches),
+      inversePatches: JSON.parse(row.inverse_patches),
+      description: row.description ?? '',
+      createdAt: row.created_at,
+    };
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Clear all entries from the redo stack.
+ * Called when a new mutation is made (invalidates redo history).
+ */
+export function clearRedoStack(planId: string): void {
+  if (!planExists(planId)) {
+    return;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    db.prepare('DELETE FROM redo_stack').run();
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Get the count of entries in the redo stack.
+ */
+export function getRedoStackCount(planId: string): number {
+  if (!planExists(planId)) {
+    return 0;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    const result = db.prepare('SELECT COUNT(*) as count FROM redo_stack').get() as { count: number };
+    return result.count;
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Pop the most recent patch from the patches table (for undo).
+ * Returns null if no patches exist.
+ */
+export function popLastPatch(planId: string): StoredPatchEntry | null {
+  if (!planExists(planId)) {
+    return null;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    // Get the most recent entry
+    const row = db
+      .prepare(`
+        SELECT id, patches, inverse_patches, description, created_at
+        FROM patches
+        ORDER BY id DESC
+        LIMIT 1
+      `)
+      .get() as {
+        id: number;
+        patches: string;
+        inverse_patches: string;
+        description: string | null;
+        created_at: string;
+      } | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    // Delete it
+    db.prepare('DELETE FROM patches WHERE id = ?').run(row.id);
+
+    return {
+      id: row.id,
+      patches: JSON.parse(row.patches),
+      inversePatches: JSON.parse(row.inverse_patches),
+      description: row.description ?? '',
+      createdAt: row.created_at,
+    };
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Get the count of patches for a plan.
+ */
+export function getPatchCount(planId: string): number {
+  if (!planExists(planId)) {
+    return 0;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    const result = db.prepare('SELECT COUNT(*) as count FROM patches').get() as { count: number };
+    return result.count;
   } finally {
     db.close();
   }

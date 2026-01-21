@@ -3,9 +3,11 @@
  *
  * Tests that verify:
  * 1. Mutations correctly update plan state
- * 2. Each mutation creates a patch entry in patchHistory
- * 3. Undo restores previous state via inverse patches
- * 4. Redo re-applies changes via forward patches
+ * 2. Each mutation increments undoCount (patches persisted to SQLite)
+ * 3. Undo/redo operations work via server API
+ *
+ * Note: Undo/redo is now server-side. The store tracks counts,
+ * and the server handles patch application and plan state.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -19,26 +21,72 @@ import {
   createTestPlanWithBeds,
   createTestPlanWithConfig,
 } from './test-helpers';
+import type { Plan } from '../plan-types';
 
 // =============================================================================
 // MOCKS
 // =============================================================================
 
-// Mock the storage adapter to avoid real persistence
+// Track plan state history for undo/redo simulation
+let planHistory: Plan[] = [];
+let redoStack: Plan[] = [];
+
+// Mock the storage adapter to simulate server-side undo/redo
 vi.mock('../sqlite-client', () => ({
   storage: {
     savePlan: vi.fn().mockResolvedValue(undefined),
     getPlan: vi.fn().mockResolvedValue(null),
     getPlanList: vi.fn().mockResolvedValue([]),
     deletePlan: vi.fn().mockResolvedValue(undefined),
-    getStash: vi.fn().mockResolvedValue([]),
-    saveToStash: vi.fn().mockResolvedValue(undefined),
-    clearStash: vi.fn().mockResolvedValue(undefined),
     getFlag: vi.fn().mockResolvedValue(null),
     setFlag: vi.fn().mockResolvedValue(undefined),
-    appendPatch: vi.fn().mockResolvedValue(1),
+    appendPatch: vi.fn().mockImplementation(async () => {
+      // Save current plan state before mutation (simulates what server does)
+      const currentPlan = usePlanStore.getState().currentPlan;
+      if (currentPlan) {
+        planHistory.push(JSON.parse(JSON.stringify(currentPlan)));
+      }
+      // Clear redo stack on new mutation
+      redoStack = [];
+      return planHistory.length;
+    }),
     getPatches: vi.fn().mockResolvedValue([]),
     clearPatches: vi.fn().mockResolvedValue(undefined),
+    getUndoRedoCounts: vi.fn().mockResolvedValue({ undoCount: 0, redoCount: 0 }),
+    undo: vi.fn().mockImplementation(async () => {
+      if (planHistory.length === 0) {
+        return { ok: false, plan: null, canUndo: false, canRedo: false };
+      }
+      // Pop from history, push current to redo
+      const currentPlan = usePlanStore.getState().currentPlan;
+      if (currentPlan) {
+        redoStack.push(JSON.parse(JSON.stringify(currentPlan)));
+      }
+      const previousPlan = planHistory.pop()!;
+      return {
+        ok: true,
+        plan: previousPlan,
+        canUndo: planHistory.length > 0,
+        canRedo: true,
+      };
+    }),
+    redo: vi.fn().mockImplementation(async () => {
+      if (redoStack.length === 0) {
+        return { ok: false, plan: null, canUndo: false, canRedo: false };
+      }
+      // Pop from redo, push current to history
+      const currentPlan = usePlanStore.getState().currentPlan;
+      if (currentPlan) {
+        planHistory.push(JSON.parse(JSON.stringify(currentPlan)));
+      }
+      const nextPlan = redoStack.pop()!;
+      return {
+        ok: true,
+        plan: nextPlan,
+        canUndo: true,
+        canRedo: redoStack.length > 0,
+      };
+    }),
   },
   onSyncMessage: vi.fn().mockReturnValue(() => {}),
 }));
@@ -51,15 +99,15 @@ vi.mock('../sqlite-client', () => ({
  * Reset the store to initial state and load a test plan.
  */
 function resetStoreWithPlan(plan = createTestPlan()) {
-  const store = usePlanStore.getState();
+  // Reset mock history
+  planHistory = [];
+  redoStack = [];
 
   // Directly set state to avoid async loading
   usePlanStore.setState({
     currentPlan: plan,
-    past: [],
-    future: [],
-    patchHistory: [],
-    patchFuture: [],
+    undoCount: 0,
+    redoCount: 0,
     isDirty: false,
     isLoading: false,
     isSaving: false,
@@ -68,7 +116,7 @@ function resetStoreWithPlan(plan = createTestPlan()) {
     planList: [],
   });
 
-  return store;
+  return usePlanStore.getState();
 }
 
 // =============================================================================
@@ -92,15 +140,14 @@ describe('planting mutations', () => {
       expect(state.currentPlan?.plantings?.[0].id).toBe('P1');
     });
 
-    it('creates patch entry in history', async () => {
+    it('increments undo count after mutation', async () => {
       const store = usePlanStore.getState();
       const planting = createTestPlanting({ id: 'P1' });
 
       await store.addPlanting(planting);
 
       const state = usePlanStore.getState();
-      expect(state.patchHistory).toHaveLength(1);
-      expect(state.patchHistory[0].description).toContain('P1');
+      expect(state.undoCount).toBe(1);
     });
 
     it('can be undone', async () => {
@@ -113,7 +160,7 @@ describe('planting mutations', () => {
 
       const state = usePlanStore.getState();
       expect(state.currentPlan?.plantings).toHaveLength(0);
-      expect(state.patchFuture).toHaveLength(1);
+      expect(state.redoCount).toBeGreaterThan(0);
     });
 
     it('can be redone after undo', async () => {
@@ -452,12 +499,12 @@ describe('undo/redo edge cases', () => {
     await store.addPlanting(createTestPlanting({ id: 'P2' }));
     await store.undo();
 
-    expect(usePlanStore.getState().patchFuture).toHaveLength(1);
+    expect(usePlanStore.getState().redoCount).toBeGreaterThan(0);
 
     // New action should clear redo stack
     await store.addPlanting(createTestPlanting({ id: 'P3' }));
 
-    expect(usePlanStore.getState().patchFuture).toHaveLength(0);
+    expect(usePlanStore.getState().redoCount).toBe(0);
   });
 
   it('undo at empty history does nothing', async () => {
