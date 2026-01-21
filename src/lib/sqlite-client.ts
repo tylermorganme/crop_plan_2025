@@ -5,7 +5,7 @@
  * Replaces the IndexedDB adapter for plan storage.
  */
 
-import type { Plan, StashEntry } from './plan-types';
+import type { Plan, StashEntry, PatchEntry } from './plan-types';
 
 // =============================================================================
 // TYPES (matching what storage-adapter.ts exported)
@@ -102,6 +102,67 @@ export class SQLiteClientAdapter {
     } catch (e) {
       console.error('Failed to delete plan:', e);
       throw e;
+    }
+  }
+
+  // ----------------------------------------
+  // Patches
+  // ----------------------------------------
+
+  /**
+   * Append a patch entry to the plan's patch history.
+   * Fire-and-forget: returns null on error instead of throwing.
+   */
+  async appendPatch(planId: string, entry: PatchEntry): Promise<number | null> {
+    try {
+      const response = await fetch(`/api/sqlite/${planId}/patches`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patch: entry }),
+      });
+      if (!response.ok) {
+        console.warn('Failed to append patch:', response.statusText);
+        return null;
+      }
+      const data = await response.json();
+      return data.id ?? null;
+    } catch (e) {
+      console.warn('Failed to append patch:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Get all patches for a plan.
+   * Returns empty array on error.
+   */
+  async getPatches(planId: string): Promise<PatchEntry[]> {
+    try {
+      const response = await fetch(`/api/sqlite/${planId}/patches`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return [];
+        }
+        console.warn('Failed to get patches:', response.statusText);
+        return [];
+      }
+      const data = await response.json();
+      return data.patches ?? [];
+    } catch (e) {
+      console.warn('Failed to get patches:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Clear all patches for a plan.
+   * Used when starting a fresh session or clearing history.
+   */
+  async clearPatches(planId: string): Promise<void> {
+    try {
+      await fetch(`/api/sqlite/${planId}/patches`, { method: 'DELETE' });
+    } catch (e) {
+      console.warn('Failed to clear patches:', e);
     }
   }
 

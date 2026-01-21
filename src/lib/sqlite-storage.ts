@@ -20,13 +20,41 @@ import type { Patch } from 'immer';
 // TYPES
 // =============================================================================
 
-/** Patch entry stored in database */
-export interface PatchEntry {
+import type { PatchEntry } from './plan-types';
+
+/** Patch entry as stored in SQLite database */
+export interface StoredPatchEntry {
   id?: number;
   patches: Patch[];
   inversePatches: Patch[];
   description: string;
   createdAt: string;
+}
+
+/** Max number of patches to keep per plan (at ~700 bytes each, 10k = ~7MB) */
+const MAX_STORED_PATCHES = 10000;
+
+// =============================================================================
+// PATCH TYPE CONVERSION
+// =============================================================================
+
+/** Convert client PatchEntry to storage format (drops timestamp, DB adds createdAt) */
+export function toStoredPatch(entry: PatchEntry): Omit<StoredPatchEntry, 'id' | 'createdAt'> {
+  return {
+    patches: entry.patches,
+    inversePatches: entry.inversePatches,
+    description: entry.description,
+  };
+}
+
+/** Convert stored patch to client PatchEntry format */
+export function fromStoredPatch(stored: StoredPatchEntry): PatchEntry {
+  return {
+    patches: stored.patches,
+    inversePatches: stored.inversePatches,
+    description: stored.description,
+    timestamp: new Date(stored.createdAt).getTime(),
+  };
 }
 
 /** Summary of a plan for listing */
@@ -214,8 +242,9 @@ export function deletePlan(planId: string): boolean {
 
 /**
  * Append a patch entry to the plan's patch history.
+ * Enforces MAX_STORED_PATCHES limit by removing oldest entries.
  */
-export function appendPatch(planId: string, entry: Omit<PatchEntry, 'id' | 'createdAt'>): number {
+export function appendPatch(planId: string, entry: Omit<StoredPatchEntry, 'id' | 'createdAt'>): number {
   const db = openPlanDb(planId);
   try {
     const stmt = db.prepare(`
@@ -227,6 +256,18 @@ export function appendPatch(planId: string, entry: Omit<PatchEntry, 'id' | 'crea
       JSON.stringify(entry.inversePatches),
       entry.description
     );
+
+    // Enforce limit - delete oldest patches if over limit
+    const countResult = db.prepare('SELECT COUNT(*) as count FROM patches').get() as { count: number };
+    if (countResult.count > MAX_STORED_PATCHES) {
+      const deleteCount = countResult.count - MAX_STORED_PATCHES;
+      db.prepare(`
+        DELETE FROM patches WHERE id IN (
+          SELECT id FROM patches ORDER BY id ASC LIMIT ?
+        )
+      `).run(deleteCount);
+    }
+
     return result.lastInsertRowid as number;
   } finally {
     db.close();
@@ -236,7 +277,7 @@ export function appendPatch(planId: string, entry: Omit<PatchEntry, 'id' | 'crea
 /**
  * Get all patches for a plan, ordered by creation time.
  */
-export function getPatches(planId: string): PatchEntry[] {
+export function getPatches(planId: string): StoredPatchEntry[] {
   if (!planExists(planId)) {
     return [];
   }
@@ -274,7 +315,7 @@ export function getPatches(planId: string): PatchEntry[] {
 /**
  * Get the most recent patch entry.
  */
-export function getLastPatch(planId: string): PatchEntry | null {
+export function getLastPatch(planId: string): StoredPatchEntry | null {
   if (!planExists(planId)) {
     return null;
   }

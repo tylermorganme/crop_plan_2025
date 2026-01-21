@@ -1,0 +1,512 @@
+/**
+ * Integration Tests for Plan Store Mutations
+ *
+ * Tests that verify:
+ * 1. Mutations correctly update plan state
+ * 2. Each mutation creates a patch entry in patchHistory
+ * 3. Undo restores previous state via inverse patches
+ * 4. Redo re-applies changes via forward patches
+ */
+
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { usePlanStore } from '../plan-store';
+import {
+  createTestPlan,
+  createTestPlanting,
+  createTestBed,
+  createTestBedGroup,
+  createTestCropConfig,
+  createTestPlanWithBeds,
+  createTestPlanWithConfig,
+} from './test-helpers';
+
+// =============================================================================
+// MOCKS
+// =============================================================================
+
+// Mock the storage adapter to avoid real persistence
+vi.mock('../sqlite-client', () => ({
+  storage: {
+    savePlan: vi.fn().mockResolvedValue(undefined),
+    getPlan: vi.fn().mockResolvedValue(null),
+    getPlanList: vi.fn().mockResolvedValue([]),
+    deletePlan: vi.fn().mockResolvedValue(undefined),
+    getStash: vi.fn().mockResolvedValue([]),
+    saveToStash: vi.fn().mockResolvedValue(undefined),
+    clearStash: vi.fn().mockResolvedValue(undefined),
+    getFlag: vi.fn().mockResolvedValue(null),
+    setFlag: vi.fn().mockResolvedValue(undefined),
+    appendPatch: vi.fn().mockResolvedValue(1),
+    getPatches: vi.fn().mockResolvedValue([]),
+    clearPatches: vi.fn().mockResolvedValue(undefined),
+  },
+  onSyncMessage: vi.fn().mockReturnValue(() => {}),
+}));
+
+// =============================================================================
+// SETUP
+// =============================================================================
+
+/**
+ * Reset the store to initial state and load a test plan.
+ */
+function resetStoreWithPlan(plan = createTestPlan()) {
+  const store = usePlanStore.getState();
+
+  // Directly set state to avoid async loading
+  usePlanStore.setState({
+    currentPlan: plan,
+    past: [],
+    future: [],
+    patchHistory: [],
+    patchFuture: [],
+    isDirty: false,
+    isLoading: false,
+    isSaving: false,
+    saveError: null,
+    lastSaved: null,
+    planList: [],
+  });
+
+  return store;
+}
+
+// =============================================================================
+// TESTS: PLANTING OPERATIONS
+// =============================================================================
+
+describe('planting mutations', () => {
+  beforeEach(() => {
+    resetStoreWithPlan();
+  });
+
+  describe('addPlanting', () => {
+    it('adds planting to plan', async () => {
+      const store = usePlanStore.getState();
+      const planting = createTestPlanting({ id: 'P1', configId: 'test-config' });
+
+      await store.addPlanting(planting);
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan?.plantings).toHaveLength(1);
+      expect(state.currentPlan?.plantings?.[0].id).toBe('P1');
+    });
+
+    it('creates patch entry in history', async () => {
+      const store = usePlanStore.getState();
+      const planting = createTestPlanting({ id: 'P1' });
+
+      await store.addPlanting(planting);
+
+      const state = usePlanStore.getState();
+      expect(state.patchHistory).toHaveLength(1);
+      expect(state.patchHistory[0].description).toContain('P1');
+    });
+
+    it('can be undone', async () => {
+      const store = usePlanStore.getState();
+      await store.addPlanting(createTestPlanting({ id: 'P1' }));
+
+      expect(usePlanStore.getState().currentPlan?.plantings).toHaveLength(1);
+
+      await store.undo();
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan?.plantings).toHaveLength(0);
+      expect(state.patchFuture).toHaveLength(1);
+    });
+
+    it('can be redone after undo', async () => {
+      const store = usePlanStore.getState();
+      await store.addPlanting(createTestPlanting({ id: 'P1' }));
+      await store.undo();
+
+      expect(usePlanStore.getState().currentPlan?.plantings).toHaveLength(0);
+
+      await store.redo();
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan?.plantings).toHaveLength(1);
+      expect(state.currentPlan?.plantings?.[0].id).toBe('P1');
+    });
+  });
+
+  describe('deleteCrop', () => {
+    it('removes planting from plan', async () => {
+      const plan = createTestPlan({
+        plantings: [createTestPlanting({ id: 'P1' })],
+      });
+      resetStoreWithPlan(plan);
+
+      const store = usePlanStore.getState();
+      await store.deleteCrop('P1');
+
+      expect(usePlanStore.getState().currentPlan?.plantings).toHaveLength(0);
+    });
+
+    it('can be undone to restore planting', async () => {
+      const planting = createTestPlanting({ id: 'P1', configId: 'tomato' });
+      const plan = createTestPlan({ plantings: [planting] });
+      resetStoreWithPlan(plan);
+
+      const store = usePlanStore.getState();
+      await store.deleteCrop('P1');
+
+      expect(usePlanStore.getState().currentPlan?.plantings).toHaveLength(0);
+
+      await store.undo();
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan?.plantings).toHaveLength(1);
+      expect(state.currentPlan?.plantings?.[0].id).toBe('P1');
+    });
+  });
+
+  describe('moveCrop', () => {
+    it('moves planting to a different bed', async () => {
+      const plan = createTestPlanWithBeds();
+      const bedIds = Object.keys(plan.beds!);
+      const bed1 = plan.beds![bedIds[0]];
+      const bed2 = plan.beds![bedIds[1]] ?? plan.beds![bedIds[0]]; // Use second bed if exists
+
+      const planting = createTestPlanting({ id: 'P1', startBed: bed1.id, bedFeet: 50 });
+      plan.plantings = [planting];
+      resetStoreWithPlan(plan);
+
+      const store = usePlanStore.getState();
+      await store.moveCrop('P1', bed2.name, [{ bed: bed2.id, feetUsed: 50, bedCapacityFt: 50 }]);
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan?.plantings?.[0].startBed).toBe(bed2.id);
+    });
+
+    it('moves planting to unassigned', async () => {
+      const plan = createTestPlanWithBeds();
+      const bedId = Object.keys(plan.beds!)[0];
+      const bed = plan.beds![bedId];
+
+      const planting = createTestPlanting({ id: 'P1', startBed: bed.id, bedFeet: 50 });
+      plan.plantings = [planting];
+      resetStoreWithPlan(plan);
+
+      const store = usePlanStore.getState();
+      await store.moveCrop('P1', 'Unassigned');
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan?.plantings?.[0].startBed).toBeNull();
+    });
+
+    it('can be undone to restore original bed', async () => {
+      const plan = createTestPlanWithBeds();
+      const bedIds = Object.keys(plan.beds!);
+      const bed1 = plan.beds![bedIds[0]];
+
+      const planting = createTestPlanting({ id: 'P1', startBed: bed1.id, bedFeet: 50 });
+      plan.plantings = [planting];
+      resetStoreWithPlan(plan);
+
+      const store = usePlanStore.getState();
+
+      // Move to unassigned
+      await store.moveCrop('P1', 'Unassigned');
+      expect(usePlanStore.getState().currentPlan?.plantings?.[0].startBed).toBeNull();
+
+      // Undo should restore original bed
+      await store.undo();
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan?.plantings?.[0].startBed).toBe(bed1.id);
+    });
+
+    it('can be redone after undo', async () => {
+      const plan = createTestPlanWithBeds();
+      const bedId = Object.keys(plan.beds!)[0];
+      const bed = plan.beds![bedId];
+
+      const planting = createTestPlanting({ id: 'P1', startBed: bed.id, bedFeet: 50 });
+      plan.plantings = [planting];
+      resetStoreWithPlan(plan);
+
+      const store = usePlanStore.getState();
+
+      await store.moveCrop('P1', 'Unassigned');
+      await store.undo();
+      expect(usePlanStore.getState().currentPlan?.plantings?.[0].startBed).toBe(bed.id);
+
+      await store.redo();
+      expect(usePlanStore.getState().currentPlan?.plantings?.[0].startBed).toBeNull();
+    });
+  });
+
+  describe('updateCropDates', () => {
+    it('updates planting start date', async () => {
+      const planting = createTestPlanting({ id: 'P1', fieldStartDate: '2025-03-01' });
+      const plan = createTestPlan({ plantings: [planting] });
+      resetStoreWithPlan(plan);
+
+      const store = usePlanStore.getState();
+      await store.updateCropDates('P1', '2025-04-15', '2025-06-15');
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan?.plantings?.[0].fieldStartDate).toBe('2025-04-15');
+    });
+
+    it('can be undone to restore original date', async () => {
+      const planting = createTestPlanting({ id: 'P1', fieldStartDate: '2025-03-01' });
+      const plan = createTestPlan({ plantings: [planting] });
+      resetStoreWithPlan(plan);
+
+      const store = usePlanStore.getState();
+      await store.updateCropDates('P1', '2025-04-15', '2025-06-15');
+      expect(usePlanStore.getState().currentPlan?.plantings?.[0].fieldStartDate).toBe('2025-04-15');
+
+      await store.undo();
+      expect(usePlanStore.getState().currentPlan?.plantings?.[0].fieldStartDate).toBe('2025-03-01');
+    });
+  });
+});
+
+// =============================================================================
+// TESTS: BED OPERATIONS
+// =============================================================================
+
+describe('bed mutations', () => {
+  beforeEach(() => {
+    resetStoreWithPlan(createTestPlanWithBeds());
+  });
+
+  describe('addBed', () => {
+    it('adds bed to group', async () => {
+      const store = usePlanStore.getState();
+      const groupId = Object.keys(store.currentPlan!.bedGroups!)[0];
+
+      await store.addBed(groupId, 'A2', 50);
+
+      const state = usePlanStore.getState();
+      const beds = Object.values(state.currentPlan!.beds!);
+      expect(beds.some(b => b.name === 'A2')).toBe(true);
+    });
+
+    it('can be undone', async () => {
+      const store = usePlanStore.getState();
+      const groupId = Object.keys(store.currentPlan!.bedGroups!)[0];
+      const initialBedCount = Object.keys(store.currentPlan!.beds!).length;
+
+      await store.addBed(groupId, 'A2', 50);
+      expect(Object.keys(usePlanStore.getState().currentPlan!.beds!).length).toBe(initialBedCount + 1);
+
+      await store.undo();
+      expect(Object.keys(usePlanStore.getState().currentPlan!.beds!).length).toBe(initialBedCount);
+    });
+  });
+
+  describe('renameBed', () => {
+    it('updates bed name', async () => {
+      const store = usePlanStore.getState();
+      const bedId = Object.keys(store.currentPlan!.beds!)[0];
+
+      await store.renameBed(bedId, 'NewName');
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan!.beds![bedId].name).toBe('NewName');
+    });
+
+    it('can be undone to restore original name', async () => {
+      const store = usePlanStore.getState();
+      const bedId = Object.keys(store.currentPlan!.beds!)[0];
+      const originalName = store.currentPlan!.beds![bedId].name;
+
+      await store.renameBed(bedId, 'NewName');
+      expect(usePlanStore.getState().currentPlan!.beds![bedId].name).toBe('NewName');
+
+      await store.undo();
+      expect(usePlanStore.getState().currentPlan!.beds![bedId].name).toBe(originalName);
+    });
+  });
+});
+
+// =============================================================================
+// TESTS: BED GROUP OPERATIONS
+// =============================================================================
+
+describe('bed group mutations', () => {
+  beforeEach(() => {
+    resetStoreWithPlan(createTestPlanWithBeds());
+  });
+
+  describe('addBedGroup', () => {
+    it('adds group to plan', async () => {
+      const store = usePlanStore.getState();
+      const initialGroupCount = Object.keys(store.currentPlan!.bedGroups!).length;
+
+      await store.addBedGroup('Row B');
+
+      const state = usePlanStore.getState();
+      expect(Object.keys(state.currentPlan!.bedGroups!).length).toBe(initialGroupCount + 1);
+    });
+
+    it('can be undone', async () => {
+      const store = usePlanStore.getState();
+      const initialGroupCount = Object.keys(store.currentPlan!.bedGroups!).length;
+
+      await store.addBedGroup('Row B');
+      expect(Object.keys(usePlanStore.getState().currentPlan!.bedGroups!).length).toBe(initialGroupCount + 1);
+
+      await store.undo();
+      expect(Object.keys(usePlanStore.getState().currentPlan!.bedGroups!).length).toBe(initialGroupCount);
+    });
+  });
+
+  describe('renameBedGroup', () => {
+    it('updates group name', async () => {
+      const store = usePlanStore.getState();
+      const groupId = Object.keys(store.currentPlan!.bedGroups!)[0];
+
+      await store.renameBedGroup(groupId, 'New Group Name');
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan!.bedGroups![groupId].name).toBe('New Group Name');
+    });
+
+    it('can be undone to restore original name', async () => {
+      const store = usePlanStore.getState();
+      const groupId = Object.keys(store.currentPlan!.bedGroups!)[0];
+      const originalName = store.currentPlan!.bedGroups![groupId].name;
+
+      await store.renameBedGroup(groupId, 'New Group Name');
+      await store.undo();
+
+      expect(usePlanStore.getState().currentPlan!.bedGroups![groupId].name).toBe(originalName);
+    });
+  });
+});
+
+// =============================================================================
+// TESTS: CROP CONFIG OPERATIONS
+// =============================================================================
+
+describe('crop config mutations', () => {
+  beforeEach(() => {
+    resetStoreWithPlan(createTestPlanWithConfig());
+  });
+
+  describe('updateCropConfig', () => {
+    it('updates config in catalog', async () => {
+      const store = usePlanStore.getState();
+      const configId = Object.keys(store.currentPlan!.cropCatalog!)[0];
+      const config = store.currentPlan!.cropCatalog![configId];
+
+      await store.updateCropConfig({ ...config, dtm: 90 });
+
+      const state = usePlanStore.getState();
+      expect(state.currentPlan!.cropCatalog![configId].dtm).toBe(90);
+    });
+
+    it('can be undone', async () => {
+      const store = usePlanStore.getState();
+      const configId = Object.keys(store.currentPlan!.cropCatalog!)[0];
+      const config = store.currentPlan!.cropCatalog![configId];
+      const originalDtm = config.dtm;
+
+      await store.updateCropConfig({ ...config, dtm: 90 });
+      expect(usePlanStore.getState().currentPlan!.cropCatalog![configId].dtm).toBe(90);
+
+      await store.undo();
+      expect(usePlanStore.getState().currentPlan!.cropCatalog![configId].dtm).toBe(originalDtm);
+    });
+  });
+});
+
+// =============================================================================
+// TESTS: UNDO/REDO EDGE CASES
+// =============================================================================
+
+describe('undo/redo edge cases', () => {
+  beforeEach(() => {
+    resetStoreWithPlan();
+  });
+
+  it('multiple undos in sequence', async () => {
+    const store = usePlanStore.getState();
+
+    await store.addPlanting(createTestPlanting({ id: 'P1' }));
+    await store.addPlanting(createTestPlanting({ id: 'P2' }));
+    await store.addPlanting(createTestPlanting({ id: 'P3' }));
+
+    expect(usePlanStore.getState().currentPlan?.plantings).toHaveLength(3);
+
+    await store.undo();
+    expect(usePlanStore.getState().currentPlan?.plantings).toHaveLength(2);
+
+    await store.undo();
+    expect(usePlanStore.getState().currentPlan?.plantings).toHaveLength(1);
+
+    await store.undo();
+    expect(usePlanStore.getState().currentPlan?.plantings).toHaveLength(0);
+  });
+
+  it('new action clears redo stack', async () => {
+    const store = usePlanStore.getState();
+
+    await store.addPlanting(createTestPlanting({ id: 'P1' }));
+    await store.addPlanting(createTestPlanting({ id: 'P2' }));
+    await store.undo();
+
+    expect(usePlanStore.getState().patchFuture).toHaveLength(1);
+
+    // New action should clear redo stack
+    await store.addPlanting(createTestPlanting({ id: 'P3' }));
+
+    expect(usePlanStore.getState().patchFuture).toHaveLength(0);
+  });
+
+  it('undo at empty history does nothing', async () => {
+    const store = usePlanStore.getState();
+    const initialPlan = { ...usePlanStore.getState().currentPlan };
+
+    await store.undo();
+
+    const state = usePlanStore.getState();
+    expect(state.currentPlan?.id).toBe(initialPlan.id);
+  });
+
+  it('redo at empty future does nothing', async () => {
+    const store = usePlanStore.getState();
+    await store.addPlanting(createTestPlanting({ id: 'P1' }));
+
+    const beforeRedo = usePlanStore.getState().currentPlan?.plantings?.length;
+
+    await store.redo();
+
+    expect(usePlanStore.getState().currentPlan?.plantings?.length).toBe(beforeRedo);
+  });
+
+  it('canUndo returns correct values', async () => {
+    const store = usePlanStore.getState();
+
+    expect(store.canUndo()).toBe(false);
+
+    await store.addPlanting(createTestPlanting({ id: 'P1' }));
+
+    expect(usePlanStore.getState().canUndo()).toBe(true);
+
+    await usePlanStore.getState().undo();
+
+    expect(usePlanStore.getState().canUndo()).toBe(false);
+  });
+
+  it('canRedo returns correct values', async () => {
+    const store = usePlanStore.getState();
+
+    expect(store.canRedo()).toBe(false);
+
+    await store.addPlanting(createTestPlanting({ id: 'P1' }));
+    expect(usePlanStore.getState().canRedo()).toBe(false);
+
+    await usePlanStore.getState().undo();
+    expect(usePlanStore.getState().canRedo()).toBe(true);
+
+    await usePlanStore.getState().redo();
+    expect(usePlanStore.getState().canRedo()).toBe(false);
+  });
+});

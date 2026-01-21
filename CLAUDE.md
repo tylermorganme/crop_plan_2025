@@ -16,9 +16,11 @@ This is production software. Data is sacred - don't lose it. Use migrations for 
 
 ```bash
 npm install          # Install dependencies
-npm run dev          # Run development server (localhost:3000)
+npm run dev          # Run development server (localhost:5336)
 npm run build        # Build for production
 npm run lint         # Run ESLint
+npm test             # Run tests in watch mode
+npm run test:run     # Run tests once (CI mode)
 npx tsc --noEmit     # Type check without emitting
 ```
 
@@ -40,8 +42,8 @@ CropTimeline Component
 ### State Management
 
 - **Zustand store** (`plan-store.ts`) - manages Plan state with immer for immutable updates
-- **localStorage persistence** via `storage-adapter.ts`
-- Undo/redo via full Plan snapshots
+- **SQLite persistence** - one database per plan (`data/plans/*.db`)
+- **Patch-based undo/redo** - lightweight immer patches instead of full plan snapshots
 
 ### Key Types
 
@@ -73,10 +75,11 @@ CropTimeline Component
    - Generated from Excel via build pipeline
    - Changes ONLY affect newly created plans
 
-2. **Live plan data** (`data/plans/*.json` + IndexedDB)
+2. **Live plan data** (`data/plans/*.db` - SQLite databases)
    - Each plan has its own `cropCatalog` snapshot
    - Created by cloning stock data at plan creation time
    - Independent after creation - edits don't affect stock or other plans
+   - Includes patch history for undo/redo recovery
 
 ```
 src/data/crop-config-template.json (STOCK - template for new plans)
@@ -106,7 +109,11 @@ src/data/
 ├── column-analysis.json       # UI display metadata
 └── build-*.js                 # Scripts to regenerate templates from Excel
 
-data/plans/              # Saved plan files (backup of IndexedDB)
+data/plans/
+├── *.db                 # SQLite databases (one per plan)
+├── index.json           # Plan metadata index
+└── archive/             # Migrated legacy .json.gz files
+
 tmp/                     # Pipeline artifacts & working files (gitignored)
 scripts/                 # Utility scripts
 ```
@@ -116,11 +123,67 @@ scripts/                 # Utility scripts
 | File | Purpose |
 |------|---------|
 | `src/lib/plan-store.ts` | Zustand store with all plan mutations |
+| `src/lib/sqlite-storage.ts` | SQLite adapter (server-side) |
+| `src/lib/sqlite-client.ts` | Storage client (browser-side, calls API) |
 | `src/lib/timeline-data.ts` | `getTimelineCropsFromPlan()` - expands Planting[] → TimelineCrop[] |
 | `src/lib/slim-planting.ts` | `computeTimelineCrop()` - timing calculations |
 | `src/lib/entities/` | Entity types and CRUD functions |
 | `src/components/CropTimeline.tsx` | Main timeline visualization |
 | `src/data/crop-config-template.json` | Crop catalog (340 configurations) |
+
+### Persistence Layer Architecture
+
+```
+Browser (client)              Server (API routes)           Disk
+sqlite-client.ts  ───HTTP───→ /api/sqlite/[planId]  ───→  data/plans/{id}.db
+```
+
+- **Client**: `sqlite-client.ts` makes fetch calls to API routes
+- **Server**: API routes in `src/app/api/sqlite/` use `sqlite-storage.ts`
+- **Storage**: SQLite database per plan with `plan` and `patches` tables
+
+**SQLite Schema (per plan database):**
+```sql
+CREATE TABLE plan (
+  id TEXT PRIMARY KEY DEFAULT 'main',
+  data JSON NOT NULL,
+  schema_version INTEGER NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE patches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  patches JSON NOT NULL,
+  inverse_patches JSON NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Patch-Based Undo/Redo
+
+Instead of storing full plan snapshots for undo, we use immer patches:
+
+```typescript
+// All mutations use mutateWithPatches()
+function mutateWithPatches(state, mutator, description) {
+  const [nextPlan, patches, inversePatches] = produceWithPatches(currentPlan, mutator);
+  // patches: what changed
+  // inversePatches: how to reverse it
+}
+```
+
+**Benefits:**
+- Lightweight: patches are tiny compared to full plan snapshots
+- Persistent: patches stored in SQLite, survive page reload
+- Time-travel ready: can reconstruct any historical state
+
+**Undo/Redo flow:**
+- `undo()`: Apply `inversePatches` from last entry, move to future stack
+- `redo()`: Apply `patches` from future stack, move back to history
+- New action: Clears future stack (no redo after branching)
+
+**History limit:** 50 patches stored in SQLite (oldest trimmed automatically)
 
 ### Entity CRUD Pattern
 
@@ -151,7 +214,7 @@ Clone functions compose on create (e.g., `clonePlanting` calls `createPlanting` 
 
 For structural changes to the Plan schema, use the migration system in `src/lib/migrations/index.ts`:
 
-- **Automatic**: Migrations run on plan load (IndexedDB and disk files)
+- **Automatic**: Migrations run on plan load (from SQLite)
 - **Append-only**: Never modify existing migrations
 - **Versioned**: `schemaVersion` tracks which migrations have run
 - **Pure functions**: Each migration is `(plan: unknown) => unknown`
@@ -191,9 +254,10 @@ This keeps the app simple - no special "shim" code paths. Enrichment happens out
 
 Remember the two-tier system:
 1. **Template** (`*-template.json`) - edit directly, affects only NEW plans
-2. **Live plan data** - stored in IndexedDB (browser), backed up to `data/plans/`
+2. **Live plan data** - stored in SQLite (`data/plans/*.db`)
 
-**IMPORTANT:** Claude cannot directly access IndexedDB - it's browser-only storage. The `data/plans/*.json` files are backups/exports. To modify live plan data:
-- Use the app's UI
-- Export → edit JSON → import
-- Write a migration (for schema changes)
+**Accessing plan data:**
+- SQLite databases are server-side files, accessible via API or directly
+- Use `sqlite3 data/plans/{id}.db` for direct inspection
+- Use the app's UI for normal edits
+- Write a migration for schema changes

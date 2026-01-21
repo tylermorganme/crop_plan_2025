@@ -128,24 +128,6 @@ function deepCopyPlan(plan: Plan): Plan {
 }
 
 /**
- * Snapshot the current plan state for undo.
- * Call this BEFORE making any mutations.
- */
-function snapshotForUndo(state: { currentPlan: Plan | null; past: Plan[]; future: Plan[] }): void {
-  if (!state.currentPlan) return;
-
-  state.past.push(deepCopyPlan(state.currentPlan));
-
-  // Limit history size
-  if (state.past.length > MAX_HISTORY_SIZE) {
-    state.past.shift();
-  }
-
-  // Clear redo stack on new change
-  state.future = [];
-}
-
-/**
  * Apply a mutation to the current plan using immer patches.
  * This creates a patch entry for undo/redo support.
  *
@@ -173,13 +155,16 @@ function mutateWithPatches(
   // Update current plan
   state.currentPlan = nextPlan;
 
-  // Add to patch history
-  state.patchHistory.push({
+  // Create patch entry
+  const entry: PatchEntry = {
     patches,
     inversePatches,
     description,
     timestamp: Date.now(),
-  });
+  };
+
+  // Add to patch history
+  state.patchHistory.push(entry);
 
   // Limit history size
   if (state.patchHistory.length > MAX_HISTORY_SIZE) {
@@ -188,6 +173,16 @@ function mutateWithPatches(
 
   // Clear redo stack on new change
   state.patchFuture = [];
+
+  // Persist patch to SQLite (fire-and-forget, non-blocking)
+  // This enables session recovery - undo history survives page reload
+  const planId = state.currentPlan.id;
+  if (planId) {
+    storage.appendPatch(planId, entry).catch((e) => {
+      console.warn('Failed to persist patch:', e);
+      // Non-fatal - in-memory undo still works
+    });
+  }
 
   return nextPlan;
 }
@@ -781,6 +776,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const existingIds = (data.plan.plantings ?? []).map(p => p.id);
       initializePlantingIdCounter(existingIds);
 
+      // Load patch history from SQLite for session recovery
+      const storedPatches = await storage.getPatches(planId);
+
       set((state) => {
         // Only clear undo/redo history if loading a different plan
         const isNewPlan = state.currentPlan?.id !== data.plan.id;
@@ -788,11 +786,15 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.currentPlan = data.plan;
 
         if (isNewPlan) {
-          // Start with empty undo/redo history for new plan
+          // Restore patch history from SQLite (enables undo after page reload)
+          state.patchHistory = storedPatches;
+          state.patchFuture = []; // Redo stack not persisted - always starts empty
+
+          // Clear legacy snapshot-based history
           state.past = [];
           state.future = [];
         }
-        // If same plan, preserve undo/redo history
+        // If same plan, preserve in-memory undo/redo history
 
         state.isDirty = false;
         state.isLoading = false;
@@ -1318,10 +1320,15 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((storeState) => {
         if (!storeState.currentPlan) return;
 
-        snapshotForUndo(storeState);
-        storeState.currentPlan.metadata.lastModified = Date.now();
-        storeState.currentPlan.changeLog.push(
-          createChangeEntry('batch', `Config changed: ${configIdentifier}`, affected.map(p => p.id))
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('batch', `Config changed: ${configIdentifier}`, affected.map(p => p.id))
+            );
+          },
+          `Config changed: ${configIdentifier}`
         );
         storeState.isDirty = true;
         storeState.isSaving = true;
@@ -1359,14 +1366,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((storeState) => {
         if (!storeState.currentPlan?.cropCatalog) return;
 
-        // Snapshot for undo
-        snapshotForUndo(storeState);
-
-        // Update catalog using CRUD function - display will recompute automatically
-        storeState.currentPlan.cropCatalog[config.identifier] = cloneCropConfig(config);
-        storeState.currentPlan.metadata.lastModified = Date.now();
-        storeState.currentPlan.changeLog.push(
-          createChangeEntry('batch', `Updated config "${config.identifier}"`, affectedPlantingIds)
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            // Update catalog using CRUD function - display will recompute automatically
+            plan.cropCatalog![config.identifier] = cloneCropConfig(config);
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('batch', `Updated config "${config.identifier}"`, affectedPlantingIds)
+            );
+          },
+          `Update config "${config.identifier}"`
         );
         storeState.isDirty = true;
         storeState.isSaving = true;
@@ -1412,19 +1422,21 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((storeState) => {
         if (!storeState.currentPlan) return;
 
-        // Initialize catalog if needed
-        if (!storeState.currentPlan.cropCatalog) {
-          storeState.currentPlan.cropCatalog = {};
-        }
-
-        // Snapshot for undo
-        snapshotForUndo(storeState);
-
-        // Add new config to catalog using CRUD function
-        storeState.currentPlan.cropCatalog[config.identifier] = cloneCropConfig(config);
-        storeState.currentPlan.metadata.lastModified = Date.now();
-        storeState.currentPlan.changeLog.push(
-          createChangeEntry('batch', `Added new config "${config.identifier}"`, [])
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            // Initialize catalog if needed
+            if (!plan.cropCatalog) {
+              plan.cropCatalog = {};
+            }
+            // Add new config to catalog using CRUD function
+            plan.cropCatalog[config.identifier] = cloneCropConfig(config);
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('batch', `Added new config "${config.identifier}"`, [])
+            );
+          },
+          `Add config "${config.identifier}"`
         );
         storeState.isDirty = true;
         storeState.isSaving = true;
@@ -1471,23 +1483,24 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((storeState) => {
         if (!storeState.currentPlan?.cropCatalog) return;
 
-        // Snapshot for undo
-        snapshotForUndo(storeState);
+        const description = existingIdentifiers.length === 1
+          ? `Delete config "${existingIdentifiers[0]}"`
+          : `Delete ${existingIdentifiers.length} configs`;
 
-        // Delete configs from catalog
-        for (const identifier of existingIdentifiers) {
-          delete storeState.currentPlan.cropCatalog[identifier];
-        }
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            // Delete configs from catalog
+            for (const identifier of existingIdentifiers) {
+              delete plan.cropCatalog![identifier];
+            }
 
-        storeState.currentPlan.metadata.lastModified = Date.now();
-        storeState.currentPlan.changeLog.push(
-          createChangeEntry(
-            'batch',
-            existingIdentifiers.length === 1
-              ? `Deleted config "${existingIdentifiers[0]}"`
-              : `Deleted ${existingIdentifiers.length} configs`,
-            []
-          )
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('batch', description, [])
+            );
+          },
+          description
         );
         storeState.isDirty = true;
         storeState.isSaving = true;
@@ -1693,12 +1706,16 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const bed = state.currentPlan.beds[bedId];
         if (!bed) return;
 
-        snapshotForUndo(state);
-
-        bed.name = newName;
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('edit', `Renamed bed to "${newName}"`, [])
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.beds![bedId].name = newName;
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('edit', `Renamed bed to "${newName}"`, [])
+            );
+          },
+          `Rename bed to "${newName}"`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -1743,22 +1760,31 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const bed = state.currentPlan.beds[bedId];
         if (!bed) return;
 
-        snapshotForUndo(state);
-
         const changes: string[] = [];
         if (updates.name !== undefined && updates.name !== bed.name) {
-          bed.name = updates.name;
           changes.push(`name to "${updates.name}"`);
         }
         if (updates.lengthFt !== undefined && updates.lengthFt !== bed.lengthFt) {
-          bed.lengthFt = updates.lengthFt;
           changes.push(`length to ${updates.lengthFt}ft`);
         }
 
         if (changes.length > 0) {
-          state.currentPlan.metadata.lastModified = Date.now();
-          state.currentPlan.changeLog.push(
-            createChangeEntry('edit', `Updated bed: ${changes.join(', ')}`, [])
+          mutateWithPatches(
+            state,
+            (plan) => {
+              const planBed = plan.beds![bedId];
+              if (updates.name !== undefined) {
+                planBed.name = updates.name;
+              }
+              if (updates.lengthFt !== undefined) {
+                planBed.lengthFt = updates.lengthFt;
+              }
+              plan.metadata.lastModified = Date.now();
+              plan.changeLog.push(
+                createChangeEntry('edit', `Updated bed: ${changes.join(', ')}`, [])
+              );
+            },
+            `Update bed: ${changes.join(', ')}`
           );
           state.isDirty = true;
           state.isSaving = true;
@@ -1801,8 +1827,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) return;
 
-        snapshotForUndo(state);
-
         // Find max displayOrder in this group
         const bedsInGroup = Object.values(state.currentPlan.beds)
           .filter(b => b.groupId === groupId);
@@ -1810,11 +1834,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         const newBed = createBed(name, groupId, lengthFt, maxOrder + 1);
         newBedId = newBed.id;
-        state.currentPlan.beds[newBed.id] = newBed;
 
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('create', `Added bed "${name}"`, [])
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.beds![newBed.id] = newBed;
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('create', `Added bed "${name}"`, [])
+            );
+          },
+          `Add bed "${name}"`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -1851,62 +1881,69 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups) return;
 
-        snapshotForUndo(state);
+        mutateWithPatches(
+          state,
+          (plan) => {
+            // Track groups we create during this batch (by normalized name -> groupId)
+            const createdGroups = new Map<string, string>();
 
-        // Track groups we create during this batch (by normalized name -> groupId)
-        const createdGroups = new Map<string, string>();
+            for (const { groupName, bedName, lengthFt } of beds) {
+              try {
+                const normalizedGroupName = groupName.toLowerCase().trim();
+                const normalizedBedName = bedName.toLowerCase().trim();
 
-        for (const { groupName, bedName, lengthFt } of beds) {
-          try {
-            const normalizedGroupName = groupName.toLowerCase().trim();
-            const normalizedBedName = bedName.toLowerCase().trim();
+                // Find or create group
+                let groupId = Object.values(plan.bedGroups!).find(
+                  g => g.name.toLowerCase().trim() === normalizedGroupName
+                )?.id ?? createdGroups.get(normalizedGroupName);
 
-            // Find or create group
-            let groupId = Object.values(state.currentPlan.bedGroups).find(
-              g => g.name.toLowerCase().trim() === normalizedGroupName
-            )?.id ?? createdGroups.get(normalizedGroupName);
+                if (!groupId) {
+                  const maxGroupOrder = Object.values(plan.bedGroups!)
+                    .reduce((max, g) => Math.max(max, g.displayOrder), -1);
+                  const newGroup = createBedGroup(groupName.trim(), maxGroupOrder + 1);
+                  groupId = newGroup.id;
+                  plan.bedGroups![newGroup.id] = newGroup;
+                  createdGroups.set(normalizedGroupName, groupId);
+                }
 
-            if (!groupId) {
-              const maxGroupOrder = Object.values(state.currentPlan.bedGroups)
-                .reduce((max, g) => Math.max(max, g.displayOrder), -1);
-              const newGroup = createBedGroup(groupName.trim(), maxGroupOrder + 1);
-              groupId = newGroup.id;
-              state.currentPlan.bedGroups[newGroup.id] = newGroup;
-              createdGroups.set(normalizedGroupName, groupId);
-            }
+                // Find existing bed in this group
+                const existingBed = Object.values(plan.beds!).find(
+                  b => b.groupId === groupId && b.name.toLowerCase().trim() === normalizedBedName
+                );
 
-            // Find existing bed in this group
-            const existingBed = Object.values(state.currentPlan.beds).find(
-              b => b.groupId === groupId && b.name.toLowerCase().trim() === normalizedBedName
-            );
-
-            if (existingBed) {
-              // Update if length differs
-              if (existingBed.lengthFt !== lengthFt) {
-                existingBed.lengthFt = lengthFt;
-                updated++;
+                if (existingBed) {
+                  // Update if length differs
+                  if (existingBed.lengthFt !== lengthFt) {
+                    existingBed.lengthFt = lengthFt;
+                    updated++;
+                  }
+                } else {
+                  // Create new bed
+                  const bedsInGroup = Object.values(plan.beds!).filter(b => b.groupId === groupId);
+                  const maxOrder = bedsInGroup.reduce((max, b) => Math.max(max, b.displayOrder), -1);
+                  const newBed = createBed(bedName.trim(), groupId, lengthFt, maxOrder + 1);
+                  plan.beds![newBed.id] = newBed;
+                  added++;
+                }
+              } catch (e) {
+                errors.push(`${groupName}/${bedName}: ${e instanceof Error ? e.message : 'Unknown error'}`);
               }
-            } else {
-              // Create new bed
-              const bedsInGroup = Object.values(state.currentPlan.beds).filter(b => b.groupId === groupId);
-              const maxOrder = bedsInGroup.reduce((max, b) => Math.max(max, b.displayOrder), -1);
-              const newBed = createBed(bedName.trim(), groupId, lengthFt, maxOrder + 1);
-              state.currentPlan.beds[newBed.id] = newBed;
-              added++;
             }
-          } catch (e) {
-            errors.push(`${groupName}/${bedName}: ${e instanceof Error ? e.message : 'Unknown error'}`);
-          }
-        }
+
+            if (added > 0 || updated > 0) {
+              plan.metadata.lastModified = Date.now();
+              const parts = [];
+              if (added > 0) parts.push(`${added} added`);
+              if (updated > 0) parts.push(`${updated} updated`);
+              plan.changeLog.push(
+                createChangeEntry('create', `Imported beds: ${parts.join(', ')}`, [])
+              );
+            }
+          },
+          `Import beds`
+        );
 
         if (added > 0 || updated > 0) {
-          state.currentPlan.metadata.lastModified = Date.now();
-          const parts = [];
-          if (added > 0) parts.push(`${added} added`);
-          if (updated > 0) parts.push(`${updated} updated`);
-          state.currentPlan.changeLog.push(
-            createChangeEntry('create', `Imported beds: ${parts.join(', ')}`, [])
-          );
           state.isDirty = true;
           state.isSaving = true;
           state.saveError = null;
@@ -1954,14 +1991,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const bed = state.currentPlan.beds[bedId];
         if (!bed) return;
 
-        snapshotForUndo(state);
-
         const bedName = bed.name;
-        delete state.currentPlan.beds[bedId];
-
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('delete', `Deleted bed "${bedName}"`, [])
+        mutateWithPatches(
+          state,
+          (plan) => {
+            delete plan.beds![bedId];
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('delete', `Deleted bed "${bedName}"`, [])
+            );
+          },
+          `Delete bed "${bedName}"`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -1988,33 +2028,38 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const bed = state.currentPlan.beds[bedId];
         if (!bed) return;
 
-        snapshotForUndo(state);
-
+        const bedName = bed.name;
         const oldOrder = bed.displayOrder;
         const groupId = bed.groupId;
 
-        // Shift other beds in the same group
-        for (const b of Object.values(state.currentPlan.beds)) {
-          if (b.groupId !== groupId || b.id === bedId) continue;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            // Shift other beds in the same group
+            for (const b of Object.values(plan.beds!)) {
+              if (b.groupId !== groupId || b.id === bedId) continue;
 
-          if (oldOrder < newDisplayOrder) {
-            // Moving down: shift beds in between up
-            if (b.displayOrder > oldOrder && b.displayOrder <= newDisplayOrder) {
-              b.displayOrder--;
+              if (oldOrder < newDisplayOrder) {
+                // Moving down: shift beds in between up
+                if (b.displayOrder > oldOrder && b.displayOrder <= newDisplayOrder) {
+                  b.displayOrder--;
+                }
+              } else {
+                // Moving up: shift beds in between down
+                if (b.displayOrder >= newDisplayOrder && b.displayOrder < oldOrder) {
+                  b.displayOrder++;
+                }
+              }
             }
-          } else {
-            // Moving up: shift beds in between down
-            if (b.displayOrder >= newDisplayOrder && b.displayOrder < oldOrder) {
-              b.displayOrder++;
-            }
-          }
-        }
 
-        bed.displayOrder = newDisplayOrder;
+            plan.beds![bedId].displayOrder = newDisplayOrder;
 
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('edit', `Reordered bed "${bed.name}"`, [])
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('edit', `Reordered bed "${bedName}"`, [])
+            );
+          },
+          `Reorder bed "${bedName}"`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2041,23 +2086,27 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const bed = state.currentPlan.beds[bedId];
         if (!bed) return;
 
-        snapshotForUndo(state);
-
-        // Unassign all plantings from this bed
-        if (action === 'unassign') {
-          for (const planting of state.currentPlan.plantings) {
-            if (planting.startBed === bedId) {
-              planting.startBed = null;
-            }
-          }
-        }
-
         const bedName = bed.name;
-        delete state.currentPlan.beds[bedId];
+        mutateWithPatches(
+          state,
+          (plan) => {
+            // Unassign all plantings from this bed
+            if (action === 'unassign' && plan.plantings) {
+              for (const planting of plan.plantings) {
+                if (planting.startBed === bedId) {
+                  planting.startBed = null;
+                }
+              }
+            }
 
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('delete', `Deleted bed "${bedName}" and unassigned plantings`, [])
+            delete plan.beds![bedId];
+
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('delete', `Deleted bed "${bedName}" and unassigned plantings`, [])
+            );
+          },
+          `Delete bed "${bedName}" and unassign plantings`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2085,31 +2134,37 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         if (!bed) return;
         if (!state.currentPlan.bedGroups[newGroupId]) return;
 
-        snapshotForUndo(state);
-
         const oldGroupId = bed.groupId;
+        const oldDisplayOrder = bed.displayOrder;
+        const bedName = bed.name;
 
-        // Shift beds in old group (fill the gap)
-        for (const b of Object.values(state.currentPlan.beds)) {
-          if (b.groupId === oldGroupId && b.displayOrder > bed.displayOrder) {
-            b.displayOrder--;
-          }
-        }
+        mutateWithPatches(
+          state,
+          (plan) => {
+            // Shift beds in old group (fill the gap)
+            for (const b of Object.values(plan.beds!)) {
+              if (b.groupId === oldGroupId && b.displayOrder > oldDisplayOrder) {
+                b.displayOrder--;
+              }
+            }
 
-        // Shift beds in new group (make room)
-        for (const b of Object.values(state.currentPlan.beds)) {
-          if (b.groupId === newGroupId && b.displayOrder >= newDisplayOrder) {
-            b.displayOrder++;
-          }
-        }
+            // Shift beds in new group (make room)
+            for (const b of Object.values(plan.beds!)) {
+              if (b.groupId === newGroupId && b.displayOrder >= newDisplayOrder) {
+                b.displayOrder++;
+              }
+            }
 
-        // Move the bed
-        bed.groupId = newGroupId;
-        bed.displayOrder = newDisplayOrder;
+            // Move the bed
+            plan.beds![bedId].groupId = newGroupId;
+            plan.beds![bedId].displayOrder = newDisplayOrder;
 
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('edit', `Moved bed "${bed.name}" to different group`, [])
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('edit', `Moved bed "${bedName}" to different group`, [])
+            );
+          },
+          `Move bed "${bedName}" to different group`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2155,12 +2210,16 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const group = state.currentPlan.bedGroups[groupId];
         if (!group) return;
 
-        snapshotForUndo(state);
-
-        group.name = newName;
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('edit', `Renamed group to "${newName}"`, [])
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.bedGroups![groupId].name = newName;
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('edit', `Renamed group to "${newName}"`, [])
+            );
+          },
+          `Rename group to "${newName}"`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2198,19 +2257,23 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan?.bedGroups) return;
 
-        snapshotForUndo(state);
-
         // Find max displayOrder
         const maxOrder = Object.values(state.currentPlan.bedGroups)
           .reduce((max, g) => Math.max(max, g.displayOrder), -1);
 
         const newGroup = createBedGroup(name, maxOrder + 1);
         newGroupId = newGroup.id;
-        state.currentPlan.bedGroups[newGroup.id] = newGroup;
 
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('create', `Added group "${name}"`, [])
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.bedGroups![newGroup.id] = newGroup;
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('create', `Added group "${name}"`, [])
+            );
+          },
+          `Add group "${name}"`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2254,14 +2317,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const group = state.currentPlan.bedGroups[groupId];
         if (!group) return;
 
-        snapshotForUndo(state);
-
         const groupName = group.name;
-        delete state.currentPlan.bedGroups[groupId];
-
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('delete', `Deleted group "${groupName}"`, [])
+        mutateWithPatches(
+          state,
+          (plan) => {
+            delete plan.bedGroups![groupId];
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('delete', `Deleted group "${groupName}"`, [])
+            );
+          },
+          `Delete group "${groupName}"`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2302,33 +2368,38 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       set((state) => {
         if (!state.currentPlan?.beds || !state.currentPlan?.bedGroups || !state.currentPlan?.plantings) return;
 
-        snapshotForUndo(state);
-
-        // Unassign all plantings from beds in this group
-        let unassignedCount = 0;
-        for (const planting of state.currentPlan.plantings) {
-          if (planting.startBed && bedIds.has(planting.startBed)) {
-            planting.startBed = null;
-            unassignedCount++;
-          }
-        }
-
-        // Delete all beds in the group
-        for (const bedId of bedIds) {
-          delete state.currentPlan.beds[bedId];
-        }
-
-        // Delete the group
         const groupName = state.currentPlan.bedGroups[groupId].name;
-        delete state.currentPlan.bedGroups[groupId];
+        let unassignedCount = 0;
 
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry(
-            'delete',
-            `Deleted group "${groupName}" with ${bedIds.size} bed(s), unassigned ${unassignedCount} planting(s)`,
-            []
-          )
+        mutateWithPatches(
+          state,
+          (plan) => {
+            // Unassign all plantings from beds in this group
+            for (const planting of plan.plantings ?? []) {
+              if (planting.startBed && bedIds.has(planting.startBed)) {
+                planting.startBed = null;
+                unassignedCount++;
+              }
+            }
+
+            // Delete all beds in the group
+            for (const bedId of bedIds) {
+              delete plan.beds![bedId];
+            }
+
+            // Delete the group
+            delete plan.bedGroups![groupId];
+
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry(
+                'delete',
+                `Deleted group "${groupName}" with ${bedIds.size} bed(s), unassigned ${unassignedCount} planting(s)`,
+                []
+              )
+            );
+          },
+          `Delete group "${groupName}" with ${bedIds.size} beds`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2355,32 +2426,37 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         const group = state.currentPlan.bedGroups[groupId];
         if (!group) return;
 
-        snapshotForUndo(state);
-
         const oldOrder = group.displayOrder;
+        const groupName = group.name;
 
-        // Shift other groups
-        for (const g of Object.values(state.currentPlan.bedGroups)) {
-          if (g.id === groupId) continue;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            // Shift other groups
+            for (const g of Object.values(plan.bedGroups!)) {
+              if (g.id === groupId) continue;
 
-          if (oldOrder < newDisplayOrder) {
-            // Moving down: shift groups in between up
-            if (g.displayOrder > oldOrder && g.displayOrder <= newDisplayOrder) {
-              g.displayOrder--;
+              if (oldOrder < newDisplayOrder) {
+                // Moving down: shift groups in between up
+                if (g.displayOrder > oldOrder && g.displayOrder <= newDisplayOrder) {
+                  g.displayOrder--;
+                }
+              } else {
+                // Moving up: shift groups in between down
+                if (g.displayOrder >= newDisplayOrder && g.displayOrder < oldOrder) {
+                  g.displayOrder++;
+                }
+              }
             }
-          } else {
-            // Moving up: shift groups in between down
-            if (g.displayOrder >= newDisplayOrder && g.displayOrder < oldOrder) {
-              g.displayOrder++;
-            }
-          }
-        }
 
-        group.displayOrder = newDisplayOrder;
+            plan.bedGroups![groupId].displayOrder = newDisplayOrder;
 
-        state.currentPlan.metadata.lastModified = Date.now();
-        state.currentPlan.changeLog.push(
-          createChangeEntry('edit', `Reordered group "${group.name}"`, [])
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('edit', `Reordered group "${groupName}"`, [])
+            );
+          },
+          `Reorder group "${groupName}"`
         );
         state.isDirty = true;
         state.isSaving = true;
@@ -2406,14 +2482,19 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     addVariety: async (variety: Variety) => {
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
 
-        if (!state.currentPlan.varieties) {
-          state.currentPlan.varieties = {};
-        }
-        state.currentPlan.varieties[variety.id] = variety;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.varieties) {
+              plan.varieties = {};
+            }
+            plan.varieties[variety.id] = variety;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Add variety ${variety.name}`
+        );
 
-        state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2436,10 +2517,16 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     updateVariety: async (variety: Variety) => {
       set((state) => {
         if (!state.currentPlan?.varieties?.[variety.id]) return;
-        snapshotForUndo(state);
 
-        state.currentPlan.varieties[variety.id] = variety;
-        state.currentPlan.metadata.lastModified = Date.now();
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.varieties![variety.id] = variety;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update variety ${variety.name}`
+        );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2462,33 +2549,39 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     deleteVariety: async (varietyId: string) => {
       set((state) => {
         if (!state.currentPlan?.varieties?.[varietyId]) return;
-        snapshotForUndo(state);
 
-        delete state.currentPlan.varieties[varietyId];
+        mutateWithPatches(
+          state,
+          (plan) => {
+            delete plan.varieties![varietyId];
 
-        // Also remove from any seed mixes that reference this variety
-        if (state.currentPlan.seedMixes) {
-          for (const mix of Object.values(state.currentPlan.seedMixes)) {
-            mix.components = mix.components.filter((c) => c.varietyId !== varietyId);
-          }
-        }
-
-        // Clear seedSource from plantings that referenced this variety
-        if (state.currentPlan.plantings) {
-          for (const planting of state.currentPlan.plantings) {
-            if (planting.seedSource?.type === 'variety' && planting.seedSource.id === varietyId) {
-              planting.seedSource = undefined;
+            // Also remove from any seed mixes that reference this variety
+            if (plan.seedMixes) {
+              for (const mix of Object.values(plan.seedMixes)) {
+                mix.components = mix.components.filter((c) => c.varietyId !== varietyId);
+              }
             }
-          }
-        }
 
-        // Delete associated seed order
-        if (state.currentPlan.seedOrders) {
-          const orderId = getSeedOrderId(varietyId);
-          delete state.currentPlan.seedOrders[orderId];
-        }
+            // Clear seedSource from plantings that referenced this variety
+            if (plan.plantings) {
+              for (const planting of plan.plantings) {
+                if (planting.seedSource?.type === 'variety' && planting.seedSource.id === varietyId) {
+                  planting.seedSource = undefined;
+                }
+              }
+            }
 
-        state.currentPlan.metadata.lastModified = Date.now();
+            // Delete associated seed order
+            if (plan.seedOrders) {
+              const orderId = getSeedOrderId(varietyId);
+              delete plan.seedOrders[orderId];
+            }
+
+            plan.metadata.lastModified = Date.now();
+          },
+          `Delete variety ${varietyId}`
+        );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2520,31 +2613,37 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
 
-        if (!state.currentPlan.varieties) {
-          state.currentPlan.varieties = {};
-        }
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.varieties) {
+              plan.varieties = {};
+            }
 
-        for (const raw of rawInputs) {
-          // Normalize the raw input (validates densityUnit)
-          const input = normalizeVarietyInput(raw);
-          const contentKey = `${input.crop}|${input.name}|${input.supplier}`.toLowerCase().trim();
-          const existingId = existingByKey.get(contentKey);
+            for (const raw of rawInputs) {
+              // Normalize the raw input (validates densityUnit)
+              const input = normalizeVarietyInput(raw);
+              const contentKey = `${input.crop}|${input.name}|${input.supplier}`.toLowerCase().trim();
+              const existingId = existingByKey.get(contentKey);
 
-          if (existingId) {
-            const variety = createVariety({ ...input, id: existingId });
-            state.currentPlan.varieties[existingId] = variety;
-            updated++;
-          } else {
-            const variety = createVariety(input);
-            state.currentPlan.varieties[variety.id] = variety;
-            existingByKey.set(contentKey, variety.id);
-            added++;
-          }
-        }
+              if (existingId) {
+                const variety = createVariety({ ...input, id: existingId });
+                plan.varieties[existingId] = variety;
+                updated++;
+              } else {
+                const variety = createVariety(input);
+                plan.varieties[variety.id] = variety;
+                existingByKey.set(contentKey, variety.id);
+                added++;
+              }
+            }
 
-        state.currentPlan.metadata.lastModified = Date.now();
+            plan.metadata.lastModified = Date.now();
+          },
+          `Import ${rawInputs.length} varieties`
+        );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2580,14 +2679,19 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     addSeedMix: async (mix: SeedMix) => {
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
 
-        if (!state.currentPlan.seedMixes) {
-          state.currentPlan.seedMixes = {};
-        }
-        state.currentPlan.seedMixes[mix.id] = mix;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.seedMixes) {
+              plan.seedMixes = {};
+            }
+            plan.seedMixes[mix.id] = mix;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Add seed mix ${mix.name}`
+        );
 
-        state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2610,10 +2714,16 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     updateSeedMix: async (mix: SeedMix) => {
       set((state) => {
         if (!state.currentPlan?.seedMixes?.[mix.id]) return;
-        snapshotForUndo(state);
 
-        state.currentPlan.seedMixes[mix.id] = mix;
-        state.currentPlan.metadata.lastModified = Date.now();
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.seedMixes![mix.id] = mix;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update seed mix ${mix.name}`
+        );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2636,20 +2746,26 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     deleteSeedMix: async (mixId: string) => {
       set((state) => {
         if (!state.currentPlan?.seedMixes?.[mixId]) return;
-        snapshotForUndo(state);
 
-        delete state.currentPlan.seedMixes[mixId];
+        mutateWithPatches(
+          state,
+          (plan) => {
+            delete plan.seedMixes![mixId];
 
-        // Clear seedSource from plantings that referenced this mix
-        if (state.currentPlan.plantings) {
-          for (const planting of state.currentPlan.plantings) {
-            if (planting.seedSource?.type === 'mix' && planting.seedSource.id === mixId) {
-              planting.seedSource = undefined;
+            // Clear seedSource from plantings that referenced this mix
+            if (plan.plantings) {
+              for (const planting of plan.plantings) {
+                if (planting.seedSource?.type === 'mix' && planting.seedSource.id === mixId) {
+                  planting.seedSource = undefined;
+                }
+              }
             }
-          }
-        }
 
-        state.currentPlan.metadata.lastModified = Date.now();
+            plan.metadata.lastModified = Date.now();
+          },
+          `Delete seed mix ${mixId}`
+        );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2689,54 +2805,60 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
 
-        if (!state.currentPlan.seedMixes) {
-          state.currentPlan.seedMixes = {};
-        }
-
-        for (const rawInput of inputs) {
-          const resolvedComponents = rawInput.components.map((comp) => {
-            if (comp.varietyId) {
-              return { varietyId: comp.varietyId, percent: comp.percent };
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.seedMixes) {
+              plan.seedMixes = {};
             }
 
-            if (comp._varietyCrop && comp._varietyName) {
-              const varietyKey = `${comp._varietyCrop}|${comp._varietyName}|${comp._varietySupplier || ''}`.toLowerCase().trim();
-              const varietyId = varietyIdByKey.get(varietyKey);
-              if (varietyId) {
-                return { varietyId, percent: comp.percent };
+            for (const rawInput of inputs) {
+              const resolvedComponents = rawInput.components.map((comp) => {
+                if (comp.varietyId) {
+                  return { varietyId: comp.varietyId, percent: comp.percent };
+                }
+
+                if (comp._varietyCrop && comp._varietyName) {
+                  const varietyKey = `${comp._varietyCrop}|${comp._varietyName}|${comp._varietySupplier || ''}`.toLowerCase().trim();
+                  const varietyId = varietyIdByKey.get(varietyKey);
+                  if (varietyId) {
+                    return { varietyId, percent: comp.percent };
+                  }
+                }
+
+                unresolvedVarieties++;
+                return null;
+              }).filter((c): c is { varietyId: string; percent: number } => c !== null);
+
+              const input: CreateSeedMixInput = {
+                id: rawInput.id,
+                name: rawInput.name,
+                crop: rawInput.crop,
+                components: resolvedComponents,
+                notes: rawInput.notes,
+              };
+
+              const contentKey = `${input.name}|${input.crop}`.toLowerCase().trim();
+              const existingId = existingMixesByKey.get(contentKey);
+
+              if (existingId) {
+                const mix = createSeedMix({ ...input, id: existingId });
+                plan.seedMixes[existingId] = mix;
+                updated++;
+              } else {
+                const mix = createSeedMix(input);
+                plan.seedMixes[mix.id] = mix;
+                existingMixesByKey.set(contentKey, mix.id);
+                added++;
               }
             }
 
-            unresolvedVarieties++;
-            return null;
-          }).filter((c): c is { varietyId: string; percent: number } => c !== null);
+            plan.metadata.lastModified = Date.now();
+          },
+          `Import ${inputs.length} seed mixes`
+        );
 
-          const input: CreateSeedMixInput = {
-            id: rawInput.id,
-            name: rawInput.name,
-            crop: rawInput.crop,
-            components: resolvedComponents,
-            notes: rawInput.notes,
-          };
-
-          const contentKey = `${input.name}|${input.crop}`.toLowerCase().trim();
-          const existingId = existingMixesByKey.get(contentKey);
-
-          if (existingId) {
-            const mix = createSeedMix({ ...input, id: existingId });
-            state.currentPlan.seedMixes[existingId] = mix;
-            updated++;
-          } else {
-            const mix = createSeedMix(input);
-            state.currentPlan.seedMixes[mix.id] = mix;
-            existingMixesByKey.set(contentKey, mix.id);
-            added++;
-          }
-        }
-
-        state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2772,14 +2894,19 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     addProduct: async (product: Product) => {
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
 
-        if (!state.currentPlan.products) {
-          state.currentPlan.products = {};
-        }
-        state.currentPlan.products[product.id] = product;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.products) {
+              plan.products = {};
+            }
+            plan.products[product.id] = product;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Add product ${product.product}`
+        );
 
-        state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2802,10 +2929,16 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     updateProduct: async (product: Product) => {
       set((state) => {
         if (!state.currentPlan?.products?.[product.id]) return;
-        snapshotForUndo(state);
 
-        state.currentPlan.products[product.id] = product;
-        state.currentPlan.metadata.lastModified = Date.now();
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.products![product.id] = product;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update product ${product.product}`
+        );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2828,11 +2961,16 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     deleteProduct: async (productId: string) => {
       set((state) => {
         if (!state.currentPlan?.products?.[productId]) return;
-        snapshotForUndo(state);
 
-        delete state.currentPlan.products[productId];
+        mutateWithPatches(
+          state,
+          (plan) => {
+            delete plan.products![productId];
+            plan.metadata.lastModified = Date.now();
+          },
+          `Delete product ${productId}`
+        );
 
-        state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2864,30 +3002,36 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
 
-        if (!state.currentPlan.products) {
-          state.currentPlan.products = {};
-        }
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.products) {
+              plan.products = {};
+            }
 
-        for (const input of inputs) {
-          const key = getProductKey(input.crop, input.product, input.unit);
-          const existingId = existingByKey.get(key);
+            for (const input of inputs) {
+              const key = getProductKey(input.crop, input.product, input.unit);
+              const existingId = existingByKey.get(key);
 
-          if (existingId) {
-            // Update existing product
-            const product = createProduct(input);
-            state.currentPlan.products[product.id] = product;
-            updated++;
-          } else {
-            // Add new product
-            const product = createProduct(input);
-            state.currentPlan.products[product.id] = product;
-            added++;
-          }
-        }
+              if (existingId) {
+                // Update existing product
+                const product = createProduct(input);
+                plan.products[product.id] = product;
+                updated++;
+              } else {
+                // Add new product
+                const product = createProduct(input);
+                plan.products[product.id] = product;
+                added++;
+              }
+            }
 
-        state.currentPlan.metadata.lastModified = Date.now();
+            plan.metadata.lastModified = Date.now();
+          },
+          `Import ${inputs.length} products`
+        );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2923,14 +3067,19 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     upsertSeedOrder: async (order: SeedOrder) => {
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
 
-        if (!state.currentPlan.seedOrders) {
-          state.currentPlan.seedOrders = {};
-        }
-        state.currentPlan.seedOrders[order.id] = order;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.seedOrders) {
+              plan.seedOrders = {};
+            }
+            plan.seedOrders[order.id] = order;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Upsert seed order ${order.id}`
+        );
 
-        state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2951,11 +3100,16 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     deleteSeedOrder: async (orderId: string) => {
       set((state) => {
         if (!state.currentPlan?.seedOrders?.[orderId]) return;
-        snapshotForUndo(state);
 
-        delete state.currentPlan.seedOrders[orderId];
+        mutateWithPatches(
+          state,
+          (plan) => {
+            delete plan.seedOrders![orderId];
+            plan.metadata.lastModified = Date.now();
+          },
+          `Delete seed order ${orderId}`
+        );
 
-        state.currentPlan.metadata.lastModified = Date.now();
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -2979,31 +3133,37 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
 
-        if (!state.currentPlan.seedOrders) {
-          state.currentPlan.seedOrders = {};
-        }
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.seedOrders) {
+              plan.seedOrders = {};
+            }
 
-        for (const input of inputs) {
-          const order = createSeedOrder(input);
-          const existingOrder = state.currentPlan.seedOrders[order.id];
+            for (const input of inputs) {
+              const order = createSeedOrder(input);
+              const existingOrder = plan.seedOrders[order.id];
 
-          if (existingOrder) {
-            // Update existing - merge fields (don't overwrite user's quantity choices with empty values)
-            if (input.productWeight !== undefined) existingOrder.productWeight = input.productWeight;
-            if (input.productUnit !== undefined) existingOrder.productUnit = input.productUnit;
-            if (input.productCost !== undefined) existingOrder.productCost = input.productCost;
-            if (input.productLink !== undefined) existingOrder.productLink = input.productLink;
-            // Don't overwrite quantity or alreadyHave - those are user decisions
-            updated++;
-          } else {
-            state.currentPlan.seedOrders[order.id] = order;
-            added++;
-          }
-        }
+              if (existingOrder) {
+                // Update existing - merge fields (don't overwrite user's quantity choices with empty values)
+                if (input.productWeight !== undefined) existingOrder.productWeight = input.productWeight;
+                if (input.productUnit !== undefined) existingOrder.productUnit = input.productUnit;
+                if (input.productCost !== undefined) existingOrder.productCost = input.productCost;
+                if (input.productLink !== undefined) existingOrder.productLink = input.productLink;
+                // Don't overwrite quantity or alreadyHave - those are user decisions
+                updated++;
+              } else {
+                plan.seedOrders[order.id] = order;
+                added++;
+              }
+            }
 
-        state.currentPlan.metadata.lastModified = Date.now();
+            plan.metadata.lastModified = Date.now();
+          },
+          `Import ${inputs.length} seed orders`
+        );
+
         state.isDirty = true;
         state.isSaving = true;
         state.saveError = null;
@@ -3055,12 +3215,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       set((state) => {
         if (!state.currentPlan) return;
-        snapshotForUndo(state);
-        if (!state.currentPlan.markets) {
-          state.currentPlan.markets = {};
-        }
-        state.currentPlan.markets[market.id] = market;
-        state.currentPlan.metadata.lastModified = Date.now();
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.markets) {
+              plan.markets = {};
+            }
+            plan.markets[market.id] = market;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Add market "${name}"`
+        );
         state.isDirty = true;
       });
 
@@ -3071,11 +3236,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const currentPlan = get().currentPlan;
       if (!currentPlan?.markets?.[id]) return;
 
+      const marketName = currentPlan.markets[id].name;
       set((state) => {
         if (!state.currentPlan?.markets?.[id]) return;
-        snapshotForUndo(state);
-        Object.assign(state.currentPlan.markets[id], updates);
-        state.currentPlan.metadata.lastModified = Date.now();
+        mutateWithPatches(
+          state,
+          (plan) => {
+            Object.assign(plan.markets![id], updates);
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update market "${marketName}"`
+        );
         state.isDirty = true;
       });
 
@@ -3086,11 +3257,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const currentPlan = get().currentPlan;
       if (!currentPlan?.markets?.[id]) return;
 
+      const marketName = currentPlan.markets[id].name;
       set((state) => {
         if (!state.currentPlan?.markets?.[id]) return;
-        snapshotForUndo(state);
-        state.currentPlan.markets[id].active = false;
-        state.currentPlan.metadata.lastModified = Date.now();
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.markets![id].active = false;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Deactivate market "${marketName}"`
+        );
         state.isDirty = true;
       });
 
@@ -3101,11 +3278,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const currentPlan = get().currentPlan;
       if (!currentPlan?.markets?.[id]) return;
 
+      const marketName = currentPlan.markets[id].name;
       set((state) => {
         if (!state.currentPlan?.markets?.[id]) return;
-        snapshotForUndo(state);
-        state.currentPlan.markets[id].active = true;
-        state.currentPlan.metadata.lastModified = Date.now();
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.markets![id].active = true;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Reactivate market "${marketName}"`
+        );
         state.isDirty = true;
       });
 
@@ -3184,12 +3367,13 @@ export function usePlanMetadata(): PlanMetadata | null {
  * Helper hook for undo/redo state
  */
 export function useUndoRedo() {
-  const canUndo = usePlanStore((state) => state.past.length > 0);
-  const canRedo = usePlanStore((state) => state.future.length > 0);
+  // Use patch-based history (primary) with fallback to legacy snapshots
+  const canUndo = usePlanStore((state) => state.patchHistory.length > 0 || state.past.length > 0);
+  const canRedo = usePlanStore((state) => state.patchFuture.length > 0 || state.future.length > 0);
   const undo = usePlanStore((state) => state.undo);
   const redo = usePlanStore((state) => state.redo);
-  const undoCount = usePlanStore((state) => state.past.length);
-  const redoCount = usePlanStore((state) => state.future.length);
+  const undoCount = usePlanStore((state) => state.patchHistory.length + state.past.length);
+  const redoCount = usePlanStore((state) => state.patchFuture.length + state.future.length);
 
   return { canUndo, canRedo, undo, redo, undoCount, redoCount };
 }
