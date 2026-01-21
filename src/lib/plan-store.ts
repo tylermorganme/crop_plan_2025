@@ -488,8 +488,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   deleteCropConfigs: (identifiers: string[]) => Promise<number>;
   /** Toggle a crop config's favorite status */
   toggleConfigFavorite: (identifier: string) => Promise<void>;
-  /** Bulk set favorite status for multiple configs (single undo step) */
-  bulkSetFavorites: (identifiers: string[], isFavorite: boolean) => Promise<number>;
+  /** Bulk update multiple crop configs (single undo step) */
+  bulkUpdateCropConfigs: (updates: { identifier: string; changes: Partial<import('./entities/crop-config').CropConfig> }[]) => Promise<number>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -1511,7 +1511,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
     },
 
-    bulkSetFavorites: async (identifiers: string[], isFavorite: boolean) => {
+    bulkUpdateCropConfigs: async (updates: { identifier: string; changes: Partial<CropConfig> }[]) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
@@ -1521,19 +1521,14 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error('Plan has no crop catalog');
       }
 
-      // Filter to only configs that exist and need to change
-      const toUpdate = identifiers.filter(id => {
-        const config = state.currentPlan!.cropCatalog![id];
-        return config && config.isFavorite !== isFavorite;
-      });
+      // Filter to only configs that exist
+      const validUpdates = updates.filter(u => state.currentPlan!.cropCatalog![u.identifier]);
 
-      if (toUpdate.length === 0) {
+      if (validUpdates.length === 0) {
         return 0;
       }
 
-      const description = isFavorite
-        ? `Add ${toUpdate.length} config${toUpdate.length !== 1 ? 's' : ''} to favorites`
-        : `Remove ${toUpdate.length} config${toUpdate.length !== 1 ? 's' : ''} from favorites`;
+      const description = `Update ${validUpdates.length} crop config${validUpdates.length !== 1 ? 's' : ''}`;
 
       set((storeState) => {
         if (!storeState.currentPlan?.cropCatalog) return;
@@ -1541,8 +1536,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         mutateWithPatches(
           storeState,
           (plan) => {
-            for (const id of toUpdate) {
-              plan.cropCatalog![id].isFavorite = isFavorite;
+            for (const { identifier, changes } of validUpdates) {
+              Object.assign(plan.cropCatalog![identifier], changes);
             }
             plan.metadata.lastModified = Date.now();
           },
@@ -1570,7 +1565,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         }
       }
 
-      return toUpdate.length;
+      return validUpdates.length;
     },
 
     // History - uses SQLite as single source of truth

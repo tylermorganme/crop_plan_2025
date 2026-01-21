@@ -274,7 +274,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const addCropConfig = usePlanStore((state) => state.addCropConfig);
   const deleteCropConfigs = usePlanStore((state) => state.deleteCropConfigs);
   const toggleConfigFavorite = usePlanStore((state) => state.toggleConfigFavorite);
-  const bulkSetFavorites = usePlanStore((state) => state.bulkSetFavorites);
+  const bulkUpdateCropConfigs = usePlanStore((state) => state.bulkUpdateCropConfigs);
   const activePlanId = usePlanStore((state) => state.activePlanId);
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
   const planList = usePlanStore((state) => state.planList);
@@ -1160,9 +1160,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       return;
     }
     const selectedConfigs = sortedCrops.filter(c => selectedCropIds.has(c.id));
-    const identifiers = selectedConfigs.map(c => c.identifier);
+    const updates = selectedConfigs.map(c => ({ identifier: c.identifier, changes: { isFavorite: true } }));
 
-    const updatedCount = await bulkSetFavorites(identifiers, true);
+    const updatedCount = await bulkUpdateCropConfigs(updates);
 
     if (updatedCount === 0) {
       setAddToPlanMessage({
@@ -1176,7 +1176,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       });
     }
     deselectAll();
-  }, [activePlanId, selectedCropIds, sortedCrops, bulkSetFavorites, deselectAll]);
+  }, [activePlanId, selectedCropIds, sortedCrops, bulkUpdateCropConfigs, deselectAll]);
 
   return (
     <div className="flex h-full">
