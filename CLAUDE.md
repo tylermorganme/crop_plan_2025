@@ -200,6 +200,38 @@ All entity creation flows through functions in `src/lib/entities/`:
 
 Clone functions compose on create (e.g., `clonePlanting` calls `createPlanting` internally).
 
+### Bulk Operations
+
+For operations affecting multiple entities, **always use bulk methods** to ensure:
+- Single undo step (one patch entry)
+- Single API call (one save to SQLite)
+- Atomic transaction (all succeed or none)
+- Better performance (no N+1 problem)
+
+**Available bulk operations:**
+
+| Entity | Bulk Create | Bulk Update | Bulk Delete |
+|--------|-------------|-------------|-------------|
+| Planting | `bulkAddPlantings()` | `bulkUpdatePlantings()` | `bulkDeletePlantings()` |
+| Bed | `upsertBeds()` | `upsertBeds()` | — |
+| CropConfig | — | `bulkUpdateCropConfigs()` | `deleteCropConfigs()` |
+
+**Anti-pattern - NEVER do this:**
+```typescript
+// BAD: N API calls, N undo steps
+for (const id of selectedIds) {
+  await deleteCrop(id);
+}
+```
+
+**Correct pattern:**
+```typescript
+// GOOD: 1 API call, 1 undo step
+const deletedCount = await bulkDeletePlantings(selectedIds);
+```
+
+**Import functions** (`importVarieties`, `importSeedMixes`, `importProducts`, `importSeedOrders`) also use this pattern internally.
+
 ## Key Concepts
 
 - **Planting**: A single decision to grow a crop (one entry even if spanning multiple beds)

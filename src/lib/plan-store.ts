@@ -481,6 +481,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   addPlanting: (planting: Planting) => Promise<void>;
   /** Bulk add multiple plantings (single undo step) */
   bulkAddPlantings: (plantings: Planting[]) => Promise<number>;
+  /** Bulk update multiple plantings (single undo step) */
+  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>> }[]) => Promise<number>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
   updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>>) => Promise<void>;
   /** Assign a seed variety or mix to a planting */
@@ -1276,6 +1278,98 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       return processedPlantings.length;
+    },
+
+    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>> }[]) => {
+      const state = get();
+      if (!state.currentPlan?.plantings) {
+        return 0;
+      }
+
+      // Filter to only updates for plantings that exist
+      const existingIds = new Set(state.currentPlan.plantings.map(p => p.id));
+      const validUpdates = updates.filter(u => existingIds.has(u.id));
+
+      if (validUpdates.length === 0) {
+        return 0;
+      }
+
+      const description = `Update ${validUpdates.length} planting${validUpdates.length !== 1 ? 's' : ''}`;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.plantings) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (!plan.plantings) return;
+
+            const now = Date.now();
+            const updateMap = new Map(validUpdates.map(u => [u.id, u.changes]));
+
+            for (const planting of plan.plantings) {
+              const changes = updateMap.get(planting.id);
+              if (!changes) continue;
+
+              // Apply updates (same logic as updatePlanting)
+              if ('startBed' in changes) {
+                planting.startBed = changes.startBed ?? null;
+              }
+              if (changes.bedFeet !== undefined) {
+                planting.bedFeet = changes.bedFeet;
+              }
+              if (changes.overrides !== undefined) {
+                planting.overrides = {
+                  ...planting.overrides,
+                  ...changes.overrides,
+                };
+              }
+              if (changes.notes !== undefined) {
+                planting.notes = changes.notes || undefined;
+              }
+              if (changes.seedSource !== undefined) {
+                planting.seedSource = changes.seedSource || undefined;
+              }
+              if (changes.actuals !== undefined) {
+                planting.actuals = {
+                  ...planting.actuals,
+                  ...changes.actuals,
+                };
+              }
+
+              planting.lastModified = now;
+            }
+
+            plan.metadata.lastModified = now;
+            plan.changeLog.push(
+              createChangeEntry('batch', description, validUpdates.map(u => u.id))
+            );
+          },
+          description
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library (single save for all updates)
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return validUpdates.length;
     },
 
     duplicatePlanting: async (plantingId: string) => {

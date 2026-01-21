@@ -144,7 +144,7 @@ export default function TimelinePlanPage() {
   }, [updateCropDates]);
 
   const duplicatePlanting = usePlanStore((state) => state.duplicatePlanting);
-  const deleteCrop = usePlanStore((state) => state.deleteCrop);
+  const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
 
   const handleDuplicateCrop = useCallback(async (groupId: string): Promise<string | void> => {
     try {
@@ -158,15 +158,12 @@ export default function TimelinePlanPage() {
 
   const handleDeleteCrop = useCallback(async (groupIds: string[]) => {
     try {
-      for (const groupId of groupIds) {
-        await deleteCrop(groupId);
-      }
-      const count = groupIds.length;
-      setToast({ message: `Deleted ${count} planting${count > 1 ? 's' : ''}`, type: 'success' });
+      const count = await bulkDeletePlantings(groupIds);
+      setToast({ message: `Deleted ${count} planting${count !== 1 ? 's' : ''}`, type: 'success' });
     } catch (e) {
       setToast({ message: `Failed to delete: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
     }
-  }, [deleteCrop]);
+  }, [bulkDeletePlantings]);
 
   const handleAddPlanting = useCallback(async (configId: string, fieldStartDate: string, bedId: string): Promise<string> => {
     const newPlanting = createPlanting({
