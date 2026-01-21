@@ -291,6 +291,7 @@ export interface CopyPlanOptions {
   shiftAmount: number;
   shiftUnit: 'years' | 'months';
   unassignAll: boolean;
+  notes?: string;
 }
 
 /**
@@ -394,6 +395,7 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     varieties,
     seedMixes,
     products,
+    notes: options.notes,
     changeLog: [],
   };
 
@@ -474,6 +476,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   moveCrop: (groupId: string, newResource: string, bedSpanInfo?: BedSpanInfo[]) => Promise<void>;
   updateCropDates: (groupId: string, startDate: string, endDate: string) => Promise<void>;
   deleteCrop: (groupId: string) => Promise<void>;
+  /** Bulk delete multiple plantings (single undo step) */
+  bulkDeletePlantings: (plantingIds: string[]) => Promise<number>;
   addPlanting: (planting: Planting) => Promise<void>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
   updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>>) => Promise<void>;
@@ -1043,6 +1047,66 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           });
         }
       }
+    },
+
+    bulkDeletePlantings: async (plantingIds: string[]) => {
+      const state = get();
+      if (!state.currentPlan?.plantings) {
+        return 0;
+      }
+
+      // Filter to only IDs that actually exist
+      const existingIds = new Set(state.currentPlan.plantings.map(p => p.id));
+      const toDelete = plantingIds.filter(id => existingIds.has(id));
+
+      if (toDelete.length === 0) {
+        return 0;
+      }
+
+      const description = `Delete ${toDelete.length} planting${toDelete.length !== 1 ? 's' : ''}`;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.plantings) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (!plan.plantings) return;
+
+            // Remove all plantings in one pass
+            const idsToDelete = new Set(toDelete);
+            plan.plantings = plan.plantings.filter(p => !idsToDelete.has(p.id));
+
+            plan.metadata.lastModified = Date.now();
+            plan.changeLog.push(
+              createChangeEntry('batch', description, toDelete)
+            );
+          },
+          description
+        );
+        storeState.isDirty = true;
+        storeState.isSaving = true;
+        storeState.saveError = null;
+      });
+
+      // Save to library (single save for all deletions)
+      const currentState = get();
+      if (currentState.currentPlan) {
+        try {
+          await savePlanToLibrary(currentState.currentPlan);
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.isDirty = false;
+          });
+        } catch (e) {
+          set((storeState) => {
+            storeState.isSaving = false;
+            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
+          });
+        }
+      }
+
+      return toDelete.length;
     },
 
     // NOTE: planting.startBed may be a bed NAME from the timeline.

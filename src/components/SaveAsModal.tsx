@@ -6,27 +6,31 @@ import { Z_INDEX } from '@/lib/z-index';
 interface SaveAsModalProps {
   isOpen: boolean;
   currentPlanName: string;
+  currentPlanNotes?: string;
   onClose: () => void;
-  onSave: (newName: string) => void;
+  onSave: (newName: string, notes?: string) => void;
 }
 
 export default function SaveAsModal({
   isOpen,
   currentPlanName,
+  currentPlanNotes,
   onClose,
   onSave,
 }: SaveAsModalProps) {
   const [newName, setNewName] = useState('');
+  const [notes, setNotes] = useState('');
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  // Generate a smart suggested name
+  // Generate a smart suggested name and pre-fill notes from source plan
   useEffect(() => {
     if (isOpen) {
       setNewName(generateSuggestedName(currentPlanName));
+      setNotes(currentPlanNotes ?? '');
       // Focus and select input after render
       setTimeout(() => nameInputRef.current?.select(), 0);
     }
-  }, [isOpen, currentPlanName]);
+  }, [isOpen, currentPlanName, currentPlanNotes]);
 
   function generateSuggestedName(name: string): string {
     // If name ends with (N), increment it
@@ -44,7 +48,7 @@ export default function SaveAsModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim()) return;
-    onSave(newName.trim());
+    onSave(newName.trim(), notes.trim() || undefined);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -81,18 +85,32 @@ export default function SaveAsModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div className="px-6 py-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              New plan name
-            </label>
-            <input
-              ref={nameInputRef}
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter plan name"
-            />
+          <div className="px-6 py-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                New plan name
+              </label>
+              <input
+                ref={nameInputRef}
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter plan name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notes <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                placeholder="Add notes about this plan..."
+                rows={3}
+              />
+            </div>
           </div>
 
           {/* Footer */}

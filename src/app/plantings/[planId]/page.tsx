@@ -538,7 +538,7 @@ export default function PlantingsPage() {
     loadPlanById,
     updatePlanting,
     updateCropDates,
-    deleteCrop,
+    bulkDeletePlantings,
   } = usePlanStore();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -897,13 +897,13 @@ export default function PlantingsPage() {
     if (selectedIds.size === 0) return;
     if (!window.confirm(`Delete ${selectedIds.size} planting(s)?`)) return;
     try {
-      for (const id of selectedIds) await deleteCrop(id);
+      const deletedCount = await bulkDeletePlantings(Array.from(selectedIds));
       setSelectedIds(new Set());
-      setToast({ message: `Deleted ${selectedIds.size} planting(s)`, type: 'success' });
+      setToast({ message: `Deleted ${deletedCount} planting(s)`, type: 'success' });
     } catch {
       setToast({ message: 'Failed to delete', type: 'error' });
     }
-  }, [selectedIds, deleteCrop]);
+  }, [selectedIds, bulkDeletePlantings]);
 
   // Selection
   const toggleSelection = (id: string) => {

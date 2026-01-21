@@ -19,6 +19,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   // Use centralized store state - automatically syncs across tabs
   const activePlanId = usePlanStore((state) => state.activePlanId);
   const currentPlanName = usePlanStore((state) => state.currentPlan?.metadata.name ?? 'Untitled');
+  const currentPlanNotes = usePlanStore((state) => state.currentPlan?.notes);
   const refreshPlanList = usePlanStore((state) => state.refreshPlanList);
 
   // Undo/redo from store
@@ -308,14 +309,16 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
       <SaveAsModal
         isOpen={showCopyModal}
         currentPlanName={currentPlanName}
+        currentPlanNotes={currentPlanNotes}
         onClose={() => setShowCopyModal(false)}
-        onSave={async (newName: string) => {
+        onSave={async (newName: string, notes?: string) => {
           await copyPlan({
             newName,
             shiftDates: false,
             shiftAmount: 0,
             shiftUnit: 'years',
             unassignAll: false,
+            notes,
           });
           await refreshPlanList();
           setShowCopyModal(false);
