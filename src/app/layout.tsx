@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DevConsoleLogger } from "@/components/DevConsoleLogger";
-import AppHeader from "@/components/AppHeader";
 import PlanStoreProvider from "@/components/PlanStoreProvider";
 
 const geistSans = Geist({
@@ -32,7 +31,6 @@ export default function RootLayout({
       >
         <PlanStoreProvider>
           <DevConsoleLogger />
-          <AppHeader />
           {children}
         </PlanStoreProvider>
       </body>
