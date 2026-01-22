@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { DevConsoleLogger } from "@/components/DevConsoleLogger";
 import PlanStoreProvider from "@/components/PlanStoreProvider";
+import UIStoreProvider from "@/components/UIStoreProvider";
 import { ClientLogger } from "@/components/ClientLogger";
 
 const geistSans = Geist({
@@ -31,9 +32,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <PlanStoreProvider>
-          <ClientLogger />
-          <DevConsoleLogger />
-          {children}
+          <UIStoreProvider>
+            <ClientLogger />
+            <DevConsoleLogger />
+            {children}
+          </UIStoreProvider>
         </PlanStoreProvider>
       </body>
     </html>
