@@ -46,12 +46,17 @@ export function parseLocalDate(dateStr: string): Date {
  * Safely parse a date string, returning null for invalid/empty input.
  *
  * @param dateStr - Date string in ISO format, or null/undefined
- * @returns Date object or null
+ * @returns Date object or null if invalid
  */
 export function parseLocalDateOrNull(dateStr: string | null | undefined): Date | null {
   if (!dateStr) return null;
   try {
-    return parseISO(dateStr);
+    const date = parseISO(dateStr);
+    // parseISO returns Invalid Date for malformed strings, check with isNaN
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    return date;
   } catch {
     return null;
   }

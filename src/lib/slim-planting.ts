@@ -18,7 +18,7 @@ import {
   type CropConfig,
 } from './entities/crop-config';
 import { createPlanting } from './entities/planting';
-import { parseLocalDate } from './date-utils';
+import { parseLocalDate, parseLocalDateOrNull } from './date-utils';
 
 // =============================================================================
 // SLIM PLANTING TYPES
@@ -219,12 +219,10 @@ export function computeTimelineCrop(
       ? parseLocalDate(planting.fixedFieldStartDate)
       : undefined,
     additionalDaysOfHarvest: 0, // Already applied via resolveEffectiveTiming
-    actualGreenhouseDate: planting.actuals?.greenhouseDate
-      ? parseLocalDate(planting.actuals.greenhouseDate)
-      : undefined,
-    actualTpOrDsDate: planting.actuals?.fieldDate
-      ? parseLocalDate(planting.actuals.fieldDate)
-      : undefined,
+    // Use parseLocalDateOrNull for actuals since they come from user input
+    // and may be incomplete (e.g., mid-entry "2025-01") or invalid
+    actualGreenhouseDate: parseLocalDateOrNull(planting.actuals?.greenhouseDate) ?? undefined,
+    actualTpOrDsDate: parseLocalDateOrNull(planting.actuals?.fieldDate) ?? undefined,
     getFollowedCropEndDate,
   };
 
