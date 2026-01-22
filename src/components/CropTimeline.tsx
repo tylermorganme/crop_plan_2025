@@ -763,10 +763,12 @@ export default function CropTimeline({
       }
 
       // realized = planned (no actual), so shift visual position
-      const updatedCrop = {
+      const updatedCrop: typeof crop = {
         ...crop,
         startDate: applyOffset(crop.startDate, deltaDays),
         endDate: applyOffset(crop.endDate, deltaDays),
+        // Also shift harvestStartDate so the harvest indicator moves with the crop
+        harvestStartDate: crop.harvestStartDate ? applyOffset(crop.harvestStartDate, deltaDays) : undefined,
       };
 
       // Only change resource for the dragged groupId (not sequence members)
