@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { usePlanStore } from '@/lib/plan-store';
 import { TIMEZONE_OPTIONS, DEFAULT_TIMEZONE } from '@/lib/date-utils';
+import AppHeader from '@/components/AppHeader';
 
 export default function SettingsPage() {
   const params = useParams();
@@ -43,8 +44,10 @@ export default function SettingsPage() {
   const metadata = currentPlan.metadata;
 
   return (
-    <div className="h-[calc(100vh-51px)] overflow-auto bg-gray-50">
-      <div className="max-w-2xl mx-auto px-6 py-8">
+    <>
+      <AppHeader />
+      <div className="h-[calc(100vh-51px)] overflow-auto bg-gray-50">
+        <div className="max-w-2xl mx-auto px-6 py-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Plan Settings</h1>
 
         {/* Plan Info Section */}
@@ -191,5 +194,6 @@ export default function SettingsPage() {
         </section>
       </div>
     </div>
+    </>
   );
 }

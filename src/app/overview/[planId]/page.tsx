@@ -11,6 +11,7 @@ import {
 import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import type { TimelineCrop } from '@/lib/plan-types';
 import type { BedGroup, Bed } from '@/lib/entities/bed';
+import AppHeader from '@/components/AppHeader';
 
 // =============================================================================
 // CONSTANTS
@@ -548,8 +549,10 @@ export default function OverviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
+    <>
+      <AppHeader />
+      <div className="min-h-screen bg-gray-100">
+        {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -590,5 +593,6 @@ export default function OverviewPage() {
         )}
       </main>
     </div>
+    </>
   );
 }

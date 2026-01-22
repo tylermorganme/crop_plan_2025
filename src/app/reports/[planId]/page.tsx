@@ -48,6 +48,7 @@ import type { Variety, DensityUnit } from '@/lib/entities/variety';
 import type { Market } from '@/lib/entities/market';
 import { getActiveMarkets } from '@/lib/entities/market';
 import { Z_INDEX } from '@/lib/z-index';
+import AppHeader from '@/components/AppHeader';
 
 // =============================================================================
 // TAB TYPES
@@ -1529,8 +1530,10 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
+    <>
+      <AppHeader />
+      <div className="min-h-screen bg-gray-100">
+        {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -1583,5 +1586,6 @@ export default function ReportsPage() {
         )}
       </main>
     </div>
+    </>
   );
 }

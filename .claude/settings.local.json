@@ -62,7 +62,8 @@
       "Bash(claude --version:*)",
       "Skill(vercel-react-best-practices)",
       "Skill(vercel-react-best-practices:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(tail:*)"
     ],
     "deny": [],
     "ask": []

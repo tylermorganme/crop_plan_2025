@@ -6,6 +6,7 @@ import { usePlanStore, initializePlanStore } from '@/lib/plan-store';
 import { createProduct, type Product, type CreateProductInput } from '@/lib/entities/product';
 import { getActiveMarkets, type Market } from '@/lib/entities/market';
 import { Z_INDEX } from '@/lib/z-index';
+import AppHeader from '@/components/AppHeader';
 
 // Stable empty object reference to avoid SSR hydration issues
 const EMPTY_PRODUCTS: Record<string, Product> = {};
@@ -340,8 +341,10 @@ export default function ProductsPage() {
   const hasFilters = searchQuery || filterCrop || filterUnit;
 
   return (
-    <div className="h-[calc(100vh-49px)] bg-gray-50 flex flex-col overflow-hidden">
-      {/* Toolbar */}
+    <>
+      <AppHeader />
+      <div className="h-[calc(100vh-49px)] bg-gray-50 flex flex-col overflow-hidden">
+        {/* Toolbar */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-3 flex-wrap flex-shrink-0">
         <h1 className="text-lg font-semibold text-gray-900">Products</h1>
         <span className="text-sm text-gray-500">{filteredProducts.length}/{productCount}</span>
@@ -471,5 +474,6 @@ export default function ProductsPage() {
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
+    </>
   );
 }

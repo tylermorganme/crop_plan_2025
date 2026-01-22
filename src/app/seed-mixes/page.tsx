@@ -5,6 +5,7 @@ import { usePlanStore, initializePlanStore } from '@/lib/plan-store';
 import { createSeedMix, type SeedMix, type SeedMixComponent } from '@/lib/entities/seed-mix';
 import type { Variety } from '@/lib/entities/variety';
 import { Z_INDEX } from '@/lib/z-index';
+import AppHeader from '@/components/AppHeader';
 
 // Stable empty object references to avoid SSR hydration issues
 const EMPTY_VARIETIES: Record<string, Variety> = {};
@@ -564,8 +565,10 @@ export default function SeedMixesPage() {
   const hasFilters = searchQuery || filterCrop;
 
   return (
-    <div className="h-[calc(100vh-49px)] bg-gray-50 flex flex-col overflow-hidden">
-      {/* Toolbar */}
+    <>
+      <AppHeader />
+      <div className="h-[calc(100vh-49px)] bg-gray-50 flex flex-col overflow-hidden">
+        {/* Toolbar */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-3 flex-wrap flex-shrink-0">
         <h1 className="text-lg font-semibold text-gray-900">Seed Mixes</h1>
         <span className="text-sm text-gray-500">{filteredMixes.length}/{mixCount}</span>
@@ -659,5 +662,6 @@ export default function SeedMixesPage() {
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
+    </>
   );
 }

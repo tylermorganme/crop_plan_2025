@@ -31,6 +31,7 @@ import GroupHeader from '@/components/beds/GroupHeader';
 import DeleteBedModal from '@/components/beds/DeleteBedModal';
 import DeleteGroupModal from '@/components/beds/DeleteGroupModal';
 import ImportBedsModal from '@/components/beds/ImportBedsModal';
+import AppHeader from '@/components/AppHeader';
 
 export default function BedsPage() {
   const params = useParams();
@@ -379,8 +380,10 @@ export default function BedsPage() {
   const activeGroup = activeId && activeType === 'group' ? bedGroups[activeId] : null;
 
   return (
-    <div className="h-[calc(100vh-51px)] flex flex-col bg-gray-50 overflow-hidden">
-      {/* Page subheader - fixed at top of view area */}
+    <>
+      <AppHeader />
+      <div className="h-[calc(100vh-51px)] flex flex-col bg-gray-50 overflow-hidden">
+        {/* Page subheader - fixed at top of view area */}
       <div className="bg-white border-b shadow-sm flex-shrink-0">
         <div className="max-w-4xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -663,5 +666,6 @@ export default function BedsPage() {
         existingBeds={existingBeds}
       />
     </div>
+    </>
   );
 }

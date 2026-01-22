@@ -12,6 +12,7 @@ import { getTimelineCrops, collapseToPlantings } from '@/lib/timeline-data';
 import { Z_INDEX } from '@/lib/z-index';
 import CopyPlanModal from '@/components/CopyPlanModal';
 import type { CopyPlanOptions } from '@/components/CopyPlanModal';
+import AppHeader from '@/components/AppHeader';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -165,8 +166,10 @@ export default function PlansPage() {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-51px)] overflow-auto bg-gray-50">
-      {/* Toolbar */}
+    <>
+      <AppHeader />
+      <div className="h-[calc(100vh-51px)] overflow-auto bg-gray-50">
+        {/* Toolbar */}
       <div className="bg-white border-b px-6 py-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <h1 className="text-xl font-semibold text-gray-900">All Plans</h1>
@@ -341,5 +344,6 @@ export default function PlansPage() {
         />
       )}
     </div>
+    </>
   );
 }
