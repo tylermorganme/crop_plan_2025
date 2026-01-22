@@ -464,8 +464,19 @@ interface ColumnManagerProps {
 }
 
 function ColumnManager({ visibleColumns, onToggle, onClose, onShowAll, onHideAll }: ColumnManagerProps) {
-  // Non-frozen columns that can be toggled
-  const toggleableColumns = ALL_COLUMNS.filter(col => !FROZEN_COLUMNS.has(col));
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Non-frozen columns that can be toggled, sorted alphabetically by display name
+  const toggleableColumns = ALL_COLUMNS
+    .filter(col => !FROZEN_COLUMNS.has(col))
+    .sort((a, b) => COLUMN_HEADERS[a].localeCompare(COLUMN_HEADERS[b]));
+
+  // Filter columns based on search query
+  const filteredColumns = toggleableColumns.filter((col) => {
+    const header = COLUMN_HEADERS[col].toLowerCase();
+    const query = searchQuery.toLowerCase();
+    return header.includes(query);
+  });
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }} onClick={onClose}>
@@ -474,10 +485,23 @@ function ColumnManager({ visibleColumns, onToggle, onClose, onShowAll, onHideAll
           <h3 className="font-medium text-gray-900">Manage Columns</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">&times;</button>
         </div>
+
+        {/* Search bar */}
+        <div className="mb-3">
+          <input
+            type="text"
+            placeholder="Search columns..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         <div className="flex gap-2 mb-3">
           <button onClick={onShowAll} className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded">Show All</button>
           <button onClick={onHideAll} className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded">Hide All</button>
         </div>
+
         {/* Frozen columns - always visible */}
         <div className="mb-2 pb-2 border-b border-gray-100">
           <div className="text-xs text-gray-500 uppercase mb-1">Always Visible</div>
@@ -488,19 +512,26 @@ function ColumnManager({ visibleColumns, onToggle, onClose, onShowAll, onHideAll
             </div>
           ))}
         </div>
+
         {/* Toggleable columns */}
         <div className="space-y-1">
-          {toggleableColumns.map((col) => (
-            <label key={col} className="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer">
-              <input
-                type="checkbox"
-                checked={visibleColumns.has(col)}
-                onChange={() => onToggle(col)}
-                className="rounded border-gray-300 text-blue-600"
-              />
-              <span className="text-sm text-gray-700">{COLUMN_HEADERS[col]}</span>
-            </label>
-          ))}
+          {filteredColumns.length > 0 ? (
+            filteredColumns.map((col) => (
+              <label key={col} className="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 rounded cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={visibleColumns.has(col)}
+                  onChange={() => onToggle(col)}
+                  className="rounded border-gray-300 text-blue-600"
+                />
+                <span className="text-sm text-gray-700">{COLUMN_HEADERS[col]}</span>
+              </label>
+            ))
+          ) : (
+            <div className="px-2 py-3 text-sm text-gray-500 text-center">
+              No columns found
+            </div>
+          )}
         </div>
       </div>
     </div>
