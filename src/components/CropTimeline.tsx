@@ -577,10 +577,13 @@ export default function CropTimeline({
     deltaDays: number;
     targetResource: string | null;
     laneOffsetY: number;
-  }>({ deltaX: 0, deltaDays: 0, targetResource: null, laneOffsetY: 0 });
+    // Cursor position for fixed ghost positioning
+    cursorX: number;
+    cursorY: number;
+    // Target lane bounding rect (for positioning ghost relative to lane)
+    laneRect: DOMRect | null;
+  }>({ deltaX: 0, deltaDays: 0, targetResource: null, laneOffsetY: 0, cursorX: 0, cursorY: 0, laneRect: null });
 
-  // Ref for the ghost preview container - we update transform directly
-  const ghostPreviewRef = useRef<HTMLDivElement>(null);
 
   // Linked crop info for drag preview (multi-bed and sequence members)
   interface LinkedCropPreview {
@@ -1135,19 +1138,27 @@ export default function CropTimeline({
       deltaDays = pixelsToDays(deltaX);
     }
 
-    // Store in ref for ghost preview and drop handler
+    // Store in ref for drop handler
     dragDeltaRef.current = {
       deltaX,
       deltaDays,
       targetResource: resource,
       laneOffsetY,
+      cursorX: e.clientX,
+      cursorY: e.clientY,
+      laneRect: rect,
     };
 
-    // Update ghost preview position via CSS transform (GPU-accelerated, no layout)
-    if (ghostPreviewRef.current && dragPreview) {
-      // Calculate horizontal offset in pixels
-      const translateX = deltaX;
-      ghostPreviewRef.current.style.transform = `translateX(${translateX}px)`;
+    // Update dragPreview state so the ghost renders at the correct position
+    // This is a local state update (not store), so it's fast
+    if (dragPreview) {
+      setDragPreview(prev => prev ? {
+        ...prev,
+        deltaX,
+        deltaDays,
+        targetResource: resource,
+        laneOffsetY,
+      } : null);
     }
   };
 
@@ -1869,48 +1880,63 @@ export default function CropTimeline({
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, 'Unassigned')}
                   >
-                    {/* Unified ghost preview for Unassigned - shows for cross-resource moves OR when timing edit enabled */}
-                    {isDragOverUnassigned && dragPreview && (dragPreview.originalResource !== 'Unassigned' || timingEditEnabled) && (() => {
-                      const isMovingToUnassigned = dragPreview.originalResource !== 'Unassigned' && dragPreview.originalResource !== '';
+                    {/* Ghost preview - shows where crop will land */}
+                    {isDragOverUnassigned && dragPreview && (() => {
+                      const isMovingToNewResource = dragPreview.originalResource !== 'Unassigned';
 
-                      // Get crop colors (same logic as renderCropBox)
+                      // Get crop colors
                       const colors = dragPreview.bgColor
                         ? { bg: dragPreview.bgColor, text: dragPreview.textColor || '#fff' }
                         : getColorForCategory(dragPreview.category);
 
-                      // Use original position - transform handles the offset (GPU-accelerated)
-                      const basePos = { left: dragPreview.originalLeft, width: dragPreview.originalWidth };
+                      // Calculate X position - deltaDays is 0 when timing edit is off
+                      const displayStartDate = offsetDate(dragPreview.startDate, dragPreview.deltaDays);
+                      const displayEndDate = offsetDate(dragPreview.endDate, dragPreview.deltaDays);
+                      const adjustedPos = getTimelinePosition(displayStartDate, displayEndDate);
+                      const hasTimeOffset = dragPreview.deltaDays !== 0;
+
+                      // Calculate Y position within lane
+                      let topPos = CROP_TOP_PADDING;
+                      if (dragPreview.laneOffsetY !== undefined && viewMode === 'stacked') {
+                        const rowHeight = CROP_HEIGHT + CROP_SPACING;
+                        const row = Math.max(0, Math.floor((dragPreview.laneOffsetY - CROP_TOP_PADDING) / rowHeight));
+                        topPos = CROP_TOP_PADDING + row * rowHeight;
+                        topPos = Math.max(CROP_TOP_PADDING, Math.min(topPos, effectiveHeight - CROP_HEIGHT - CROP_TOP_PADDING));
+                      }
 
                       // Build label
-                      const bedPart = isMovingToUnassigned ? '→ Unassigned' : 'Unassigned';
+                      const bedPart = isMovingToNewResource ? '→ Unassigned' : 'Unassigned';
+                      const timePart = hasTimeOffset
+                        ? ` ${dragPreview.deltaDays > 0 ? '+' : ''}${dragPreview.deltaDays}d`
+                        : '';
+                      const badgeColor = hasTimeOffset
+                        ? (dragPreview.deltaDays > 0 ? '#22c55e' : '#ef4444')
+                        : colors.bg;
 
                       return (
                         <div
-                          ref={ghostPreviewRef}
                           className="absolute rounded border-2 border-dashed pointer-events-none"
                           style={{
-                            left: basePos.left,
-                            width: basePos.width,
-                            top: CROP_TOP_PADDING,
+                            left: adjustedPos.left,
+                            width: adjustedPos.width,
+                            top: topPos,
                             height: CROP_HEIGHT,
                             borderColor: colors.bg,
                             backgroundColor: `${colors.bg}33`,
                             zIndex: Z_INDEX.TIMELINE_DRAG_PREVIEW,
-                            // Use transform for smooth movement - updated via ref in handleDragOver
-                            transform: 'translateX(0px)',
-                            willChange: 'transform',
                           }}
                         >
-                          {/* Badge showing destination */}
+                          {/* Badge showing destination + timing */}
                           <div
                             className="absolute -top-6 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap text-white"
-                            style={{ backgroundColor: colors.bg }}
+                            style={{ backgroundColor: badgeColor }}
                           >
-                            {bedPart}
+                            {bedPart}{timePart}
                           </div>
-                          {/* Crop name */}
+                          {/* Crop name and dates */}
                           <div className="px-2 py-1 text-xs" style={{ color: colors.bg }}>
                             <div className="font-semibold truncate">{dragPreview.cropName}</div>
+                            <div className="text-[10px] opacity-80">{formatDate(displayStartDate)} - {formatDate(displayEndDate)}</div>
                           </div>
                         </div>
                       );
@@ -2050,9 +2076,8 @@ export default function CropTimeline({
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, resource)}
                   >
-                    {/* Unified ghost preview for all drags - shows target position with bed + timing info */}
-                    {/* Show when: hovering over this lane OR this is the original lane and timing mode is on */}
-                    {(isDragOver || (dragPreview?.originalResource === resource && timingEditEnabled)) && dragPreview && (() => {
+                    {/* Ghost preview - shows where crop will land */}
+                    {isDragOver && dragPreview && (() => {
                       const isMovingToNewResource = dragPreview.targetResource !== dragPreview.originalResource;
                       const isComplete = dragPreview.targetIsComplete !== false;
                       const spanBeds = dragPreview.targetSpanBeds || [resource];
@@ -2064,17 +2089,11 @@ export default function CropTimeline({
                         ? { bg: dragPreview.bgColor, text: dragPreview.textColor || '#fff' }
                         : getColorForCategory(dragPreview.category);
 
-                      // Calculate position - use adjusted dates if timing edit is enabled
-                      const hasTimeOffset = timingEditEnabled && dragPreview.deltaDays !== 0;
-                      const displayStartDate = hasTimeOffset
-                        ? offsetDate(dragPreview.startDate, dragPreview.deltaDays)
-                        : dragPreview.startDate;
-                      const displayEndDate = hasTimeOffset
-                        ? offsetDate(dragPreview.endDate, dragPreview.deltaDays)
-                        : dragPreview.endDate;
-                      const adjustedPos = hasTimeOffset
-                        ? getTimelinePosition(displayStartDate, displayEndDate)
-                        : { left: dragPreview.originalLeft, width: dragPreview.originalWidth };
+                      // Calculate X position - deltaDays is 0 when timing edit is off
+                      const displayStartDate = offsetDate(dragPreview.startDate, dragPreview.deltaDays);
+                      const displayEndDate = offsetDate(dragPreview.endDate, dragPreview.deltaDays);
+                      const adjustedPos = getTimelinePosition(displayStartDate, displayEndDate);
+                      const hasTimeOffset = dragPreview.deltaDays !== 0;
 
                       // Calculate vertical position based on cursor Y position
                       // In stacked mode, snap to row positions; in overlap mode, follow cursor more freely
