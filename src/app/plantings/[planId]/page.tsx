@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { parseISO, format } from 'date-fns';
 import { usePlanStore } from '@/lib/plan-store';
 import { Z_INDEX } from '@/lib/z-index';
+import { DateInputWithButtons } from '@/components/DateInputWithButtons';
 import {
   getPrimarySeedToHarvest,
   calculateAggregateHarvestWindow,
@@ -1210,11 +1211,10 @@ export default function PlantingsPage() {
         return <span className="text-gray-600 text-xs">{planting.identifier}</span>;
       case 'fieldStartDate':
         return (
-          <InlineCell
+          <DateInputWithButtons
             value={planting.fieldStartDate.split('T')[0]}
             displayValue={format(parseISO(planting.fieldStartDate), 'MMM d')}
             onSave={(v) => handleDateChange(planting.id, v)}
-            type="date"
           />
         );
       case 'ghDate':
@@ -1296,22 +1296,18 @@ export default function PlantingsPage() {
         );
       case 'actualGhDate':
         return (
-          <InlineCell
+          <DateInputWithButtons
             value={planting.actuals?.greenhouseDate?.split('T')[0] || ''}
             displayValue={planting.actuals?.greenhouseDate ? format(parseISO(planting.actuals.greenhouseDate), 'MMM d') : undefined}
             onSave={(v) => handleActualDateChange(planting.id, 'greenhouseDate', v)}
-            type="date"
-            placeholder="—"
           />
         );
       case 'actualFieldDate':
         return (
-          <InlineCell
+          <DateInputWithButtons
             value={planting.actuals?.fieldDate?.split('T')[0] || ''}
             displayValue={planting.actuals?.fieldDate ? format(parseISO(planting.actuals.fieldDate), 'MMM d') : undefined}
             onSave={(v) => handleActualDateChange(planting.id, 'fieldDate', v)}
-            type="date"
-            placeholder="—"
           />
         );
       case 'addlDaysHarvest':

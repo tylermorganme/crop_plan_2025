@@ -7,6 +7,7 @@ import { calculateCropFields, calculateDaysInCells, calculateSeedToHarvest, calc
 import { resolveEffectiveTiming } from '@/lib/slim-planting';
 import { Z_INDEX } from '@/lib/z-index';
 import AddToBedPanel from './AddToBedPanel';
+import { DateInputWithButtons } from './DateInputWithButtons';
 
 // =============================================================================
 // Types
@@ -2317,11 +2318,10 @@ export default function CropTimeline({
                         <div>
                           <div className="text-xs text-gray-600 mb-1">Field</div>
                           {onCropDateChange ? (
-                            <input
-                              type="date"
-                              defaultValue={formatForInput(fieldDate)}
-                              onChange={(e) => {
-                                const newFieldDate = e.target.value;
+                            <DateInputWithButtons
+                              value={formatForInput(fieldDate)}
+                              mode="input"
+                              onSave={(newFieldDate) => {
                                 if (newFieldDate) {
                                   // End date shifts by the same delta
                                   const oldField = parseISO(crop.startDate);
@@ -2331,7 +2331,7 @@ export default function CropTimeline({
                                   onCropDateChange(crop.groupId, newFieldDate + 'T00:00:00', newEnd.toISOString().split('T')[0] + 'T00:00:00');
                                 }
                               }}
-                              className="w-full px-1 py-0.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                              className="text-center"
                             />
                           ) : (
                             <div className="text-sm text-gray-900 py-0.5">{fieldDate.toLocaleDateString()}</div>
@@ -2350,32 +2350,28 @@ export default function CropTimeline({
                     <div className="grid grid-cols-2 gap-2 text-center">
                       <div>
                         <div className="text-xs text-gray-600 mb-1">Actual Greenhouse</div>
-                        <input
-                          type="date"
-                          key={`greenhouse-${crop.groupId}`}
+                        <DateInputWithButtons
                           value={crop.actuals?.greenhouseDate?.split('T')[0] || ''}
-                          onChange={(e) => {
-                            const val = e.target.value || undefined;
+                          mode="input"
+                          onSave={(val) => {
                             onUpdatePlanting(crop.groupId, {
-                              actuals: { ...crop.actuals, greenhouseDate: val }
+                              actuals: { ...crop.actuals, greenhouseDate: val || undefined }
                             });
                           }}
-                          className="w-full px-1 py-0.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                          className="text-center"
                         />
                       </div>
                       <div>
                         <div className="text-xs text-gray-600 mb-1">Actual Field</div>
-                        <input
-                          type="date"
-                          key={`field-${crop.groupId}`}
+                        <DateInputWithButtons
                           value={crop.actuals?.fieldDate?.split('T')[0] || ''}
-                          onChange={(e) => {
-                            const val = e.target.value || undefined;
+                          mode="input"
+                          onSave={(val) => {
                             onUpdatePlanting(crop.groupId, {
-                              actuals: { ...crop.actuals, fieldDate: val }
+                              actuals: { ...crop.actuals, fieldDate: val || undefined }
                             });
                           }}
-                          className="w-full px-1 py-0.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                          className="text-center"
                         />
                       </div>
                     </div>
