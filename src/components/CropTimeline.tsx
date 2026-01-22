@@ -1836,22 +1836,35 @@ export default function CropTimeline({
               }}
             />
             {/* Preview time bounds - dashed outline, green if later, red if earlier */}
-            {Math.abs(dragPreview.deltaX) >= 1 && (
-              <div
-                className={`rounded border-2 border-dashed pointer-events-none ${
-                  dragPreview.deltaX > 0 ? 'border-green-500' : 'border-red-500'
-                }`}
-                style={{
-                  position: 'sticky',
-                  top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
-                  zIndex: Z_INDEX.TIMELINE_HEADER + 2,
-                  marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft + dragPreview.deltaX,
-                  width: Math.round(dragPreview.originalWidth),
-                  height: CROP_HEIGHT,
-                  marginBottom: -CROP_HEIGHT,
-                }}
-              />
-            )}
+            {Math.abs(dragPreview.deltaX) >= 1 && (() => {
+              const deltaDays = pixelsToDays(dragPreview.deltaX);
+              const isLater = dragPreview.deltaX > 0;
+              return (
+                <div
+                  className={`rounded border-2 border-dashed pointer-events-none ${
+                    isLater ? 'border-green-500' : 'border-red-500'
+                  }`}
+                  style={{
+                    position: 'sticky',
+                    top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
+                    zIndex: Z_INDEX.TIMELINE_HEADER + 2,
+                    marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft + dragPreview.deltaX,
+                    width: Math.round(dragPreview.originalWidth),
+                    height: CROP_HEIGHT,
+                    marginBottom: -CROP_HEIGHT,
+                  }}
+                >
+                  {/* Delta days badge */}
+                  <div
+                    className={`absolute -top-5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-xs font-bold text-white ${
+                      isLater ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                  >
+                    {isLater ? '+' : ''}{deltaDays}d
+                  </div>
+                </div>
+              );
+            })()}
           </>
         )}
         {/* Using HTML table for reliable dual-axis sticky positioning */}
