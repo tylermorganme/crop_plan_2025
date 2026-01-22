@@ -1835,10 +1835,12 @@ export default function CropTimeline({
                 marginBottom: -CROP_HEIGHT,
               }}
             />
-            {/* Preview time bounds - dashed colored outline, only show if moved */}
+            {/* Preview time bounds - dashed outline, green if later, red if earlier */}
             {Math.abs(dragPreview.deltaX) >= 1 && (
               <div
-                className="rounded border-2 border-dashed border-blue-500 pointer-events-none"
+                className={`rounded border-2 border-dashed pointer-events-none ${
+                  dragPreview.deltaX > 0 ? 'border-green-500' : 'border-red-500'
+                }`}
                 style={{
                   position: 'sticky',
                   top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
