@@ -708,7 +708,6 @@ export default function PlantingsPage() {
   const togglePlanting = useUIStore((state) => state.togglePlanting);
   const clearSelectionStore = useUIStore((state) => state.clearSelection);
   const selectAll = useUIStore((state) => state.selectMultiple);
-  const selectPlanting = useUIStore((state) => state.selectPlanting);
 
   // Sequence modal state
   const [sequenceModalData, setSequenceModalData] = useState<{
@@ -1061,21 +1060,11 @@ export default function PlantingsPage() {
   }, [updatePlanting, currentPlan?.plantings]);
 
   const handleRowClick = useCallback((plantingId: string, event: React.MouseEvent) => {
-    // Unified behavior like Timeline:
-    // Ctrl/Cmd + click = multi-select toggle
-    // Regular click = single select (replaces previous)
-    if (event.ctrlKey || event.metaKey) {
-      togglePlanting(plantingId);
-    } else {
-      // Single select: if already the only selected item, deselect; otherwise replace
-      if (selectedIds.size === 1 && selectedIds.has(plantingId)) {
-        clearSelectionStore();
-      } else {
-        clearSelectionStore();
-        selectPlanting(plantingId);
-      }
-    }
-  }, [selectedIds, togglePlanting, clearSelectionStore, selectPlanting]);
+    console.log('[handleRowClick] clicked:', plantingId, '| ctrl/meta:', event.ctrlKey || event.metaKey, '| current selection size:', selectedIds.size, '| current IDs:', Array.from(selectedIds));
+    // Plantings view: simple toggle behavior (no Ctrl needed for multi-select)
+    // Each click just toggles the item in/out of selection
+    togglePlanting(plantingId);
+  }, [togglePlanting]);
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedIds.size === 0) return;

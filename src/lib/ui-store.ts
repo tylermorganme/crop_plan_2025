@@ -1,5 +1,85 @@
 import { create } from 'zustand';
 
+// ============================================
+// Cross-Tab Sync via BroadcastChannel
+// ============================================
+
+const SYNC_CHANNEL_NAME = 'ui-store-sync';
+const TAB_ID_KEY = 'ui-store-tab-id';
+
+/**
+ * Unique ID for this tab (to filter out own broadcasts).
+ * Persisted in sessionStorage to survive Fast Refresh during development.
+ */
+export const TAB_ID = (() => {
+  if (typeof window === 'undefined') return null;
+
+  // Try to get existing tab ID from sessionStorage
+  let tabId = sessionStorage.getItem(TAB_ID_KEY);
+
+  // Generate new one if it doesn't exist
+  if (!tabId) {
+    tabId = `${Date.now()}-${Math.random()}`;
+    sessionStorage.setItem(TAB_ID_KEY, tabId);
+  }
+
+  return tabId;
+})();
+
+/** Message types for cross-tab UI state sync */
+export type UIStoreSyncMessage =
+  | { type: 'selection-changed'; selectedIds: string[]; tabId: string; version: number }
+  | { type: 'search-changed'; query: string; tabId: string; version: number }
+  | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null; tabId: string; version: number };
+
+/** BroadcastChannel for cross-tab sync */
+let syncChannel: BroadcastChannel | null = null;
+
+/** Track if we already have a listener registered (prevent duplicates from Fast Refresh) */
+let listenerRegistered = false;
+
+/** Get or create the sync channel */
+function getSyncChannel(): BroadcastChannel | null {
+  if (typeof window === 'undefined') return null;
+  if (!syncChannel) {
+    try {
+      syncChannel = new BroadcastChannel(SYNC_CHANNEL_NAME);
+    } catch {
+      console.warn('BroadcastChannel not supported, cross-tab UI sync disabled');
+    }
+  }
+  return syncChannel;
+}
+
+/** Broadcast a sync message to other tabs (includes tab ID and version) */
+function broadcastUISync(message: { type: 'selection-changed'; selectedIds: string[] } | { type: 'search-changed'; query: string } | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null }): void {
+  if (!TAB_ID) return;
+  const version = useUIStore.getState().version;
+  const fullMessage = { ...message, tabId: TAB_ID, version } as UIStoreSyncMessage;
+  console.log('[broadcastUISync] posting message:', { type: message.type, tabId: TAB_ID, version });
+  getSyncChannel()?.postMessage(fullMessage);
+}
+
+/** Subscribe to sync messages from other tabs */
+export function onUIStoreSyncMessage(callback: (message: UIStoreSyncMessage) => void): () => void {
+  const channel = getSyncChannel();
+  if (!channel || listenerRegistered) {
+    console.log('[onUIStoreSyncMessage] skipping registration - channel:', !!channel, 'listenerRegistered:', listenerRegistered);
+    return () => {};
+  }
+
+  console.log('[onUIStoreSyncMessage] registering new listener, tabId:', TAB_ID);
+  listenerRegistered = true;
+  const handler = (event: MessageEvent<UIStoreSyncMessage>) => callback(event.data);
+  channel.addEventListener('message', handler);
+
+  return () => {
+    console.log('[onUIStoreSyncMessage] cleaning up listener, tabId:', TAB_ID);
+    listenerRegistered = false;
+    channel.removeEventListener('message', handler);
+  };
+}
+
 /**
  * UI Store - Manages ephemeral UI state shared across views
  *
@@ -42,6 +122,9 @@ import { create } from 'zustand';
  */
 
 interface UIState {
+  // Version counter for cross-tab sync ordering
+  version: number;
+
   // Selection state: Set of planting IDs that are currently selected
   // Inspector shows details for selected plantings (same in Timeline and Plantings)
   selectedPlantingIds: Set<string>;
@@ -70,55 +153,110 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set, get) => ({
+  // Version counter for ordering cross-tab updates
+  version: 0,
+
   // Selection
   selectedPlantingIds: new Set<string>(),
 
-  selectPlanting: (id: string) =>
-    set((state) => ({
-      selectedPlantingIds: new Set(state.selectedPlantingIds).add(id),
-    })),
-
-  deselectPlanting: (id: string) =>
+  selectPlanting: (id: string) => {
+    let newIds: string[];
+    let prevSize: number;
     set((state) => {
+      prevSize = state.selectedPlantingIds.size;
+      const next = new Set(state.selectedPlantingIds).add(id);
+      newIds = Array.from(next);
+      console.log('[UIStore] selectPlanting:', id, '| prev size:', prevSize, '→ new size:', newIds.length, '| new IDs:', newIds);
+      return { selectedPlantingIds: next, version: state.version + 1 };
+    });
+    console.log('[UIStore] broadcasting selection-changed:', newIds!.length, 'IDs');
+    broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
+  },
+
+  deselectPlanting: (id: string) => {
+    let newIds: string[];
+    let prevSize: number;
+    set((state) => {
+      prevSize = state.selectedPlantingIds.size;
       const next = new Set(state.selectedPlantingIds);
       next.delete(id);
-      return { selectedPlantingIds: next };
-    }),
+      newIds = Array.from(next);
+      console.log('[UIStore] deselectPlanting:', id, '| prev size:', prevSize, '→ new size:', newIds.length);
+      return { selectedPlantingIds: next, version: state.version + 1 };
+    });
+    broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
+  },
 
-  togglePlanting: (id: string) =>
+  togglePlanting: (id: string) => {
+    let newIds: string[];
+    let prevSize: number;
+    let action: string;
     set((state) => {
+      prevSize = state.selectedPlantingIds.size;
       const next = new Set(state.selectedPlantingIds);
       if (next.has(id)) {
         next.delete(id);
+        action = 'removed';
       } else {
         next.add(id);
+        action = 'added';
       }
-      return { selectedPlantingIds: next };
-    }),
+      newIds = Array.from(next);
+      console.log('[UIStore] togglePlanting:', id, action, '| prev size:', prevSize, '→ new size:', newIds.length, '| new IDs:', newIds);
+      return { selectedPlantingIds: next, version: state.version + 1 };
+    });
+    console.log('[UIStore] broadcasting selection-changed:', newIds!.length, 'IDs');
+    broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
+  },
 
-  selectMultiple: (ids: string[]) =>
-    set((state) => ({
-      selectedPlantingIds: new Set([...state.selectedPlantingIds, ...ids]),
-    })),
+  selectMultiple: (ids: string[]) => {
+    let newIds: string[];
+    let prevSize: number;
+    set((state) => {
+      prevSize = state.selectedPlantingIds.size;
+      const next = new Set([...state.selectedPlantingIds, ...ids]);
+      newIds = Array.from(next);
+      console.log('[UIStore] selectMultiple:', ids.length, 'IDs | prev size:', prevSize, '→ new size:', newIds.length);
+      return { selectedPlantingIds: next, version: state.version + 1 };
+    });
+    broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
+  },
 
-  clearSelection: () => set({ selectedPlantingIds: new Set<string>() }),
+  clearSelection: () => {
+    const prevSize = get().selectedPlantingIds.size;
+    const newVersion = get().version + 1;
+    console.log('[UIStore] clearSelection | prev size:', prevSize, '→ 0');
+    set({ selectedPlantingIds: new Set<string>(), version: newVersion });
+    console.log('[UIStore] broadcasting selection-changed: 0 IDs');
+    broadcastUISync({ type: 'selection-changed', selectedIds: [] });
+  },
 
   isSelected: (id: string) => get().selectedPlantingIds.has(id),
 
   // Group selection: selects/deselects all plantings in a group
-  selectGroup: (groupId: string, plantingIds: string[]) =>
-    set((state) => ({
-      selectedPlantingIds: new Set([...state.selectedPlantingIds, ...plantingIds]),
-    })),
+  selectGroup: (_groupId: string, plantingIds: string[]) => {
+    let newIds: string[];
+    set((state) => {
+      const next = new Set([...state.selectedPlantingIds, ...plantingIds]);
+      newIds = Array.from(next);
+      return { selectedPlantingIds: next, version: state.version + 1 };
+    });
+    broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
+  },
 
-  deselectGroup: (groupId: string, plantingIds: string[]) =>
+  deselectGroup: (_groupId: string, plantingIds: string[]) => {
+    let newIds: string[];
     set((state) => {
       const next = new Set(state.selectedPlantingIds);
       plantingIds.forEach((id) => next.delete(id));
-      return { selectedPlantingIds: next };
-    }),
+      newIds = Array.from(next);
+      return { selectedPlantingIds: next, version: state.version + 1 };
+    });
+    broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
+  },
 
-  toggleGroup: (groupId: string, plantingIds: string[]) =>
+  toggleGroup: (_groupId: string, plantingIds: string[]) => {
+    let newIds: string[];
     set((state) => {
       const next = new Set(state.selectedPlantingIds);
       const allSelected = plantingIds.every((id) => next.has(id));
@@ -131,19 +269,28 @@ export const useUIStore = create<UIState>((set, get) => ({
         plantingIds.forEach((id) => next.add(id));
       }
 
-      return { selectedPlantingIds: next };
-    }),
+      newIds = Array.from(next);
+      return { selectedPlantingIds: next, version: state.version + 1 };
+    });
+    broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
+  },
 
-  isGroupSelected: (groupId: string, plantingIds: string[]) => {
+  isGroupSelected: (_groupId: string, plantingIds: string[]) => {
     const state = get();
     return plantingIds.length > 0 && plantingIds.every((id) => state.selectedPlantingIds.has(id));
   },
 
   // Search
   searchQuery: '',
-  setSearchQuery: (query: string) => set({ searchQuery: query }),
+  setSearchQuery: (query: string) => {
+    set((state) => ({ searchQuery: query, version: state.version + 1 }));
+    broadcastUISync({ type: 'search-changed', query });
+  },
 
   // Toast
   toast: null,
-  setToast: (toast) => set({ toast }),
+  setToast: (toast) => {
+    set((state) => ({ toast, version: state.version + 1 }));
+    broadcastUISync({ type: 'toast-changed', toast });
+  },
 }));
