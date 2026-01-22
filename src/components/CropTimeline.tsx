@@ -1854,13 +1854,20 @@ export default function CropTimeline({
                     marginBottom: -CROP_HEIGHT,
                   }}
                 >
-                  {/* Delta days badge */}
+                  {/* Delta days badges - circles on left and right walls */}
                   <div
-                    className={`absolute -top-5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded text-xs font-bold text-white ${
+                    className={`absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
                       isLater ? 'bg-green-500' : 'bg-red-500'
                     }`}
                   >
-                    {isLater ? '+' : ''}{deltaDays}d
+                    {deltaDays}
+                  </div>
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                      isLater ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                  >
+                    {deltaDays}
                   </div>
                 </div>
               );
