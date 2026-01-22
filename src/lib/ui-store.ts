@@ -28,9 +28,9 @@ export const TAB_ID = (() => {
 
 /** Message types for cross-tab UI state sync */
 export type UIStoreSyncMessage =
-  | { type: 'selection-changed'; selectedIds: string[]; tabId: string; version: number }
-  | { type: 'search-changed'; query: string; tabId: string; version: number }
-  | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null; tabId: string; version: number };
+  | { type: 'selection-changed'; selectedIds: string[]; tabId: string }
+  | { type: 'search-changed'; query: string; tabId: string }
+  | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null; tabId: string };
 
 /** BroadcastChannel for cross-tab sync */
 let syncChannel: BroadcastChannel | null = null;
@@ -51,12 +51,10 @@ function getSyncChannel(): BroadcastChannel | null {
   return syncChannel;
 }
 
-/** Broadcast a sync message to other tabs (includes tab ID and version) */
+/** Broadcast a sync message to other tabs (includes tab ID) */
 function broadcastUISync(message: { type: 'selection-changed'; selectedIds: string[] } | { type: 'search-changed'; query: string } | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null }): void {
   if (!TAB_ID) return;
-  const version = useUIStore.getState().version;
-  const fullMessage = { ...message, tabId: TAB_ID, version } as UIStoreSyncMessage;
-  console.log('[broadcastUISync] posting message:', { type: message.type, tabId: TAB_ID, version });
+  const fullMessage = { ...message, tabId: TAB_ID } as UIStoreSyncMessage;
   getSyncChannel()?.postMessage(fullMessage);
 }
 
@@ -122,9 +120,6 @@ export function onUIStoreSyncMessage(callback: (message: UIStoreSyncMessage) => 
  */
 
 interface UIState {
-  // Version counter for cross-tab sync ordering
-  version: number;
-
   // Selection state: Set of planting IDs that are currently selected
   // Inspector shows details for selected plantings (same in Timeline and Plantings)
   selectedPlantingIds: Set<string>;
@@ -153,81 +148,57 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set, get) => ({
-  // Version counter for ordering cross-tab updates
-  version: 0,
-
   // Selection
   selectedPlantingIds: new Set<string>(),
 
   selectPlanting: (id: string) => {
     let newIds: string[];
-    let prevSize: number;
     set((state) => {
-      prevSize = state.selectedPlantingIds.size;
       const next = new Set(state.selectedPlantingIds).add(id);
       newIds = Array.from(next);
-      console.log('[UIStore] selectPlanting:', id, '| prev size:', prevSize, '→ new size:', newIds.length, '| new IDs:', newIds);
-      return { selectedPlantingIds: next, version: state.version + 1 };
+      return { selectedPlantingIds: next };
     });
-    console.log('[UIStore] broadcasting selection-changed:', newIds!.length, 'IDs');
     broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
   },
 
   deselectPlanting: (id: string) => {
     let newIds: string[];
-    let prevSize: number;
     set((state) => {
-      prevSize = state.selectedPlantingIds.size;
       const next = new Set(state.selectedPlantingIds);
       next.delete(id);
       newIds = Array.from(next);
-      console.log('[UIStore] deselectPlanting:', id, '| prev size:', prevSize, '→ new size:', newIds.length);
-      return { selectedPlantingIds: next, version: state.version + 1 };
+      return { selectedPlantingIds: next };
     });
     broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
   },
 
   togglePlanting: (id: string) => {
     let newIds: string[];
-    let prevSize: number;
-    let action: string;
     set((state) => {
-      prevSize = state.selectedPlantingIds.size;
       const next = new Set(state.selectedPlantingIds);
       if (next.has(id)) {
         next.delete(id);
-        action = 'removed';
       } else {
         next.add(id);
-        action = 'added';
       }
       newIds = Array.from(next);
-      console.log('[UIStore] togglePlanting:', id, action, '| prev size:', prevSize, '→ new size:', newIds.length, '| new IDs:', newIds);
-      return { selectedPlantingIds: next, version: state.version + 1 };
+      return { selectedPlantingIds: next };
     });
-    console.log('[UIStore] broadcasting selection-changed:', newIds!.length, 'IDs');
     broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
   },
 
   selectMultiple: (ids: string[]) => {
     let newIds: string[];
-    let prevSize: number;
     set((state) => {
-      prevSize = state.selectedPlantingIds.size;
       const next = new Set([...state.selectedPlantingIds, ...ids]);
       newIds = Array.from(next);
-      console.log('[UIStore] selectMultiple:', ids.length, 'IDs | prev size:', prevSize, '→ new size:', newIds.length);
-      return { selectedPlantingIds: next, version: state.version + 1 };
+      return { selectedPlantingIds: next };
     });
     broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
   },
 
   clearSelection: () => {
-    const prevSize = get().selectedPlantingIds.size;
-    const newVersion = get().version + 1;
-    console.log('[UIStore] clearSelection | prev size:', prevSize, '→ 0');
-    set({ selectedPlantingIds: new Set<string>(), version: newVersion });
-    console.log('[UIStore] broadcasting selection-changed: 0 IDs');
+    set({ selectedPlantingIds: new Set<string>() });
     broadcastUISync({ type: 'selection-changed', selectedIds: [] });
   },
 
@@ -239,7 +210,7 @@ export const useUIStore = create<UIState>((set, get) => ({
     set((state) => {
       const next = new Set([...state.selectedPlantingIds, ...plantingIds]);
       newIds = Array.from(next);
-      return { selectedPlantingIds: next, version: state.version + 1 };
+      return { selectedPlantingIds: next };
     });
     broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
   },
@@ -250,7 +221,7 @@ export const useUIStore = create<UIState>((set, get) => ({
       const next = new Set(state.selectedPlantingIds);
       plantingIds.forEach((id) => next.delete(id));
       newIds = Array.from(next);
-      return { selectedPlantingIds: next, version: state.version + 1 };
+      return { selectedPlantingIds: next };
     });
     broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
   },
@@ -270,7 +241,7 @@ export const useUIStore = create<UIState>((set, get) => ({
       }
 
       newIds = Array.from(next);
-      return { selectedPlantingIds: next, version: state.version + 1 };
+      return { selectedPlantingIds: next };
     });
     broadcastUISync({ type: 'selection-changed', selectedIds: newIds! });
   },
@@ -283,14 +254,14 @@ export const useUIStore = create<UIState>((set, get) => ({
   // Search
   searchQuery: '',
   setSearchQuery: (query: string) => {
-    set((state) => ({ searchQuery: query, version: state.version + 1 }));
+    set({ searchQuery: query });
     broadcastUISync({ type: 'search-changed', query });
   },
 
   // Toast
   toast: null,
   setToast: (toast) => {
-    set((state) => ({ toast, version: state.version + 1 }));
+    set({ toast });
     broadcastUISync({ type: 'toast-changed', toast });
   },
 }));

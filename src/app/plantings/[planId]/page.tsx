@@ -1059,8 +1059,7 @@ export default function PlantingsPage() {
     }
   }, [updatePlanting, currentPlan?.plantings]);
 
-  const handleRowClick = useCallback((plantingId: string, event: React.MouseEvent) => {
-    console.log('[handleRowClick] clicked:', plantingId, '| ctrl/meta:', event.ctrlKey || event.metaKey, '| current selection size:', selectedIds.size, '| current IDs:', Array.from(selectedIds));
+  const handleRowClick = useCallback((plantingId: string, _event: React.MouseEvent) => {
     // Plantings view: simple toggle behavior (no Ctrl needed for multi-select)
     // Each click just toggles the item in/out of selection
     togglePlanting(plantingId);
