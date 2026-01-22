@@ -61,7 +61,8 @@
       "Bash(sqlite3:*)",
       "Bash(claude --version:*)",
       "Skill(vercel-react-best-practices)",
-      "Skill(vercel-react-best-practices:*)"
+      "Skill(vercel-react-best-practices:*)",
+      "Bash(git diff:*)"
     ],
     "deny": [],
     "ask": []

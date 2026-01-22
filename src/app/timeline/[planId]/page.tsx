@@ -7,6 +7,8 @@ import CropTimeline from '@/components/CropTimeline';
 import CropConfigEditor from '@/components/CropConfigEditor';
 import CreateSequenceModal, { type CreateSequenceOptions } from '@/components/CreateSequenceModal';
 import SequenceEditorModal from '@/components/SequenceEditorModal';
+import { PageLayout } from '@/components/PageLayout';
+import AppHeader from '@/components/AppHeader';
 import { type CropConfig } from '@/lib/entities/crop-config';
 // useSnapshotScheduler removed - SQLite storage handles persistence directly
 import { calculateRowSpan, getTimelineCropsFromPlan, buildBedMappings } from '@/lib/timeline-data';
@@ -318,57 +320,60 @@ export default function TimelinePlanPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-51px)]">
-        <div className="text-gray-600">Loading plan...</div>
-      </div>
+      <PageLayout header={<AppHeader />}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-gray-600">Loading plan...</div>
+        </div>
+      </PageLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-51px)] gap-4">
-        <div className="text-red-600 font-medium">{error}</div>
-        <Link href="/plans" className="text-blue-600 hover:text-blue-800">
-          ← Back to plan list
-        </Link>
-      </div>
+      <PageLayout header={<AppHeader />}>
+        <div className="flex flex-col items-center justify-center h-full gap-4">
+          <div className="text-red-600 font-medium">{error}</div>
+          <Link href="/plans" className="text-blue-600 hover:text-blue-800">
+            ← Back to plan list
+          </Link>
+        </div>
+      </PageLayout>
     );
   }
 
   if (!currentPlan) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-51px)]">
-        <div className="text-gray-600">No plan loaded</div>
-      </div>
+      <PageLayout header={<AppHeader />}>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-gray-600">No plan loaded</div>
+        </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-51px)] flex flex-col overflow-hidden">
-      {/* Timeline */}
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <CropTimeline
-          crops={getTimelineCropsFromPlan(currentPlan)}
-          resources={getResources(currentPlan)}
-          groups={getGroups(currentPlan)}
-          bedLengths={bedMappings.bedLengths}
-          onCropMove={handleCropMove}
-          onCropDateChange={handleDateChange}
-          onDuplicateCrop={handleDuplicateCrop}
-          onDeleteCrop={handleDeleteCrop}
-          onEditCropConfig={handleEditCropConfig}
-          cropCatalog={currentPlan.cropCatalog}
-          planYear={currentPlan.metadata.year}
-          onAddPlanting={handleAddPlanting}
-          onUpdatePlanting={handleUpdatePlanting}
-          varieties={currentPlan.varieties}
-          seedMixes={currentPlan.seedMixes}
-          initialNoVarietyFilter={initialNoVarietyFilter}
-          onCreateSequence={handleCreateSequence}
-          onUnlinkFromSequence={handleUnlinkFromSequence}
-          onEditSequence={handleEditSequence}
-        />
-      </div>
+    <PageLayout header={<AppHeader />}>
+      <CropTimeline
+        crops={getTimelineCropsFromPlan(currentPlan)}
+        resources={getResources(currentPlan)}
+        groups={getGroups(currentPlan)}
+        bedLengths={bedMappings.bedLengths}
+        onCropMove={handleCropMove}
+        onCropDateChange={handleDateChange}
+        onDuplicateCrop={handleDuplicateCrop}
+        onDeleteCrop={handleDeleteCrop}
+        onEditCropConfig={handleEditCropConfig}
+        cropCatalog={currentPlan.cropCatalog}
+        planYear={currentPlan.metadata.year}
+        onAddPlanting={handleAddPlanting}
+        onUpdatePlanting={handleUpdatePlanting}
+        varieties={currentPlan.varieties}
+        seedMixes={currentPlan.seedMixes}
+        initialNoVarietyFilter={initialNoVarietyFilter}
+        onCreateSequence={handleCreateSequence}
+        onUnlinkFromSequence={handleUnlinkFromSequence}
+        onEditSequence={handleEditSequence}
+      />
 
       {/* Toast notification */}
       {toast && (
@@ -461,6 +466,6 @@ export default function TimelinePlanPage() {
           }}
         />
       )}
-    </div>
+    </PageLayout>
   );
 }
