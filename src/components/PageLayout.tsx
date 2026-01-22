@@ -57,9 +57,9 @@ export function PageLayout({
       {/* Header (fixed height, sticky) */}
       {header}
 
-      {/* Optional Toolbar (fixed height, below header) */}
+      {/* Optional Toolbar (fixed height, below header, full width) */}
       {toolbar && (
-        <div className="flex-shrink-0 border-b bg-white">
+        <div className="flex-shrink-0 border-b bg-white w-full">
           {toolbar}
         </div>
       )}

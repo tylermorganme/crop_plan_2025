@@ -1498,11 +1498,9 @@ export default function CropTimeline({
   }, [hoverPreview, addToBedId]);
 
   return (
-    <div className="flex h-full bg-gray-100 overflow-hidden">
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div className="h-full flex flex-col bg-gray-100 overflow-hidden">
       {/* Controls */}
-      <div className="flex items-center gap-3 p-2 bg-white border-b">
+      <div className="flex items-center gap-3 p-2 bg-white border-b flex-shrink-0">
         {/* View mode toggle */}
         <div className="flex rounded overflow-hidden border border-gray-300">
           <button
@@ -1623,7 +1621,9 @@ export default function CropTimeline({
       </div>
 
       {/* Main timeline area - single scrollable container */}
-      <div className="flex-1 min-h-0 overflow-auto bg-white border rounded-b" ref={plannerScrollRef}>
+      {/* Main content area with timeline + panels */}
+      <div className="flex-1 min-h-0 flex overflow-hidden">
+        <div className="flex-1 min-w-0 overflow-auto bg-white border rounded-b" ref={plannerScrollRef}>
         {/* Header indicators during drag */}
         {dragPreview && (
           <>
@@ -1923,8 +1923,6 @@ export default function CropTimeline({
           </tbody>
         </table>
       </div>
-      </div>
-
       {/* Right Panel - AddToBed or Inspector */}
       {addToBedId && cropCatalog && onAddPlanting ? (
         <div ref={addToBedPanelRef}>
@@ -1985,6 +1983,7 @@ export default function CropTimeline({
           className="w-80 bg-white border-l flex flex-col shrink-0 h-full overflow-hidden"
         />
       ) : null}
+      </div>
     </div>
   );
 }
