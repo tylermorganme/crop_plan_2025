@@ -1212,7 +1212,8 @@ export default function CropTimeline({
         {/* Animated gradient border for selected items - rendered as sibling to avoid overflow clip */}
         {isSelected && (
           <div
-            className="absolute pointer-events-none rounded-md animate-border"
+            className="absolute rounded-md animate-border cursor-pointer"
+            onClick={(e) => handleCropClick(e, crop)}
             style={{
               left: 0,
               top: 0,

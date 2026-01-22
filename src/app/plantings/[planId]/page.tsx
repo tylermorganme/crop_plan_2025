@@ -1673,7 +1673,13 @@ export default function PlantingsPage() {
                 >
                   {/* Checkbox - sticky */}
                   <td className={`px-2 py-1 text-center sticky left-0 ${rowBg}`}>
-                    <input type="checkbox" checked={selectedIds.has(planting.id)} onChange={() => toggleSelection(planting.id)} className="rounded border-gray-300" />
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(planting.id)}
+                      onChange={() => toggleSelection(planting.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="rounded border-gray-300"
+                    />
                   </td>
                   {/* Crop - sticky */}
                   <td className={`px-2 py-1 sticky ${rowBg}`} style={{ left: 32, width: getColumnWidth('crop'), minWidth: getColumnWidth('crop') }}>
