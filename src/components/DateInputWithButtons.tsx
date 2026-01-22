@@ -89,13 +89,13 @@ export function DateInputWithButtons({
             mode === 'input' ? 'border-gray-300' : 'border-blue-500'
           } ${className}`}
         />
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-0.5">
           <button
             onClick={(e) => {
               e.stopPropagation();
               adjustDate(1);
             }}
-            className="px-1.5 py-0 text-xs leading-none text-gray-600 hover:bg-gray-100 rounded-t border border-gray-300 border-b-0"
+            className="px-2 py-1 text-sm leading-none text-gray-600 hover:bg-gray-100 rounded border border-gray-300"
             title="Next day"
             type="button"
           >
@@ -106,7 +106,7 @@ export function DateInputWithButtons({
               e.stopPropagation();
               adjustDate(-1);
             }}
-            className="px-1.5 py-0 text-xs leading-none text-gray-600 hover:bg-gray-100 rounded-b border border-gray-300"
+            className="px-2 py-1 text-sm leading-none text-gray-600 hover:bg-gray-100 rounded border border-gray-300"
             title="Previous day"
             type="button"
           >
@@ -126,13 +126,13 @@ export function DateInputWithButtons({
       >
         {displayValue || value || <span className="text-gray-400">—</span>}
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-0.5">
         <button
           onClick={(e) => {
             e.stopPropagation();
             adjustDate(1);
           }}
-          className="px-1 py-0 text-[10px] leading-none text-gray-600 hover:bg-gray-100 rounded-t"
+          className="px-1.5 py-0.5 text-xs leading-none text-gray-600 hover:bg-gray-100 rounded border border-gray-200"
           title="Next day"
           type="button"
         >
@@ -143,7 +143,7 @@ export function DateInputWithButtons({
             e.stopPropagation();
             adjustDate(-1);
           }}
-          className="px-1 py-0 text-[10px] leading-none text-gray-600 hover:bg-gray-100 rounded-b"
+          className="px-1.5 py-0.5 text-xs leading-none text-gray-600 hover:bg-gray-100 rounded border border-gray-200"
           title="Previous day"
           type="button"
         >
