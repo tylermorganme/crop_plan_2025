@@ -715,20 +715,13 @@ export default function CropTimeline({
   }, [crops, searchQuery, showNoVarietyOnly]);
 
   // Apply drag transformation - move dragged crop(s) to preview position
-  // Also adds artifact entries at original positions (rendered as preview ghosts)
+  // During drag: move dragged crops to preview position, original bounds shown in header
   const effectiveCrops = useMemo(() => {
     if (!dragPreview?.targetResource) return filteredCrops;
 
     const targetResource = dragPreview.targetResource;
-    const originalResource = dragPreview.originalResource;
     const deltaDays = dragPreview.deltaDays;
     const groupId = dragPreview.groupId;
-
-    // Check if position actually changed
-    const positionChanged = targetResource !== originalResource || deltaDays !== 0;
-
-    // If nothing changed, just return original crops
-    if (!positionChanged) return filteredCrops;
 
     // Inline date offset (can't use offsetDate callback - defined later)
     const applyOffset = (dateStr: string, days: number): string => {
@@ -738,31 +731,17 @@ export default function CropTimeline({
       return d.toISOString().split('T')[0];
     };
 
-    const result: TimelineCrop[] = [];
+    return filteredCrops.map(crop => {
+      if (crop.groupId !== groupId) return crop;
 
-    for (const crop of filteredCrops) {
-      if (crop.groupId !== groupId) {
-        // Not being dragged - keep as-is
-        result.push(crop);
-      } else {
-        // Add artifact at original position (faded ghost)
-        result.push({
-          ...crop,
-          id: `${crop.id}-artifact`,
-          isPreview: true, // Renders as dashed/faded
-        });
-
-        // Add crop at new position
-        result.push({
-          ...crop,
-          resource: targetResource === 'Unassigned' ? '' : targetResource,
-          startDate: applyOffset(crop.startDate, deltaDays),
-          endDate: applyOffset(crop.endDate, deltaDays),
-        });
-      }
-    }
-
-    return result;
+      // Move dragged crop to new position
+      return {
+        ...crop,
+        resource: targetResource === 'Unassigned' ? '' : targetResource,
+        startDate: applyOffset(crop.startDate, deltaDays),
+        endDate: applyOffset(crop.endDate, deltaDays),
+      };
+    });
   }, [filteredCrops, dragPreview]);
 
   // Set of resources that have matching crops (for filtering rows)
@@ -1077,9 +1056,9 @@ export default function CropTimeline({
     setDraggedCropId(effectiveCrop.id);
     setDraggedGroupId(effectiveCrop.groupId);
 
-    // For timing editing, track start position
+    // Track start position for header indicator (always) and timing edit (when enabled)
+    dragStartX.current = e.clientX;
     if (timingEditEnabled) {
-      dragStartX.current = e.clientX;
       dragOriginalDates.current = { start: effectiveCrop.startDate, end: effectiveCrop.endDate };
     }
 
@@ -1181,12 +1160,14 @@ export default function CropTimeline({
     }
 
     // Update live drag state in ref (NO re-render)
-    // Calculate day delta for timing
+    // Always calculate deltaX for header indicator, but only calculate deltaDays when timing edit enabled
     let deltaX = 0;
     let deltaDays = 0;
-    if (timingEditEnabled && dragStartX.current !== null) {
+    if (dragStartX.current !== null) {
       deltaX = e.clientX - dragStartX.current;
-      deltaDays = pixelsToDays(deltaX);
+      if (timingEditEnabled) {
+        deltaDays = pixelsToDays(deltaX);
+      }
     }
 
     // Store in ref for drop handler
@@ -1838,6 +1819,39 @@ export default function CropTimeline({
 
       {/* Main timeline area - single scrollable container */}
       <div className="flex-1 min-h-0 overflow-auto bg-white border rounded-b" ref={plannerScrollRef}>
+        {/* Header indicators during drag */}
+        {dragPreview && (
+          <>
+            {/* Original time bounds - dashed gray outline */}
+            <div
+              className="rounded border-2 border-dashed border-gray-400 pointer-events-none"
+              style={{
+                position: 'sticky',
+                top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
+                zIndex: Z_INDEX.TIMELINE_HEADER + 2,
+                marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft,
+                width: Math.round(dragPreview.originalWidth),
+                height: CROP_HEIGHT,
+                marginBottom: -CROP_HEIGHT,
+              }}
+            />
+            {/* Preview time bounds - solid colored outline, only show if moved */}
+            {Math.abs(dragPreview.deltaX) >= 1 && (
+              <div
+                className="rounded border-2 border-blue-500 pointer-events-none"
+                style={{
+                  position: 'sticky',
+                  top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
+                  zIndex: Z_INDEX.TIMELINE_HEADER + 2,
+                  marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft + dragPreview.deltaX,
+                  width: Math.round(dragPreview.originalWidth),
+                  height: CROP_HEIGHT,
+                  marginBottom: -CROP_HEIGHT,
+                }}
+              />
+            )}
+          </>
+        )}
         {/* Using HTML table for reliable dual-axis sticky positioning */}
         <table style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
           <thead>
