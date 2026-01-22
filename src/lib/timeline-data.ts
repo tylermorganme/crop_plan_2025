@@ -148,8 +148,14 @@ function resolveSeedSource(assignment: BedAssignment): SeedSource | undefined {
  * @param feetNeeded - Total feet needed for the planting
  * @param startBed - The starting bed (e.g., "J2")
  * @param bedGroups - Optional bed groups mapping (defaults to bedPlanData)
+ * @param bedLengths - Optional bed lengths mapping (bed name -> feet). If not provided, uses hardcoded ROW_LENGTHS.
  */
-export function calculateRowSpan(feetNeeded: number, startBed: string, bedGroups?: Record<string, string[]>): {
+export function calculateRowSpan(
+  feetNeeded: number,
+  startBed: string,
+  bedGroups?: Record<string, string[]>,
+  bedLengths?: Record<string, number>
+): {
   rowSpan: number;
   spanBeds: string[];
   bedSpanInfo: BedSpanInfo[];
@@ -159,7 +165,9 @@ export function calculateRowSpan(feetNeeded: number, startBed: string, bedGroups
 } {
   const groups = bedGroups || (bedPlanData as BedPlanData).bedGroups;
   const row = getBedGroup(startBed);
-  const bedSizeFt = getBedLengthFromId(startBed);
+  // Use plan's bed lengths if provided, otherwise fall back to hardcoded ROW_LENGTHS
+  const getBedLength = (bed: string) => bedLengths?.[bed] ?? getBedLengthFromId(bed);
+  const bedSizeFt = getBedLength(startBed);
 
   // Default to one bed if no feet specified
   if (!feetNeeded || feetNeeded <= 0) {
@@ -197,7 +205,7 @@ export function calculateRowSpan(feetNeeded: number, startBed: string, bedGroups
 
   for (let i = startIndex; i < rowBeds.length && remainingFeet > 0; i++) {
     const bed = rowBeds[i];
-    const thisBedCapacity = getBedLengthFromId(bed);
+    const thisBedCapacity = getBedLength(bed);
     const feetUsed = Math.min(remainingFeet, thisBedCapacity);
 
     spanBeds.push(bed);
@@ -574,7 +582,7 @@ export function expandPlantingsToTimelineCrops(
     }
 
     const slim = plantingToSlim(planting, mappings.uuidToName, effectiveFieldStartDate);
-    const crops = computeTimelineCrop(slim, config, mappings.nameGroups);
+    const crops = computeTimelineCrop(slim, config, mappings.nameGroups, mappings.bedLengths);
 
     // Add planting fields for inspector editing
     // NOTE: crop.resource remains a bed NAME for display matching.
