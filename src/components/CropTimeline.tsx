@@ -1835,10 +1835,10 @@ export default function CropTimeline({
                 marginBottom: -CROP_HEIGHT,
               }}
             />
-            {/* Preview time bounds - solid colored outline, only show if moved */}
+            {/* Preview time bounds - dashed colored outline, only show if moved */}
             {Math.abs(dragPreview.deltaX) >= 1 && (
               <div
-                className="rounded border-2 border-blue-500 pointer-events-none"
+                className="rounded border-2 border-dashed border-blue-500 pointer-events-none"
                 style={{
                   position: 'sticky',
                   top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
