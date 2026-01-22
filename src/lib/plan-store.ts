@@ -1032,19 +1032,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const sequence = sequenceId && currentPlan.sequences ? currentPlan.sequences[sequenceId] : null;
 
       // If this planting is locked (has actuals set), don't allow date changes
+      // Note: Locked plantings in sequences will have their fieldStartDate updated,
+      // but their actual dates stay put, so they remain visually pinned.
       if (planting.actuals?.greenhouseDate || planting.actuals?.fieldDate) {
         return;
-      }
-
-      // If this is a sequence member, check if the anchor is locked
-      if (sequenceId && currentPlan.plantings) {
-        const anchor = currentPlan.plantings.find(
-          p => p.sequenceId === sequenceId && p.sequenceSlot === 0
-        );
-        if (anchor?.actuals?.greenhouseDate || anchor?.actuals?.fieldDate) {
-          // Anchor is locked - sequence can't be moved
-          return;
-        }
       }
 
       set((state) => {

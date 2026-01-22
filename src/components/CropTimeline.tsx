@@ -740,7 +740,29 @@ export default function CropTimeline({
       // Not a linked crop - keep as-is
       if (!linkedCropIds.has(crop.id)) return crop;
 
-      // Apply time delta to all linked crops (shared logic)
+      // Data model for dates:
+      // - planned (fieldStartDate): what dragging changes
+      // - actual (actuals.fieldDate): immutable during drag
+      // - realized = actual ?? planned: determines visual position
+      //
+      // During drag, delta applies to ALL linked crops' planned dates.
+      // Visual position is the realized date: actual if it exists, else planned.
+      //
+      // Crops with actual dates: planned shifts but realized (visual) stays put
+      // Crops without actual dates: planned shifts so realized shifts too
+
+      // The timeline already computes startDate/endDate using actual dates when present.
+      // So for crops WITH actuals, the current startDate/endDate are already pinned.
+      // We only shift crops WITHOUT actual field dates.
+      // Check for non-empty string (empty string is falsy but means "cleared")
+      const hasActualFieldDate = crop.actuals?.fieldDate && crop.actuals.fieldDate.length > 0;
+      const hasActualGreenhouseDate = crop.actuals?.greenhouseDate && crop.actuals.greenhouseDate.length > 0;
+      if (hasActualFieldDate || hasActualGreenhouseDate) {
+        // realized = actual (exists), so visual position unchanged
+        return crop;
+      }
+
+      // realized = planned (no actual), so shift visual position
       const updatedCrop = {
         ...crop,
         startDate: applyOffset(crop.startDate, deltaDays),
@@ -1456,7 +1478,7 @@ export default function CropTimeline({
           onDragEnd={handleDragEnd}
           onClick={(e) => handleCropClick(e, crop)}
           className={`absolute rounded select-none overflow-hidden ${
-            crop.isLocked ? 'cursor-default' : 'cursor-grab'
+            crop.isLocked ? 'cursor-not-allowed' : 'cursor-grab'
           } ${isDragging ? 'opacity-50 cursor-grabbing' : ''
           } ${isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
           } ${isOverlapping ? 'bg-transparent border-2' : ''
