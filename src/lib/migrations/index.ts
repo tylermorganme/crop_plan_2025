@@ -168,6 +168,49 @@ function migrateV3ToV4(rawPlan: unknown): unknown {
   };
 }
 
+/**
+ * v4 → v5: Rename sequenceIndex to sequenceSlot
+ * This supports the new sparse slot model for sequences.
+ * Slot numbers can have gaps (e.g., 0, 1, 2, 5, 10) when plantings are removed.
+ */
+function migrateV4ToV5(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    plantings?: Array<{
+      sequenceIndex?: number;
+      sequenceSlot?: number;
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+  };
+
+  if (!plan.plantings) {
+    return plan;
+  }
+
+  // Check if already migrated (plantings have sequenceSlot instead of sequenceIndex)
+  const hasOldField = plan.plantings.some(p => 'sequenceIndex' in p);
+  if (!hasOldField) {
+    return plan; // Already migrated or no sequences
+  }
+
+  // Rename sequenceIndex to sequenceSlot in all plantings
+  const migratedPlantings = plan.plantings.map(planting => {
+    if ('sequenceIndex' in planting) {
+      const { sequenceIndex, ...rest } = planting;
+      return {
+        ...rest,
+        sequenceSlot: sequenceIndex,
+      };
+    }
+    return planting;
+  });
+
+  return {
+    ...plan,
+    plantings: migratedPlantings,
+  };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -189,6 +232,7 @@ const migrations: MigrationFn[] = [
   migrateV1ToV2, // Index 0: v1 → v2
   migrateV2ToV3, // Index 1: v2 → v3
   migrateV3ToV4, // Index 2: v3 → v4
+  migrateV4ToV5, // Index 3: v4 → v5 (sequenceIndex → sequenceSlot)
 ];
 
 // =============================================================================

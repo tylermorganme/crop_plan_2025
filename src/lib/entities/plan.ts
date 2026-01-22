@@ -97,8 +97,8 @@ export interface TimelineCrop {
   actuals?: import('./planting').PlantingActuals;
   /** Sequence ID if planting is part of a succession sequence */
   sequenceId?: string;
-  /** Position in sequence (0 = anchor, 1+ = follower) */
-  sequenceIndex?: number;
+  /** Slot number in sequence (0 = anchor, sparse allowed for followers) */
+  sequenceSlot?: number;
 }
 
 /**

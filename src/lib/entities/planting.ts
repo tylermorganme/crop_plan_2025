@@ -113,11 +113,12 @@ export interface Planting {
   sequenceId?: string;
 
   /**
-   * 0-based position in the sequence.
-   * - Index 0 = anchor (owns its own fieldStartDate)
-   * - Index > 0 = follower (date calculated from anchor + offset)
+   * Slot number in the sequence (sparse, not necessarily consecutive).
+   * - Slot 0 = anchor (owns its own fieldStartDate)
+   * - Slot > 0 = follower (date calculated from anchor + slot * offsetDays)
+   * Slots can have gaps (e.g., 0, 1, 2, 5, 10) when plantings are removed.
    */
-  sequenceIndex?: number;
+  sequenceSlot?: number;
 
   // ---- Metadata ----
 
@@ -183,8 +184,8 @@ export interface CreatePlantingInput {
   notes?: string;
   /** Optional: sequence ID (for succession plantings) */
   sequenceId?: string;
-  /** Optional: position in sequence (0 = anchor) */
-  sequenceIndex?: number;
+  /** Optional: slot number in sequence (0 = anchor, sparse allowed) */
+  sequenceSlot?: number;
 }
 
 /**
@@ -204,7 +205,7 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     actuals: input.actuals,
     notes: input.notes,
     sequenceId: input.sequenceId,
-    sequenceIndex: input.sequenceIndex,
+    sequenceSlot: input.sequenceSlot,
     lastModified: Date.now(),
   };
 }
@@ -213,7 +214,7 @@ export function createPlanting(input: CreatePlantingInput): Planting {
  * Clone a planting with a new ID.
  * Use this for duplicating plantings within a plan.
  *
- * NOTE: By default, sequence fields (sequenceId, sequenceIndex) are NOT
+ * NOTE: By default, sequence fields (sequenceId, sequenceSlot) are NOT
  * copied. Pass them explicitly in overrides if needed for sequence operations.
  */
 export function clonePlanting(
@@ -232,7 +233,7 @@ export function clonePlanting(
     actuals: source.actuals,
     notes: source.notes,
     // NOTE: Do NOT copy sequence fields by default - they must be explicitly provided
-    // sequenceId and sequenceIndex are intentionally omitted
+    // sequenceId and sequenceSlot are intentionally omitted
     ...overrides,
   });
 }

@@ -559,7 +559,7 @@ export function expandPlantingsToTimelineCrops(
 
       // Add sequence membership info
       crop.sequenceId = planting.sequenceId;
-      crop.sequenceIndex = planting.sequenceIndex;
+      crop.sequenceSlot = planting.sequenceSlot;
 
       // Calculate seeds needed based on CropConfig.seedsPerBed
       if (config.seedsPerBed && planting.bedFeet) {

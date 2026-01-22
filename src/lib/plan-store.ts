@@ -3754,7 +3754,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           overrides: original.overrides,
           notes: original.notes,
           sequenceId: sequence.id,
-          sequenceIndex: i,
+          sequenceSlot: i,
         });
         newPlantings.push(newPlanting);
         newPlantingIds.push(newPlanting.id);
@@ -3783,7 +3783,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             const anchor = plan.plantings?.find(p => p.id === plantingId);
             if (anchor) {
               anchor.sequenceId = sequence.id;
-              anchor.sequenceIndex = 0;
+              anchor.sequenceSlot = 0;
               anchor.lastModified = now;
             }
 
@@ -3823,7 +3823,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       // Find anchor planting
       const anchor = currentPlan.plantings.find(
-        p => p.sequenceId === sequenceId && p.sequenceIndex === 0
+        p => p.sequenceId === sequenceId && p.sequenceSlot === 0
       );
       if (!anchor) {
         throw new Error('Sequence anchor not found');
@@ -3849,11 +3849,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
             // Find and update all followers
             const followers = plan.plantings?.filter(
-              p => p.sequenceId === sequenceId && p.sequenceIndex !== undefined && p.sequenceIndex > 0
+              p => p.sequenceId === sequenceId && p.sequenceSlot !== undefined && p.sequenceSlot > 0
             ) ?? [];
 
             for (const follower of followers) {
-              const offsetDate = addDays(anchorDate, follower.sequenceIndex! * newOffsetDays);
+              const offsetDate = addDays(anchorDate, follower.sequenceSlot! * newOffsetDays);
               follower.fieldStartDate = format(offsetDate, 'yyyy-MM-dd');
               follower.lastModified = now;
             }
@@ -3885,9 +3885,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       // Get all plantings in this sequence
       const sequencePlantings = currentPlan.plantings
         .filter(p => p.sequenceId === sequenceId)
-        .sort((a, b) => (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0));
+        .sort((a, b) => (a.sequenceSlot ?? 0) - (b.sequenceSlot ?? 0));
 
-      const isAnchor = planting.sequenceIndex === 0;
+      const isAnchor = planting.sequenceSlot === 0;
       const remainingCount = sequencePlantings.length - 1;
 
       set((state) => {
@@ -3902,7 +3902,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
             // Clear sequence membership from this planting
             delete p.sequenceId;
-            delete p.sequenceIndex;
+            delete p.sequenceSlot;
             p.lastModified = now;
 
             if (remainingCount <= 1) {
@@ -3912,34 +3912,27 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               );
               if (lastPlanting) {
                 delete lastPlanting.sequenceId;
-                delete lastPlanting.sequenceIndex;
+                delete lastPlanting.sequenceSlot;
                 lastPlanting.lastModified = now;
               }
               // Remove the sequence
               delete plan.sequences?.[sequenceId];
             } else if (isAnchor) {
-              // Removing anchor - promote next planting to anchor
-              // The new anchor keeps its current fieldStartDate (no recalculation)
+              // Removing anchor - promote next lowest slot to anchor (slot 0)
+              // Other plantings keep their slot numbers (sparse slots preserved)
               const remaining = plan.plantings?.filter(
                 p => p.sequenceId === sequenceId && p.id !== plantingId
-              ).sort((a, b) => (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0)) ?? [];
+              ).sort((a, b) => (a.sequenceSlot ?? 0) - (b.sequenceSlot ?? 0)) ?? [];
 
-              // Reindex: new anchor becomes index 0, others decrement
-              for (let i = 0; i < remaining.length; i++) {
-                remaining[i].sequenceIndex = i;
-                remaining[i].lastModified = now;
-              }
-            } else {
-              // Removing a follower - reindex remaining
-              const remaining = plan.plantings?.filter(
-                p => p.sequenceId === sequenceId && p.id !== plantingId
-              ).sort((a, b) => (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0)) ?? [];
-
-              for (let i = 0; i < remaining.length; i++) {
-                remaining[i].sequenceIndex = i;
-                remaining[i].lastModified = now;
+              if (remaining.length > 0) {
+                // The first one (lowest slot) becomes the new anchor
+                remaining[0].sequenceSlot = 0;
+                remaining[0].lastModified = now;
+                // Other plantings keep their existing slot numbers - no reindexing
               }
             }
+            // If removing a follower (non-anchor): do nothing to remaining plantings
+            // They keep their slot numbers, creating gaps (sparse slots)
 
             plan.metadata.lastModified = now;
           },
@@ -4007,7 +4000,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       return currentPlan.plantings
         .filter(p => p.sequenceId === sequenceId)
-        .sort((a, b) => (a.sequenceIndex ?? 0) - (b.sequenceIndex ?? 0));
+        .sort((a, b) => (a.sequenceSlot ?? 0) - (b.sequenceSlot ?? 0));
     },
   }))
 );

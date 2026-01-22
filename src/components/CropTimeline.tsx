@@ -78,7 +78,7 @@ interface TimelineCrop {
   /** Sequence ID if planting is part of a succession sequence */
   sequenceId?: string;
   /** Position in sequence (0 = anchor, 1+ = follower) */
-  sequenceIndex?: number;
+  sequenceSlot?: number;
 }
 
 interface ResourceGroup {
@@ -600,7 +600,7 @@ export default function CropTimeline({
     bedIndex: number;
     totalBeds: number;
     sequenceId?: string;
-    sequenceIndex?: number;
+    sequenceSlot?: number;
     // Offset from the dragged crop (in days) - for sequence members
     dayOffset: number;
     // Offset from the dragged crop (in beds) - for multi-bed
@@ -1114,7 +1114,7 @@ export default function CropTimeline({
           bedIndex: c.bedIndex,
           totalBeds: c.totalBeds,
           sequenceId: c.sequenceId,
-          sequenceIndex: c.sequenceIndex,
+          sequenceSlot: c.sequenceSlot,
           dayOffset,
           bedOffset,
         });
@@ -1416,8 +1416,8 @@ export default function CropTimeline({
       };
       tooltip += `\n${methodNames[crop.plantingMethod] || crop.plantingMethod}`;
     }
-    if (crop.sequenceId !== undefined && crop.sequenceIndex !== undefined) {
-      tooltip += `\nSequence #${crop.sequenceIndex + 1}${crop.sequenceIndex === 0 ? ' (anchor)' : ''}`;
+    if (crop.sequenceId !== undefined && crop.sequenceSlot !== undefined) {
+      tooltip += `\nSequence #${crop.sequenceSlot + 1}${crop.sequenceSlot === 0 ? ' (anchor)' : ''}`;
     }
 
     return (
@@ -1580,16 +1580,16 @@ export default function CropTimeline({
                       );
                     })()}
                     {/* Sequence indicator badge */}
-                    {crop.sequenceId !== undefined && crop.sequenceIndex !== undefined && (
+                    {crop.sequenceId !== undefined && crop.sequenceSlot !== undefined && (
                       <div
                         className="text-[9px] px-1 rounded font-bold"
                         style={{
                           backgroundColor: '#7c3aed', // Purple for sequences
                           color: '#ffffff',
                         }}
-                        title={`Sequence ${crop.sequenceIndex + 1}${crop.sequenceIndex === 0 ? ' (anchor)' : ''}`}
+                        title={`Sequence ${crop.sequenceSlot + 1}${crop.sequenceSlot === 0 ? ' (anchor)' : ''}`}
                       >
-                        S{crop.sequenceIndex + 1}
+                        S{crop.sequenceSlot + 1}
                       </div>
                     )}
                   </div>
@@ -2462,7 +2462,7 @@ export default function CropTimeline({
                   )}
 
                   {/* Sequence Info */}
-                  {crop.sequenceId !== undefined && crop.sequenceIndex !== undefined && (
+                  {crop.sequenceId !== undefined && crop.sequenceSlot !== undefined && (
                     <div className="pt-3 border-t">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-semibold text-gray-600">Sequence</span>
@@ -2470,12 +2470,12 @@ export default function CropTimeline({
                           className="px-2 py-0.5 rounded text-xs font-bold"
                           style={{ backgroundColor: '#7c3aed', color: '#ffffff' }}
                         >
-                          #{crop.sequenceIndex + 1}{crop.sequenceIndex === 0 ? ' (anchor)' : ''}
+                          #{crop.sequenceSlot + 1}{crop.sequenceSlot === 0 ? ' (anchor)' : ''}
                         </span>
                       </div>
                       <div className="text-xs text-gray-600">
                         This planting is part of a succession sequence.
-                        {crop.sequenceIndex === 0 ? (
+                        {crop.sequenceSlot === 0 ? (
                           <span className="block mt-1 text-purple-600">
                             As the anchor, dragging this will shift all other plantings in the sequence.
                           </span>
@@ -2485,7 +2485,7 @@ export default function CropTimeline({
                           </span>
                         )}
                       </div>
-                      {onUnlinkFromSequence && crop.sequenceIndex !== 0 && (
+                      {onUnlinkFromSequence && crop.sequenceSlot !== 0 && (
                         <button
                           onClick={() => onUnlinkFromSequence(crop.groupId)}
                           className="mt-2 w-full px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 rounded hover:bg-purple-100 transition-colors"

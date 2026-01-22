@@ -746,13 +746,13 @@ export default function PlantingsPage() {
       }
 
       // Sequence display: show clean sequence ID (S1, S2, etc.)
-      // seqNum: 1-based position in sequence
+      // seqNum: 1-based slot number in sequence (sparse - can have gaps)
       let sequenceDisplay = '';
       let seqNum: number | null = null;
       if (p.sequenceId !== undefined) {
         sequenceDisplay = p.sequenceId;
-        if (p.sequenceIndex !== undefined) {
-          seqNum = p.sequenceIndex + 1;
+        if (p.sequenceSlot !== undefined) {
+          seqNum = p.sequenceSlot + 1;
         }
       }
 
