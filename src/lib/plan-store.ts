@@ -37,7 +37,7 @@ import {
   createPlanting,
 } from './entities/planting';
 import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities/bed';
-import { createSequence, type PlantingSequence } from './entities/planting-sequence';
+import { createSequence, initializeSequenceIdCounter, type PlantingSequence } from './entities/planting-sequence';
 import { storage, onSyncMessage, type PlanSummary, type PlanData } from './sqlite-client';
 import bedPlanData from '@/data/bed-template.json';
 import { getAllCrops } from './crops';
@@ -754,9 +754,12 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         // Continue loading - don't fail on invalid data, just warn
       }
 
-      // Initialize ID counter based on existing plantings to avoid collisions
-      const existingIds = (data.plan.plantings ?? []).map(p => p.id);
-      initializePlantingIdCounter(existingIds);
+      // Initialize ID counters based on existing data to avoid collisions
+      const existingPlantingIds = (data.plan.plantings ?? []).map(p => p.id);
+      initializePlantingIdCounter(existingPlantingIds);
+
+      const existingSequenceIds = Object.keys(data.plan.sequences ?? {});
+      initializeSequenceIdCounter(existingSequenceIds);
 
       // Load undo/redo counts from SQLite
       const { undoCount, redoCount } = await storage.getUndoRedoCounts(planId);

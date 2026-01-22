@@ -48,6 +48,7 @@ const ALL_COLUMNS = [
   'harvestWindow',
   'method',
   'seedSource',
+  'sequence',
   'notes',
   'failed',
   'actualGhDate',
@@ -94,6 +95,7 @@ const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
   harvestWindow: 80,
   method: 100,
   seedSource: 150,
+  sequence: 100,
   notes: 200,
   failed: 60,
   actualGhDate: 110,
@@ -125,6 +127,7 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
   harvestWindow: 'Harvest Days',
   method: 'Method',
   seedSource: 'Seed Source',
+  sequence: 'Sequence',
   notes: 'Notes',
   failed: 'Failed',
   actualGhDate: 'Actual GH',
@@ -520,6 +523,7 @@ interface EnrichedPlanting extends Planting {
   spacing: number | null;
   plants: number | null;
   seedSourceDisplay: string;
+  sequenceDisplay: string;  // e.g. "S1 #3" or empty
   ghDate: string | null;
   harvestStart: string | null;
   harvestEnd: string | null;
@@ -736,6 +740,12 @@ export default function PlantingsPage() {
         }
       }
 
+      // Sequence display: "S1 #3" format
+      let sequenceDisplay = '';
+      if (p.sequenceId !== undefined && p.sequenceIndex !== undefined) {
+        sequenceDisplay = `${p.sequenceId} #${p.sequenceIndex + 1}`;
+      }
+
       return {
         ...p,
         cropName: config?.crop ?? p.configId,
@@ -752,6 +762,7 @@ export default function PlantingsPage() {
         spacing,
         plants,
         seedSourceDisplay,
+        sequenceDisplay,
         ghDate,
         harvestStart,
         harvestEnd,
@@ -1167,6 +1178,10 @@ export default function PlantingsPage() {
         );
       case 'seedSource':
         return <span className="text-gray-600 truncate">{planting.seedSourceDisplay || '—'}</span>;
+      case 'sequence':
+        return planting.sequenceDisplay
+          ? <span className="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-700">{planting.sequenceDisplay}</span>
+          : <span className="text-gray-300">—</span>;
       case 'notes':
         return (
           <InlineCell

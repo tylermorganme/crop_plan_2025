@@ -37,6 +37,15 @@ export {
   clonePlanting,
 } from './planting';
 
+// Planting sequence entity
+export type { PlantingSequence, CreateSequenceInput } from './planting-sequence';
+export {
+  generateSequenceId,
+  initializeSequenceIdCounter,
+  createSequence,
+  cloneSequence,
+} from './planting-sequence';
+
 // Crop config entity
 export type {
   TrayStage,

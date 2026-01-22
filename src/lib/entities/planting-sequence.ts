@@ -26,7 +26,7 @@ export interface PlantingSequence {
 }
 
 export interface CreateSequenceInput {
-  /** Optional custom ID (defaults to UUID) */
+  /** Optional custom ID (defaults to generated S1, S2, etc.) */
   id?: string;
   /** Optional sequence name */
   name?: string;
@@ -34,12 +34,38 @@ export interface CreateSequenceInput {
   offsetDays: number;
 }
 
+// Simple counter for generating unique sequence IDs
+let nextSequenceId = 1;
+
+/**
+ * Generate a unique sequence ID.
+ * Format: S{sequential number} e.g., S1, S2, S3...
+ */
+export function generateSequenceId(): string {
+  return `S${nextSequenceId++}`;
+}
+
+/**
+ * Initialize the sequence ID counter based on existing sequences.
+ * Call this when loading a plan to avoid ID collisions.
+ */
+export function initializeSequenceIdCounter(existingIds: string[]): void {
+  let maxId = 0;
+  for (const id of existingIds) {
+    const match = id.match(/^S(\d+)$/);
+    if (match) {
+      maxId = Math.max(maxId, parseInt(match[1], 10));
+    }
+  }
+  nextSequenceId = maxId + 1;
+}
+
 /**
  * Create a new PlantingSequence entity.
  */
 export function createSequence(input: CreateSequenceInput): PlantingSequence {
   return {
-    id: input.id ?? crypto.randomUUID(),
+    id: input.id ?? generateSequenceId(),
     name: input.name,
     offsetDays: input.offsetDays,
   };
