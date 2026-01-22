@@ -123,6 +123,8 @@ interface CropTimelineProps {
   onCreateSequence?: (plantingId: string, cropName: string, fieldStartDate: string) => void;
   /** Callback when user wants to unlink a planting from its sequence */
   onUnlinkFromSequence?: (plantingId: string) => void;
+  /** Callback when user wants to edit a sequence's properties */
+  onEditSequence?: (sequenceId: string) => void;
 }
 
 // =============================================================================
@@ -523,6 +525,7 @@ export default function CropTimeline({
   initialNoVarietyFilter,
   onCreateSequence,
   onUnlinkFromSequence,
+  onEditSequence,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -2485,14 +2488,24 @@ export default function CropTimeline({
                           </span>
                         )}
                       </div>
-                      {onUnlinkFromSequence && crop.sequenceSlot !== 0 && (
-                        <button
-                          onClick={() => onUnlinkFromSequence(crop.groupId)}
-                          className="mt-2 w-full px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 rounded hover:bg-purple-100 transition-colors"
-                        >
-                          Break from Sequence
-                        </button>
-                      )}
+                      <div className="mt-2 flex gap-2">
+                        {onEditSequence && (
+                          <button
+                            onClick={() => onEditSequence(crop.sequenceId!)}
+                            className="flex-1 px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 rounded hover:bg-purple-100 transition-colors"
+                          >
+                            Edit Sequence
+                          </button>
+                        )}
+                        {onUnlinkFromSequence && crop.sequenceSlot !== 0 && (
+                          <button
+                            onClick={() => onUnlinkFromSequence(crop.groupId)}
+                            className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
+                          >
+                            Break from Sequence
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
 

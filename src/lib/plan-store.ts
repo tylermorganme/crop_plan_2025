@@ -661,6 +661,20 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
    */
   deleteSequence: (sequenceId: string) => Promise<number>;
 
+  /**
+   * Update a sequence's name.
+   */
+  updateSequenceName: (sequenceId: string, newName: string | undefined) => Promise<void>;
+
+  /**
+   * Reorder sequence slots by reassigning slot numbers.
+   * Validates that slot 0 exists (anchor) and compacts slots to remove gaps at the end.
+   */
+  reorderSequenceSlots: (
+    sequenceId: string,
+    newSlotAssignments: { plantingId: string; slot: number }[]
+  ) => Promise<void>;
+
   /** Get a sequence by ID */
   getSequence: (sequenceId: string) => PlantingSequence | undefined;
 
@@ -3848,6 +3862,100 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             plan.metadata.lastModified = now;
           },
           `Update sequence offset to ${newOffsetDays} days`
+        );
+
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+    },
+
+    updateSequenceName: async (sequenceId, newName) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.sequences) return;
+
+      const sequence = currentPlan.sequences[sequenceId];
+      if (!sequence) {
+        throw new Error(`Sequence not found: ${sequenceId}`);
+      }
+
+      set((state) => {
+        if (!state.currentPlan?.sequences) return;
+
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const now = Date.now();
+
+            if (plan.sequences?.[sequenceId]) {
+              plan.sequences[sequenceId].name = newName;
+            }
+
+            plan.metadata.lastModified = now;
+          },
+          `Update sequence name to "${newName ?? '(unnamed)'}"`
+        );
+
+        state.isDirty = true;
+      });
+
+      await savePlanToLibrary(get().currentPlan!);
+    },
+
+    reorderSequenceSlots: async (sequenceId, newSlotAssignments) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings || !currentPlan.sequences) return;
+
+      const sequence = currentPlan.sequences[sequenceId];
+      if (!sequence) {
+        throw new Error(`Sequence not found: ${sequenceId}`);
+      }
+
+      // Validate: all plantings must be in this sequence
+      const sequencePlantingIds = new Set(
+        currentPlan.plantings
+          .filter(p => p.sequenceId === sequenceId)
+          .map(p => p.id)
+      );
+
+      for (const { plantingId } of newSlotAssignments) {
+        if (!sequencePlantingIds.has(plantingId)) {
+          throw new Error(`Planting ${plantingId} is not in sequence ${sequenceId}`);
+        }
+      }
+
+      // Validate: slot 0 must exist (anchor)
+      const hasAnchor = newSlotAssignments.some(a => a.slot === 0);
+      if (!hasAnchor) {
+        throw new Error('Sequence must have an anchor (slot 0)');
+      }
+
+      // Validate: no duplicate slots
+      const slots = newSlotAssignments.map(a => a.slot);
+      const uniqueSlots = new Set(slots);
+      if (uniqueSlots.size !== slots.length) {
+        throw new Error('Duplicate slot numbers in assignment');
+      }
+
+      set((state) => {
+        if (!state.currentPlan?.plantings) return;
+
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const now = Date.now();
+
+            for (const { plantingId, slot } of newSlotAssignments) {
+              const planting = plan.plantings?.find(p => p.id === plantingId);
+              if (planting) {
+                planting.sequenceSlot = slot;
+                planting.lastModified = now;
+              }
+            }
+
+            plan.metadata.lastModified = now;
+          },
+          `Reorder sequence slots`
         );
 
         state.isDirty = true;

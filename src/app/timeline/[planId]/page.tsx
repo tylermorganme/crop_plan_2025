@@ -6,6 +6,7 @@ import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import CropConfigEditor from '@/components/CropConfigEditor';
 import CreateSequenceModal, { type CreateSequenceOptions } from '@/components/CreateSequenceModal';
+import SequenceEditorModal from '@/components/SequenceEditorModal';
 import { type CropConfig } from '@/lib/entities/crop-config';
 // useSnapshotScheduler removed - SQLite storage handles persistence directly
 import { calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
@@ -58,6 +59,7 @@ export default function TimelinePlanPage() {
     cropName: string;
     fieldStartDate: string;
   } | null>(null);
+  const [editSequenceId, setEditSequenceId] = useState<string | null>(null);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
@@ -75,6 +77,11 @@ export default function TimelinePlanPage() {
   // Sequence actions from store
   const createSequenceFromPlanting = usePlanStore((state) => state.createSequenceFromPlanting);
   const unlinkFromSequence = usePlanStore((state) => state.unlinkFromSequence);
+  const updateSequenceOffset = usePlanStore((state) => state.updateSequenceOffset);
+  const updateSequenceName = usePlanStore((state) => state.updateSequenceName);
+  const reorderSequenceSlots = usePlanStore((state) => state.reorderSequenceSlots);
+  const getSequence = usePlanStore((state) => state.getSequence);
+  const getSequencePlantings = usePlanStore((state) => state.getSequencePlantings);
 
   // Helper to get crop config from plan's catalog (falls back to master)
   const getCropByIdentifier = useCallback((identifier: string) => {
@@ -290,6 +297,14 @@ export default function TimelinePlanPage() {
     }
   }, [unlinkFromSequence]);
 
+  const handleEditSequence = useCallback((sequenceId: string) => {
+    setEditSequenceId(sequenceId);
+  }, []);
+
+  // Get the sequence being edited (if any)
+  const editingSequence = editSequenceId ? getSequence(editSequenceId) : undefined;
+  const editingSequencePlantings = editSequenceId ? getSequencePlantings(editSequenceId) : [];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-51px)]">
@@ -339,6 +354,7 @@ export default function TimelinePlanPage() {
           initialNoVarietyFilter={initialNoVarietyFilter}
           onCreateSequence={handleCreateSequence}
           onUnlinkFromSequence={handleUnlinkFromSequence}
+          onEditSequence={handleEditSequence}
         />
       </div>
 
@@ -377,6 +393,62 @@ export default function TimelinePlanPage() {
         }}
         onCreate={handleConfirmCreateSequence}
       />
+
+      {/* Edit sequence modal */}
+      {editingSequence && (
+        <SequenceEditorModal
+          isOpen={!!editSequenceId}
+          sequence={editingSequence}
+          plantings={editingSequencePlantings}
+          cropCatalog={currentPlan.cropCatalog ?? {}}
+          beds={currentPlan.beds ?? {}}
+          onClose={() => setEditSequenceId(null)}
+          onUpdateOffset={async (newOffsetDays) => {
+            try {
+              await updateSequenceOffset(editSequenceId!, newOffsetDays);
+              setToast({ message: 'Sequence offset updated', type: 'success' });
+            } catch (e) {
+              setToast({
+                message: `Failed to update offset: ${e instanceof Error ? e.message : 'Unknown error'}`,
+                type: 'error',
+              });
+            }
+          }}
+          onUpdateName={async (newName) => {
+            try {
+              await updateSequenceName(editSequenceId!, newName);
+              setToast({ message: 'Sequence name updated', type: 'success' });
+            } catch (e) {
+              setToast({
+                message: `Failed to update name: ${e instanceof Error ? e.message : 'Unknown error'}`,
+                type: 'error',
+              });
+            }
+          }}
+          onUnlinkPlanting={async (plantingId) => {
+            try {
+              await unlinkFromSequence(plantingId);
+              setToast({ message: 'Planting removed from sequence', type: 'success' });
+            } catch (e) {
+              setToast({
+                message: `Failed to unlink: ${e instanceof Error ? e.message : 'Unknown error'}`,
+                type: 'error',
+              });
+            }
+          }}
+          onReorderSlots={async (newSlotAssignments) => {
+            try {
+              await reorderSequenceSlots(editSequenceId!, newSlotAssignments);
+              setToast({ message: 'Sequence reordered', type: 'success' });
+            } catch (e) {
+              setToast({
+                message: `Failed to reorder: ${e instanceof Error ? e.message : 'Unknown error'}`,
+                type: 'error',
+              });
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
