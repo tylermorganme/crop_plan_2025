@@ -714,14 +714,14 @@ export default function CropTimeline({
     return result;
   }, [crops, searchQuery, showNoVarietyOnly]);
 
-  // Apply drag transformation - move dragged crop(s) to preview position
-  // During drag: move dragged crops to preview position, original bounds shown in header
+  // During drag: move all linked crops (groupings + sequences) to preview positions
   const effectiveCrops = useMemo(() => {
     if (!dragPreview?.targetResource) return filteredCrops;
 
-    const targetResource = dragPreview.targetResource;
-    const deltaDays = dragPreview.deltaDays;
-    const groupId = dragPreview.groupId;
+    const { targetResource, deltaDays, groupId, linkedCrops } = dragPreview;
+
+    // Build set of all linked crop IDs for fast lookup
+    const linkedCropIds = new Set(linkedCrops.map(c => c.id));
 
     // Inline date offset (can't use offsetDate callback - defined later)
     const applyOffset = (dateStr: string, days: number): string => {
@@ -732,15 +732,22 @@ export default function CropTimeline({
     };
 
     return filteredCrops.map(crop => {
-      if (crop.groupId !== groupId) return crop;
+      // Not a linked crop - keep as-is
+      if (!linkedCropIds.has(crop.id)) return crop;
 
-      // Move dragged crop to new position
-      return {
+      // Apply time delta to all linked crops (shared logic)
+      const updatedCrop = {
         ...crop,
-        resource: targetResource === 'Unassigned' ? '' : targetResource,
         startDate: applyOffset(crop.startDate, deltaDays),
         endDate: applyOffset(crop.endDate, deltaDays),
       };
+
+      // Only change resource for the dragged groupId (not sequence members)
+      if (crop.groupId === groupId) {
+        updatedCrop.resource = targetResource === 'Unassigned' ? '' : targetResource;
+      }
+
+      return updatedCrop;
     });
   }, [filteredCrops, dragPreview]);
 
