@@ -62,7 +62,11 @@ export function DateInputWithButtons({
     }
   };
 
-  const adjustDate = (days: number) => {
+  const adjustDate = (days: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!value) return;
     const date = parseISO(value);
     const newDate = addDays(date, days);
