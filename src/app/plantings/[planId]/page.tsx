@@ -7,6 +7,9 @@ import { parseISO, format } from 'date-fns';
 import { usePlanStore } from '@/lib/plan-store';
 import { Z_INDEX } from '@/lib/z-index';
 import { DateInputWithButtons } from '@/components/DateInputWithButtons';
+import { PlantingInspectorPanel } from '@/components/PlantingInspectorPanel';
+import CreateSequenceModal from '@/components/CreateSequenceModal';
+import SequenceEditorModal from '@/components/SequenceEditorModal';
 import {
   getPrimarySeedToHarvest,
   calculateAggregateHarvestWindow,
@@ -667,6 +670,11 @@ export default function PlantingsPage() {
     updatePlanting,
     updateCropDates,
     bulkDeletePlantings,
+    createSequenceFromPlanting,
+    unlinkFromSequence,
+    updateSequenceOffset,
+    updateSequenceName,
+    reorderSequenceSlots,
   } = usePlanStore();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -688,6 +696,15 @@ export default function PlantingsPage() {
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [inspectedPlantingId, setInspectedPlantingId] = useState<string | null>(null);
+
+  // Sequence modal state
+  const [sequenceModalData, setSequenceModalData] = useState<{
+    plantingId: string;
+    cropName: string;
+    fieldStartDate: string;
+  } | null>(null);
+  const [editingSequenceId, setEditingSequenceId] = useState<string | null>(null);
 
   // Drag state for column reordering
   const [draggedColumn, setDraggedColumn] = useState<ColumnId | null>(null);
@@ -919,6 +936,33 @@ export default function PlantingsPage() {
     return result;
   }, [enrichedPlantings, assignmentFilter, showFailed, searchQuery, sortColumn, sortDirection]);
 
+  // Inspector data - compute crops for inspected planting
+  const inspectedPlanting = inspectedPlantingId
+    ? displayPlantings.find(p => p.id === inspectedPlantingId)
+    : null;
+
+  const inspectedCrops: TimelineCrop[] = inspectedPlanting && inspectedPlantingId && cropsByPlanting.has(inspectedPlantingId)
+    ? cropsByPlanting.get(inspectedPlantingId)!
+    : [];
+
+  // Compute used variety and mix IDs for seed source picker
+  const { usedVarietyIds, usedMixIds } = useMemo(() => {
+    const varietyIds = new Set<string>();
+    const mixIds = new Set<string>();
+
+    for (const planting of displayPlantings) {
+      if (planting.seedSource) {
+        if (planting.seedSource.type === 'variety') {
+          varietyIds.add(planting.seedSource.id);
+        } else if (planting.seedSource.type === 'mix') {
+          mixIds.add(planting.seedSource.id);
+        }
+      }
+    }
+
+    return { usedVarietyIds: varietyIds, usedMixIds: mixIds };
+  }, [displayPlantings]);
+
   // Handlers
   const handleSort = (col: ColumnId) => {
     if (!SORTABLE_COLUMNS.has(col)) return;
@@ -999,6 +1043,14 @@ export default function PlantingsPage() {
       setToast({ message: 'Failed to update', type: 'error' });
     }
   }, [updatePlanting, currentPlan?.plantings]);
+
+  const handleRowClick = useCallback((plantingId: string, event: React.MouseEvent) => {
+    // Ctrl/Cmd + click = multi-select (existing behavior via checkbox)
+    // Regular click = inspect (new behavior)
+    if (!event.ctrlKey && !event.metaKey) {
+      setInspectedPlantingId(plantingId);
+    }
+  }, []);
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedIds.size === 0) return;
@@ -1440,9 +1492,11 @@ export default function PlantingsPage() {
         <span className="text-sm text-gray-500">{displayPlantings.length} of {plantings.length}</span>
       </div>
 
-      {/* Table */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-auto">
-        <table className="border-collapse text-sm" style={{ minWidth: 'max-content' }}>
+      {/* Table and Inspector Container */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Table */}
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto">
+          <table className="border-collapse text-sm" style={{ minWidth: 'max-content' }}>
           <thead className="bg-gray-100 sticky top-0" style={{ zIndex: 20 }}>
             <tr>
               {/* Checkbox - sticky */}
@@ -1554,8 +1608,20 @@ export default function PlantingsPage() {
           <tbody className="bg-white">
             {displayPlantings.map((planting, index) => {
               const rowBg = selectedIds.has(planting.id) ? 'bg-blue-100' : index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+              const isInspected = inspectedPlantingId === planting.id;
               return (
-                <tr key={planting.id} className={`border-b border-gray-100 hover:bg-blue-50/50 ${rowBg}`} style={{ height: ROW_HEIGHT }}>
+                <tr
+                  key={planting.id}
+                  className={`border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer ${rowBg} ${isInspected ? 'ring-2 ring-blue-500' : ''}`}
+                  style={{ height: ROW_HEIGHT }}
+                  onClick={(e) => {
+                    // Don't trigger row click if clicking checkbox
+                    if ((e.target as HTMLElement).closest('input[type="checkbox"]')) {
+                      return;
+                    }
+                    handleRowClick(planting.id, e);
+                  }}
+                >
                   {/* Checkbox - sticky */}
                   <td className={`px-2 py-1 text-center sticky left-0 ${rowBg}`}>
                     <input type="checkbox" checked={selectedIds.has(planting.id)} onChange={() => toggleSelection(planting.id)} className="rounded border-gray-300" />
@@ -1590,6 +1656,58 @@ export default function PlantingsPage() {
             )}
           </tbody>
         </table>
+        </div>
+
+        {/* Planting Inspector Panel */}
+        {inspectedPlantingId && inspectedCrops.length > 0 && (
+          <PlantingInspectorPanel
+            selectedCrops={inspectedCrops}
+            onDeselect={() => setInspectedPlantingId(null)}
+            onClearSelection={() => setInspectedPlantingId(null)}
+            onUpdatePlanting={async (plantingId, updates) => {
+              await updatePlanting(plantingId, updates);
+            }}
+            onCropDateChange={(groupId, startDate, endDate) => {
+              // Update crop dates
+              updateCropDates(groupId, startDate, endDate);
+            }}
+            onDeleteCrop={(groupIds) => {
+              // Delete the inspected planting
+              const plantingIds = displayPlantings
+                .filter(p => {
+                  const crops = cropsByPlanting.get(p.id);
+                  return crops && groupIds.some(gid =>
+                    crops.some(c => c.groupId === gid)
+                  );
+                })
+                .map(p => p.id);
+
+              if (plantingIds.length > 0) {
+                bulkDeletePlantings(plantingIds);
+                setInspectedPlantingId(null);
+              }
+            }}
+            onCreateSequence={(plantingId, cropName, fieldStartDate) => {
+              // Open CreateSequenceModal
+              setSequenceModalData({ plantingId, cropName, fieldStartDate });
+            }}
+            onEditSequence={(sequenceId) => {
+              // Open SequenceEditorModal
+              setEditingSequenceId(sequenceId);
+            }}
+            onUnlinkFromSequence={(plantingId) => {
+              // Call plan store method
+              unlinkFromSequence(plantingId);
+            }}
+            cropCatalog={catalogLookup}
+            varieties={varietiesLookup}
+            seedMixes={seedMixesLookup}
+            usedVarietyIds={usedVarietyIds}
+            usedMixIds={usedMixIds}
+            showTimingEdits={true}
+            className="w-80 bg-white border-l flex flex-col shrink-0"
+          />
+        )}
       </div>
 
       {/* Column Manager Modal */}
@@ -1605,6 +1723,44 @@ export default function PlantingsPage() {
 
       {/* Toast */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* Create Sequence Modal */}
+      {sequenceModalData && (
+        <CreateSequenceModal
+          isOpen={true}
+          anchorFieldStartDate={sequenceModalData.fieldStartDate}
+          cropName={sequenceModalData.cropName}
+          onClose={() => setSequenceModalData(null)}
+          onCreate={async (options) => {
+            await createSequenceFromPlanting(sequenceModalData.plantingId, options);
+            setSequenceModalData(null);
+          }}
+        />
+      )}
+
+      {/* Sequence Editor Modal */}
+      {editingSequenceId && currentPlan?.sequences?.[editingSequenceId] && (
+        <SequenceEditorModal
+          isOpen={true}
+          sequence={currentPlan.sequences[editingSequenceId]}
+          plantings={plantings}
+          cropCatalog={catalogLookup}
+          beds={bedsLookup}
+          onClose={() => setEditingSequenceId(null)}
+          onUpdateOffset={(newOffsetDays) => {
+            updateSequenceOffset(editingSequenceId, newOffsetDays);
+          }}
+          onUpdateName={(newName) => {
+            updateSequenceName(editingSequenceId, newName);
+          }}
+          onUnlinkPlanting={(plantingId) => {
+            unlinkFromSequence(plantingId);
+          }}
+          onReorderSlots={(newSlotAssignments) => {
+            reorderSequenceSlots(editingSequenceId, newSlotAssignments);
+          }}
+        />
+      )}
 
       {/* Resize overlay */}
       {resizingColumn && <div className="fixed inset-0 cursor-col-resize" style={{ zIndex: Z_INDEX.RESIZE_OVERLAY ?? 9999 }} />}
