@@ -469,6 +469,7 @@ export default function CropTimeline({
   );
   const [isResizing, setIsResizing] = useState(false);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [showSequenceInfo, setShowSequenceInfo] = useState(false);
 
   // For timing mode: track drag start position and original dates
   const dragStartX = useRef<number | null>(null);
@@ -1345,7 +1346,7 @@ export default function CropTimeline({
       tooltip += `\n${methodNames[crop.plantingMethod] || crop.plantingMethod}`;
     }
     if (crop.sequenceId !== undefined && crop.sequenceSlot !== undefined) {
-      tooltip += `\nSequence #${crop.sequenceSlot + 1}${crop.sequenceSlot === 0 ? ' (anchor)' : ''}`;
+      tooltip += `\nSequence #${crop.sequenceSlot + 1}`;
     }
 
     return (
@@ -1516,7 +1517,7 @@ export default function CropTimeline({
                           backgroundColor: '#7c3aed', // Purple for sequences
                           color: '#ffffff',
                         }}
-                        title={`Sequence ${crop.sequenceSlot + 1}${crop.sequenceSlot === 0 ? ' (anchor)' : ''}`}
+                        title={`Sequence ${crop.sequenceSlot + 1}`}
                       >
                         S{crop.sequenceSlot + 1}
                       </div>
@@ -2401,30 +2402,31 @@ export default function CropTimeline({
                   {crop.sequenceId !== undefined && crop.sequenceSlot !== undefined && (
                     <div className="pt-3 border-t">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-gray-600">Sequence</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-semibold text-gray-600">Sequence</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowSequenceInfo(true);
+                            }}
+                            title="Moving a planting will move all sequenced plantings that aren't already fixed by actual dates. Click for more info."
+                            className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer"
+                          >
+                            ⓘ
+                          </button>
+                        </div>
                         <span
                           className="px-2 py-0.5 rounded text-xs font-bold"
                           style={{ backgroundColor: '#7c3aed', color: '#ffffff' }}
                         >
-                          #{crop.sequenceSlot + 1}{crop.sequenceSlot === 0 ? ' (anchor)' : ''}
+                          #{crop.sequenceSlot + 1}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-600">
-                        This planting is part of a succession sequence.
-                        {crop.isLocked ? (
-                          <span className="block mt-1 text-amber-600">
-                            This planting has actual dates set and cannot be moved.
-                          </span>
-                        ) : crop.sequenceSlot === 0 ? (
-                          <span className="block mt-1 text-purple-600">
-                            As the anchor, dragging this will shift all other plantings in the sequence.
-                          </span>
-                        ) : (
-                          <span className="block mt-1 text-purple-600">
-                            Dragging or moving this planting will unlink it from the sequence.
-                          </span>
-                        )}
-                      </div>
+                      {crop.isLocked && (
+                        <div className="text-xs text-amber-600 mb-2">
+                          This planting has actual dates set and cannot be moved.
+                        </div>
+                      )}
                       <div className="mt-2 flex gap-2">
                         {onEditSequence && (
                           <button
@@ -2439,7 +2441,7 @@ export default function CropTimeline({
                             onClick={() => onUnlinkFromSequence(crop.groupId)}
                             className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
                           >
-                            {crop.sequenceSlot === 0 ? 'Break Anchor from Sequence' : 'Break from Sequence'}
+                            Break from Sequence
                           </button>
                         )}
                       </div>
@@ -2646,6 +2648,79 @@ export default function CropTimeline({
           </div>
         </div>
       ) : null}
+
+      {/* Sequence Info Modal */}
+      {showSequenceInfo && (
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ zIndex: Z_INDEX.MODAL }}
+          onClick={() => setShowSequenceInfo(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50" />
+
+          {/* Modal */}
+          <div
+            className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Succession Sequences</h2>
+              <button
+                onClick={() => setShowSequenceInfo(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl leading-none p-1"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4">
+              <div className="space-y-3 text-sm text-gray-700">
+                <p>
+                  A <strong>succession sequence</strong> is a group of plantings spaced at regular intervals to provide continuous harvest.
+                </p>
+
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                  <h3 className="font-semibold text-purple-900 mb-2">How It Works</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex gap-2">
+                      <span className="text-purple-600">•</span>
+                      <span>All plantings in the sequence are numbered (#1, #2, #3...)</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-purple-600">•</span>
+                      <span>Dates are automatically calculated based on the first planting and the spacing between them</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-purple-600">•</span>
+                      <span>Moving any planting will move all sequenced plantings that aren't already fixed by actual dates</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <h3 className="font-semibold text-gray-900 mb-2">Breaking from Sequence</h3>
+                  <p className="text-sm">
+                    Click <strong>"Break from Sequence"</strong> to remove a planting from the group. The remaining plantings will continue to follow each other.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end rounded-b-lg">
+              <button
+                onClick={() => setShowSequenceInfo(false)}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
