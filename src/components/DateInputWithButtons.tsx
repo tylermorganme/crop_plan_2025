@@ -74,17 +74,6 @@ export function DateInputWithButtons({
   if (mode === 'input' || editing) {
     return (
       <div className="flex items-center gap-1">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            adjustDate(-1);
-          }}
-          className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded border border-gray-300"
-          title="Previous day"
-          type="button"
-        >
-          −
-        </button>
         <input
           ref={inputRef}
           type="date"
@@ -96,17 +85,30 @@ export function DateInputWithButtons({
             mode === 'input' ? 'border-gray-300' : 'border-blue-500'
           } ${className}`}
         />
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            adjustDate(1);
-          }}
-          className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded border border-gray-300"
-          title="Next day"
-          type="button"
-        >
-          +
-        </button>
+        <div className="flex flex-col">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              adjustDate(1);
+            }}
+            className="px-1.5 py-0 text-xs leading-none text-gray-600 hover:bg-gray-100 rounded-t border border-gray-300 border-b-0"
+            title="Next day"
+            type="button"
+          >
+            ▲
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              adjustDate(-1);
+            }}
+            className="px-1.5 py-0 text-xs leading-none text-gray-600 hover:bg-gray-100 rounded-b border border-gray-300"
+            title="Previous day"
+            type="button"
+          >
+            ▼
+          </button>
+        </div>
       </div>
     );
   }
@@ -114,34 +116,36 @@ export function DateInputWithButtons({
   // Inline mode (compact for grid)
   return (
     <div className="flex items-center gap-0.5">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          adjustDate(-1);
-        }}
-        className="px-1 py-0.5 text-xs text-gray-600 hover:bg-gray-100 rounded"
-        title="Previous day"
-        type="button"
-      >
-        −
-      </button>
       <div
         onClick={() => setEditing(true)}
         className={`flex-1 min-w-0 cursor-text hover:bg-blue-50 rounded truncate ${className}`}
       >
         {displayValue || value || <span className="text-gray-400">—</span>}
       </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          adjustDate(1);
-        }}
-        className="px-1 py-0.5 text-xs text-gray-600 hover:bg-gray-100 rounded"
-        title="Next day"
-        type="button"
-      >
-        +
-      </button>
+      <div className="flex flex-col">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            adjustDate(1);
+          }}
+          className="px-1 py-0 text-[10px] leading-none text-gray-600 hover:bg-gray-100 rounded-t"
+          title="Next day"
+          type="button"
+        >
+          ▲
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            adjustDate(-1);
+          }}
+          className="px-1 py-0 text-[10px] leading-none text-gray-600 hover:bg-gray-100 rounded-b"
+          title="Previous day"
+          type="button"
+        >
+          ▼
+        </button>
+      </div>
     </div>
   );
 }
