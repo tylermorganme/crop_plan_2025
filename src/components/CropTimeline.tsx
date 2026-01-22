@@ -5,6 +5,7 @@ import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear,
 import type { CropConfig } from '@/lib/entities/crop-config';
 import { calculateCropFields } from '@/lib/entities/crop-config';
 import { Z_INDEX } from '@/lib/z-index';
+import { useUIStore } from '@/lib/ui-store';
 import AddToBedPanel from './AddToBedPanel';
 import { PlantingInspectorPanel } from './PlantingInspectorPanel';
 
@@ -307,13 +308,21 @@ export default function CropTimeline({
   const [draggedCropId, setDraggedCropId] = useState<string | null>(null);
   const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null);
   const [dragOverResource, setDragOverResource] = useState<string | null>(null);
-  const [selectedGroupIds, setSelectedGroupIds] = useState<Set<string>>(new Set());
+
+  // Selection state - shared across Timeline and Plantings views via UI store
+  // selectedGroupIds tracks planting IDs (groupId = plantingId in TimelineCrop)
+  const selectedPlantingIds = useUIStore((state) => state.selectedPlantingIds);
+  const togglePlanting = useUIStore((state) => state.togglePlanting);
+  const clearSelection = useUIStore((state) => state.clearSelection);
+  const selectPlanting = useUIStore((state) => state.selectPlanting);
+
   // State for "Add to Bed" panel - which bed's + button was clicked
   const [addToBedId, setAddToBedId] = useState<string | null>(null);
   const addToBedPanelRef = useRef<HTMLDivElement>(null);
 
-  // Search filter
-  const [searchQuery, setSearchQuery] = useState('');
+  // Search filter - shared across views via UI store
+  const searchQuery = useUIStore((state) => state.searchQuery);
+  const setSearchQuery = useUIStore((state) => state.setSearchQuery);
   const searchInputRef = useRef<HTMLInputElement>(null);
   // Filter to show only plantings without seed source
   // Initialize from URL param if provided
@@ -1001,8 +1010,8 @@ export default function CropTimeline({
 
       // Determine which groups to move: if dragged item is in selection, move all selected
       // Otherwise just move the dragged item
-      const groupsToMove = selectedGroupIds.has(data.groupId)
-        ? Array.from(selectedGroupIds)
+      const groupsToMove = selectedPlantingIds.has(data.groupId)
+        ? Array.from(selectedPlantingIds)
         : [data.groupId];
 
       // Apply timing changes if enabled and there was horizontal movement
@@ -1181,7 +1190,7 @@ export default function CropTimeline({
     const isDragging = draggedCropId === crop.id;
     // Highlight all beds in the group being dragged
     const isGroupBeingDragged = draggedGroupId === crop.groupId && draggedGroupId !== null;
-    const isSelected = selectedGroupIds.has(crop.groupId);
+    const isSelected = selectedPlantingIds.has(crop.groupId);
     // All beds are draggable - dragging a secondary bed acts like dragging the first bed
 
     // Check if this is a partial bed (doesn't use full capacity)
@@ -1418,12 +1427,12 @@ export default function CropTimeline({
 
   // Get selected crop groups info for inspector
   const selectedCropsData = useMemo(() => {
-    if (selectedGroupIds.size === 0) return null;
-    // Get crops for all selected groups
-    const allSelected = crops.filter(c => selectedGroupIds.has(c.groupId));
+    if (selectedPlantingIds.size === 0) return null;
+    // Get crops for all selected groups (groupId = plantingId)
+    const allSelected = crops.filter(c => selectedPlantingIds.has(c.groupId));
     if (allSelected.length === 0) return null;
     return allSelected;
-  }, [crops, selectedGroupIds]);
+  }, [crops, selectedPlantingIds]);
 
   // Click handler for crop selection with multi-select support
   const handleCropClick = useCallback((e: React.MouseEvent, crop: TimelineCrop) => {
@@ -1431,25 +1440,17 @@ export default function CropTimeline({
 
     // Cmd/Ctrl+Click toggles the crop in selection
     if (e.metaKey || e.ctrlKey) {
-      setSelectedGroupIds(prev => {
-        const next = new Set(prev);
-        if (next.has(crop.groupId)) {
-          next.delete(crop.groupId);
-        } else {
-          next.add(crop.groupId);
-        }
-        return next;
-      });
+      togglePlanting(crop.groupId);
     } else {
       // Regular click: if already selected as only item, deselect; otherwise select only this
-      setSelectedGroupIds(prev => {
-        if (prev.size === 1 && prev.has(crop.groupId)) {
-          return new Set();
-        }
-        return new Set([crop.groupId]);
-      });
+      if (selectedPlantingIds.size === 1 && selectedPlantingIds.has(crop.groupId)) {
+        clearSelection();
+      } else {
+        clearSelection();
+        selectPlanting(crop.groupId);
+      }
     }
-  }, []);
+  }, [selectedPlantingIds, togglePlanting, clearSelection, selectPlanting]);
 
   // Calculate duration in days
   const getDuration = (start: string, end: string) => {
@@ -1883,7 +1884,7 @@ export default function CropTimeline({
                           onClick={(e) => {
                             e.stopPropagation();
                             setAddToBedId(resource);
-                            setSelectedGroupIds(new Set()); // Clear selection to hide inspector
+                            clearSelection(); // Clear selection to hide inspector
                           }}
                           className="ml-auto p-1 text-gray-300 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
                           title={`Add planting to ${resource}`}
@@ -1935,9 +1936,10 @@ export default function CropTimeline({
               const result = await onAddPlanting(configId, fieldStartDate, bedId);
               setAddToBedId(null);
               setHoverPreview(null);
-              // If the callback returns a groupId, select it to show inspector
+              // If the callback returns a groupId (plantingId), select it to show inspector
               if (result) {
-                setSelectedGroupIds(new Set([result]));
+                clearSelection();
+                selectPlanting(result);
               }
             }}
             onClose={() => {
@@ -1951,13 +1953,10 @@ export default function CropTimeline({
         <PlantingInspectorPanel
           selectedCrops={selectedCropsData as import('@/lib/plan-types').TimelineCrop[]}
           onDeselect={(groupId) => {
-            setSelectedGroupIds(prev => {
-              const next = new Set(prev);
-              next.delete(groupId);
-              return next;
-            });
+            // groupId is actually a plantingId in the context of TimelineCrop
+            togglePlanting(groupId);
           }}
-          onClearSelection={() => setSelectedGroupIds(new Set())}
+          onClearSelection={() => clearSelection()}
           onUpdatePlanting={onUpdatePlanting}
           onCropDateChange={onCropDateChange}
           onDeleteCrop={onDeleteCrop}
@@ -1965,7 +1964,8 @@ export default function CropTimeline({
             if (onDuplicateCrop) {
               const newId = await onDuplicateCrop(groupId);
               if (newId) {
-                setSelectedGroupIds(new Set([newId]));
+                clearSelection();
+                selectPlanting(newId);
               }
               return newId;
             }

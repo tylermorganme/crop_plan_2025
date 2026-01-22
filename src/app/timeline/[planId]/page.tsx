@@ -18,6 +18,7 @@ import {
   usePlanStore,
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
+import { useUIStore } from '@/lib/ui-store';
 import { Z_INDEX } from '@/lib/z-index';
 
 // Toast notification component
@@ -51,8 +52,11 @@ export default function TimelinePlanPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [configEditorOpen, setConfigEditorOpen] = useState(false);
+
+  // Toast notifications - shared across views via UI store
+  const toast = useUIStore((state) => state.toast);
+  const setToast = useUIStore((state) => state.setToast);
   const [editingCrop, setEditingCrop] = useState<CropConfig | null>(null);
   const [sequenceModalOpen, setSequenceModalOpen] = useState(false);
   const [sequenceModalData, setSequenceModalData] = useState<{

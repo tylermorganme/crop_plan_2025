@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import { parseISO, format } from 'date-fns';
 import { usePlanStore } from '@/lib/plan-store';
+import { useUIStore } from '@/lib/ui-store';
 import { Z_INDEX } from '@/lib/z-index';
 import { DateInputWithButtons } from '@/components/DateInputWithButtons';
 import { PlantingInspectorPanel } from '@/components/PlantingInspectorPanel';
@@ -170,7 +171,7 @@ type AssignmentFilter = 'all' | 'assigned' | 'unassigned';
 interface PersistedState {
   sortColumn: ColumnId;
   sortDirection: SortDirection;
-  searchQuery: string;
+  searchQuery?: string; // Optional - moved to UI store for cross-view sharing
   assignmentFilter: AssignmentFilter;
   showFailed: boolean;
   columnOrder: ColumnId[];
@@ -680,8 +681,11 @@ export default function PlantingsPage() {
   } = usePlanStore();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [showColumnManager, setShowColumnManager] = useState(false);
+
+  // Toast notifications - shared across views via UI store
+  const toast = useUIStore((state) => state.toast);
+  const setToast = useUIStore((state) => state.setToast);
 
   // Column state
   const [columnOrder, setColumnOrder] = useState<ColumnId[]>([...ALL_COLUMNS]);
@@ -691,14 +695,20 @@ export default function PlantingsPage() {
   // Sorting and filtering state
   const [sortColumn, setSortColumn] = useState<ColumnId>('fieldStartDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [searchQuery, setSearchQuery] = useState('');
   const [assignmentFilter, setAssignmentFilter] = useState<AssignmentFilter>('all');
   const [showFailed, setShowFailed] = useState(true);
   const [hydrated, setHydrated] = useState(false);
 
-  // Selection state
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [inspectedPlantingId, setInspectedPlantingId] = useState<string | null>(null);
+  // Search state - shared across views via UI store
+  const searchQuery = useUIStore((state) => state.searchQuery);
+  const setSearchQuery = useUIStore((state) => state.setSearchQuery);
+
+  // Selection state - shared across Timeline and Plantings views via UI store
+  const selectedIds = useUIStore((state) => state.selectedPlantingIds);
+  const togglePlanting = useUIStore((state) => state.togglePlanting);
+  const clearSelectionStore = useUIStore((state) => state.clearSelection);
+  const selectAll = useUIStore((state) => state.selectMultiple);
+  const selectPlanting = useUIStore((state) => state.selectPlanting);
 
   // Sequence modal state
   const [sequenceModalData, setSequenceModalData] = useState<{
@@ -726,7 +736,7 @@ export default function PlantingsPage() {
     if (persisted) {
       setSortColumn(persisted.sortColumn);
       setSortDirection(persisted.sortDirection);
-      setSearchQuery(persisted.searchQuery);
+      // searchQuery removed - now in UI store (shared across views)
       // Handle migration from old showUnassigned boolean to new assignmentFilter
       if ('assignmentFilter' in persisted) {
         setAssignmentFilter(persisted.assignmentFilter);
@@ -752,14 +762,14 @@ export default function PlantingsPage() {
     savePersistedState({
       sortColumn,
       sortDirection,
-      searchQuery,
+      // searchQuery removed - now in UI store (shared across views)
       assignmentFilter,
       showFailed,
       columnOrder,
       columnWidths,
       visibleColumns: Array.from(visibleColumns) as ColumnId[],
     });
-  }, [hydrated, sortColumn, sortDirection, searchQuery, assignmentFilter, showFailed, columnOrder, columnWidths, visibleColumns]);
+  }, [hydrated, sortColumn, sortDirection, assignmentFilter, showFailed, columnOrder, columnWidths, visibleColumns]);
 
   // Load plan on mount
   useEffect(() => {
@@ -938,14 +948,18 @@ export default function PlantingsPage() {
     return result;
   }, [enrichedPlantings, assignmentFilter, showFailed, searchQuery, sortColumn, sortDirection]);
 
-  // Inspector data - compute crops for inspected planting
-  const inspectedPlanting = inspectedPlantingId
-    ? displayPlantings.find(p => p.id === inspectedPlantingId)
-    : null;
+  // Inspector shows all selected plantings (like Timeline)
+  const inspectedCrops: TimelineCrop[] = useMemo(() => {
+    if (selectedIds.size === 0) return [];
 
-  const inspectedCrops: TimelineCrop[] = inspectedPlanting && inspectedPlantingId && cropsByPlanting.has(inspectedPlantingId)
-    ? cropsByPlanting.get(inspectedPlantingId)!
-    : [];
+    const allCrops: TimelineCrop[] = [];
+    selectedIds.forEach(id => {
+      if (cropsByPlanting.has(id)) {
+        allCrops.push(...cropsByPlanting.get(id)!);
+      }
+    });
+    return allCrops;
+  }, [selectedIds, cropsByPlanting]);
 
   // Compute used variety and mix IDs for seed source picker
   const { usedVarietyIds, usedMixIds } = useMemo(() => {
@@ -1047,35 +1061,49 @@ export default function PlantingsPage() {
   }, [updatePlanting, currentPlan?.plantings]);
 
   const handleRowClick = useCallback((plantingId: string, event: React.MouseEvent) => {
-    // Ctrl/Cmd + click = multi-select (existing behavior via checkbox)
-    // Regular click = inspect (new behavior)
-    if (!event.ctrlKey && !event.metaKey) {
-      setInspectedPlantingId(plantingId);
+    // Unified behavior like Timeline:
+    // Ctrl/Cmd + click = multi-select toggle
+    // Regular click = single select (replaces previous)
+    if (event.ctrlKey || event.metaKey) {
+      togglePlanting(plantingId);
+    } else {
+      // Single select: if already the only selected item, deselect; otherwise replace
+      if (selectedIds.size === 1 && selectedIds.has(plantingId)) {
+        clearSelectionStore();
+      } else {
+        clearSelectionStore();
+        selectPlanting(plantingId);
+      }
     }
-  }, []);
+  }, [selectedIds, togglePlanting, clearSelectionStore, selectPlanting]);
 
   const handleDeleteSelected = useCallback(async () => {
     if (selectedIds.size === 0) return;
     if (!window.confirm(`Delete ${selectedIds.size} planting(s)?`)) return;
     try {
       const deletedCount = await bulkDeletePlantings(Array.from(selectedIds));
-      setSelectedIds(new Set());
+      clearSelectionStore();
       setToast({ message: `Deleted ${deletedCount} planting(s)`, type: 'success' });
     } catch {
       setToast({ message: 'Failed to delete', type: 'error' });
     }
-  }, [selectedIds, bulkDeletePlantings]);
+  }, [selectedIds, bulkDeletePlantings, clearSelectionStore]);
 
-  // Selection
-  const toggleSelection = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-  const selectAll = () => setSelectedIds(new Set(displayPlantings.map((p) => p.id)));
-  const clearSelection = () => setSelectedIds(new Set());
+  // Selection - wraps UI store methods with debug logging
+  const toggleSelection = useCallback((id: string) => {
+    console.log('toggleSelection called for', id);
+    const wasSelected = selectedIds.has(id);
+    togglePlanting(id);
+    console.log('Selection changed:', wasSelected ? 'removed' : 'added', 'New size:', selectedIds.size + (wasSelected ? -1 : 1));
+  }, [selectedIds, togglePlanting]);
+
+  const selectAllPlantings = useCallback(() => {
+    selectAll(displayPlantings.map((p) => p.id));
+  }, [selectAll, displayPlantings]);
+
+  const clearSelection = useCallback(() => {
+    clearSelectionStore();
+  }, [clearSelectionStore]);
 
   // Column visibility
   const toggleColumnVisibility = (col: ColumnId) => {
@@ -1496,11 +1524,11 @@ export default function PlantingsPage() {
         </div>
       }
       rightPanel={
-        inspectedPlantingId && inspectedCrops.length > 0 ? (
+        inspectedCrops.length > 0 ? (
           <PlantingInspectorPanel
             selectedCrops={inspectedCrops}
-            onDeselect={() => setInspectedPlantingId(null)}
-            onClearSelection={() => setInspectedPlantingId(null)}
+            onDeselect={(groupId) => togglePlanting(groupId)}
+            onClearSelection={() => clearSelectionStore()}
             onUpdatePlanting={async (plantingId, updates) => {
               await updatePlanting(plantingId, updates);
             }}
@@ -1519,7 +1547,7 @@ export default function PlantingsPage() {
 
               if (plantingIds.length > 0) {
                 bulkDeletePlantings(plantingIds);
-                setInspectedPlantingId(null);
+                clearSelectionStore();
               }
             }}
             onCreateSequence={(plantingId, cropName, fieldStartDate) => {
@@ -1553,7 +1581,7 @@ export default function PlantingsPage() {
                 <input
                   type="checkbox"
                   checked={selectedIds.size > 0 && selectedIds.size === displayPlantings.length}
-                  onChange={(e) => e.target.checked ? selectAll() : clearSelection()}
+                  onChange={(e) => e.target.checked ? selectAllPlantings() : clearSelection()}
                   className="rounded border-gray-300"
                 />
               </th>
@@ -1656,12 +1684,12 @@ export default function PlantingsPage() {
           </thead>
           <tbody className="bg-white">
             {displayPlantings.map((planting, index) => {
-              const rowBg = selectedIds.has(planting.id) ? 'bg-blue-100' : index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-              const isInspected = inspectedPlantingId === planting.id;
+              const isSelected = selectedIds.has(planting.id);
+              const rowBg = isSelected ? 'bg-blue-100' : index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
               return (
                 <tr
                   key={planting.id}
-                  className={`border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer ${rowBg} ${isInspected ? 'ring-2 ring-blue-500' : ''}`}
+                  className={`border-b border-gray-100 hover:bg-blue-50/50 cursor-pointer ${rowBg}`}
                   style={{ height: ROW_HEIGHT }}
                   onClick={(e) => {
                     // Don't trigger row click if clicking checkbox
