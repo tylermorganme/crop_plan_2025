@@ -1436,9 +1436,10 @@ export default function PlantingsPage() {
   const failedCount = enrichedPlantings.filter((p) => p.isFailed).length;
 
   return (
-    <div className="h-[calc(100vh-51px)] flex flex-col bg-gray-50">
-      {/* Toolbar */}
-      <div className="bg-white border-b px-4 py-2 flex items-center gap-4 flex-shrink-0">
+    <PageLayout
+      header={<AppHeader />}
+      toolbar={
+        <div className="px-4 py-2 flex items-center gap-4">
         <input
           type="text"
           placeholder="Search plantings..."
@@ -1492,12 +1493,58 @@ export default function PlantingsPage() {
         )}
 
         <span className="text-sm text-gray-500">{displayPlantings.length} of {plantings.length}</span>
-      </div>
+        </div>
+      }
+      rightPanel={
+        inspectedPlantingId && inspectedCrops.length > 0 ? (
+          <PlantingInspectorPanel
+            selectedCrops={inspectedCrops}
+            onDeselect={() => setInspectedPlantingId(null)}
+            onClearSelection={() => setInspectedPlantingId(null)}
+            onUpdatePlanting={async (plantingId, updates) => {
+              await updatePlanting(plantingId, updates);
+            }}
+            onCropDateChange={(groupId, startDate, endDate) => {
+              updateCropDates(groupId, startDate, endDate);
+            }}
+            onDeleteCrop={(groupIds) => {
+              const plantingIds = displayPlantings
+                .filter(p => {
+                  const crops = cropsByPlanting.get(p.id);
+                  return crops && groupIds.some(gid =>
+                    crops.some(c => c.groupId === gid)
+                  );
+                })
+                .map(p => p.id);
 
-      {/* Table and Inspector Container */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Table */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-auto">
+              if (plantingIds.length > 0) {
+                bulkDeletePlantings(plantingIds);
+                setInspectedPlantingId(null);
+              }
+            }}
+            onCreateSequence={(plantingId, cropName, fieldStartDate) => {
+              setSequenceModalData({ plantingId, cropName, fieldStartDate });
+            }}
+            onEditSequence={(sequenceId) => {
+              setEditingSequenceId(sequenceId);
+            }}
+            onUnlinkFromSequence={(plantingId) => {
+              unlinkFromSequence(plantingId);
+            }}
+            cropCatalog={catalogLookup}
+            varieties={varietiesLookup}
+            seedMixes={seedMixesLookup}
+            usedVarietyIds={usedVarietyIds}
+            usedMixIds={usedMixIds}
+            showTimingEdits={true}
+            className="w-80 bg-white border-l flex flex-col shrink-0"
+          />
+        ) : null
+      }
+      contentClassName="bg-gray-50"
+    >
+      {/* Table */}
+      <div ref={scrollContainerRef} className="overflow-auto">
           <table className="border-collapse text-sm" style={{ minWidth: 'max-content' }}>
           <thead className="bg-gray-100 sticky top-0" style={{ zIndex: 20 }}>
             <tr>
@@ -1658,58 +1705,6 @@ export default function PlantingsPage() {
             )}
           </tbody>
         </table>
-        </div>
-
-        {/* Planting Inspector Panel */}
-        {inspectedPlantingId && inspectedCrops.length > 0 && (
-          <PlantingInspectorPanel
-            selectedCrops={inspectedCrops}
-            onDeselect={() => setInspectedPlantingId(null)}
-            onClearSelection={() => setInspectedPlantingId(null)}
-            onUpdatePlanting={async (plantingId, updates) => {
-              await updatePlanting(plantingId, updates);
-            }}
-            onCropDateChange={(groupId, startDate, endDate) => {
-              // Update crop dates
-              updateCropDates(groupId, startDate, endDate);
-            }}
-            onDeleteCrop={(groupIds) => {
-              // Delete the inspected planting
-              const plantingIds = displayPlantings
-                .filter(p => {
-                  const crops = cropsByPlanting.get(p.id);
-                  return crops && groupIds.some(gid =>
-                    crops.some(c => c.groupId === gid)
-                  );
-                })
-                .map(p => p.id);
-
-              if (plantingIds.length > 0) {
-                bulkDeletePlantings(plantingIds);
-                setInspectedPlantingId(null);
-              }
-            }}
-            onCreateSequence={(plantingId, cropName, fieldStartDate) => {
-              // Open CreateSequenceModal
-              setSequenceModalData({ plantingId, cropName, fieldStartDate });
-            }}
-            onEditSequence={(sequenceId) => {
-              // Open SequenceEditorModal
-              setEditingSequenceId(sequenceId);
-            }}
-            onUnlinkFromSequence={(plantingId) => {
-              // Call plan store method
-              unlinkFromSequence(plantingId);
-            }}
-            cropCatalog={catalogLookup}
-            varieties={varietiesLookup}
-            seedMixes={seedMixesLookup}
-            usedVarietyIds={usedVarietyIds}
-            usedMixIds={usedMixIds}
-            showTimingEdits={true}
-            className="w-80 bg-white border-l flex flex-col shrink-0"
-          />
-        )}
       </div>
 
       {/* Column Manager Modal */}
@@ -1784,6 +1779,6 @@ export default function PlantingsPage() {
         </div>,
         document.body
       )}
-    </div>
+    </PageLayout>
   );
 }
