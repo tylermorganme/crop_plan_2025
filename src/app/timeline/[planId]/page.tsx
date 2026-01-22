@@ -351,6 +351,7 @@ export default function TimelinePlanPage() {
           crops={getTimelineCropsFromPlan(currentPlan)}
           resources={getResources(currentPlan)}
           groups={getGroups(currentPlan)}
+          bedLengths={bedMappings.bedLengths}
           onCropMove={handleCropMove}
           onCropDateChange={handleDateChange}
           onDuplicateCrop={handleDuplicateCrop}

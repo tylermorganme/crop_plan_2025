@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from 'date-fns';
-import { getBedGroup, getBedNumber, getBedLengthFromId } from '@/lib/plan-types';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import { calculateCropFields, calculateDaysInCells, calculateSeedToHarvest, calculateHarvestWindow } from '@/lib/entities/crop-config';
 import { resolveEffectiveTiming } from '@/lib/slim-planting';
@@ -94,6 +93,8 @@ interface CropTimelineProps {
   crops: TimelineCrop[];
   resources: string[];
   groups?: ResourceGroup[] | null;
+  /** Bed lengths from plan data (bed name -> length in feet) */
+  bedLengths: Record<string, number>;
   onCropMove?: (cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => void;
   onCropDateChange?: (groupId: string, startDate: string, endDate: string) => void;
   onDuplicateCrop?: (groupId: string) => Promise<string | void>;
@@ -401,110 +402,6 @@ interface BedSpanInfoLocal {
   bedCapacityFt: number;
 }
 
-/**
- * Calculate which beds a crop would span if placed at startBed
- * Works with actual feet to handle rows with different bed sizes
- *
- * @param feetNeeded - Total feet needed for the planting
- * @param startBed - The starting bed (e.g., "J2")
- * @param groups - Resource groups containing bed lists
- */
-function calculateBedSpan(
-  feetNeeded: number,
-  startBed: string,
-  groups: ResourceGroup[] | null | undefined
-): {
-  spanBeds: string[];
-  bedSpanInfo: BedSpanInfoLocal[];
-  isComplete: boolean;
-  feetNeeded: number;
-  feetAvailable: number;
-} {
-  const bedSize = getBedLengthFromId(startBed);
-
-  // Default to one bed if no feet specified
-  if (!groups || !feetNeeded || feetNeeded <= 0) {
-    return {
-      spanBeds: [startBed],
-      bedSpanInfo: [{ bed: startBed, feetUsed: bedSize, bedCapacityFt: bedSize }],
-      isComplete: true,
-      feetNeeded: bedSize,
-      feetAvailable: bedSize,
-    };
-  }
-
-  const row = getBedGroup(startBed);
-
-  // Find the group containing this bed
-  const group = groups.find(g => g.beds.includes(startBed));
-  if (!group) {
-    return {
-      spanBeds: [startBed],
-      bedSpanInfo: [{ bed: startBed, feetUsed: Math.min(feetNeeded, bedSize), bedCapacityFt: bedSize }],
-      isComplete: feetNeeded <= bedSize,
-      feetNeeded,
-      feetAvailable: bedSize,
-    };
-  }
-
-  // Get beds in this row, sorted numerically
-  const rowBeds = group.beds
-    .filter(b => getBedGroup(b) === row)
-    .sort((a, b) => getBedNumber(a) - getBedNumber(b));
-
-  // Find beds starting from startBed
-  const startIndex = rowBeds.findIndex(b => b === startBed);
-  if (startIndex === -1) {
-    return {
-      spanBeds: [startBed],
-      bedSpanInfo: [{ bed: startBed, feetUsed: Math.min(feetNeeded, bedSize), bedCapacityFt: bedSize }],
-      isComplete: feetNeeded <= bedSize,
-      feetNeeded,
-      feetAvailable: bedSize,
-    };
-  }
-
-  // Collect consecutive beds until we have enough footage
-  const spanBeds: string[] = [];
-  const bedSpanInfo: BedSpanInfoLocal[] = [];
-  let feetAvailable = 0;
-  let remainingFeet = feetNeeded;
-
-  for (let i = startIndex; i < rowBeds.length && remainingFeet > 0; i++) {
-    const bed = rowBeds[i];
-    const thisBedCapacity = getBedLengthFromId(bed);
-    const feetUsed = Math.min(remainingFeet, thisBedCapacity);
-
-    spanBeds.push(bed);
-    bedSpanInfo.push({
-      bed,
-      feetUsed,
-      bedCapacityFt: thisBedCapacity,
-    });
-
-    feetAvailable += thisBedCapacity;
-    remainingFeet -= feetUsed;
-  }
-
-  if (spanBeds.length === 0) {
-    spanBeds.push(startBed);
-    bedSpanInfo.push({
-      bed: startBed,
-      feetUsed: Math.min(feetNeeded, bedSize),
-      bedCapacityFt: bedSize,
-    });
-    feetAvailable = bedSize;
-  }
-
-  return {
-    spanBeds,
-    bedSpanInfo,
-    isComplete: feetAvailable >= feetNeeded,
-    feetNeeded,
-    feetAvailable,
-  };
-}
-
 // =============================================================================
 // Component
 // =============================================================================
@@ -513,6 +410,7 @@ export default function CropTimeline({
   crops,
   resources,
   groups,
+  bedLengths,
   onCropMove,
   onCropDateChange,
   onDuplicateCrop,
@@ -644,7 +542,6 @@ export default function CropTimeline({
 
   // Refs
   const plannerScrollRef = useRef<HTMLDivElement>(null);
-  const headerScrollRef = useRef<HTMLDivElement>(null);
   const initialScrollDone = useRef(false);
   const savedScrollLeft = useRef(savedState.current.scrollLeft ?? null);
 
@@ -1041,11 +938,6 @@ export default function CropTimeline({
     const daysFromStart = (scrollToDate.getTime() - timelineStart.getTime()) / msPerDay;
     plannerScrollRef.current.scrollLeft = Math.max(0, daysFromStart * pixelsPerDay);
   };
-
-  // Get resources that a crop group occupies
-  const getGroupResources = useCallback((groupId: string) => {
-    return crops.filter(c => c.groupId === groupId).map(c => c.resource);
-  }, [crops]);
 
   // Helper to convert pixel offset to date offset
   const pixelsToDays = useCallback((pixels: number) => {
@@ -1698,11 +1590,6 @@ export default function CropTimeline({
     }
   }, []);
 
-  // Clear selection when clicking outside
-  const handleBackgroundClick = useCallback(() => {
-    setSelectedGroupIds(new Set());
-  }, []);
-
   // Calculate duration in days
   const getDuration = (start: string, end: string) => {
     const startDate = parseDate(start);
@@ -2128,7 +2015,7 @@ export default function CropTimeline({
                         </span>
                       )}
                       <span className="truncate text-gray-900">{resource}</span>
-                      <span className="text-xs text-gray-600 ml-1">({getBedLengthFromId(resource)}&apos;)</span>
+                      <span className="text-xs text-gray-600 ml-1">({bedLengths[resource] ?? 50}&apos;)</span>
                       {/* Add planting button */}
                       {onAddPlanting && cropCatalog && (
                         <button
