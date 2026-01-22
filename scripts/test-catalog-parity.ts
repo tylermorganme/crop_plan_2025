@@ -12,7 +12,7 @@ import bedPlanData from '../src/data/bed-template.json';
 import {
   lookupConfigFromCatalog,
   type CropCatalogEntry,
-} from '../src/lib/slim-planting';
+} from '../src/lib/planting-display-calc';
 
 interface BedPlanAssignment {
   crop: string;

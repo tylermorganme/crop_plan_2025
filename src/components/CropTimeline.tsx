@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from 'date-fns';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import { calculateCropFields, calculateDaysInCells, calculateSeedToHarvest, calculateHarvestWindow } from '@/lib/entities/crop-config';
-import { resolveEffectiveTiming } from '@/lib/slim-planting';
+import { resolveEffectiveTiming } from '@/lib/planting-display-calc';
 import { Z_INDEX } from '@/lib/z-index';
 import AddToBedPanel from './AddToBedPanel';
 import { DateInputWithButtons } from './DateInputWithButtons';

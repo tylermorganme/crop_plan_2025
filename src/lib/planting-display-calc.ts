@@ -1,8 +1,15 @@
 /**
- * Slim Planting Types and Computation
+ * Planting Display Calculation
  *
- * This module defines the minimal data needed to store a planting,
- * and computes the full TimelineCrop at runtime from catalog lookups.
+ * Transforms raw storage Planting entities into display-ready TimelineCrop entries.
+ *
+ * Data Flow:
+ *   Planting (storage) → PlantingWithDates (computed) → TimelineCrop[] (display)
+ *
+ * This module:
+ * - Resolves config values with overrides
+ * - Calculates all dates (field, greenhouse, harvest)
+ * - Expands one planting into per-bed TimelineCrop entries
  */
 
 import { format } from 'date-fns';
@@ -21,14 +28,19 @@ import { createPlanting } from './entities/planting';
 import { parseLocalDate, parseLocalDateOrNull } from './date-utils';
 
 // =============================================================================
-// SLIM PLANTING TYPES
+// PLANTING WITH COMPUTED DATES
 // =============================================================================
 
 /**
- * Minimal planting data that gets stored.
- * All other fields are computed from config lookups at runtime.
+ * Planting entity with computed dates and effective timing values.
+ *
+ * This is the intermediate format between raw storage (Planting entity)
+ * and display format (TimelineCrop[]). Contains all calculated dates
+ * (field date, harvest dates) and resolved config values (DTM, harvest window).
+ *
+ * Used for: Converting storage format → display format with all dates calculated
  */
-export interface SlimPlanting {
+export interface PlantingWithDates {
   /** Unique planting identifier, e.g., "ARU001" */
   id: string;
 
@@ -164,7 +176,7 @@ export interface EffectiveTiming {
  */
 export function resolveEffectiveTiming(
   baseConfig: Pick<PlantingConfigLookup, 'dtm' | 'harvestWindow' | 'daysInCells'>,
-  overrides?: SlimPlanting['overrides']
+  overrides?: PlantingWithDates['overrides']
 ): EffectiveTiming {
   const additionalDaysInField = overrides?.additionalDaysInField ?? 0;
   const additionalDaysInCells = overrides?.additionalDaysInCells ?? 0;
@@ -187,24 +199,30 @@ export function resolveEffectiveTiming(
 
 /**
  * Standard bed length used for bedsCount conversion in legacy import data.
- * The SlimPlanting.bedsCount field stores bed fractions based on 50ft beds
+ * The PlantingWithDates.bedsCount field stores bed fractions based on 50ft beds
  * (e.g., 0.4 = 20ft, 1.0 = 50ft). This constant is ONLY for converting
  * that legacy format - actual bed lengths come from Bed.lengthFt.
  */
 const LEGACY_IMPORT_BED_FT = 50;
 
 /**
- * Compute TimelineCrop objects from a slim planting and config lookup.
+ * Expands a planting (with computed dates) into TimelineCrop entries.
  *
- * @param planting - The slim planting data
+ * Takes: PlantingWithDates (one planting, dates calculated)
+ * Returns: TimelineCrop[] (one entry per bed span)
+ *
+ * This handles multi-bed plantings by creating separate TimelineCrop
+ * entries for each bed, all sharing the same computed dates.
+ *
+ * @param planting - Planting with computed dates and effective config
  * @param config - Config values looked up from catalog
  * @param bedGroups - Bed groupings for span calculation
  * @param bedLengths - Bed lengths mapping (bed name -> feet)
  * @param getFollowedCropEndDate - Optional callback for succession lookups
  * @returns Array of TimelineCrop objects (one per bed in span)
  */
-export function computeTimelineCrop(
-  planting: SlimPlanting,
+export function expandToTimelineCrops(
+  planting: PlantingWithDates,
   config: PlantingConfigLookup,
   bedGroups: Record<string, string[]>,
   bedLengths: Record<string, number>,
@@ -342,7 +360,7 @@ export function recalculateCropsForConfig(
 
     // Extract slim planting from existing timeline crop
     // Convert feet back to legacy bedsCount format for recalculation
-    const slim: SlimPlanting = {
+    const slim: PlantingWithDates = {
       id: firstCrop.plantingId || groupId,
       cropConfigId: configIdentifier,
       bed: firstCrop.resource || null,
@@ -351,7 +369,7 @@ export function recalculateCropsForConfig(
     };
 
     // Recalculate with fresh config
-    const recalculated = computeTimelineCrop(slim, config, bedGroups, bedLengths);
+    const recalculated = expandToTimelineCrops(slim, config, bedGroups, bedLengths);
 
     // Preserve any non-calculated fields from original crops
     for (let i = 0; i < recalculated.length; i++) {
@@ -395,10 +413,14 @@ function safeParseNumber(value: unknown): number | undefined {
 }
 
 /**
- * Extract slim planting data from a bed-plan assignment.
- * Used for testing parity between old fat data and new computed data.
+ * Extracts planting data from legacy import/assignment format.
+ *
+ * Converts: RawAssignment (import format)
+ * To: PlantingWithDates (normalized with dates)
+ *
+ * Used for: Legacy Excel imports and testing parity
  */
-export function extractSlimPlanting(assignment: {
+export function extractPlantingFromImport(assignment: {
   identifier: string;
   crop: string;
   bed: string;
@@ -410,7 +432,7 @@ export function extractSlimPlanting(assignment: {
   actualGreenhouseDate?: string | null;
   actualFieldDate?: string | null;
   failed?: boolean | null;
-}): SlimPlanting {
+}): PlantingWithDates {
   return {
     id: assignment.identifier,
     cropConfigId: assignment.crop, // For now, use the full crop identifier as the config ID

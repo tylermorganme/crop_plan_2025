@@ -1,18 +1,20 @@
 /**
- * Parity Test Script for Slim Planting Computation
+ * Parity Test Script for Planting Display Calculation
  *
- * Verifies that computeTimelineCrop() produces dates matching
+ * Verifies that expandToTimelineCrops() produces dates matching
  * the pre-computed values in bed-template.json.
  *
- * Run with: npx tsx scripts/test-slim-planting.ts
+ * Tests the transformation: Planting (storage) → TimelineCrop (display)
+ *
+ * Run with: npx tsx scripts/test-planting-display-calc.ts
  */
 
 import bedPlanData from '../src/data/bed-template.json';
 import {
-  computeTimelineCrop,
-  extractSlimPlanting,
+  expandToTimelineCrops,
+  extractPlantingFromImport,
   extractConfigLookup,
-} from '../src/lib/slim-planting';
+} from '../src/lib/planting-display-calc';
 import { buildBedLengthsFromTemplate } from '../src/lib/entities/bed';
 
 interface BedPlanAssignment {
@@ -136,11 +138,11 @@ function runParityTests() {
     try {
       // Extract slim planting and config
       // Use trueHarvestWindow for corrupted additionalDaysOfHarvest data
-      const slim = extractSlimPlanting(assignment);
+      const slim = extractPlantingFromImport(assignment);
       const config = extractConfigLookup(assignment, true);
 
       // Compute timeline crops
-      const timelineCrops = computeTimelineCrop(slim, config, bedGroups, bedLengths);
+      const timelineCrops = expandToTimelineCrops(slim, config, bedGroups, bedLengths);
 
       if (timelineCrops.length === 0) {
         results.push({

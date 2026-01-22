@@ -13,15 +13,15 @@ import type { SeedSource } from './entities/planting';
 import { getStockVarieties, getStockSeedMixes } from './stock-data';
 import { getVarietyKey } from './entities/variety';
 
-// Import slim planting computation
+// Import planting display calculation
 import {
-  computeTimelineCrop,
-  extractSlimPlanting,
+  expandToTimelineCrops,
+  extractPlantingFromImport,
   lookupConfigFromCatalog,
   collapseToPlantings,
-  type SlimPlanting,
+  type PlantingWithDates,
   type CropCatalogEntry,
-} from './slim-planting';
+} from './planting-display-calc';
 
 // Import plan types
 import type { Plan, Planting, Bed, BedGroup } from './plan-types';
@@ -305,7 +305,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
     // If we can compute dates from config, do so
     if (baseConfig && assignment.fixedFieldStartDate) {
       // Extract slim planting
-      const slim = extractSlimPlanting(assignment);
+      const slim = extractPlantingFromImport(assignment);
 
       // Apply planting-level overrides to catalog base values
       const additionalDaysInField = typeof assignment.additionalDaysInField === 'number'
@@ -323,7 +323,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
       };
 
       // Compute timeline crops with calculated dates
-      const computed = computeTimelineCrop(slim, config, bedPlan.bedGroups, bedLengths);
+      const computed = expandToTimelineCrops(slim, config, bedPlan.bedGroups, bedLengths);
 
       for (const tc of computed) {
         timelineCrops.push({
@@ -501,18 +501,18 @@ export function buildBedMappings(
 }
 
 /**
- * Convert Planting entity to SlimPlanting for computeTimelineCrop.
- * Converts bed UUID to bed name for span calculation.
+ * Prepares a storage Planting entity for date calculation.
+ * Converts: Planting (raw storage) → PlantingWithDates (ready for calc)
  *
- * @param planting - The planting entity
+ * @param planting - The planting entity from storage
  * @param uuidToName - Mapping from bed UUIDs to names
  * @param effectiveFieldStartDate - Optional computed date (for sequence followers)
  */
-function plantingToSlim(
+function preparePlantingForCalc(
   planting: Planting,
   uuidToName: Record<string, string>,
   effectiveFieldStartDate?: string
-): SlimPlanting {
+): PlantingWithDates {
   // Convert bed UUID to name for legacy span calculation
   const bedName = planting.startBed ? uuidToName[planting.startBed] ?? null : null;
 
@@ -529,7 +529,7 @@ function plantingToSlim(
 
 /**
  * Expand Planting[] to TimelineCrop[] for display.
- * Uses the existing computeTimelineCrop function.
+ * Uses the existing expandToTimelineCrops function.
  *
  * @param plantings - Array of plantings to expand
  * @param beds - Bed definitions keyed by UUID
@@ -584,8 +584,8 @@ export function expandPlantingsToTimelineCrops(
       }
     }
 
-    const slim = plantingToSlim(planting, mappings.uuidToName, effectiveFieldStartDate);
-    const crops = computeTimelineCrop(slim, config, mappings.nameGroups, mappings.bedLengths);
+    const slim = preparePlantingForCalc(planting, mappings.uuidToName, effectiveFieldStartDate);
+    const crops = expandToTimelineCrops(slim, config, mappings.nameGroups, mappings.bedLengths);
 
     // Add planting fields for inspector editing
     // NOTE: crop.resource remains a bed NAME for display matching.
