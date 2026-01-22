@@ -49,6 +49,7 @@ const ALL_COLUMNS = [
   'method',
   'seedSource',
   'sequence',
+  'seqNum',
   'notes',
   'failed',
   'actualGhDate',
@@ -72,6 +73,7 @@ const DEFAULT_VISIBLE: ColumnId[] = [
   'ghDate',
   'bedFeet',
   'method',
+  'sequence',
   'notes',
   'failed',
 ];
@@ -95,7 +97,8 @@ const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
   harvestWindow: 80,
   method: 100,
   seedSource: 150,
-  sequence: 100,
+  sequence: 80,
+  seqNum: 60,
   notes: 200,
   failed: 60,
   actualGhDate: 110,
@@ -128,6 +131,7 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
   method: 'Method',
   seedSource: 'Seed Source',
   sequence: 'Sequence',
+  seqNum: 'Seq #',
   notes: 'Notes',
   failed: 'Failed',
   actualGhDate: 'Actual GH',
@@ -523,7 +527,8 @@ interface EnrichedPlanting extends Planting {
   spacing: number | null;
   plants: number | null;
   seedSourceDisplay: string;
-  sequenceDisplay: string;  // e.g. "S1 #3" or empty
+  sequenceDisplay: string;  // Sequence ID (e.g. "S1") or empty
+  seqNum: number | null;    // Position in sequence (1-based) or null
   ghDate: string | null;
   harvestStart: string | null;
   harvestEnd: string | null;
@@ -740,10 +745,15 @@ export default function PlantingsPage() {
         }
       }
 
-      // Sequence display: "S1 #3" format
+      // Sequence display: show clean sequence ID (S1, S2, etc.)
+      // seqNum: 1-based position in sequence
       let sequenceDisplay = '';
-      if (p.sequenceId !== undefined && p.sequenceIndex !== undefined) {
-        sequenceDisplay = `${p.sequenceId} #${p.sequenceIndex + 1}`;
+      let seqNum: number | null = null;
+      if (p.sequenceId !== undefined) {
+        sequenceDisplay = p.sequenceId;
+        if (p.sequenceIndex !== undefined) {
+          seqNum = p.sequenceIndex + 1;
+        }
       }
 
       return {
@@ -763,6 +773,7 @@ export default function PlantingsPage() {
         plants,
         seedSourceDisplay,
         sequenceDisplay,
+        seqNum,
         ghDate,
         harvestStart,
         harvestEnd,
@@ -1181,6 +1192,10 @@ export default function PlantingsPage() {
       case 'sequence':
         return planting.sequenceDisplay
           ? <span className="px-1.5 py-0.5 text-xs rounded bg-purple-100 text-purple-700">{planting.sequenceDisplay}</span>
+          : <span className="text-gray-300">—</span>;
+      case 'seqNum':
+        return planting.seqNum !== null
+          ? <span className="text-gray-600">#{planting.seqNum}</span>
           : <span className="text-gray-300">—</span>;
       case 'notes':
         return (
