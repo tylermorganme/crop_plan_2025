@@ -1319,12 +1319,11 @@ export default function CropTimeline({
             zIndex: Z_INDEX.TIMELINE_DRAG_PREVIEW,
             left: 0,
             top: 0,
-            transform: `translate(${pos.left}px, ${topPos}px)`,
-            width: pos.width,
+            transform: `translate3d(${Math.round(pos.left)}px, ${Math.round(topPos)}px, 0)`,
+            width: Math.round(pos.width),
             height: CROP_HEIGHT,
             borderColor: colors.bg,
             backgroundColor: `${colors.bg}40`, // 25% opacity
-            willChange: 'transform',
           }}
         >
           <div className="px-2 py-1 flex items-center h-full">
@@ -1380,12 +1379,11 @@ export default function CropTimeline({
             style={{
               left: 0,
               top: 0,
-              transform: `translate(${pos.left - 3}px, ${topPos - 3}px)`,
-              width: pos.width + 6,
+              transform: `translate3d(${Math.round(pos.left) - 3}px, ${Math.round(topPos) - 3}px, 0)`,
+              width: Math.round(pos.width) + 6,
               height: CROP_HEIGHT + 6,
               zIndex: Z_INDEX.TIMELINE_CROP_SELECTED,
               background: `conic-gradient(from var(--border-angle), #f59e0b, #ef4444, #ec4899, #8b5cf6, #3b82f6, #10b981, #f59e0b)`,
-              willChange: 'transform',
             }}
           />
         )}
@@ -1404,14 +1402,12 @@ export default function CropTimeline({
           style={{
             zIndex: isSelected ? Z_INDEX.TIMELINE_CROP_SELECTED : Z_INDEX.TIMELINE_CROP,
             // Base position at origin, then transform for GPU-accelerated movement
+            // Round to integers to prevent fuzzy text from subpixel rendering
             left: 0,
             top: 0,
-            transform: `translate(${pos.left}px, ${topPos}px)`,
-            width: pos.width,
+            transform: `translate3d(${Math.round(pos.left)}px, ${Math.round(topPos)}px, 0)`,
+            width: Math.round(pos.width),
             height: CROP_HEIGHT,
-            // Hint to browser to promote to own layer
-            willChange: 'transform',
-            contain: 'layout style paint',
             boxShadow: isOverlapping ? 'none' : '0 2px 4px rgba(0,0,0,0.2)',
             backgroundColor: isOverlapping ? 'transparent' : colors.bg,
             borderColor: colors.bg,
