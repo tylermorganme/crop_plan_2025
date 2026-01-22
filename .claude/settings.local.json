@@ -59,7 +59,9 @@
       "Bash(npm run lint:*)",
       "Bash(npm run test:run:*)",
       "Bash(sqlite3:*)",
-      "Bash(claude --version:*)"
+      "Bash(claude --version:*)",
+      "Skill(vercel-react-best-practices)",
+      "Skill(vercel-react-best-practices:*)"
     ],
     "deny": [],
     "ask": []

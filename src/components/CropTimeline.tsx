@@ -570,6 +570,40 @@ export default function CropTimeline({
   const dragStartX = useRef<number | null>(null);
   const dragOriginalDates = useRef<{ start: string; end: string } | null>(null);
 
+  // Live drag state - updated during drag WITHOUT triggering re-renders
+  // These values drive the ghost preview via direct DOM updates
+  const dragDeltaRef = useRef<{
+    deltaX: number;
+    deltaDays: number;
+    targetResource: string | null;
+    laneOffsetY: number;
+  }>({ deltaX: 0, deltaDays: 0, targetResource: null, laneOffsetY: 0 });
+
+  // Ref for the ghost preview container - we update transform directly
+  const ghostPreviewRef = useRef<HTMLDivElement>(null);
+
+  // Linked crop info for drag preview (multi-bed and sequence members)
+  interface LinkedCropPreview {
+    id: string;
+    groupId: string;
+    resource: string;
+    startDate: string;
+    endDate: string;
+    cropName: string;
+    category?: string;
+    bgColor?: string;
+    textColor?: string;
+    feetNeeded: number;
+    bedIndex: number;
+    totalBeds: number;
+    sequenceId?: string;
+    sequenceIndex?: number;
+    // Offset from the dragged crop (in days) - for sequence members
+    dayOffset: number;
+    // Offset from the dragged crop (in beds) - for multi-bed
+    bedOffset: number;
+  }
+
   // For drag preview - track position during drag
   const [dragPreview, setDragPreview] = useState<{
     groupId: string;
@@ -596,6 +630,8 @@ export default function CropTimeline({
     targetFeetAvailable?: number;
     // Y position within the lane for ghost placement
     laneOffsetY?: number;
+    // All linked crops (multi-bed + sequence members) for ghost preview
+    linkedCrops: LinkedCropPreview[];
   } | null>(null);
 
   // Refs
@@ -996,6 +1032,55 @@ export default function CropTimeline({
     // Get original crop position for preview (use first bed's resource)
     const originalPos = getTimelinePosition(effectiveCrop.startDate, effectiveCrop.endDate);
 
+    // Collect all linked crops:
+    // 1. All beds of this multi-bed planting (same groupId)
+    // 2. All sequence members (same sequenceId) and their beds
+    const linkedCrops: LinkedCropPreview[] = [];
+    const effectiveStartDate = parseISO(effectiveCrop.startDate);
+    const effectiveResourceIndex = resources.indexOf(effectiveCrop.resource);
+
+    // Find all related groupIds (this planting + sequence members)
+    const relatedGroupIds = new Set<string>([effectiveCrop.groupId]);
+    if (effectiveCrop.sequenceId) {
+      // Find all plantings in this sequence
+      crops.forEach(c => {
+        if (c.sequenceId === effectiveCrop.sequenceId) {
+          relatedGroupIds.add(c.groupId);
+        }
+      });
+    }
+
+    // Collect all crops from related groupIds
+    for (const c of crops) {
+      if (relatedGroupIds.has(c.groupId)) {
+        const cropStartDate = parseISO(c.startDate);
+        const dayOffset = Math.round((cropStartDate.getTime() - effectiveStartDate.getTime()) / (1000 * 60 * 60 * 24));
+        const resourceIndex = resources.indexOf(c.resource);
+        const bedOffset = resourceIndex >= 0 && effectiveResourceIndex >= 0
+          ? resourceIndex - effectiveResourceIndex
+          : 0;
+
+        linkedCrops.push({
+          id: c.id,
+          groupId: c.groupId,
+          resource: c.resource,
+          startDate: c.startDate,
+          endDate: c.endDate,
+          cropName: c.name,
+          category: c.category,
+          bgColor: c.bgColor,
+          textColor: c.textColor,
+          feetNeeded: c.feetNeeded || 50,
+          bedIndex: c.bedIndex,
+          totalBeds: c.totalBeds,
+          sequenceId: c.sequenceId,
+          sequenceIndex: c.sequenceIndex,
+          dayOffset,
+          bedOffset,
+        });
+      }
+    }
+
     // Initialize drag preview with original position
     // Normalize empty resource to 'Unassigned' so it matches how handleDragOver sets targetResource
     const normalizedResource = effectiveCrop.resource || 'Unassigned';
@@ -1014,6 +1099,7 @@ export default function CropTimeline({
       textColor: effectiveCrop.textColor,
       startDate: effectiveCrop.startDate,
       endDate: effectiveCrop.endDate,
+      linkedCrops,
     });
   };
 
@@ -1035,46 +1121,33 @@ export default function CropTimeline({
     const rect = laneElement.getBoundingClientRect();
     const laneOffsetY = e.clientY - rect.top;
 
-    // Always allow moving between beds (vertical)
-    setDragOverResource(resource);
-    if (dragPreview && draggedGroupId) {
-      // Calculate bed span for the target resource
-      let targetSpanBeds: string[] | undefined;
-      let targetBedSpanInfo: BedSpanInfoLocal[] | undefined;
-      let targetIsComplete: boolean | undefined;
-      let targetFeetNeeded: number | undefined;
-      let targetFeetAvailable: number | undefined;
-
-      if (resource !== 'Unassigned' && resource !== '') {
-        const spanInfo = calculateBedSpan(dragPreview.feetNeeded, resource, groups);
-        targetSpanBeds = spanInfo.spanBeds;
-        targetBedSpanInfo = spanInfo.bedSpanInfo;
-        targetIsComplete = spanInfo.isComplete;
-        targetFeetNeeded = spanInfo.feetNeeded;
-        targetFeetAvailable = spanInfo.feetAvailable;
-      }
-
-      setDragPreview(prev => prev ? {
-        ...prev,
-        targetResource: resource,
-        targetSpanBeds,
-        targetBedSpanInfo,
-        targetIsComplete,
-        targetFeetNeeded,
-        targetFeetAvailable,
-        laneOffsetY,
-      } : null);
+    // Update drag-over highlight (this is fast, just a string comparison)
+    if (dragOverResource !== resource) {
+      setDragOverResource(resource);
     }
 
-    // Also track timing offset when timing edit is enabled (horizontal)
-    if (timingEditEnabled && dragStartX.current !== null && draggedGroupId) {
-      const deltaX = e.clientX - dragStartX.current;
-      const deltaDays = pixelsToDays(deltaX);
-      setDragPreview(prev => prev ? {
-        ...prev,
-        deltaX,
-        deltaDays,
-      } : null);
+    // Update live drag state in ref (NO re-render)
+    // Calculate day delta for timing
+    let deltaX = 0;
+    let deltaDays = 0;
+    if (timingEditEnabled && dragStartX.current !== null) {
+      deltaX = e.clientX - dragStartX.current;
+      deltaDays = pixelsToDays(deltaX);
+    }
+
+    // Store in ref for ghost preview and drop handler
+    dragDeltaRef.current = {
+      deltaX,
+      deltaDays,
+      targetResource: resource,
+      laneOffsetY,
+    };
+
+    // Update ghost preview position via CSS transform (GPU-accelerated, no layout)
+    if (ghostPreviewRef.current && dragPreview) {
+      // Calculate horizontal offset in pixels
+      const translateX = deltaX;
+      ghostPreviewRef.current.style.transform = `translateX(${translateX}px)`;
     }
   };
 
@@ -1244,12 +1317,14 @@ export default function CropTimeline({
           className="absolute rounded border-2 border-dashed pointer-events-none"
           style={{
             zIndex: Z_INDEX.TIMELINE_DRAG_PREVIEW,
-            left: pos.left,
+            left: 0,
+            top: 0,
+            transform: `translate(${pos.left}px, ${topPos}px)`,
             width: pos.width,
-            top: topPos,
             height: CROP_HEIGHT,
             borderColor: colors.bg,
             backgroundColor: `${colors.bg}40`, // 25% opacity
+            willChange: 'transform',
           }}
         >
           <div className="px-2 py-1 flex items-center h-full">
@@ -1303,12 +1378,14 @@ export default function CropTimeline({
           <div
             className="absolute pointer-events-none rounded-md animate-border"
             style={{
-              left: pos.left - 3,
+              left: 0,
+              top: 0,
+              transform: `translate(${pos.left - 3}px, ${topPos - 3}px)`,
               width: pos.width + 6,
-              top: topPos - 3,
               height: CROP_HEIGHT + 6,
               zIndex: Z_INDEX.TIMELINE_CROP_SELECTED,
               background: `conic-gradient(from var(--border-angle), #f59e0b, #ef4444, #ec4899, #8b5cf6, #3b82f6, #10b981, #f59e0b)`,
+              willChange: 'transform',
             }}
           />
         )}
@@ -1326,11 +1403,16 @@ export default function CropTimeline({
           }`}
           style={{
             zIndex: isSelected ? Z_INDEX.TIMELINE_CROP_SELECTED : Z_INDEX.TIMELINE_CROP,
-            left: pos.left,
+            // Base position at origin, then transform for GPU-accelerated movement
+            left: 0,
+            top: 0,
+            transform: `translate(${pos.left}px, ${topPos}px)`,
             width: pos.width,
-            top: topPos,
-            boxShadow: isOverlapping ? 'none' : '0 2px 4px rgba(0,0,0,0.2)',
             height: CROP_HEIGHT,
+            // Hint to browser to promote to own layer
+            willChange: 'transform',
+            contain: 'layout style paint',
+            boxShadow: isOverlapping ? 'none' : '0 2px 4px rgba(0,0,0,0.2)',
             backgroundColor: isOverlapping ? 'transparent' : colors.bg,
             borderColor: colors.bg,
             color: isOverlapping ? '#333' : colors.text,
@@ -1800,69 +1882,39 @@ export default function CropTimeline({
                         ? { bg: dragPreview.bgColor, text: dragPreview.textColor || '#fff' }
                         : getColorForCategory(dragPreview.category);
 
-                      // Calculate position - use adjusted dates if timing edit is enabled
-                      const hasTimeOffset = timingEditEnabled && dragPreview.deltaDays !== 0;
-                      const displayStartDate = hasTimeOffset
-                        ? offsetDate(dragPreview.startDate, dragPreview.deltaDays)
-                        : dragPreview.startDate;
-                      const displayEndDate = hasTimeOffset
-                        ? offsetDate(dragPreview.endDate, dragPreview.deltaDays)
-                        : dragPreview.endDate;
-                      const adjustedPos = hasTimeOffset
-                        ? getTimelinePosition(displayStartDate, displayEndDate)
-                        : { left: dragPreview.originalLeft, width: dragPreview.originalWidth };
+                      // Use original position - transform handles the offset (GPU-accelerated)
+                      const basePos = { left: dragPreview.originalLeft, width: dragPreview.originalWidth };
 
-                      // Calculate vertical position based on cursor Y position
-                      let topPos = CROP_TOP_PADDING;
-                      if (dragPreview.laneOffsetY !== undefined) {
-                        if (viewMode === 'stacked') {
-                          // Snap to nearest row slot
-                          const rowHeight = CROP_HEIGHT + CROP_SPACING;
-                          const row = Math.max(0, Math.floor((dragPreview.laneOffsetY - CROP_TOP_PADDING) / rowHeight));
-                          topPos = CROP_TOP_PADDING + row * rowHeight;
-                          // Clamp to lane bounds
-                          topPos = Math.max(CROP_TOP_PADDING, Math.min(topPos, effectiveHeight - CROP_HEIGHT - CROP_TOP_PADDING));
-                        } else {
-                          // In overlap mode, center on cursor with some constraints
-                          topPos = Math.max(CROP_TOP_PADDING, Math.min(dragPreview.laneOffsetY - CROP_HEIGHT / 2, effectiveHeight - CROP_HEIGHT - CROP_TOP_PADDING));
-                        }
-                      }
-
-                      // Build label parts
+                      // Build label
                       const bedPart = isMovingToUnassigned ? '→ Unassigned' : 'Unassigned';
-                      const timePart = hasTimeOffset
-                        ? ` ${dragPreview.deltaDays > 0 ? '+' : ''}${dragPreview.deltaDays}d`
-                        : '';
-
-                      // Badge color: green if positive time, red if negative, crop color otherwise
-                      const badgeColor = hasTimeOffset
-                        ? (dragPreview.deltaDays > 0 ? '#22c55e' : '#ef4444')
-                        : colors.bg;
 
                       return (
                         <div
+                          ref={ghostPreviewRef}
                           className="absolute rounded border-2 border-dashed pointer-events-none"
                           style={{
-                            left: adjustedPos.left,
-                            width: adjustedPos.width,
-                            top: topPos,
+                            left: basePos.left,
+                            width: basePos.width,
+                            top: CROP_TOP_PADDING,
                             height: CROP_HEIGHT,
                             borderColor: colors.bg,
                             backgroundColor: `${colors.bg}33`,
                             zIndex: Z_INDEX.TIMELINE_DRAG_PREVIEW,
+                            // Use transform for smooth movement - updated via ref in handleDragOver
+                            transform: 'translateX(0px)',
+                            willChange: 'transform',
                           }}
                         >
-                          {/* Badge showing destination + timing */}
+                          {/* Badge showing destination */}
                           <div
                             className="absolute -top-6 left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap text-white"
-                            style={{ backgroundColor: badgeColor }}
+                            style={{ backgroundColor: colors.bg }}
                           >
-                            {bedPart}{timePart}
+                            {bedPart}
                           </div>
-                          {/* Crop name and dates */}
+                          {/* Crop name */}
                           <div className="px-2 py-1 text-xs" style={{ color: colors.bg }}>
                             <div className="font-semibold truncate">{dragPreview.cropName}</div>
-                            <div className="text-[10px] opacity-80">{formatDate(displayStartDate)} - {formatDate(displayEndDate)}</div>
                           </div>
                         </div>
                       );
