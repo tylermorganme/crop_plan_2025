@@ -99,6 +99,8 @@ export interface TimelineCrop {
   sequenceId?: string;
   /** Slot number in sequence (0 = anchor, sparse allowed for followers) */
   sequenceSlot?: number;
+  /** Whether this planting is locked due to actual dates being set */
+  isLocked?: boolean;
 }
 
 /**

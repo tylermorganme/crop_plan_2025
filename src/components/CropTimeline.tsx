@@ -79,6 +79,8 @@ interface TimelineCrop {
   sequenceId?: string;
   /** Position in sequence (0 = anchor, 1+ = follower) */
   sequenceSlot?: number;
+  /** Whether this planting is locked due to actual dates being set */
+  isLocked?: boolean;
 }
 
 interface ResourceGroup {
@@ -1035,6 +1037,12 @@ export default function CropTimeline({
 
   // Drag handlers
   const handleDragStart = (e: React.DragEvent, crop: TimelineCrop) => {
+    // Prevent dragging locked plantings (have actual dates set)
+    if (crop.isLocked) {
+      e.preventDefault();
+      return;
+    }
+
     // If this is a secondary bed of a multi-bed crop, find and use the first bed instead
     // This allows dragging from any bed while treating it as if the first bed was grabbed
     let effectiveCrop = crop;
@@ -1443,12 +1451,13 @@ export default function CropTimeline({
 
         {/* Actual crop box */}
         <div
-          draggable
+          draggable={!crop.isLocked}
           onDragStart={(e) => handleDragStart(e, crop)}
           onDragEnd={handleDragEnd}
           onClick={(e) => handleCropClick(e, crop)}
-          className={`absolute rounded select-none overflow-hidden cursor-grab ${
-            isDragging ? 'opacity-50 cursor-grabbing' : ''
+          className={`absolute rounded select-none overflow-hidden ${
+            crop.isLocked ? 'cursor-default' : 'cursor-grab'
+          } ${isDragging ? 'opacity-50 cursor-grabbing' : ''
           } ${isGroupBeingDragged && !isDragging ? 'opacity-60 ring-2 ring-blue-400' : ''
           } ${isOverlapping ? 'bg-transparent border-2' : ''
           }`}
@@ -1593,6 +1602,21 @@ export default function CropTimeline({
                         title={`Sequence ${crop.sequenceSlot + 1}${crop.sequenceSlot === 0 ? ' (anchor)' : ''}`}
                       >
                         S{crop.sequenceSlot + 1}
+                      </div>
+                    )}
+                    {/* Lock indicator for plantings with actual dates */}
+                    {crop.isLocked && (
+                      <div
+                        className="text-[9px] px-1 rounded"
+                        style={{
+                          backgroundColor: '#6b7280', // Gray
+                          color: '#ffffff',
+                        }}
+                        title={`Locked: ${crop.actuals?.fieldDate ? 'Actual field date set' : 'Actual greenhouse date set'}`}
+                      >
+                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
                       </div>
                     )}
                   </div>
@@ -2478,7 +2502,11 @@ export default function CropTimeline({
                       </div>
                       <div className="text-xs text-gray-600">
                         This planting is part of a succession sequence.
-                        {crop.sequenceSlot === 0 ? (
+                        {crop.isLocked ? (
+                          <span className="block mt-1 text-amber-600">
+                            This planting has actual dates set and cannot be moved.
+                          </span>
+                        ) : crop.sequenceSlot === 0 ? (
                           <span className="block mt-1 text-purple-600">
                             As the anchor, dragging this will shift all other plantings in the sequence.
                           </span>
@@ -2497,12 +2525,12 @@ export default function CropTimeline({
                             Edit Sequence
                           </button>
                         )}
-                        {onUnlinkFromSequence && crop.sequenceSlot !== 0 && (
+                        {onUnlinkFromSequence && (
                           <button
                             onClick={() => onUnlinkFromSequence(crop.groupId)}
                             className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
                           >
-                            Break from Sequence
+                            {crop.sequenceSlot === 0 ? 'Break Anchor from Sequence' : 'Break from Sequence'}
                           </button>
                         )}
                       </div>

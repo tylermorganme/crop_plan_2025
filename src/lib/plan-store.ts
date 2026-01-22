@@ -1031,6 +1031,22 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const sequenceId = planting.sequenceId;
       const sequence = sequenceId && currentPlan.sequences ? currentPlan.sequences[sequenceId] : null;
 
+      // If this planting is locked (has actuals set), don't allow date changes
+      if (planting.actuals?.greenhouseDate || planting.actuals?.fieldDate) {
+        return;
+      }
+
+      // If this is a sequence member, check if the anchor is locked
+      if (sequenceId && currentPlan.plantings) {
+        const anchor = currentPlan.plantings.find(
+          p => p.sequenceId === sequenceId && p.sequenceSlot === 0
+        );
+        if (anchor?.actuals?.greenhouseDate || anchor?.actuals?.fieldDate) {
+          // Anchor is locked - sequence can't be moved
+          return;
+        }
+      }
+
       set((state) => {
         // Use patch-based mutation
         mutateWithPatches(
@@ -1438,10 +1454,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
                 planting.seedSource = changes.seedSource || undefined;
               }
               if (changes.actuals !== undefined) {
-                planting.actuals = {
-                  ...planting.actuals,
-                  ...changes.actuals,
-                };
+                // Merge actuals - explicitly handle undefined to clear values
+                const newActuals = { ...planting.actuals };
+                for (const [key, value] of Object.entries(changes.actuals)) {
+                  if (value === undefined) {
+                    delete (newActuals as Record<string, unknown>)[key];
+                  } else {
+                    (newActuals as Record<string, unknown>)[key] = value;
+                  }
+                }
+                // If all values are cleared, set actuals to undefined
+                planting.actuals = Object.keys(newActuals).length > 0 ? newActuals : undefined;
               }
 
               planting.lastModified = now;
@@ -1541,11 +1564,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               p.useDefaultSeedSource = updates.useDefaultSeedSource;
             }
             if (updates.actuals !== undefined) {
-              // Merge actuals (shallow merge)
-              p.actuals = {
-                ...p.actuals,
-                ...updates.actuals,
-              };
+              // Merge actuals - explicitly handle undefined to clear values
+              const newActuals = { ...p.actuals };
+              for (const [key, value] of Object.entries(updates.actuals)) {
+                if (value === undefined) {
+                  delete (newActuals as Record<string, unknown>)[key];
+                } else {
+                  (newActuals as Record<string, unknown>)[key] = value;
+                }
+              }
+              // If all values are cleared, set actuals to undefined
+              p.actuals = Object.keys(newActuals).length > 0 ? newActuals : undefined;
             }
 
             p.lastModified = now;
@@ -4013,17 +4042,29 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               // Remove the sequence
               delete plan.sequences?.[sequenceId];
             } else if (isAnchor) {
-              // Removing anchor - promote next lowest slot to anchor (slot 0)
-              // Other plantings keep their slot numbers (sparse slots preserved)
+              // Removing anchor - promote next lowest slot and shift all slots down
               const remaining = plan.plantings?.filter(
-                p => p.sequenceId === sequenceId && p.id !== plantingId
+                rp => rp.sequenceId === sequenceId && rp.id !== plantingId
               ).sort((a, b) => (a.sequenceSlot ?? 0) - (b.sequenceSlot ?? 0)) ?? [];
 
               if (remaining.length > 0) {
-                // The first one (lowest slot) becomes the new anchor
-                remaining[0].sequenceSlot = 0;
-                remaining[0].lastModified = now;
-                // Other plantings keep their existing slot numbers - no reindexing
+                const seq = plan.sequences?.[sequenceId];
+                const offsetDays = seq?.offsetDays ?? 7;
+                const oldAnchorDate = parseISO(p.fieldStartDate);
+                const newAnchorOldSlot = remaining[0].sequenceSlot ?? 1;
+
+                // Materialize new anchor's computed date as its fieldStartDate
+                // Formula: anchor.fieldStartDate + (slot * offsetDays) + additionalDaysInField
+                const newAnchorAdditionalDays = remaining[0].overrides?.additionalDaysInField ?? 0;
+                const totalOffset = newAnchorOldSlot * offsetDays + newAnchorAdditionalDays;
+                const newAnchorComputedDate = addDays(oldAnchorDate, totalOffset);
+                remaining[0].fieldStartDate = format(newAnchorComputedDate, 'yyyy-MM-dd');
+
+                // Shift all remaining slots down by the displacement
+                for (const rp of remaining) {
+                  rp.sequenceSlot = (rp.sequenceSlot ?? 0) - newAnchorOldSlot;
+                  rp.lastModified = now;
+                }
               }
             }
             // If removing a follower (non-anchor): do nothing to remaining plantings

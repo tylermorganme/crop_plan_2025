@@ -206,6 +206,8 @@ export default function TimelinePlanPage() {
     overrides?: { additionalDaysOfHarvest?: number; additionalDaysInField?: number; additionalDaysInCells?: number };
     notes?: string;
     seedSource?: { type: 'variety' | 'mix'; id: string } | null;
+    useDefaultSeedSource?: boolean;
+    actuals?: { greenhouseDate?: string; fieldDate?: string; failed?: boolean };
   }) => {
     try {
       // Convert null to undefined for store compatibility

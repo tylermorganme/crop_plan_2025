@@ -592,6 +592,11 @@ export function expandPlantingsToTimelineCrops(
       crop.sequenceId = planting.sequenceId;
       crop.sequenceSlot = planting.sequenceSlot;
 
+      // Add actuals tracking and compute lock status
+      crop.actuals = planting.actuals;
+      // A planting is locked if it has actual greenhouse OR field date set
+      crop.isLocked = !!(planting.actuals?.greenhouseDate || planting.actuals?.fieldDate);
+
       // Calculate seeds needed based on CropConfig.seedsPerBed
       if (config.seedsPerBed && planting.bedFeet) {
         // seedsPerBed is per 50ft bed, scale to actual feet
