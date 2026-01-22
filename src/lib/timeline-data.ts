@@ -2,7 +2,7 @@
  * Transform crop data for the timeline view
  */
 
-import { parseISO } from 'date-fns';
+import { parseISO, format, addDays } from 'date-fns';
 import cropsData from '@/data/crop-config-template.json';
 import bedPlanData from '@/data/bed-template.json';
 
@@ -492,8 +492,16 @@ function buildBedMappings(
 /**
  * Convert Planting entity to SlimPlanting for computeTimelineCrop.
  * Converts bed UUID to bed name for span calculation.
+ *
+ * @param planting - The planting entity
+ * @param uuidToName - Mapping from bed UUIDs to names
+ * @param effectiveFieldStartDate - Optional computed date (for sequence followers)
  */
-function plantingToSlim(planting: Planting, uuidToName: Record<string, string>): SlimPlanting {
+function plantingToSlim(
+  planting: Planting,
+  uuidToName: Record<string, string>,
+  effectiveFieldStartDate?: string
+): SlimPlanting {
   // Convert bed UUID to name for legacy span calculation
   const bedName = planting.startBed ? uuidToName[planting.startBed] ?? null : null;
 
@@ -502,7 +510,7 @@ function plantingToSlim(planting: Planting, uuidToName: Record<string, string>):
     cropConfigId: planting.configId,
     bed: bedName,
     bedsCount: planting.bedFeet / LEGACY_IMPORT_BED_FT,
-    fixedFieldStartDate: planting.fieldStartDate,
+    fixedFieldStartDate: effectiveFieldStartDate ?? planting.fieldStartDate,
     overrides: planting.overrides,
     actuals: planting.actuals,
   };
@@ -521,7 +529,8 @@ export function expandPlantingsToTimelineCrops(
   plantings: Planting[],
   beds: Record<string, Bed>,
   catalog: Record<string, CropCatalogEntry>,
-  bedGroups?: Record<string, BedGroup>
+  bedGroups?: Record<string, BedGroup>,
+  sequences?: Record<string, { id: string; offsetDays: number }>
 ): TimelineCrop[] {
   // Build bed mappings for UUID <-> name conversion
   const mappings = bedGroups
@@ -530,6 +539,14 @@ export function expandPlantingsToTimelineCrops(
 
   const catalogArray = Object.values(catalog);
   const result: TimelineCrop[] = [];
+
+  // Build a map of sequence anchors for date computation
+  const sequenceAnchors = new Map<string, Planting>();
+  for (const planting of plantings) {
+    if (planting.sequenceId && planting.sequenceSlot === 0) {
+      sequenceAnchors.set(planting.sequenceId, planting);
+    }
+  }
 
   for (const planting of plantings) {
     // Try plan catalog first, then fall back to default catalog
@@ -542,7 +559,21 @@ export function expandPlantingsToTimelineCrops(
       continue;
     }
 
-    const slim = plantingToSlim(planting, mappings.uuidToName);
+    // Compute effective field start date for sequence followers
+    let effectiveFieldStartDate = planting.fieldStartDate;
+    if (planting.sequenceId && planting.sequenceSlot !== undefined && planting.sequenceSlot > 0) {
+      const sequence = sequences?.[planting.sequenceId];
+      const anchor = sequenceAnchors.get(planting.sequenceId);
+      if (sequence && anchor) {
+        // Formula: anchor.fieldStartDate + (slot * offsetDays) + additionalDaysInField
+        const anchorDate = parseISO(anchor.fieldStartDate);
+        const additionalDaysInField = planting.overrides?.additionalDaysInField ?? 0;
+        const totalOffset = planting.sequenceSlot * sequence.offsetDays + additionalDaysInField;
+        effectiveFieldStartDate = format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
+      }
+    }
+
+    const slim = plantingToSlim(planting, mappings.uuidToName, effectiveFieldStartDate);
     const crops = computeTimelineCrop(slim, config, mappings.nameGroups);
 
     // Add planting fields for inspector editing
@@ -590,7 +621,8 @@ export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
     plan.plantings,
     plan.beds,
     plan.cropCatalog,
-    plan.bedGroups
+    plan.bedGroups,
+    plan.sequences
   );
 }
 

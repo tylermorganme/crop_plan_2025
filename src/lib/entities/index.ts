@@ -44,6 +44,7 @@ export {
   initializeSequenceIdCounter,
   createSequence,
   cloneSequence,
+  computeSequenceDate,
 } from './planting-sequence';
 
 // Crop config entity

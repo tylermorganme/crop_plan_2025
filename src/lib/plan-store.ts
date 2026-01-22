@@ -1027,25 +1027,36 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
             const now = Date.now();
 
-            // If this planting is in a sequence, move all sequence members together
+            // If this planting is in a sequence, only update the anchor's date.
+            // Followers will auto-recompute at render time via the formula.
             if (sequence && sequenceId && plan.plantings) {
-              const newDraggedDate = parseISO(startDate);
-              const oldDraggedDate = parseISO(p.fieldStartDate);
+              // Find the anchor (slot 0)
+              const anchor = plan.plantings.find(
+                sp => sp.sequenceId === sequenceId && sp.sequenceSlot === 0
+              );
 
-              if (isValid(newDraggedDate) && isValid(oldDraggedDate)) {
-                // Calculate the delta (how many days the user dragged)
-                const deltaDays = Math.round(
-                  (newDraggedDate.getTime() - oldDraggedDate.getTime()) / (1000 * 60 * 60 * 24)
-                );
+              if (anchor) {
+                const newDraggedDate = parseISO(startDate);
+                // Get the effective date of the dragged planting
+                // For anchor (slot 0): it's the planting's own fieldStartDate
+                // For followers: it's computed from anchor + slot * offset
+                const draggedSlot = p.sequenceSlot ?? 0;
+                const effectiveDraggedDate = draggedSlot === 0
+                  ? parseISO(p.fieldStartDate)
+                  : addDays(parseISO(anchor.fieldStartDate), draggedSlot * sequence.offsetDays);
 
-                // Apply the same delta to ALL sequence members
-                const sequenceMembers = plan.plantings.filter(sp => sp.sequenceId === sequenceId);
-                for (const member of sequenceMembers) {
-                  const memberDate = parseISO(member.fieldStartDate);
-                  if (isValid(memberDate)) {
-                    const newMemberDate = addDays(memberDate, deltaDays);
-                    member.fieldStartDate = format(newMemberDate, 'yyyy-MM-dd');
-                    member.lastModified = now;
+                if (isValid(newDraggedDate) && isValid(effectiveDraggedDate)) {
+                  // Calculate the delta (how many days the user dragged)
+                  const deltaDays = Math.round(
+                    (newDraggedDate.getTime() - effectiveDraggedDate.getTime()) / (1000 * 60 * 60 * 24)
+                  );
+
+                  // Only update the anchor's fieldStartDate
+                  // All followers will auto-recompute via the formula at render time
+                  const anchorDate = parseISO(anchor.fieldStartDate);
+                  if (isValid(anchorDate)) {
+                    anchor.fieldStartDate = format(addDays(anchorDate, deltaDays), 'yyyy-MM-dd');
+                    anchor.lastModified = now;
                   }
                 }
               }
@@ -3810,52 +3821,28 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
     updateSequenceOffset: async (sequenceId, newOffsetDays) => {
       const { currentPlan } = get();
-      if (!currentPlan?.plantings || !currentPlan.sequences) return;
+      if (!currentPlan?.sequences) return;
 
       const sequence = currentPlan.sequences[sequenceId];
       if (!sequence) {
         throw new Error(`Sequence not found: ${sequenceId}`);
       }
 
-      if (newOffsetDays < 1 || newOffsetDays > 90) {
-        throw new Error('Offset days must be between 1 and 90');
-      }
-
-      // Find anchor planting
-      const anchor = currentPlan.plantings.find(
-        p => p.sequenceId === sequenceId && p.sequenceSlot === 0
-      );
-      if (!anchor) {
-        throw new Error('Sequence anchor not found');
-      }
-
-      const anchorDate = parseISO(anchor.fieldStartDate);
-      if (!isValid(anchorDate)) {
-        throw new Error('Invalid anchor date');
+      if (newOffsetDays < 1 || newOffsetDays > 365) {
+        throw new Error('Offset days must be between 1 and 365');
       }
 
       set((state) => {
-        if (!state.currentPlan?.plantings || !state.currentPlan.sequences) return;
+        if (!state.currentPlan?.sequences) return;
 
         mutateWithPatches(
           state,
           (plan) => {
             const now = Date.now();
 
-            // Update the sequence offset
+            // Update the sequence offset - followers auto-recompute at render time
             if (plan.sequences?.[sequenceId]) {
               plan.sequences[sequenceId].offsetDays = newOffsetDays;
-            }
-
-            // Find and update all followers
-            const followers = plan.plantings?.filter(
-              p => p.sequenceId === sequenceId && p.sequenceSlot !== undefined && p.sequenceSlot > 0
-            ) ?? [];
-
-            for (const follower of followers) {
-              const offsetDate = addDays(anchorDate, follower.sequenceSlot! * newOffsetDays);
-              follower.fieldStartDate = format(offsetDate, 'yyyy-MM-dd');
-              follower.lastModified = now;
             }
 
             plan.metadata.lastModified = now;

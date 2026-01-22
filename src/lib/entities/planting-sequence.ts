@@ -3,16 +3,19 @@
  *
  * A sequence links multiple plantings temporally (succession planting).
  * Each planting in the sequence has its fieldStartDate calculated as:
- *   anchor.fieldStartDate + (index * offsetDays)
+ *   anchor.fieldStartDate + (slot * offsetDays) + additionalDaysInField
  *
  * Key concepts:
- * - Anchor: The first planting (index 0) - owns its own fieldStartDate
- * - Followers: Subsequent plantings (index > 0) - dates calculated from anchor
- * - Offset: Days between each planting's fieldStartDate
+ * - Anchor: The planting with slot 0 - owns its own fieldStartDate
+ * - Followers: Subsequent plantings (slot > 0) - dates calculated from anchor
+ * - Sparse slots: Slot numbers can have gaps (e.g., 0, 1, 2, 5, 10)
+ * - Offset: Days between each slot's fieldStartDate
  *
  * Sequences are orthogonal to bed-spanning - a planting can both be in
  * a sequence AND span multiple beds.
  */
+
+import { parseISO, format, addDays } from 'date-fns';
 
 export interface PlantingSequence {
   /** Unique sequence identifier (UUID) */
@@ -85,4 +88,26 @@ export function cloneSequence(
     offsetDays: source.offsetDays,
     ...overrides,
   };
+}
+
+/**
+ * Compute the effective field start date for a sequence member.
+ *
+ * Formula: anchor.fieldStartDate + (slot * offsetDays) + additionalDaysInField
+ *
+ * @param anchorFieldStartDate - The anchor planting's fieldStartDate (ISO string)
+ * @param slot - The slot number of this planting (0 = anchor)
+ * @param offsetDays - Days between each slot
+ * @param additionalDaysInField - Optional per-planting adjustment (default 0)
+ * @returns ISO date string for the effective field start date
+ */
+export function computeSequenceDate(
+  anchorFieldStartDate: string,
+  slot: number,
+  offsetDays: number,
+  additionalDaysInField: number = 0
+): string {
+  const anchorDate = parseISO(anchorFieldStartDate);
+  const totalOffset = slot * offsetDays + additionalDaysInField;
+  return format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
 }
