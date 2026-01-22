@@ -16,6 +16,7 @@ export {
   getBedNumber,
   getBedLength,
   getBedLengthFromId,
+  buildBedLengthsFromTemplate,
   generateBedUuid,
   createBed,
   createBedGroup,

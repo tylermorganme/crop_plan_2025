@@ -729,7 +729,7 @@ export default function PlantingsPage() {
       // Compute beds display (all beds spanned)
       let bedsDisplay = '';
       if (bed?.name) {
-        const { bedSpanInfo } = calculateRowSpan(p.bedFeet, bed.name, bedNameGroups);
+        const { bedSpanInfo } = calculateRowSpan(p.bedFeet, bed.name, bedNameGroups, bedLengths);
         if (bedSpanInfo.length > 0) {
           // Format: "A1, A2, A3 (12')" where partial bed shows feet used
           const parts = bedSpanInfo.map((info, idx) => {

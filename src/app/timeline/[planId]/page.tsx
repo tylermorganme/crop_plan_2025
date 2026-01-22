@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
@@ -9,7 +9,7 @@ import CreateSequenceModal, { type CreateSequenceOptions } from '@/components/Cr
 import SequenceEditorModal from '@/components/SequenceEditorModal';
 import { type CropConfig } from '@/lib/entities/crop-config';
 // useSnapshotScheduler removed - SQLite storage handles persistence directly
-import { calculateRowSpan, getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { calculateRowSpan, getTimelineCropsFromPlan, buildBedMappings } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import {
@@ -17,7 +17,6 @@ import {
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
 import { Z_INDEX } from '@/lib/z-index';
-import bedPlanData from '@/data/bed-template.json';
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -93,6 +92,15 @@ export default function TimelinePlanPage() {
     return null;
   }, [currentPlan]);
 
+  // Derive bed mappings from plan data
+  const bedMappings = useMemo(() => {
+    if (!currentPlan?.beds || !currentPlan?.bedGroups) {
+      return { nameGroups: {}, bedLengths: {} };
+    }
+    const mappings = buildBedMappings(currentPlan.beds, currentPlan.bedGroups);
+    return { nameGroups: mappings.nameGroups, bedLengths: mappings.bedLengths };
+  }, [currentPlan?.beds, currentPlan?.bedGroups]);
+
   // Load the specific plan by ID
   useEffect(() => {
     // Try to load the plan from library
@@ -140,7 +148,8 @@ export default function TimelinePlanPage() {
     const { bedSpanInfo, isComplete, feetNeeded: neededFeet, feetAvailable } = calculateRowSpan(
       feet,
       newResource,
-      (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups
+      bedMappings.nameGroups,
+      bedMappings.bedLengths
     );
 
     // Don't allow the move if there isn't enough room
@@ -155,7 +164,7 @@ export default function TimelinePlanPage() {
     // Use the plan store's moveCrop which handles undo
     // Pass full bedSpanInfo so feetUsed/bedCapacityFt are preserved
     moveCrop(targetGroupId, newResource, bedSpanInfo);
-  }, [moveCrop]);
+  }, [moveCrop, bedMappings]);
 
   const handleDateChange = useCallback((groupId: string, startDate: string, endDate: string) => {
     updateCropDates(groupId, startDate, endDate);

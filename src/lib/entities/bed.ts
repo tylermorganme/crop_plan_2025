@@ -271,11 +271,26 @@ export function getBedLength(beds: Record<string, Bed>, bedId: string): number {
 
 /**
  * Get bed length from just a bed ID string, using ROW_LENGTHS lookup.
- * Use this when you don't have access to the full beds map.
+ * Use this for import/template contexts only - runtime code should use plan.beds.
  */
 export function getBedLengthFromId(bedId: string): number {
   const group = getBedGroup(bedId);
   return ROW_LENGTHS[group] ?? DEFAULT_BED_LENGTH;
+}
+
+/**
+ * Build a bed lengths map from template bed names.
+ * Use this for import/template contexts only - runtime code should use plan.beds.
+ *
+ * @param bedNames - Array of bed names from template (e.g., ["A1", "A2", "B1"])
+ * @returns Mapping of bed name -> length in feet
+ */
+export function buildBedLengthsFromTemplate(bedNames: string[]): Record<string, number> {
+  const bedLengths: Record<string, number> = {};
+  for (const bed of bedNames) {
+    bedLengths[bed] = getBedLengthFromId(bed);
+  }
+  return bedLengths;
 }
 
 // =============================================================================

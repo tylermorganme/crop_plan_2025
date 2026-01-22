@@ -199,7 +199,7 @@ const LEGACY_IMPORT_BED_FT = 50;
  * @param planting - The slim planting data
  * @param config - Config values looked up from catalog
  * @param bedGroups - Bed groupings for span calculation
- * @param bedLengths - Optional bed lengths mapping (bed name -> feet). If not provided, uses hardcoded defaults.
+ * @param bedLengths - Bed lengths mapping (bed name -> feet)
  * @param getFollowedCropEndDate - Optional callback for succession lookups
  * @returns Array of TimelineCrop objects (one per bed in span)
  */
@@ -207,7 +207,7 @@ export function computeTimelineCrop(
   planting: SlimPlanting,
   config: PlantingConfigLookup,
   bedGroups: Record<string, string[]>,
-  bedLengths?: Record<string, number>,
+  bedLengths: Record<string, number>,
   getFollowedCropEndDate?: (identifier: string) => Date | null
 ): TimelineCrop[] {
   // Resolve effective timing values with overrides and clamping
@@ -304,7 +304,7 @@ export function computeTimelineCrop(
  * @param configIdentifier - The crop config identifier that was updated
  * @param catalog - Fresh crop catalog with updated config
  * @param bedGroups - Bed groupings for span calculation
- * @param bedLengths - Optional bed lengths mapping (bed name -> feet)
+ * @param bedLengths - Bed lengths mapping (bed name -> feet)
  * @returns Updated array of timeline crops with recalculated dates
  */
 export function recalculateCropsForConfig(
@@ -312,7 +312,7 @@ export function recalculateCropsForConfig(
   configIdentifier: string,
   catalog: CropCatalogEntry[],
   bedGroups: Record<string, string[]>,
-  bedLengths?: Record<string, number>
+  bedLengths: Record<string, number>
 ): TimelineCrop[] {
   const config = lookupConfigFromCatalog(configIdentifier, catalog);
   if (!config) {

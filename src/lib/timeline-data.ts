@@ -25,7 +25,8 @@ import {
 
 // Import plan types
 import type { Plan, Planting, Bed, BedGroup } from './plan-types';
-import { getBedGroup, getBedNumber, getBedLengthFromId } from './plan-types';
+import { getBedGroup, getBedNumber } from './plan-types';
+import { buildBedLengthsFromTemplate } from './entities/bed';
 
 // Re-export for consumers
 export type { CropCatalogEntry };
@@ -147,14 +148,14 @@ function resolveSeedSource(assignment: BedAssignment): SeedSource | undefined {
  *
  * @param feetNeeded - Total feet needed for the planting
  * @param startBed - The starting bed (e.g., "J2")
- * @param bedGroups - Optional bed groups mapping (defaults to bedPlanData)
- * @param bedLengths - Optional bed lengths mapping (bed name -> feet). If not provided, uses hardcoded ROW_LENGTHS.
+ * @param bedGroups - Bed groups mapping (group letter -> bed names)
+ * @param bedLengths - Bed lengths mapping (bed name -> feet)
  */
 export function calculateRowSpan(
   feetNeeded: number,
   startBed: string,
-  bedGroups?: Record<string, string[]>,
-  bedLengths?: Record<string, number>
+  bedGroups: Record<string, string[]>,
+  bedLengths: Record<string, number>
 ): {
   rowSpan: number;
   spanBeds: string[];
@@ -163,10 +164,9 @@ export function calculateRowSpan(
   feetNeeded: number;
   feetAvailable: number;
 } {
-  const groups = bedGroups || (bedPlanData as BedPlanData).bedGroups;
   const row = getBedGroup(startBed);
-  // Use plan's bed lengths if provided, otherwise fall back to hardcoded ROW_LENGTHS
-  const getBedLength = (bed: string) => bedLengths?.[bed] ?? getBedLengthFromId(bed);
+  // Default to 50ft if bed not in map (shouldn't happen with valid plan data)
+  const getBedLength = (bed: string) => bedLengths[bed] ?? 50;
   const bedSizeFt = getBedLength(startBed);
 
   // Default to one bed if no feet specified
@@ -182,10 +182,10 @@ export function calculateRowSpan(
   }
 
   // Get available beds in this row, sorted numerically
-  const rowBeds = (groups[row] || []).sort((a, b) => getBedNumber(a) - getBedNumber(b));
+  const rowBeds = (bedGroups[row] || []).sort((a, b) => getBedNumber(a) - getBedNumber(b));
 
   // Find beds starting from startBed
-  const startIndex = rowBeds.findIndex(b => b === startBed);
+  const startIndex = rowBeds.findIndex((b: string) => b === startBed);
   if (startIndex === -1) {
     return {
       rowSpan: 1,
@@ -251,6 +251,9 @@ export function calculateRowSpan(
 export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop[] {
   const bedPlan = bedPlanData as BedPlanData;
   const catalogCrops = cropCatalog || defaultCatalog;
+
+  // Build bed lengths from template data (import-only, not runtime)
+  const bedLengths = buildBedLengthsFromTemplate(bedPlan.beds);
 
   const timelineCrops: TimelineCrop[] = [];
   const seenIdentifiers = new Set<string>();
@@ -320,7 +323,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
       };
 
       // Compute timeline crops with calculated dates
-      const computed = computeTimelineCrop(slim, config, bedPlan.bedGroups);
+      const computed = computeTimelineCrop(slim, config, bedPlan.bedGroups, bedLengths);
 
       for (const tc of computed) {
         timelineCrops.push({
@@ -331,7 +334,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
       }
     } else {
       // Fall back to stored dates from bed plan
-      const { bedSpanInfo } = calculateRowSpan(feetNeeded, assignment.bed, bedPlan.bedGroups);
+      const { bedSpanInfo } = calculateRowSpan(feetNeeded, assignment.bed, bedPlan.bedGroups, bedLengths);
 
       // Get category and structure from assignment or config
       const category = typeof assignment.category === 'number'
@@ -452,7 +455,7 @@ export function getTimelineStats() {
  * - uuidToName: bed UUID -> bed name
  * - nameToUuid: bed name -> bed UUID
  */
-function buildBedMappings(
+export function buildBedMappings(
   beds: Record<string, Bed>,
   bedGroups: Record<string, BedGroup>
 ): {

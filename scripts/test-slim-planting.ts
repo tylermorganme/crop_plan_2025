@@ -13,6 +13,7 @@ import {
   extractSlimPlanting,
   extractConfigLookup,
 } from '../src/lib/slim-planting';
+import { buildBedLengthsFromTemplate } from '../src/lib/entities/bed';
 
 interface BedPlanAssignment {
   crop: string;
@@ -103,7 +104,10 @@ interface TestResult {
 
 function runParityTests() {
   const data = bedPlanData as BedPlanData;
-  const { assignments, bedGroups } = data;
+  const { assignments, bedGroups, beds } = data;
+
+  // Build bed lengths from template
+  const bedLengths = buildBedLengthsFromTemplate(beds);
 
   console.log('='.repeat(80));
   console.log('SLIM PLANTING COMPUTATION PARITY TESTS');
@@ -136,7 +140,7 @@ function runParityTests() {
       const config = extractConfigLookup(assignment, true);
 
       // Compute timeline crops
-      const timelineCrops = computeTimelineCrop(slim, config, bedGroups);
+      const timelineCrops = computeTimelineCrop(slim, config, bedGroups, bedLengths);
 
       if (timelineCrops.length === 0) {
         results.push({
