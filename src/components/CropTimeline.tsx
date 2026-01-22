@@ -2463,7 +2463,8 @@ export default function CropTimeline({
                         <div className="text-xs text-gray-600 mb-1">Actual Greenhouse</div>
                         <input
                           type="date"
-                          defaultValue={crop.actuals?.greenhouseDate?.split('T')[0] || ''}
+                          key={`greenhouse-${crop.groupId}`}
+                          value={crop.actuals?.greenhouseDate?.split('T')[0] || ''}
                           onChange={(e) => {
                             const val = e.target.value || undefined;
                             onUpdatePlanting(crop.groupId, {
@@ -2477,7 +2478,8 @@ export default function CropTimeline({
                         <div className="text-xs text-gray-600 mb-1">Actual Field</div>
                         <input
                           type="date"
-                          defaultValue={crop.actuals?.fieldDate?.split('T')[0] || ''}
+                          key={`field-${crop.groupId}`}
+                          value={crop.actuals?.fieldDate?.split('T')[0] || ''}
                           onChange={(e) => {
                             const val = e.target.value || undefined;
                             onUpdatePlanting(crop.groupId, {
