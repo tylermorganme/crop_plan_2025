@@ -574,6 +574,7 @@ interface EnrichedPlanting extends Planting {
  * Converts ISO datetime → date string, handles null crops gracefully.
  */
 function extractDatesFromTimelineCrop(crop: TimelineCrop | undefined): {
+  fieldStartDate: string;
   ghDate: string | null;
   harvestStart: string | null;
   harvestEnd: string | null;
@@ -581,6 +582,7 @@ function extractDatesFromTimelineCrop(crop: TimelineCrop | undefined): {
 } {
   if (!crop) {
     return {
+      fieldStartDate: '',
       ghDate: null,
       harvestStart: null,
       harvestEnd: null,
@@ -594,10 +596,13 @@ function extractDatesFromTimelineCrop(crop: TimelineCrop | undefined): {
     return isoDateTime.split('T')[0];
   };
 
-  // For transplants: startDate is GH start, for direct seed: no GH date
-  const ghDate = crop.plantingMethod === 'transplant'
-    ? extractDate(crop.startDate)
-    : null;
+  // IMPORTANT: TimelineCrop.startDate is the FIELD date (tpOrDsDate from timing calculator)
+  // This is the effective field date, accounting for sequences and actuals
+  const fieldStartDate = extractDate(crop.startDate) || '';
+
+  // GH date is not directly on TimelineCrop - it needs to be computed from timing
+  // For now we'll set to null and rely on raw planting data for actuals
+  const ghDate = null;
 
   const harvestStart = extractDate(crop.harvestStartDate);
   const harvestEnd = extractDate(crop.endDate);
@@ -610,7 +615,7 @@ function extractDatesFromTimelineCrop(crop: TimelineCrop | undefined): {
   };
   const method = methodMap[crop.plantingMethod || 'direct-seed'] || 'DS';
 
-  return { ghDate, harvestStart, harvestEnd, method };
+  return { fieldStartDate, ghDate, harvestStart, harvestEnd, method };
 }
 
 /**
@@ -1210,13 +1215,15 @@ export default function PlantingsPage() {
       case 'identifier':
         return <span className="text-gray-600 text-xs">{planting.identifier}</span>;
       case 'fieldStartDate':
-        return (
+        // Use the computed field date from TimelineCrop (accounts for sequences and actuals)
+        // planting.fieldStartDate is now the effective field date from ...dates spread
+        return planting.fieldStartDate ? (
           <DateInputWithButtons
             value={planting.fieldStartDate.split('T')[0]}
             displayValue={format(parseISO(planting.fieldStartDate), 'MMM d')}
             onSave={(v) => handleDateChange(planting.id, v)}
           />
-        );
+        ) : <span className="text-gray-300">—</span>;
       case 'ghDate':
         return planting.ghDate ? format(parseISO(planting.ghDate), 'MMM d') : <span className="text-gray-300">—</span>;
       case 'harvestStart':
