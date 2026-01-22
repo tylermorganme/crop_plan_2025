@@ -3,18 +3,17 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
-import { parseISO, format, addDays } from 'date-fns';
+import { parseISO, format } from 'date-fns';
 import { usePlanStore } from '@/lib/plan-store';
 import { Z_INDEX } from '@/lib/z-index';
 import {
-  calculateDaysInCells,
-  calculatePlantingMethod,
   getPrimarySeedToHarvest,
   calculateAggregateHarvestWindow,
 } from '@/lib/entities/crop-config';
-import { calculateRowSpan } from '@/lib/timeline-data';
+import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import type { Planting } from '@/lib/entities/planting';
+import type { TimelineCrop } from '@/lib/plan-types';
 
 // =============================================================================
 // Constants
@@ -535,6 +534,89 @@ interface EnrichedPlanting extends Planting {
 }
 
 // =============================================================================
+// Helper Functions
+// =============================================================================
+
+/**
+ * Extract date strings from a TimelineCrop for grid display.
+ * Converts ISO datetime → date string, handles null crops gracefully.
+ */
+function extractDatesFromTimelineCrop(crop: TimelineCrop | undefined): {
+  ghDate: string | null;
+  harvestStart: string | null;
+  harvestEnd: string | null;
+  method: string;
+} {
+  if (!crop) {
+    return {
+      ghDate: null,
+      harvestStart: null,
+      harvestEnd: null,
+      method: 'DS',
+    };
+  }
+
+  // Extract date from ISO datetime (yyyy-MM-ddTHH:mm:ss → yyyy-MM-dd)
+  const extractDate = (isoDateTime: string | undefined): string | null => {
+    if (!isoDateTime) return null;
+    return isoDateTime.split('T')[0];
+  };
+
+  // For transplants: startDate is GH start, for direct seed: no GH date
+  const ghDate = crop.plantingMethod === 'transplant'
+    ? extractDate(crop.startDate)
+    : null;
+
+  const harvestStart = extractDate(crop.harvestStartDate);
+  const harvestEnd = extractDate(crop.endDate);
+
+  // Map plantingMethod to display format
+  const methodMap = {
+    'transplant': 'TP',
+    'direct-seed': 'DS',
+    'perennial': 'P',
+  };
+  const method = methodMap[crop.plantingMethod || 'direct-seed'] || 'DS';
+
+  return { ghDate, harvestStart, harvestEnd, method };
+}
+
+/**
+ * Format bed span from TimelineCrop[] (one per bed).
+ * Returns "A1, A2, A3 (12')" format where last bed shows feet if partial.
+ */
+function formatBedSpan(crops: TimelineCrop[]): string {
+  if (crops.length === 0) return '';
+
+  const sorted = [...crops].sort((a, b) => a.bedIndex - b.bedIndex);
+
+  const parts = sorted.map((crop, idx) => {
+    const bedLength = crop.bedCapacityFt || 50;
+    const isPartial = (crop.feetUsed || bedLength) < bedLength;
+    const isLast = idx === sorted.length - 1;
+
+    if (isLast && isPartial) {
+      return `${crop.resource} (${crop.feetUsed}')`;
+    }
+    return crop.resource;
+  });
+
+  return parts.join(', ');
+}
+
+/**
+ * Calculate plant count: (bedFeet * 12 / spacing) * rows
+ */
+function calculatePlantCount(
+  bedFeet: number,
+  rows: number | undefined,
+  spacing: number | undefined
+): number | null {
+  if (!rows || !spacing || spacing === 0) return null;
+  return Math.round((bedFeet * 12 / spacing) * rows);
+}
+
+// =============================================================================
 // Main Page Component
 // =============================================================================
 
@@ -643,61 +725,43 @@ export default function PlantingsPage() {
     return columnWidths[col] ?? DEFAULT_WIDTHS[col] ?? 100;
   }, [columnWidths]);
 
-  // Build bed name groups for calculateRowSpan (keyed by row letter, e.g., { A: ['A1', 'A2'], B: ['B1'] })
-  const bedNameGroups = useMemo(() => {
-    const groups: Record<string, string[]> = {};
-    for (const bed of Object.values(bedsLookup)) {
-      const group = bedGroupsLookup[bed.groupId];
-      if (!group) continue;
-      // Extract the letter prefix from bed name (e.g., "A" from "A1")
-      const match = bed.name.match(/^([A-Za-z]+)/);
-      const groupKey = match ? match[1] : group.name;
-      if (!groups[groupKey]) groups[groupKey] = [];
-      groups[groupKey].push(bed.name);
-    }
-    // Sort beds within each group numerically
-    for (const key of Object.keys(groups)) {
-      groups[key].sort((a, b) => {
-        const numA = parseInt(a.replace(/[^0-9]/g, '')) || 0;
-        const numB = parseInt(b.replace(/[^0-9]/g, '')) || 0;
-        return numA - numB;
-      });
+  // Compute TimelineCrop[] once (shared with Timeline view logic)
+  const timelineCrops = useMemo(() => {
+    if (!currentPlan) return [];
+    return getTimelineCropsFromPlan(currentPlan);
+  }, [currentPlan]);
+
+  // Group TimelineCrop[] by planting ID (groupId)
+  const cropsByPlanting = useMemo(() => {
+    const groups = new Map<string, TimelineCrop[]>();
+    for (const crop of timelineCrops) {
+      if (!groups.has(crop.groupId)) {
+        groups.set(crop.groupId, []);
+      }
+      groups.get(crop.groupId)!.push(crop);
     }
     return groups;
-  }, [bedsLookup, bedGroupsLookup]);
-
-  // Map bed names to lengths
-  const bedLengths = useMemo(() => {
-    const lengths: Record<string, number> = {};
-    for (const bed of Object.values(bedsLookup)) {
-      lengths[bed.name] = bed.lengthFt;
-    }
-    return lengths;
-  }, [bedsLookup]);
+  }, [timelineCrops]);
 
   // Enrich plantings with computed data
   const enrichedPlantings = useMemo((): EnrichedPlanting[] => {
     if (!currentPlan?.plantings) return [];
 
     return currentPlan.plantings.map((p) => {
+      // Get all TimelineCrop entries for this planting (one per bed)
+      const cropsForPlanting = cropsByPlanting.get(p.id) || [];
+      const firstCrop = cropsForPlanting[0]; // Dates same across all beds
+
+      // Get config for lookup fields
       const config = catalogLookup[p.configId] as CropConfig | undefined;
       const bed = p.startBed ? bedsLookup[p.startBed] : null;
 
-      // Compute timing
-      const daysInCells = config ? calculateDaysInCells(config) : 0;
-      const method = config ? calculatePlantingMethod(config) : 'direct-seed';
+      // Extract pre-computed dates from TimelineCrop
+      const dates = extractDatesFromTimelineCrop(firstCrop);
+
+      // Lookup config timing values (for display columns, not for date calculation)
       const dtm = config ? getPrimarySeedToHarvest(config) : 0;
       const harvestWindow = config ? calculateAggregateHarvestWindow(config) : 0;
-
-      // Compute dates
-      const fieldDate = parseISO(p.fieldStartDate);
-      const ghDate = method === 'transplant' && daysInCells > 0
-        ? format(addDays(fieldDate, -daysInCells), 'yyyy-MM-dd')
-        : null;
-      const harvestStart = dtm > 0 ? format(addDays(fieldDate, dtm - daysInCells), 'yyyy-MM-dd') : null;
-      const harvestEnd = harvestStart && harvestWindow > 0
-        ? format(addDays(parseISO(harvestStart), harvestWindow), 'yyyy-MM-dd')
-        : harvestStart;
 
       // Seed source display
       let seedSourceDisplay = '';
@@ -719,31 +783,11 @@ export default function PlantingsPage() {
         }
       }
 
-      // Compute plant count: (bedFeet * 12 / spacing) * rows
-      const rows = config?.rows ?? null;
-      const spacing = config?.spacing ?? null;
-      const plants = rows && spacing && spacing > 0
-        ? Math.round((p.bedFeet * 12 / spacing) * rows)
-        : null;
+      // Plant count calculation
+      const plants = calculatePlantCount(p.bedFeet, config?.rows, config?.spacing);
 
-      // Compute beds display (all beds spanned)
-      let bedsDisplay = '';
-      if (bed?.name) {
-        const { bedSpanInfo } = calculateRowSpan(p.bedFeet, bed.name, bedNameGroups, bedLengths);
-        if (bedSpanInfo.length > 0) {
-          // Format: "A1, A2, A3 (12')" where partial bed shows feet used
-          const parts = bedSpanInfo.map((info, idx) => {
-            const bedLength = bedLengths[info.bed] ?? 50;
-            const isPartial = info.feetUsed < bedLength;
-            // Only show feet on the last bed if it's partial
-            if (idx === bedSpanInfo.length - 1 && isPartial) {
-              return `${info.bed} (${info.feetUsed}')`;
-            }
-            return info.bed;
-          });
-          bedsDisplay = parts.join(', ');
-        }
-      }
+      // Beds display (formatted from TimelineCrop span)
+      const bedsDisplay = formatBedSpan(cropsForPlanting);
 
       // Sequence display: show clean sequence ID (S1, S2, etc.)
       // seqNum: 1-based slot number in sequence (sparse - can have gaps)
@@ -758,28 +802,32 @@ export default function PlantingsPage() {
 
       return {
         ...p,
+        // From TimelineCrop (pre-computed dates)
+        ...dates,
+        dtm,
+        harvestWindow,
+
+        // From config lookup
         cropName: config?.crop ?? p.configId,
         category: config?.category ?? '',
         identifier: config?.identifier ?? p.configId,
+        rows: config?.rows ?? null,
+        spacing: config?.spacing ?? null,
+
+        // From bed lookup
         bedName: bed?.name ?? '',
+
+        // Computed PlantingsPage-specific fields
         bedsDisplay,
-        isUnassigned: !p.startBed,
-        isFailed: p.actuals?.failed ?? false,
-        dtm,
-        harvestWindow,
-        method: method === 'transplant' ? 'TP' : method === 'direct-seed' ? 'DS' : 'P',
-        rows,
-        spacing,
         plants,
         seedSourceDisplay,
         sequenceDisplay,
         seqNum,
-        ghDate,
-        harvestStart,
-        harvestEnd,
+        isUnassigned: !p.startBed,
+        isFailed: p.actuals?.failed ?? false,
       };
     });
-  }, [currentPlan?.plantings, catalogLookup, bedsLookup, bedNameGroups, bedLengths, varietiesLookup, seedMixesLookup]);
+  }, [currentPlan?.plantings, cropsByPlanting, catalogLookup, bedsLookup, varietiesLookup, seedMixesLookup]);
 
   // Display columns (visible and ordered)
   const displayColumns = useMemo(() => {

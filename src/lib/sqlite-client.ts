@@ -86,15 +86,21 @@ export class SQLiteClientAdapter {
 
   async savePlan(id: string, data: PlanData): Promise<void> {
     try {
-      const response = await fetch(`/api/sqlite/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: data.plan }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to save plan');
-      }
+      await withBroadcast(
+        async () => {
+          const response = await fetch(`/api/sqlite/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan: data.plan }),
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to save plan');
+          }
+        },
+        id,
+        'update'
+      );
     } catch (e) {
       console.error('Failed to save plan:', e);
       throw e;
@@ -103,12 +109,18 @@ export class SQLiteClientAdapter {
 
   async deletePlan(id: string): Promise<void> {
     try {
-      const response = await fetch(`/api/sqlite/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok && response.status !== 404) {
-        throw new Error('Failed to delete plan');
-      }
+      await withBroadcast(
+        async () => {
+          const response = await fetch(`/api/sqlite/${id}`, {
+            method: 'DELETE',
+          });
+          if (!response.ok && response.status !== 404) {
+            throw new Error('Failed to delete plan');
+          }
+        },
+        id,
+        'delete'
+      );
     } catch (e) {
       console.error('Failed to delete plan:', e);
       throw e;
@@ -125,17 +137,23 @@ export class SQLiteClientAdapter {
    */
   async appendPatch(planId: string, entry: PatchEntry): Promise<number | null> {
     try {
-      const response = await fetch(`/api/sqlite/${planId}/patches`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ patch: entry }),
-      });
-      if (!response.ok) {
-        console.warn('Failed to append patch:', response.statusText);
-        return null;
-      }
-      const data = await response.json();
-      return data.id ?? null;
+      return await withBroadcast(
+        async () => {
+          const response = await fetch(`/api/sqlite/${planId}/patches`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ patch: entry }),
+          });
+          if (!response.ok) {
+            console.warn('Failed to append patch:', response.statusText);
+            return null;
+          }
+          const data = await response.json();
+          return data.id ?? null;
+        },
+        planId,
+        'update'
+      );
     } catch (e) {
       console.warn('Failed to append patch:', e);
       return null;
@@ -187,22 +205,28 @@ export class SQLiteClientAdapter {
    */
   async undo(planId: string): Promise<{ ok: boolean; plan: Plan | null; canUndo: boolean; canRedo: boolean; description?: string }> {
     try {
-      const response = await fetch(`/api/sqlite/${planId}/undo`, {
-        method: 'POST',
-      });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        console.warn('Undo failed:', data.error || response.statusText);
-        return { ok: false, plan: null, canUndo: false, canRedo: false };
-      }
-      const data = await response.json();
-      return {
-        ok: true,
-        plan: data.plan,
-        canUndo: data.canUndo,
-        canRedo: data.canRedo,
-        description: data.description,
-      };
+      return await withBroadcast(
+        async () => {
+          const response = await fetch(`/api/sqlite/${planId}/undo`, {
+            method: 'POST',
+          });
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            console.warn('Undo failed:', data.error || response.statusText);
+            return { ok: false, plan: null, canUndo: false, canRedo: false };
+          }
+          const data = await response.json();
+          return {
+            ok: true,
+            plan: data.plan,
+            canUndo: data.canUndo,
+            canRedo: data.canRedo,
+            description: data.description,
+          };
+        },
+        planId,
+        'update'
+      );
     } catch (e) {
       console.error('Undo failed:', e);
       return { ok: false, plan: null, canUndo: false, canRedo: false };
@@ -216,22 +240,28 @@ export class SQLiteClientAdapter {
    */
   async redo(planId: string): Promise<{ ok: boolean; plan: Plan | null; canUndo: boolean; canRedo: boolean; description?: string }> {
     try {
-      const response = await fetch(`/api/sqlite/${planId}/redo`, {
-        method: 'POST',
-      });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        console.warn('Redo failed:', data.error || response.statusText);
-        return { ok: false, plan: null, canUndo: false, canRedo: false };
-      }
-      const data = await response.json();
-      return {
-        ok: true,
-        plan: data.plan,
-        canUndo: data.canUndo,
-        canRedo: data.canRedo,
-        description: data.description,
-      };
+      return await withBroadcast(
+        async () => {
+          const response = await fetch(`/api/sqlite/${planId}/redo`, {
+            method: 'POST',
+          });
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            console.warn('Redo failed:', data.error || response.statusText);
+            return { ok: false, plan: null, canUndo: false, canRedo: false };
+          }
+          const data = await response.json();
+          return {
+            ok: true,
+            plan: data.plan,
+            canUndo: data.canUndo,
+            canRedo: data.canRedo,
+            description: data.description,
+          };
+        },
+        planId,
+        'update'
+      );
     } catch (e) {
       console.error('Redo failed:', e);
       return { ok: false, plan: null, canUndo: false, canRedo: false };
@@ -367,16 +397,80 @@ export class SQLiteClientAdapter {
 export const storage = new SQLiteClientAdapter();
 
 // =============================================================================
-// SYNC MESSAGES (stubbed - can add back later if needed)
+// BROADCAST CHANNEL (Cross-Tab Sync)
 // =============================================================================
 
-/** Message types for cross-tab communication (future) */
+/** Message types for cross-tab communication */
 export type SyncMessage =
   | { type: 'plan-updated'; planId: string }
   | { type: 'plan-deleted'; planId: string };
 
-/** Subscribe to sync messages - currently a no-op */
-export function onSyncMessage(_callback: (message: SyncMessage) => void): () => void {
-  // Cross-tab sync disabled for now - can add back via polling if needed
-  return () => {};
+const SYNC_CHANNEL_NAME = 'crop-plan-sync';
+let syncChannel: BroadcastChannel | null = null;
+
+/**
+ * Get or create the BroadcastChannel for cross-tab sync.
+ * Returns null in SSR or if BroadcastChannel is not supported.
+ */
+function getSyncChannel(): BroadcastChannel | null {
+  if (typeof window === 'undefined') return null;
+  if (!syncChannel) {
+    try {
+      syncChannel = new BroadcastChannel(SYNC_CHANNEL_NAME);
+    } catch {
+      console.warn('BroadcastChannel not supported, cross-tab sync disabled');
+    }
+  }
+  return syncChannel;
+}
+
+/**
+ * Broadcast a sync message to other tabs/windows.
+ * No-op if BroadcastChannel is not available.
+ */
+function broadcastSync(message: SyncMessage): void {
+  getSyncChannel()?.postMessage(message);
+}
+
+/**
+ * Wrapper for mutation operations that automatically broadcasts sync messages.
+ *
+ * @param operation - Async function to execute
+ * @param planId - Plan ID to include in broadcast (if null, broadcasts plan-list-updated)
+ * @param type - Type of mutation ('update' | 'delete')
+ * @returns Result of the operation
+ *
+ * @example
+ * return withBroadcast(
+ *   () => fetch(...).then(r => r.json()),
+ *   planId,
+ *   'update'
+ * );
+ */
+async function withBroadcast<T>(
+  operation: () => Promise<T>,
+  planId: string | null,
+  type: 'update' | 'delete'
+): Promise<T> {
+  const result = await operation();
+
+  // Only broadcast if operation succeeded (didn't throw)
+  if (planId) {
+    broadcastSync({
+      type: type === 'delete' ? 'plan-deleted' : 'plan-updated',
+      planId,
+    });
+  }
+
+  return result;
+}
+
+/** Subscribe to sync messages from other tabs/windows */
+export function onSyncMessage(callback: (message: SyncMessage) => void): () => void {
+  const channel = getSyncChannel();
+  if (!channel) return () => {};
+
+  const handler = (event: MessageEvent<SyncMessage>) => callback(event.data);
+  channel.addEventListener('message', handler);
+  return () => channel.removeEventListener('message', handler);
 }
