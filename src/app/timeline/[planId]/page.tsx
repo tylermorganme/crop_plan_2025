@@ -427,53 +427,45 @@ export default function TimelinePlanPage() {
   const editingSequence = editSequenceId ? getSequence(editSequenceId) : undefined;
   const editingSequencePlantings = editSequenceId ? getSequencePlantings(editSequenceId) : [];
 
-  // Compute preview crops: base crops with pending drag changes applied
-  // This gives us optimistic UI during drag without committing to the store
+  // Compute preview crops: apply pending changes to plantings, then re-expand
+  // This ensures bed spanning logic runs correctly during drag preview
   const previewCrops = useMemo(() => {
     if (!currentPlan) return [];
 
-    const baseCrops = getTimelineCropsFromPlan(currentPlan);
-
-    // No pending changes - return base crops as-is
+    // No pending changes - use normal expansion
     if (pendingDragChanges.size === 0) {
-      return baseCrops;
+      return getTimelineCropsFromPlan(currentPlan);
     }
 
-    // Apply pending changes to crops for preview rendering
-    return baseCrops.map(crop => {
-      const changes = pendingDragChanges.get(crop.groupId);
-      if (!changes) return crop;
+    // Apply pending changes to plantings, then let normal expansion handle bed spanning
+    const patchedPlantings = currentPlan.plantings?.map(planting => {
+      const changes = pendingDragChanges.get(planting.id);
+      if (!changes) return planting;
 
-      let newCrop = { ...crop };
+      const patched = { ...planting };
 
-      // Apply bed change (changes.startBed is bed name or null for unassigned)
+      // Apply bed change (convert name to UUID)
       if (changes.startBed !== undefined) {
-        newCrop.resource = changes.startBed || ''; // null -> '' for unassigned
+        if (changes.startBed === null) {
+          patched.startBed = null;
+        } else {
+          // Find bed UUID by name
+          const bed = currentPlan.beds ? Object.values(currentPlan.beds).find(b => b.name === changes.startBed) : null;
+          patched.startBed = bed?.id ?? null;
+        }
       }
 
       // Apply date change
       if (changes.fieldStartDate !== undefined) {
-        // Compute the delta from original date to new date
-        const origDate = new Date(crop.startDate);
-        const origEndDate = new Date(crop.endDate);
-
-        // Find original fieldStartDate from planting
-        const planting = currentPlan.plantings?.find(p => p.id === crop.groupId);
-        if (planting) {
-          const originalFieldDate = new Date(planting.fieldStartDate);
-          const newFieldDate = new Date(changes.fieldStartDate);
-          const deltaDays = Math.round((newFieldDate.getTime() - originalFieldDate.getTime()) / (1000 * 60 * 60 * 24));
-
-          // Apply delta to the display dates
-          origDate.setDate(origDate.getDate() + deltaDays);
-          origEndDate.setDate(origEndDate.getDate() + deltaDays);
-          newCrop.startDate = origDate.toISOString().split('T')[0];
-          newCrop.endDate = origEndDate.toISOString().split('T')[0];
-        }
+        patched.fieldStartDate = changes.fieldStartDate;
       }
 
-      return newCrop;
-    });
+      return patched;
+    }) ?? [];
+
+    // Create modified plan with patched plantings and run normal expansion
+    const previewPlan = { ...currentPlan, plantings: patchedPlantings };
+    return getTimelineCropsFromPlan(previewPlan);
   }, [currentPlan, pendingDragChanges]);
 
   if (loading) {
