@@ -30,14 +30,14 @@ npx tsc --noEmit     # Type check without emitting
 
 ```
 Planting[] (storage)
-    ↓ expandPlantingsToTimelineCrops()
-TimelineCrop[] (display)
-    ↓
-CropTimeline Component
+    ↓ getTimelineCropsFromPlan()
+TimelineCrop[] (1:1 with Planting)
+    ↓ CropTimeline.cropsByResource (render-time bed spanning)
+Per-bed entries for display
 ```
 
 **Planting** = one planting decision (stored), even if spanning multiple beds
-**TimelineCrop** = one entry per bed (computed at render time for display)
+**TimelineCrop** = 1:1 with Planting; bed spanning computed at render time in CropTimeline
 
 ### State Management
 
@@ -125,8 +125,8 @@ scripts/                 # Utility scripts
 | `src/lib/plan-store.ts` | Zustand store with all plan mutations |
 | `src/lib/sqlite-storage.ts` | SQLite adapter (server-side) |
 | `src/lib/sqlite-client.ts` | Storage client (browser-side, calls API) |
-| `src/lib/timeline-data.ts` | `getTimelineCropsFromPlan()` - expands Planting[] → TimelineCrop[] |
-| `src/lib/slim-planting.ts` | `computeTimelineCrop()` - timing calculations |
+| `src/lib/timeline-data.ts` | `getTimelineCropsFromPlan()` - converts Planting[] → TimelineCrop[] (1:1) |
+| `src/lib/planting-display-calc.ts` | `expandToTimelineCrops()` - timing calculations |
 | `src/lib/entities/` | Entity types and CRUD functions |
 | `src/components/CropTimeline.tsx` | Main timeline visualization |
 | `src/data/crop-config-template.json` | Crop catalog (340 configurations) |
@@ -232,10 +232,30 @@ const deletedCount = await bulkDeletePlantings(selectedIds);
 
 **Import functions** (`importVarieties`, `importSeedMixes`, `importProducts`, `importSeedOrders`) also use this pattern internally.
 
+### Drag Operations
+
+Drag-and-drop in CropTimeline uses optimistic preview with commit-on-drop:
+
+```
+During drag:
+  onBulkCropMove/onBulkCropDateChange → queue to pendingDragChanges (local state)
+  previewCrops applies pending changes → CropTimeline renders preview
+
+On drop:
+  onDragEnd(true) → bulkUpdatePlantings() → single API call + patch
+
+On cancel:
+  onDragEnd(false) → clear pendingDragChanges (no API call)
+```
+
+**Key files:**
+- `src/app/timeline/[planId]/page.tsx` - handles `pendingDragChanges` state and `previewCrops`
+- `src/components/CropTimeline.tsx` - `cropsByResource` expands bed spanning at render time
+
 ## Key Concepts
 
 - **Planting**: A single decision to grow a crop (one entry even if spanning multiple beds)
-- **TimelineCrop**: Display format - one entry per bed for timeline rendering
+- **TimelineCrop**: Display format - 1:1 with Planting; bed spanning computed at render time
 - **CropConfig**: Static configuration (DTM, spacing, seasons) from the crop catalog
 - **Bed**: A 50-foot growing bed (92 total on the farm)
 - **Crop Year**: Plans span crop years, not calendar years - overwintering crops carry forward
