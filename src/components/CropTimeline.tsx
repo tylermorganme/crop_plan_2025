@@ -102,6 +102,8 @@ interface CropTimelineProps {
   onBulkCropMove?: (moves: { groupId: string; newResource: string; feetNeeded: number }[]) => void;
   /** Bulk update dates for multiple crops (single API call) - preferred over onCropDateChange for multi-select */
   onBulkCropDateChange?: (updates: { groupId: string; startDate: string }[]) => void;
+  /** Called when drag operation ends - committed=true on drop, false on cancel */
+  onDragEnd?: (committed: boolean) => void;
   onDuplicateCrop?: (groupId: string) => Promise<string | void>;
   onDeleteCrop?: (groupIds: string[]) => void;
   /** Callback when user wants to edit the crop config. Receives the planting identifier. */
@@ -280,6 +282,7 @@ export default function CropTimeline({
   onCropDateChange,
   onBulkCropMove,
   onBulkCropDateChange,
+  onDragEnd,
   onDuplicateCrop,
   onDeleteCrop,
   onEditCropConfig,
@@ -446,8 +449,8 @@ export default function CropTimeline({
     return result;
   }, [crops, searchQuery, showNoVarietyOnly]);
 
-  // During drag: move all linked crops (groupings + sequences) to preview positions
-  // No complex preview logic - filtered crops are already the source of truth
+  // During drag: parent applies pending changes to crops prop for preview
+  // CropTimeline just renders what it's given
   const effectiveCrops = filteredCrops;
 
   // Set of resources that have matching crops (for filtering rows)
@@ -816,23 +819,9 @@ export default function CropTimeline({
   };
 
   const handleDragEnd = () => {
-    // If cache still has data, drag was cancelled - restore original state
-    if (dragCache.current.size > 0 && onCropMove && onCropDateChange) {
-      for (const [groupId, original] of dragCache.current) {
-        const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
-        if (groupCrop) {
-          // Restore bed assignment if it changed
-          if (groupCrop.resource !== original.startBed) {
-            onCropMove(groupCrop.id, original.startBed || '', groupId, groupCrop.feetNeeded || 50);
-          }
-          // Restore date if it changed
-          if (groupCrop.startDate !== original.fieldStartDate) {
-            onCropDateChange(groupId, original.fieldStartDate, groupCrop.endDate);
-          }
-        }
-      }
-      dragCache.current.clear();
-    }
+    // Drag was cancelled (not dropped) - notify parent to discard pending changes
+    onDragEnd?.(false);
+    dragCache.current.clear();
 
     // Clear drag state
     setDraggedCropId(null);
@@ -939,8 +928,8 @@ export default function CropTimeline({
     e.preventDefault();
     setDragOverResource(null);
 
-    // Drop succeeded - changes already applied during drag
-    // Just clear cache and drag state
+    // Drop succeeded - notify parent to commit pending changes
+    onDragEnd?.(true);
     dragCache.current.clear();
     setDraggedCropId(null);
     setDraggedGroupId(null);

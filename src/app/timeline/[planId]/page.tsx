@@ -66,6 +66,13 @@ export default function TimelinePlanPage() {
   } | null>(null);
   const [editSequenceId, setEditSequenceId] = useState<string | null>(null);
 
+  // Pending drag changes - queued during drag, committed on drop
+  // Key is groupId (plantingId), value contains pending changes
+  const [pendingDragChanges, setPendingDragChanges] = useState<Map<string, {
+    startBed?: string | null; // null = unassigned, undefined = unchanged
+    fieldStartDate?: string;  // undefined = unchanged
+  }>>(new Map());
+
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
@@ -177,59 +184,102 @@ export default function TimelinePlanPage() {
     updateCropDates(groupId, startDate, endDate);
   }, [updateCropDates]);
 
-  // Bulk handlers for multi-planting drag operations (single API call for all)
+  // Bulk handlers for multi-planting drag operations
+  // During drag: queue changes for preview. On drop: commit all at once.
   const handleBulkCropMove = useCallback((moves: { groupId: string; newResource: string; feetNeeded: number }[]) => {
     if (moves.length === 0) return;
 
-    // For bulk moves, we need to resolve bed names to UUIDs and validate capacity
-    // For simplicity in drag operations, we'll just update startBed directly
-    // Capacity checking is already done visually during drag
-    const updates: { id: string; changes: { startBed: string | null; bedFeet?: number } }[] = [];
+    // Queue changes for preview (commit happens in handleDragEnd)
+    setPendingDragChanges(prev => {
+      const next = new Map(prev);
+      for (const move of moves) {
+        const existing = next.get(move.groupId) || {};
+        // Store bed name for preview, will resolve to UUID on commit
+        // Empty string = unassigned, store as null
+        next.set(move.groupId, {
+          ...existing,
+          startBed: move.newResource === '' ? null : move.newResource,
+        });
+      }
+      return next;
+    });
+  }, []);
 
-    for (const move of moves) {
-      // Moving to Unassigned
-      if (move.newResource === '') {
-        updates.push({ id: move.groupId, changes: { startBed: null } });
-        continue;
+  const handleBulkCropDateChange = useCallback((dateUpdates: { groupId: string; startDate: string }[]) => {
+    if (dateUpdates.length === 0) return;
+
+    // Queue changes for preview (commit happens in handleDragEnd)
+    setPendingDragChanges(prev => {
+      const next = new Map(prev);
+      for (const update of dateUpdates) {
+        const existing = next.get(update.groupId) || {};
+        next.set(update.groupId, {
+          ...existing,
+          fieldStartDate: update.startDate,
+        });
+      }
+      return next;
+    });
+  }, []);
+
+  // Handle drag end - commit or discard pending changes
+  const handleDragEnd = useCallback((committed: boolean) => {
+    if (!committed || pendingDragChanges.size === 0) {
+      // Drag cancelled or no changes - just clear pending state
+      setPendingDragChanges(new Map());
+      return;
+    }
+
+    // Commit all pending changes in a single bulk update
+    const updates: { id: string; changes: { startBed?: string | null; bedFeet?: number; fieldStartDate?: string } }[] = [];
+
+    for (const [groupId, changes] of pendingDragChanges) {
+      const updateChanges: { startBed?: string | null; bedFeet?: number; fieldStartDate?: string } = {};
+
+      // Handle bed change
+      if (changes.startBed !== undefined) {
+        if (changes.startBed === null) {
+          // Moving to unassigned
+          updateChanges.startBed = null;
+        } else {
+          // Moving to a real bed - resolve name to UUID
+          const planting = currentPlan?.plantings?.find(p => p.id === groupId);
+          const feetNeeded = planting?.bedFeet || 50;
+
+          const { bedSpanInfo, isComplete } = calculateRowSpan(
+            feetNeeded,
+            changes.startBed,
+            bedMappings.nameGroups,
+            bedMappings.bedLengths
+          );
+
+          if (isComplete) {
+            const bed = currentPlan?.beds ? Object.values(currentPlan.beds).find(b => b.name === changes.startBed) : null;
+            if (bed) {
+              updateChanges.startBed = bed.id;
+              updateChanges.bedFeet = bedSpanInfo?.reduce((sum, b) => sum + b.feetUsed, 0) ?? feetNeeded;
+            }
+          }
+        }
       }
 
-      // Moving to a real bed - calculate span
-      const { bedSpanInfo, isComplete } = calculateRowSpan(
-        move.feetNeeded,
-        move.newResource,
-        bedMappings.nameGroups,
-        bedMappings.bedLengths
-      );
-
-      if (!isComplete) {
-        // Skip this one if not enough room (shouldn't happen during drag)
-        continue;
+      // Handle date change
+      if (changes.fieldStartDate !== undefined) {
+        updateChanges.fieldStartDate = changes.fieldStartDate;
       }
 
-      // Get the bed UUID from the first bed in the span
-      const targetBedName = move.newResource;
-      const bed = currentPlan?.beds ? Object.values(currentPlan.beds).find(b => b.name === targetBedName) : null;
-      if (bed) {
-        const totalBedFeet = bedSpanInfo?.reduce((sum, b) => sum + b.feetUsed, 0) ?? move.feetNeeded;
-        updates.push({ id: move.groupId, changes: { startBed: bed.id, bedFeet: totalBedFeet } });
+      if (Object.keys(updateChanges).length > 0) {
+        updates.push({ id: groupId, changes: updateChanges });
       }
     }
 
     if (updates.length > 0) {
       bulkUpdatePlantings(updates);
     }
-  }, [bulkUpdatePlantings, bedMappings, currentPlan?.beds]);
 
-  const handleBulkCropDateChange = useCallback((dateUpdates: { groupId: string; startDate: string }[]) => {
-    if (dateUpdates.length === 0) return;
-
-    const updates = dateUpdates.map(u => ({
-      id: u.groupId,
-      changes: { fieldStartDate: u.startDate }
-    }));
-
-    bulkUpdatePlantings(updates);
-  }, [bulkUpdatePlantings]);
+    // Clear pending state
+    setPendingDragChanges(new Map());
+  }, [pendingDragChanges, bulkUpdatePlantings, bedMappings, currentPlan?.beds, currentPlan?.plantings]);
 
   const duplicatePlanting = usePlanStore((state) => state.duplicatePlanting);
   const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
@@ -377,6 +427,55 @@ export default function TimelinePlanPage() {
   const editingSequence = editSequenceId ? getSequence(editSequenceId) : undefined;
   const editingSequencePlantings = editSequenceId ? getSequencePlantings(editSequenceId) : [];
 
+  // Compute preview crops: base crops with pending drag changes applied
+  // This gives us optimistic UI during drag without committing to the store
+  const previewCrops = useMemo(() => {
+    if (!currentPlan) return [];
+
+    const baseCrops = getTimelineCropsFromPlan(currentPlan);
+
+    // No pending changes - return base crops as-is
+    if (pendingDragChanges.size === 0) {
+      return baseCrops;
+    }
+
+    // Apply pending changes to crops for preview rendering
+    return baseCrops.map(crop => {
+      const changes = pendingDragChanges.get(crop.groupId);
+      if (!changes) return crop;
+
+      let newCrop = { ...crop };
+
+      // Apply bed change (changes.startBed is bed name or null for unassigned)
+      if (changes.startBed !== undefined) {
+        newCrop.resource = changes.startBed || ''; // null -> '' for unassigned
+      }
+
+      // Apply date change
+      if (changes.fieldStartDate !== undefined) {
+        // Compute the delta from original date to new date
+        const origDate = new Date(crop.startDate);
+        const origEndDate = new Date(crop.endDate);
+
+        // Find original fieldStartDate from planting
+        const planting = currentPlan.plantings?.find(p => p.id === crop.groupId);
+        if (planting) {
+          const originalFieldDate = new Date(planting.fieldStartDate);
+          const newFieldDate = new Date(changes.fieldStartDate);
+          const deltaDays = Math.round((newFieldDate.getTime() - originalFieldDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          // Apply delta to the display dates
+          origDate.setDate(origDate.getDate() + deltaDays);
+          origEndDate.setDate(origEndDate.getDate() + deltaDays);
+          newCrop.startDate = origDate.toISOString().split('T')[0];
+          newCrop.endDate = origEndDate.toISOString().split('T')[0];
+        }
+      }
+
+      return newCrop;
+    });
+  }, [currentPlan, pendingDragChanges]);
+
   if (loading) {
     return (
       <PageLayout header={<AppHeader />}>
@@ -413,7 +512,7 @@ export default function TimelinePlanPage() {
   return (
     <PageLayout header={<AppHeader />}>
       <CropTimeline
-        crops={getTimelineCropsFromPlan(currentPlan)}
+        crops={previewCrops}
         resources={getResources(currentPlan)}
         groups={getGroups(currentPlan)}
         bedLengths={bedMappings.bedLengths}
@@ -421,6 +520,7 @@ export default function TimelinePlanPage() {
         onCropDateChange={handleDateChange}
         onBulkCropMove={handleBulkCropMove}
         onBulkCropDateChange={handleBulkCropDateChange}
+        onDragEnd={handleDragEnd}
         onDuplicateCrop={handleDuplicateCrop}
         onDeleteCrop={handleDeleteCrop}
         onEditCropConfig={handleEditCropConfig}
