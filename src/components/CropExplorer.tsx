@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { format } from 'date-fns';
 import type { Crop } from '@/lib/crops';
 import type { Planting } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
@@ -221,12 +220,15 @@ function getNumericRange(crops: Crop[], col: string): { min: number; max: number
 }
 
 // Helper to create a Planting from a Crop config using CRUD function
-function createPlantingFromConfig(crop: Crop): Planting {
-  const startDate = format(new Date(), 'yyyy-MM-dd');
+function createPlantingFromConfig(crop: Crop, planYear: number): Planting {
+  // Use targetFieldDate if available, otherwise fall back to June 1st
+  const fieldStartDate = crop.targetFieldDate
+    ? `${planYear}-${crop.targetFieldDate}`
+    : `${planYear}-06-01`;
 
   return createPlanting({
     configId: crop.identifier,
-    fieldStartDate: startDate,
+    fieldStartDate,
     startBed: null, // Unassigned
     bedFeet: 50, // Default 1 bed
   });
@@ -263,6 +265,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   // Only subscribe to cropCatalog, not the entire plan (avoids re-renders when plantings change)
   const cropCatalog = usePlanStore((state) => state.currentPlan?.cropCatalog);
   const currentPlanId = usePlanStore((state) => state.currentPlan?.id);
+  const planYear = usePlanStore((state) => state.currentPlan?.metadata?.year) ?? new Date().getFullYear();
   const varieties = usePlanStore((state) => state.currentPlan?.varieties);
   const seedMixes = usePlanStore((state) => state.currentPlan?.seedMixes);
   const products = usePlanStore((state) => state.currentPlan?.products);
@@ -855,7 +858,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       }
 
       // Add all crops as plantings in a single transaction
-      const newPlantings = cropsToAddNow.map(crop => createPlantingFromConfig(crop));
+      // Get planYear from the loaded plan (may have been just loaded)
+      const loadedPlanYear = usePlanStore.getState().currentPlan?.metadata?.year ?? new Date().getFullYear();
+      const newPlantings = cropsToAddNow.map(crop => createPlantingFromConfig(crop, loadedPlanYear));
       const addedCount = await bulkAddPlantings(newPlantings);
 
       setAddToPlanMessage({
@@ -918,7 +923,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       }
 
       // Add all crops as plantings in a single transaction
-      const newPlantings = cropsToAdd.map(crop => createPlantingFromConfig(crop));
+      // Get planYear from the loaded plan (may have been just loaded)
+      const loadedPlanYear = usePlanStore.getState().currentPlan?.metadata?.year ?? new Date().getFullYear();
+      const newPlantings = cropsToAdd.map(crop => createPlantingFromConfig(crop, loadedPlanYear));
       const addedCount = await bulkAddPlantings(newPlantings);
 
       // Set this as the active plan for future adds (store handles localStorage sync)

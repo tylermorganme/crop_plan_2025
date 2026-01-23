@@ -528,6 +528,7 @@ export default function TimelinePlanPage() {
         onUpdatePlanting={handleUpdatePlanting}
         varieties={currentPlan.varieties}
         seedMixes={currentPlan.seedMixes}
+        products={currentPlan.products}
         initialNoVarietyFilter={initialNoVarietyFilter}
         onCreateSequence={handleCreateSequence}
         onUnlinkFromSequence={handleUnlinkFromSequence}

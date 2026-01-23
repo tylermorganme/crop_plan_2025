@@ -8,6 +8,7 @@ import { Z_INDEX } from '@/lib/z-index';
 import { useUIStore } from '@/lib/ui-store';
 import { calculateRowSpan } from '@/lib/timeline-data';
 import { getBedGroup } from '@/lib/plan-types';
+import { calculateConfigRevenue } from '@/lib/revenue';
 import AddToBedPanel from './AddToBedPanel';
 import { PlantingInspectorPanel } from './PlantingInspectorPanel';
 
@@ -129,6 +130,8 @@ interface CropTimelineProps {
   varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
   /** Seed mixes available in the plan (for seed source picker) */
   seedMixes?: Record<string, { id: string; crop: string; name: string }>;
+  /** Products available in the plan (for revenue calculation) */
+  products?: Record<string, import('@/lib/entities/product').Product>;
   /** Initial state for no-variety filter (set via URL param) */
   initialNoVarietyFilter?: boolean;
   /** Callback when user wants to create a sequence from a planting */
@@ -294,6 +297,7 @@ export default function CropTimeline({
   onUpdatePlanting,
   varieties,
   seedMixes,
+  products,
   initialNoVarietyFilter,
   onCreateSequence,
   onUnlinkFromSequence,
@@ -338,6 +342,12 @@ export default function CropTimeline({
   // Filter to show only plantings without seed source
   // Initialize from URL param if provided
   const [showNoVarietyOnly, setShowNoVarietyOnly] = useState(initialNoVarietyFilter ?? false);
+  // When true, show all bed rows even when filtering (for drag-to-assign workflow)
+  const [showAllBeds, setShowAllBeds] = useState(false);
+  // State for search help modal
+  const [showSearchHelp, setShowSearchHelp] = useState(false);
+  // State for search autocomplete
+  const [autocompleteIndex, setAutocompleteIndex] = useState(0);
   // State for hover preview when browsing crops in AddToBedPanel
   const [hoverPreview, setHoverPreview] = useState<{
     config: CropConfig;
@@ -428,6 +438,64 @@ export default function CropTimeline({
     return { left: Math.max(0, left), width: Math.max(30, width) };
   }, [timelineStart, pixelsPerDay]);
 
+  // Autocomplete suggestions for search DSL
+  const SORT_FIELDS = ['revenue', 'date', 'end', 'name', 'bed', 'category', 'feet', 'size'];
+  const SORT_DIRS = ['asc', 'desc'];
+  const FILTER_FIELDS = ['bed', 'group', 'bedGroup', 'category', 'method', 'crop', 'notes'];
+
+  const autocompleteSuggestions = useMemo(() => {
+    if (!searchQuery) return [];
+
+    // Get the last word being typed
+    const words = searchQuery.split(/\s+/);
+    const lastWord = words[words.length - 1].toLowerCase();
+
+    // Check if typing a sort directive (sort: or s: shorthand)
+    const isSortPrefix = lastWord.startsWith('sort:') || lastWord.startsWith('s:');
+    if (isSortPrefix) {
+      const prefixLen = lastWord.startsWith('sort:') ? 5 : 2;
+      const afterSort = lastWord.slice(prefixLen);
+
+      // Check if we have a field and are typing direction
+      const colonIndex = afterSort.indexOf(':');
+      if (colonIndex > 0) {
+        // Typing direction (e.g., "s:revenue:")
+        const dirPrefix = afterSort.slice(colonIndex + 1);
+        return SORT_DIRS
+          .filter(d => d.startsWith(dirPrefix))
+          .map(d => ({ type: 'sortDir', value: d, display: d, full: `s:${afterSort.slice(0, colonIndex)}:${d}` }));
+      } else {
+        // Typing field (e.g., "s:" or "s:r")
+        return SORT_FIELDS
+          .filter(f => f.startsWith(afterSort))
+          .map(f => ({ type: 'sortField', value: f, display: f, full: `s:${f}` }));
+      }
+    }
+
+    // Check if typing a filter field
+    const colonIndex = lastWord.indexOf(':');
+    if (colonIndex === -1 && lastWord.length > 0) {
+      // Might be starting a field filter
+      const fieldMatches = FILTER_FIELDS
+        .filter(f => f.toLowerCase().startsWith(lastWord))
+        .map(f => ({ type: 'filterField', value: f, display: `${f}:`, full: `${f}:` }));
+
+      // Also suggest "sort:" (or "s:") if it matches
+      if ('sort'.startsWith(lastWord) || lastWord === 's') {
+        fieldMatches.unshift({ type: 'sort', value: 's', display: 's:', full: 's:' });
+      }
+
+      return fieldMatches;
+    }
+
+    return [];
+  }, [searchQuery]);
+
+  // Reset autocomplete index when suggestions change
+  useEffect(() => {
+    setAutocompleteIndex(0);
+  }, [autocompleteSuggestions.length]);
+
   // Filter crops by search query and no-variety filter
   const filteredCrops = useMemo(() => {
     let result = crops;
@@ -437,15 +505,132 @@ export default function CropTimeline({
       result = result.filter(crop => !crop.seedSource);
     }
 
-    // Then apply search query
+    // Then apply search query (multi-term AND search with field-specific syntax)
+    // Also parse sort directives (e.g., sort:revenue:desc)
+    let sortField: string | null = null;
+    let sortDir: 'asc' | 'desc' = 'asc';
+
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter(crop =>
-        crop.name.toLowerCase().includes(query) ||
-        crop.category?.toLowerCase().includes(query) ||
-        crop.cropConfigId?.toLowerCase().includes(query) ||
-        crop.resource?.toLowerCase().includes(query)
-      );
+      // Split query into terms - all terms must match somewhere
+      const allTerms = searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
+
+      // Extract sort directive (e.g., sort:revenue:desc, s:date, s:revenue:desc)
+      const sortPattern = /^(?:sort|s):(\w+)(?::(asc|desc))?$/i;
+      const filterTerms: string[] = [];
+
+      for (const term of allTerms) {
+        const sortMatch = term.match(sortPattern);
+        if (sortMatch) {
+          sortField = sortMatch[1].toLowerCase();
+          sortDir = (sortMatch[2]?.toLowerCase() as 'asc' | 'desc') || 'asc';
+        } else {
+          filterTerms.push(term);
+        }
+      }
+
+      // Parse field-specific terms (e.g., bed:A1, group:H, category:greens)
+      // bedGroup is an alias for group
+      const fieldPattern = /^(bed|group|bedGroup|category|method|crop|notes):(.+)$/i;
+
+      if (filterTerms.length > 0) {
+        result = result.filter(crop => {
+          // Build searchable text from all relevant fields (for general terms)
+          const searchText = [
+            crop.name,
+            crop.category,
+            crop.cropConfigId,
+            crop.resource,
+            crop.crop,
+            crop.notes,
+            crop.plantingMethod,
+            crop.groupId,
+          ].filter(Boolean).join(' ').toLowerCase();
+
+          // All terms must match
+          return filterTerms.every(term => {
+            const fieldMatch = term.match(fieldPattern);
+            if (fieldMatch) {
+              const [, field, value] = fieldMatch;
+              switch (field.toLowerCase()) {
+                case 'bed':
+                  return crop.resource?.toLowerCase().includes(value);
+                case 'group':
+                case 'bedgroup':
+                  return getBedGroup(crop.resource || '').toLowerCase().includes(value);
+                case 'category':
+                  return crop.category?.toLowerCase().includes(value);
+                case 'method':
+                  return crop.plantingMethod?.toLowerCase().includes(value);
+                case 'crop':
+                  return crop.crop?.toLowerCase().includes(value) || crop.name?.toLowerCase().includes(value);
+                case 'notes':
+                  return crop.notes?.toLowerCase().includes(value);
+                default:
+                  return searchText.includes(term);
+              }
+            }
+            // General term - search all fields
+            return searchText.includes(term);
+          });
+        });
+      }
+    }
+
+    // Apply sorting if specified
+    if (sortField) {
+      // Helper to get revenue for a crop
+      const getRevenue = (crop: TimelineCrop): number => {
+        if (!cropCatalog || !products || !crop.cropConfigId) return 0;
+        const config = cropCatalog[crop.cropConfigId];
+        if (!config) return 0;
+        return calculateConfigRevenue(config, crop.feetNeeded || 50, products) ?? 0;
+      };
+
+      result = [...result].sort((a, b) => {
+        let aVal: number | string = 0;
+        let bVal: number | string = 0;
+
+        switch (sortField) {
+          case 'revenue':
+            aVal = getRevenue(a);
+            bVal = getRevenue(b);
+            break;
+          case 'date':
+          case 'start':
+            aVal = a.startDate || '';
+            bVal = b.startDate || '';
+            break;
+          case 'end':
+            aVal = a.endDate || '';
+            bVal = b.endDate || '';
+            break;
+          case 'name':
+            aVal = a.name?.toLowerCase() || '';
+            bVal = b.name?.toLowerCase() || '';
+            break;
+          case 'bed':
+            aVal = a.resource || '';
+            bVal = b.resource || '';
+            break;
+          case 'category':
+            aVal = a.category?.toLowerCase() || '';
+            bVal = b.category?.toLowerCase() || '';
+            break;
+          case 'feet':
+          case 'size':
+            aVal = a.feetNeeded || 0;
+            bVal = b.feetNeeded || 0;
+            break;
+        }
+
+        // Compare
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          const cmp = aVal.localeCompare(bVal);
+          return sortDir === 'desc' ? -cmp : cmp;
+        }
+        const cmp = (aVal as number) - (bVal as number);
+        return sortDir === 'desc' ? -cmp : cmp;
+      });
     }
 
     return result;
@@ -516,9 +701,10 @@ export default function CropTimeline({
   // Set of resources that have matching crops (for filtering rows)
   const matchingResources = useMemo(() => {
     if (!searchQuery.trim() && !showNoVarietyOnly) return null; // null means show all
+    if (showAllBeds) return null; // Show all beds when toggle is on (for drag-to-assign workflow)
     // Use cropsByResource keys since that's what determines which rows have crops
     return new Set(Object.keys(cropsByResource));
-  }, [cropsByResource, searchQuery, showNoVarietyOnly]);
+  }, [cropsByResource, searchQuery, showNoVarietyOnly, showAllBeds]);
 
   // Compute variety/mix IDs used in the plan (for sorting in picker)
   const { usedVarietyIds, usedMixIds } = useMemo(() => {
@@ -1496,40 +1682,129 @@ export default function CropTimeline({
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Search filter */}
+        {/* Crop count */}
+        <span className={`text-xs ${(searchQuery || showNoVarietyOnly) ? 'text-blue-600' : 'text-gray-500'}`}>
+          {filteredCrops.length}/{crops.length} crops
+        </span>
+
+        {/* Search filter with autocomplete */}
         <div className="relative">
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Filter crops..."
-            className={`w-48 px-3 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              searchQuery
-                ? 'border-blue-400 bg-blue-50 text-gray-900'
-                : 'border-gray-300 text-gray-900'
-            }`}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                searchInputRef.current?.focus();
+          <div className="relative">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (autocompleteSuggestions.length > 0) {
+                  if (e.key === 'Tab' || e.key === 'Enter') {
+                    e.preventDefault();
+                    // Apply the selected suggestion
+                    const suggestion = autocompleteSuggestions[autocompleteIndex];
+                    if (suggestion) {
+                      const words = searchQuery.split(/\s+/);
+                      words[words.length - 1] = suggestion.full;
+                      setSearchQuery(words.join(' ') + (suggestion.type === 'sortField' ? ':' : ' '));
+                    }
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setAutocompleteIndex(i => Math.min(i + 1, autocompleteSuggestions.length - 1));
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setAutocompleteIndex(i => Math.max(i - 1, 0));
+                  } else if (e.key === 'Escape') {
+                    searchInputRef.current?.blur();
+                  }
+                }
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              title="Clear search"
-            >
-              ×
-            </button>
+              placeholder="Filter crops..."
+              className={`w-48 px-3 py-1 pr-6 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                searchQuery
+                  ? 'border-blue-400 bg-blue-50 text-gray-900'
+                  : 'border-gray-300 text-gray-900'
+              }`}
+            />
+            {/* Ghost preview of autocomplete */}
+            {autocompleteSuggestions.length > 0 && searchQuery && (
+              <div className="absolute inset-0 pointer-events-none px-3 py-1 text-sm text-gray-400 overflow-hidden">
+                <span className="invisible">{searchQuery}</span>
+                <span>{autocompleteSuggestions[autocompleteIndex]?.full.slice(
+                  searchQuery.split(/\s+/).pop()?.length || 0
+                )}</span>
+              </div>
+            )}
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  searchInputRef.current?.focus();
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+                title="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
+          {/* Autocomplete dropdown */}
+          {autocompleteSuggestions.length > 0 && (
+            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg z-50 max-h-48 overflow-auto">
+              {autocompleteSuggestions.map((suggestion, i) => (
+                <button
+                  key={suggestion.full}
+                  className={`w-full text-left px-3 py-1.5 text-sm ${
+                    i === autocompleteIndex
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  onMouseEnter={() => setAutocompleteIndex(i)}
+                  onClick={() => {
+                    const words = searchQuery.split(/\s+/);
+                    words[words.length - 1] = suggestion.full;
+                    setSearchQuery(words.join(' ') + (suggestion.type === 'sortField' ? ':' : ' '));
+                    searchInputRef.current?.focus();
+                  }}
+                >
+                  <span className="font-mono">{suggestion.display}</span>
+                  {suggestion.type === 'sortField' && (
+                    <span className="text-gray-400 text-xs ml-2">sort field</span>
+                  )}
+                  {suggestion.type === 'sortDir' && (
+                    <span className="text-gray-400 text-xs ml-2">direction</span>
+                  )}
+                  {suggestion.type === 'filterField' && (
+                    <span className="text-gray-400 text-xs ml-2">filter</span>
+                  )}
+                </button>
+              ))}
+              <div className="px-3 py-1 text-xs text-gray-400 border-t">
+                Tab to complete · ↑↓ to navigate
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Filter status */}
-        {(searchQuery || showNoVarietyOnly) && (
-          <span className="text-xs text-blue-600">
-            {filteredCrops.length} of {crops.length} crops
-          </span>
-        )}
+        {/* Search help button */}
+        <button
+          onClick={() => setShowSearchHelp(true)}
+          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+          title="Search help"
+        >
+          ?
+        </button>
+
+        {/* Show all beds toggle */}
+        <button
+          onClick={() => setShowAllBeds(!showAllBeds)}
+          className={`px-2 py-1 text-xs font-medium rounded border ${
+            showAllBeds
+              ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+              : 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'
+          }`}
+          title={showAllBeds ? 'Only show beds with matching crops' : 'Show all beds (for dragging crops to assign)'}
+        >
+          All beds
+        </button>
 
         {/* No Variety filter button */}
         {noVarietyCount > 0 && (
@@ -1882,6 +2157,101 @@ export default function CropTimeline({
         />
       ) : null}
       </div>
+
+      {/* Search Help Modal */}
+      {showSearchHelp && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setShowSearchHelp(false)}
+          />
+
+          {/* Modal */}
+          <div
+            className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4"
+            onKeyDown={(e) => e.key === 'Escape' && setShowSearchHelp(false)}
+            tabIndex={-1}
+            ref={(el) => el?.focus()}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Search Help</h2>
+              <button
+                onClick={() => setShowSearchHelp(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl leading-none p-1"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <h3 className="font-medium text-gray-900 mb-2">Multi-term Search</h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  Separate words with spaces. All terms must match (AND logic).
+                </p>
+                <div className="bg-gray-50 rounded p-3 space-y-2 text-sm">
+                  <div><code className="bg-gray-200 px-1 rounded">tom cherry</code> → tomatoes with &quot;cherry&quot; in name</div>
+                  <div><code className="bg-gray-200 px-1 rounded">lettuce direct</code> → lettuce that is direct-seeded</div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-gray-900 mb-2">Field-specific Search</h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  Use <code className="bg-gray-200 px-1 rounded">field:value</code> to search specific fields.
+                </p>
+                <div className="bg-gray-50 rounded p-3 space-y-2 text-sm">
+                  <div><code className="bg-gray-200 px-1 rounded">bed:A1</code> → crops in bed A1</div>
+                  <div><code className="bg-gray-200 px-1 rounded">group:H</code> → crops in bed group H (H1, H2, etc.)</div>
+                  <div><code className="bg-gray-200 px-1 rounded">category:greens</code> → crops in Greens category</div>
+                  <div><code className="bg-gray-200 px-1 rounded">method:direct</code> → direct-seeded crops</div>
+                  <div><code className="bg-gray-200 px-1 rounded">cab group:A</code> → cabbage in bed group A</div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Fields: bed, group (or bedGroup), category, method, crop, notes
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-gray-900 mb-2">Sorting</h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  Use <code className="bg-gray-200 px-1 rounded">s:field</code> or <code className="bg-gray-200 px-1 rounded">s:field:desc</code> to sort results.
+                </p>
+                <div className="bg-gray-50 rounded p-3 space-y-2 text-sm">
+                  <div><code className="bg-gray-200 px-1 rounded">s:revenue:desc</code> → highest revenue first</div>
+                  <div><code className="bg-gray-200 px-1 rounded">s:date</code> → earliest start date first</div>
+                  <div><code className="bg-gray-200 px-1 rounded">greens s:revenue:desc</code> → greens sorted by revenue</div>
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Sort fields: revenue, date, end, name, bed, category, feet (also <code className="bg-gray-200 px-1 rounded">sort:</code> works)
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-medium text-gray-900 mb-2">Tips</h3>
+                <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                  <li>Use <strong>All beds</strong> toggle to show empty beds when assigning</li>
+                  <li>Partial matches work: <code className="bg-gray-200 px-1 rounded">cabb</code> matches &quot;Cabbage&quot;</li>
+                  <li>Search is case-insensitive</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end rounded-b-lg">
+              <button
+                onClick={() => setShowSearchHelp(false)}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
