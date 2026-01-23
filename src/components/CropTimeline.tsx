@@ -489,7 +489,7 @@ export default function CropTimeline({
   const effectiveCrops = useMemo(() => {
     if (!dragPreview?.targetResource) return filteredCrops;
 
-    const { targetResource, deltaDays, groupId, linkedCrops } = dragPreview;
+    const { targetResource, deltaDays, linkedCrops } = dragPreview;
 
     // Build set of all linked crop IDs for fast lookup
     const linkedCropIds = new Set(linkedCrops.map(c => c.id));
@@ -535,12 +535,9 @@ export default function CropTimeline({
         endDate: applyOffset(crop.endDate, deltaDays),
         // Also shift harvestStartDate so the harvest indicator moves with the crop
         harvestStartDate: crop.harvestStartDate ? applyOffset(crop.harvestStartDate, deltaDays) : undefined,
+        // Move all linked crops to the target resource (selected crops + sequences)
+        resource: targetResource === 'Unassigned' ? '' : targetResource,
       };
-
-      // Only change resource for the dragged groupId (not sequence members)
-      if (crop.groupId === groupId) {
-        updatedCrop.resource = targetResource === 'Unassigned' ? '' : targetResource;
-      }
 
       return updatedCrop;
     });
@@ -875,15 +872,25 @@ export default function CropTimeline({
     const effectiveStartDate = parseISO(effectiveCrop.startDate);
     const effectiveResourceIndex = resources.indexOf(effectiveCrop.resource);
 
-    // Find all related groupIds (this planting + sequence members)
+    // Find all related groupIds (this planting + sequence members + selected crops)
     const relatedGroupIds = new Set<string>([effectiveCrop.groupId]);
-    if (effectiveCrop.sequenceId) {
-      // Find all plantings in this sequence
-      crops.forEach(c => {
-        if (c.sequenceId === effectiveCrop.sequenceId) {
-          relatedGroupIds.add(c.groupId);
-        }
-      });
+
+    // If dragged crop is selected, include all selected crops
+    if (selectedPlantingIds.has(effectiveCrop.groupId)) {
+      selectedPlantingIds.forEach(id => relatedGroupIds.add(id));
+    }
+
+    // Add sequence members for all related crops
+    const groupsToExpand = Array.from(relatedGroupIds);
+    for (const groupId of groupsToExpand) {
+      const groupCrop = crops.find(c => c.groupId === groupId);
+      if (groupCrop?.sequenceId) {
+        crops.forEach(c => {
+          if (c.sequenceId === groupCrop.sequenceId) {
+            relatedGroupIds.add(c.groupId);
+          }
+        });
+      }
     }
 
     // Collect all crops from related groupIds
@@ -1010,9 +1017,24 @@ export default function CropTimeline({
 
       // Determine which groups to move: if dragged item is in selection, move all selected
       // Otherwise just move the dragged item
-      const groupsToMove = selectedPlantingIds.has(data.groupId)
+      let groupsToMove = selectedPlantingIds.has(data.groupId)
         ? Array.from(selectedPlantingIds)
         : [data.groupId];
+
+      // Expand to include sequence peers: when moving a planting, move its entire sequence
+      const expandedGroups = new Set<string>(groupsToMove);
+      for (const groupId of groupsToMove) {
+        const groupCrop = crops.find(c => c.groupId === groupId);
+        if (groupCrop?.sequenceId) {
+          // Add all plantings in this sequence
+          crops.forEach(c => {
+            if (c.sequenceId === groupCrop.sequenceId) {
+              expandedGroups.add(c.groupId);
+            }
+          });
+        }
+      }
+      groupsToMove = Array.from(expandedGroups);
 
       // Apply timing changes if enabled and there was horizontal movement
       if (timingEditEnabled && dragStartX.current !== null && dragOriginalDates.current) {
@@ -1036,16 +1058,19 @@ export default function CropTimeline({
       // (avoid double undo entry when only dates changed)
       const targetResource = resource === 'Unassigned' ? '' : resource;
       const resourceChanged = data.originalResource !== targetResource;
-      if (data.cropId && onCropMove && resourceChanged) {
-        // For multi-select moves, move each selected item
-        // Note: currently onCropMove only handles one at a time
-        // For now, just move the dragged one (multi-move is complex with bed spans)
-        onCropMove(
-          data.cropId,
-          targetResource,
-          data.groupId,
-          data.feetNeeded
-        );
+      if (onCropMove && resourceChanged) {
+        // Move all selected/dragged groups (includes sequence peers)
+        for (const groupId of groupsToMove) {
+          const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
+          if (groupCrop) {
+            onCropMove(
+              groupCrop.id,
+              targetResource,
+              groupCrop.groupId,
+              groupCrop.feetNeeded || 50
+            );
+          }
+        }
       }
     } catch {
       // Fallback for simple drag data
@@ -1452,6 +1477,12 @@ export default function CropTimeline({
     }
   }, [selectedPlantingIds, togglePlanting, clearSelection, selectPlanting]);
 
+  // Click handler for timeline cells - deselects when clicking empty space
+  // Crops call stopPropagation(), decorations have pointer-events: none
+  const handleTimelineCellClick = useCallback(() => {
+    clearSelection();
+  }, [clearSelection]);
+
   // Calculate duration in days
   const getDuration = (start: string, end: string) => {
     const startDate = parseDate(start);
@@ -1773,12 +1804,17 @@ export default function CropTimeline({
                     onDragOver={(e) => handleDragOver(e, 'Unassigned')}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, 'Unassigned')}
+                    onClick={handleTimelineCellClick}
                   >
                     {/* Today line */}
                     {todayPosition !== null && (
                       <div
                         className="absolute top-0 bottom-0 w-0.5 bg-red-500"
-                        style={{ left: todayPosition, zIndex: Z_INDEX.BASE + 5 }}
+                        style={{
+                          left: todayPosition,
+                          zIndex: Z_INDEX.BASE + 5,
+                          pointerEvents: 'none', // Make click-through for deselection
+                        }}
                       />
                     )}
                     {/* Unassigned crop boxes */}
@@ -1908,12 +1944,17 @@ export default function CropTimeline({
                     onDragOver={(e) => handleDragOver(e, resource)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, resource)}
+                    onClick={handleTimelineCellClick}
                   >
                     {/* Today line */}
                     {todayPosition !== null && (
                       <div
                         className="absolute top-0 bottom-0 w-0.5 bg-red-500"
-                        style={{ left: todayPosition, zIndex: Z_INDEX.BASE + 5 }}
+                        style={{
+                          left: todayPosition,
+                          zIndex: Z_INDEX.BASE + 5,
+                          pointerEvents: 'none', // Make click-through for deselection
+                        }}
                       />
                     )}
                     {/* Crop boxes (includes preview ghost if present) */}
