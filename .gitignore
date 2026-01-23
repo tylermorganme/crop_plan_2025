@@ -59,3 +59,4 @@ next-env.d.ts
 
 # Claude local settings
 .claude/settings.local.json
+data/plans-backup-*/
