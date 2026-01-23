@@ -357,56 +357,22 @@ export default function CropTimeline({
   }>({ deltaX: 0, deltaDays: 0, targetResource: null, laneOffsetY: 0, cursorX: 0, cursorY: 0, laneRect: null });
 
 
-  // Linked crop info for drag preview (multi-bed and sequence members)
-  interface LinkedCropPreview {
-    id: string;
-    groupId: string;
-    resource: string;
-    startDate: string;
-    endDate: string;
-    cropName: string;
-    category?: string;
-    bgColor?: string;
-    textColor?: string;
-    feetNeeded: number;
-    bedIndex: number;
-    totalBeds: number;
-    sequenceId?: string;
-    sequenceSlot?: number;
-    // Offset from the dragged crop (in days) - for sequence members
-    dayOffset: number;
-    // Offset from the dragged crop (in beds) - for multi-bed
-    bedOffset: number;
-  }
-
-  // For drag preview - track position during drag
+  // For drag preview - minimal state, everything else derived
   const [dragPreview, setDragPreview] = useState<{
-    groupId: string;
+    // Which groups are being moved (dragged crop + selected + sequence members)
+    draggedGroupIds: Set<string>;
     deltaX: number;
     deltaDays: number;
     targetResource: string | null;
-    // Original position for vertical move preview
+    // Original position for the primary dragged crop (for visual feedback)
     originalLeft: number;
     originalWidth: number;
     originalResource: string;
-    cropName: string;
-    feetNeeded: number;
-    // Crop styling info
-    category?: string;
-    bgColor?: string;
-    textColor?: string;
-    startDate: string;
-    endDate: string;
-    // Calculated span info for target resource
-    targetSpanBeds?: string[];
-    targetBedSpanInfo?: BedSpanInfoLocal[];
-    targetIsComplete?: boolean;
-    targetFeetNeeded?: number;
-    targetFeetAvailable?: number;
+    // Primary crop info (for ghost display)
+    primaryCropName: string;
+    primaryGroupId: string;
     // Y position within the lane for ghost placement
     laneOffsetY?: number;
-    // All linked crops (multi-bed + sequence members) for ghost preview
-    linkedCrops: LinkedCropPreview[];
   } | null>(null);
 
   // Refs
@@ -489,10 +455,7 @@ export default function CropTimeline({
   const effectiveCrops = useMemo(() => {
     if (!dragPreview?.targetResource) return filteredCrops;
 
-    const { targetResource, deltaDays, linkedCrops } = dragPreview;
-
-    // Build map of crop ID -> linkedCrop data (includes bedOffset)
-    const linkedCropMap = new Map(linkedCrops.map(c => [c.id, c]));
+    const { targetResource, deltaDays, draggedGroupIds } = dragPreview;
 
     // Inline date offset (can't use offsetDate callback - defined later)
     const applyOffset = (dateStr: string, days: number): string => {
@@ -502,73 +465,95 @@ export default function CropTimeline({
       return d.toISOString().split('T')[0];
     };
 
-    // For multi-bed plantings, calculate which beds they'll span from target
-    // This mirrors calculateRowSpan logic: find target bed's group, get consecutive beds
+    // For each dragged group, calculate total footage needed
+    // (sum bedFeet across all beds of the multi-bed planting)
+    const groupFootage = new Map<string, number>();
+    filteredCrops.forEach(crop => {
+      if (draggedGroupIds.has(crop.groupId)) {
+        // For multi-bed plantings, all crops with same groupId have same total footage
+        // Just use the feetNeeded from any crop (they should all be the same total)
+        if (!groupFootage.has(crop.groupId)) {
+          // Get total footage for this group (sum across all beds)
+          const groupCrops = filteredCrops.filter(c => c.groupId === crop.groupId);
+          const totalFeet = groupCrops.reduce((sum, c) => sum + (c.feetNeeded || 50), 0);
+          groupFootage.set(crop.groupId, totalFeet);
+        }
+      }
+    });
+
+    // Calculate which beds each group will span at target location
     const baseTargetResource = targetResource === 'Unassigned' ? '' : targetResource;
-    let consecutiveBeds: string[] = [];
+    const groupBedSpans = new Map<string, string[]>();
 
     if (baseTargetResource && groups) {
-      // Find which group contains the target bed
       const targetGroup = groups.find(g => g.beds.includes(baseTargetResource));
       if (targetGroup) {
-        // Get beds in this group starting from target
         const startIndex = targetGroup.beds.indexOf(baseTargetResource);
         if (startIndex >= 0) {
-          consecutiveBeds = targetGroup.beds.slice(startIndex);
+          const consecutiveBeds = targetGroup.beds.slice(startIndex);
+
+          // For each dragged group, calculate which beds it will span
+          for (const [groupId, totalFeet] of groupFootage) {
+            const spanBeds: string[] = [];
+            let remainingFeet = totalFeet;
+
+            for (const bed of consecutiveBeds) {
+              if (remainingFeet <= 0) break;
+              spanBeds.push(bed);
+              const bedCapacity = bedLengths[bed] || 50;
+              remainingFeet -= bedCapacity;
+            }
+
+            groupBedSpans.set(groupId, spanBeds);
+          }
         }
       }
     }
 
-    return filteredCrops.map(crop => {
-      const linkedCrop = linkedCropMap.get(crop.id);
-      // Not a linked crop - keep as-is
-      if (!linkedCrop) return crop;
+    // Map all crops, updating dragged ones with new positions
+    return filteredCrops.flatMap(crop => {
+      // Not being dragged - keep as-is
+      if (!draggedGroupIds.has(crop.groupId)) return [crop];
 
-      // Data model for dates:
-      // - planned (fieldStartDate): what dragging changes
-      // - actual (actuals.fieldDate): immutable during drag
-      // - realized = actual ?? planned: determines visual position
-      //
-      // During drag, delta applies to ALL linked crops' planned dates.
-      // Visual position is the realized date: actual if it exists, else planned.
-      //
-      // Crops with actual dates: planned shifts but realized (visual) stays put
-      // Crops without actual dates: planned shifts so realized shifts too
-
-      // The timeline already computes startDate/endDate using actual dates when present.
-      // So for crops WITH actuals, the current startDate/endDate are already pinned.
-      // We only shift crops WITHOUT actual field dates.
-      // Check for non-empty string (empty string is falsy but means "cleared")
+      // Pinned crops (have actual dates) don't move
       const hasActualFieldDate = crop.actuals?.fieldDate && crop.actuals.fieldDate.length > 0;
       const hasActualGreenhouseDate = crop.actuals?.greenhouseDate && crop.actuals.greenhouseDate.length > 0;
       if (hasActualFieldDate || hasActualGreenhouseDate) {
-        // realized = actual (exists), so visual position unchanged
-        return crop;
+        return [crop];
       }
 
-      // Calculate target bed for this crop based on its bedIndex
-      // bedIndex 1 = target bed, bedIndex 2 = next bed in group, etc.
-      let finalResource = baseTargetResource;
-      if (baseTargetResource && crop.bedIndex > 1 && consecutiveBeds.length > 0) {
-        const bedOffset = crop.bedIndex - 1; // bedIndex is 1-based
-        if (bedOffset < consecutiveBeds.length) {
-          finalResource = consecutiveBeds[bedOffset];
-        }
+      // Get the new bed span for this group
+      const newBeds = groupBedSpans.get(crop.groupId);
+      if (!newBeds || newBeds.length === 0) {
+        // Moving to unassigned - show in unassigned lane
+        return [{
+          ...crop,
+          startDate: applyOffset(crop.startDate, deltaDays),
+          endDate: applyOffset(crop.endDate, deltaDays),
+          harvestStartDate: crop.harvestStartDate ? applyOffset(crop.harvestStartDate, deltaDays) : undefined,
+          resource: '',
+        }];
       }
 
-      // realized = planned (no actual), so shift visual position
-      const updatedCrop: typeof crop = {
+      // Only show crops that will exist in the new split
+      // If old split was 3 beds but new split is 1 bed, only show bedIndex 1
+      if (crop.bedIndex > newBeds.length) {
+        return []; // This crop won't exist in new split
+      }
+
+      // Map to the correct bed in the new span
+      const newBedIndex = crop.bedIndex - 1; // Convert to 0-based
+      const finalResource = newBeds[newBedIndex];
+
+      return [{
         ...crop,
         startDate: applyOffset(crop.startDate, deltaDays),
         endDate: applyOffset(crop.endDate, deltaDays),
-        // Also shift harvestStartDate so the harvest indicator moves with the crop
         harvestStartDate: crop.harvestStartDate ? applyOffset(crop.harvestStartDate, deltaDays) : undefined,
         resource: finalResource,
-      };
-
-      return updatedCrop;
+      }];
     });
-  }, [filteredCrops, dragPreview, resources, groups]);
+  }, [filteredCrops, dragPreview, groups, bedLengths]);
 
   // Set of resources that have matching crops (for filtering rows)
   const matchingResources = useMemo(() => {
@@ -892,84 +877,40 @@ export default function CropTimeline({
     // Get original crop position for preview (use first bed's resource)
     const originalPos = getTimelinePosition(effectiveCrop.startDate, effectiveCrop.endDate);
 
-    // Collect all linked crops:
-    // 1. All beds of this multi-bed planting (same groupId)
-    // 2. All sequence members (same sequenceId) and their beds
-    const linkedCrops: LinkedCropPreview[] = [];
-    const effectiveStartDate = parseISO(effectiveCrop.startDate);
-    const effectiveResourceIndex = resources.indexOf(effectiveCrop.resource);
-
     // Find all related groupIds (this planting + sequence members + selected crops)
-    const relatedGroupIds = new Set<string>([effectiveCrop.groupId]);
+    const draggedGroupIds = new Set<string>([effectiveCrop.groupId]);
 
     // If dragged crop is selected, include all selected crops
     if (selectedPlantingIds.has(effectiveCrop.groupId)) {
-      selectedPlantingIds.forEach(id => relatedGroupIds.add(id));
+      selectedPlantingIds.forEach(id => draggedGroupIds.add(id));
     }
 
     // Add sequence members for all related crops
-    const groupsToExpand = Array.from(relatedGroupIds);
+    const groupsToExpand = Array.from(draggedGroupIds);
     for (const groupId of groupsToExpand) {
       const groupCrop = crops.find(c => c.groupId === groupId);
       if (groupCrop?.sequenceId) {
         crops.forEach(c => {
           if (c.sequenceId === groupCrop.sequenceId) {
-            relatedGroupIds.add(c.groupId);
+            draggedGroupIds.add(c.groupId);
           }
         });
       }
     }
 
-    // Collect all crops from related groupIds
-    for (const c of crops) {
-      if (relatedGroupIds.has(c.groupId)) {
-        const cropStartDate = parseISO(c.startDate);
-        const dayOffset = Math.round((cropStartDate.getTime() - effectiveStartDate.getTime()) / (1000 * 60 * 60 * 24));
-        const resourceIndex = resources.indexOf(c.resource);
-        const bedOffset = resourceIndex >= 0 && effectiveResourceIndex >= 0
-          ? resourceIndex - effectiveResourceIndex
-          : 0;
-
-        linkedCrops.push({
-          id: c.id,
-          groupId: c.groupId,
-          resource: c.resource,
-          startDate: c.startDate,
-          endDate: c.endDate,
-          cropName: c.name,
-          category: c.category,
-          bgColor: c.bgColor,
-          textColor: c.textColor,
-          feetNeeded: c.feetNeeded || 50,
-          bedIndex: c.bedIndex,
-          totalBeds: c.totalBeds,
-          sequenceId: c.sequenceId,
-          sequenceSlot: c.sequenceSlot,
-          dayOffset,
-          bedOffset,
-        });
-      }
-    }
-
-    // Initialize drag preview with original position
+    // Initialize drag preview with minimal state
     // Normalize empty resource to 'Unassigned' so it matches how handleDragOver sets targetResource
     const normalizedResource = effectiveCrop.resource || 'Unassigned';
     setDragPreview({
-      groupId: effectiveCrop.groupId,
+      draggedGroupIds,
       deltaX: 0,
       deltaDays: 0,
       targetResource: normalizedResource,
       originalLeft: originalPos.left,
       originalWidth: originalPos.width,
       originalResource: normalizedResource,
-      cropName: effectiveCrop.name,
-      feetNeeded: effectiveCrop.feetNeeded || 50,
-      category: effectiveCrop.category,
-      bgColor: effectiveCrop.bgColor,
-      textColor: effectiveCrop.textColor,
-      startDate: effectiveCrop.startDate,
-      endDate: effectiveCrop.endDate,
-      linkedCrops,
+      primaryCropName: effectiveCrop.name,
+      primaryGroupId: effectiveCrop.groupId,
     });
   };
 
