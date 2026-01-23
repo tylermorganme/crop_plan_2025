@@ -491,8 +491,8 @@ export default function CropTimeline({
 
     const { targetResource, deltaDays, linkedCrops } = dragPreview;
 
-    // Build set of all linked crop IDs for fast lookup
-    const linkedCropIds = new Set(linkedCrops.map(c => c.id));
+    // Build map of crop ID -> linkedCrop data (includes bedOffset)
+    const linkedCropMap = new Map(linkedCrops.map(c => [c.id, c]));
 
     // Inline date offset (can't use offsetDate callback - defined later)
     const applyOffset = (dateStr: string, days: number): string => {
@@ -502,9 +502,27 @@ export default function CropTimeline({
       return d.toISOString().split('T')[0];
     };
 
+    // For multi-bed plantings, calculate which beds they'll span from target
+    // This mirrors calculateRowSpan logic: find target bed's group, get consecutive beds
+    const baseTargetResource = targetResource === 'Unassigned' ? '' : targetResource;
+    let consecutiveBeds: string[] = [];
+
+    if (baseTargetResource && groups) {
+      // Find which group contains the target bed
+      const targetGroup = groups.find(g => g.beds.includes(baseTargetResource));
+      if (targetGroup) {
+        // Get beds in this group starting from target
+        const startIndex = targetGroup.beds.indexOf(baseTargetResource);
+        if (startIndex >= 0) {
+          consecutiveBeds = targetGroup.beds.slice(startIndex);
+        }
+      }
+    }
+
     return filteredCrops.map(crop => {
+      const linkedCrop = linkedCropMap.get(crop.id);
       // Not a linked crop - keep as-is
-      if (!linkedCropIds.has(crop.id)) return crop;
+      if (!linkedCrop) return crop;
 
       // Data model for dates:
       // - planned (fieldStartDate): what dragging changes
@@ -528,6 +546,16 @@ export default function CropTimeline({
         return crop;
       }
 
+      // Calculate target bed for this crop based on its bedIndex
+      // bedIndex 1 = target bed, bedIndex 2 = next bed in group, etc.
+      let finalResource = baseTargetResource;
+      if (baseTargetResource && crop.bedIndex > 1 && consecutiveBeds.length > 0) {
+        const bedOffset = crop.bedIndex - 1; // bedIndex is 1-based
+        if (bedOffset < consecutiveBeds.length) {
+          finalResource = consecutiveBeds[bedOffset];
+        }
+      }
+
       // realized = planned (no actual), so shift visual position
       const updatedCrop: typeof crop = {
         ...crop,
@@ -535,13 +563,12 @@ export default function CropTimeline({
         endDate: applyOffset(crop.endDate, deltaDays),
         // Also shift harvestStartDate so the harvest indicator moves with the crop
         harvestStartDate: crop.harvestStartDate ? applyOffset(crop.harvestStartDate, deltaDays) : undefined,
-        // Move all linked crops to the target resource (selected crops + sequences)
-        resource: targetResource === 'Unassigned' ? '' : targetResource,
+        resource: finalResource,
       };
 
       return updatedCrop;
     });
-  }, [filteredCrops, dragPreview]);
+  }, [filteredCrops, dragPreview, resources, groups]);
 
   // Set of resources that have matching crops (for filtering rows)
   const matchingResources = useMemo(() => {
