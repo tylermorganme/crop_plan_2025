@@ -4,18 +4,17 @@
  * Transforms raw storage Planting entities into display-ready TimelineCrop entries.
  *
  * Data Flow:
- *   Planting (storage) → PlantingWithDates (computed) → TimelineCrop[] (display)
+ *   Planting (storage) → PlantingWithDates (computed) → TimelineCrop (1:1 display)
  *
  * This module:
  * - Resolves config values with overrides
  * - Calculates all dates (field, greenhouse, harvest)
- * - Expands one planting into per-bed TimelineCrop entries
+ * - Creates one TimelineCrop per planting (bed spanning computed at render time)
  */
 
 import { format } from 'date-fns';
 import { calculateCropTiming, type CropTimingInputs } from './crop-timing-calculator';
-import { calculateRowSpan } from './timeline-data';
-import type { TimelineCrop, BedSpanInfo, Planting } from './plan-types';
+import type { TimelineCrop, Planting } from './plan-types';
 import {
   calculateDaysInCells,
   calculatePlantingMethod,
@@ -206,26 +205,27 @@ export function resolveEffectiveTiming(
 const LEGACY_IMPORT_BED_FT = 50;
 
 /**
- * Expands a planting (with computed dates) into TimelineCrop entries.
+ * Converts a planting (with computed dates) into a single TimelineCrop.
  *
  * Takes: PlantingWithDates (one planting, dates calculated)
- * Returns: TimelineCrop[] (one entry per bed span)
+ * Returns: TimelineCrop (1:1 mapping - one crop per planting)
  *
- * This handles multi-bed plantings by creating separate TimelineCrop
- * entries for each bed, all sharing the same computed dates.
+ * Bed spanning (totalBeds, bedIndex, feetUsed) is computed at render time
+ * in CropTimeline, not here. This keeps the data model simple and makes
+ * drag preview trivial.
  *
  * @param planting - Planting with computed dates and effective config
  * @param config - Config values looked up from catalog
- * @param bedGroups - Bed groupings for span calculation
- * @param bedLengths - Bed lengths mapping (bed name -> feet)
+ * @param _bedGroups - Unused (bed spanning moved to render time)
+ * @param _bedLengths - Unused (bed spanning moved to render time)
  * @param getFollowedCropEndDate - Optional callback for succession lookups
- * @returns Array of TimelineCrop objects (one per bed in span)
+ * @returns Single TimelineCrop object
  */
 export function expandToTimelineCrops(
   planting: PlantingWithDates,
   config: PlantingConfigLookup,
-  bedGroups: Record<string, string[]>,
-  bedLengths: Record<string, number>,
+  _bedGroups: Record<string, string[]>,
+  _bedLengths: Record<string, number>,
   getFollowedCropEndDate?: (identifier: string) => Date | null
 ): TimelineCrop[] {
   // Resolve effective timing values with overrides and clamping
@@ -262,52 +262,26 @@ export function expandToTimelineCrops(
     ? `${config.crop} (${config.product})`
     : config.crop;
 
-  // Handle unassigned plantings
-  if (!planting.bed) {
-    return [{
-      id: `${planting.id}_unassigned`,
-      name,
-      startDate,
-      endDate,
-      harvestStartDate,
-      resource: '',
-      category: config.category,
-      feetNeeded,
-      structure: config.growingStructure,
-      plantingId: planting.id,
-      cropConfigId: planting.cropConfigId,
-      totalBeds: 1,
-      bedIndex: 1,
-      groupId: planting.id,
-      plantingMethod: config.plantingMethod,
-      actuals: planting.actuals,
-    }];
-  }
-
-  // Calculate bed span using plan's bed lengths
-  const spanResult = calculateRowSpan(feetNeeded, planting.bed, bedGroups, bedLengths);
-
-  // Create a TimelineCrop for each bed in the span
-  return spanResult.bedSpanInfo.map((info: BedSpanInfo, index: number) => ({
-    id: `${planting.id}_bed${index}`,
+  // Return single TimelineCrop (1:1 with planting)
+  // Bed spanning (totalBeds, bedIndex) computed at render time in CropTimeline
+  return [{
+    id: planting.id,
     name,
     startDate,
     endDate,
     harvestStartDate,
-    resource: info.bed,
+    resource: planting.bed || '',  // Start bed name, or '' for unassigned
     category: config.category,
     feetNeeded,
     structure: config.growingStructure,
     plantingId: planting.id,
     cropConfigId: planting.cropConfigId,
-    totalBeds: spanResult.bedSpanInfo.length,
-    bedIndex: index + 1,
+    totalBeds: 1,   // Default - computed at render time
+    bedIndex: 1,    // Default - computed at render time
     groupId: planting.id,
-    feetUsed: info.feetUsed,
-    bedCapacityFt: info.bedCapacityFt,
     plantingMethod: config.plantingMethod,
     actuals: planting.actuals,
-  }));
+  }];
 }
 
 // =============================================================================

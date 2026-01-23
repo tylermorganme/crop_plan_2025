@@ -6,6 +6,8 @@ import type { CropConfig } from '@/lib/entities/crop-config';
 import { calculateCropFields } from '@/lib/entities/crop-config';
 import { Z_INDEX } from '@/lib/z-index';
 import { useUIStore } from '@/lib/ui-store';
+import { calculateRowSpan } from '@/lib/timeline-data';
+import { getBedGroup } from '@/lib/plan-types';
 import AddToBedPanel from './AddToBedPanel';
 import { PlantingInspectorPanel } from './PlantingInspectorPanel';
 
@@ -453,26 +455,70 @@ export default function CropTimeline({
   // CropTimeline just renders what it's given
   const effectiveCrops = filteredCrops;
 
+  // Build nameGroups lookup: group key → ordered list of beds in that group
+  // Key is derived from bed names using getBedGroup (e.g., "H" from "H1")
+  // Format matches what calculateRowSpan expects: { "H": ["H1", "H2"], "A": ["A1", "A2"] }
+  const nameGroups = useMemo(() => {
+    const result: Record<string, string[]> = {};
+    if (groups) {
+      for (const group of groups) {
+        // Derive group key from first bed name (e.g., "H" from "H1")
+        const firstBed = group.beds[0];
+        const groupKey = firstBed ? getBedGroup(firstBed) : group.name || '';
+        if (groupKey && group.beds.length > 0) {
+          result[groupKey] = group.beds;
+        }
+      }
+    }
+    return result;
+  }, [groups]);
+
+  // Group crops by resource with render-time bed spanning
+  // Each crop is 1:1 with a planting; we expand to per-bed entries here
+  const cropsByResource = useMemo(() => {
+    const result: Record<string, TimelineCrop[]> = {};
+
+    for (const crop of effectiveCrops) {
+      // Unassigned crops - single entry
+      if (!crop.resource) {
+        if (!result['Unassigned']) result['Unassigned'] = [];
+        result['Unassigned'].push({
+          ...crop,
+          totalBeds: 1,
+          bedIndex: 1,
+        });
+        continue;
+      }
+
+      // Compute bed span at render time
+      const feetNeeded = crop.feetNeeded || 50;
+      const span = calculateRowSpan(feetNeeded, crop.resource, nameGroups, bedLengths);
+
+      // Create entry for each bed in span
+      for (let i = 0; i < span.bedSpanInfo.length; i++) {
+        const info = span.bedSpanInfo[i];
+        if (!result[info.bed]) result[info.bed] = [];
+        result[info.bed].push({
+          ...crop,
+          id: `${crop.groupId}_bed${i}`,
+          resource: info.bed,
+          totalBeds: span.bedSpanInfo.length,
+          bedIndex: i + 1,
+          feetUsed: info.feetUsed,
+          bedCapacityFt: info.bedCapacityFt,
+        });
+      }
+    }
+
+    return result;
+  }, [effectiveCrops, nameGroups, bedLengths]);
+
   // Set of resources that have matching crops (for filtering rows)
   const matchingResources = useMemo(() => {
     if (!searchQuery.trim() && !showNoVarietyOnly) return null; // null means show all
-    const resources = new Set<string>();
-    for (const crop of effectiveCrops) {
-      resources.add(crop.resource || 'Unassigned');
-    }
-    return resources;
-  }, [effectiveCrops, searchQuery, showNoVarietyOnly]);
-
-  // Group crops by resource (using effective crops with drag applied)
-  const cropsByResource = useMemo(() => {
-    const result: Record<string, TimelineCrop[]> = {};
-    for (const crop of effectiveCrops) {
-      const resource = crop.resource || 'Unassigned';
-      if (!result[resource]) result[resource] = [];
-      result[resource].push(crop);
-    }
-    return result;
-  }, [effectiveCrops]);
+    // Use cropsByResource keys since that's what determines which rows have crops
+    return new Set(Object.keys(cropsByResource));
+  }, [cropsByResource, searchQuery, showNoVarietyOnly]);
 
   // Compute variety/mix IDs used in the plan (for sorting in picker)
   const { usedVarietyIds, usedMixIds } = useMemo(() => {

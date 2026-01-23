@@ -427,45 +427,51 @@ export default function TimelinePlanPage() {
   const editingSequence = editSequenceId ? getSequence(editSequenceId) : undefined;
   const editingSequencePlantings = editSequenceId ? getSequencePlantings(editSequenceId) : [];
 
-  // Compute preview crops: apply pending changes to plantings, then re-expand
-  // This ensures bed spanning logic runs correctly during drag preview
+  // Compute preview crops: just update resource/dates on 1:1 crop entries
+  // Bed spanning is computed at render time in CropTimeline's cropsByResource
   const previewCrops = useMemo(() => {
     if (!currentPlan) return [];
 
-    // No pending changes - use normal expansion
+    const baseCrops = getTimelineCropsFromPlan(currentPlan);
+
+    // No pending changes - return as-is
     if (pendingDragChanges.size === 0) {
-      return getTimelineCropsFromPlan(currentPlan);
+      return baseCrops;
     }
 
-    // Apply pending changes to plantings, then let normal expansion handle bed spanning
-    const patchedPlantings = currentPlan.plantings?.map(planting => {
-      const changes = pendingDragChanges.get(planting.id);
-      if (!changes) return planting;
+    // Apply pending changes directly to crop entries (1:1 with plantings)
+    return baseCrops.map(crop => {
+      const changes = pendingDragChanges.get(crop.groupId);
+      if (!changes) return crop;
 
-      const patched = { ...planting };
+      return {
+        ...crop,
+        // Update resource (bed name) - null becomes '' for unassigned
+        resource: changes.startBed !== undefined
+          ? (changes.startBed || '')
+          : crop.resource,
+        // Update start/end dates if fieldStartDate changed
+        ...(changes.fieldStartDate !== undefined ? (() => {
+          // Find the planting to compute date delta
+          const planting = currentPlan.plantings?.find(p => p.id === crop.groupId);
+          if (!planting) return {};
 
-      // Apply bed change (convert name to UUID)
-      if (changes.startBed !== undefined) {
-        if (changes.startBed === null) {
-          patched.startBed = null;
-        } else {
-          // Find bed UUID by name
-          const bed = currentPlan.beds ? Object.values(currentPlan.beds).find(b => b.name === changes.startBed) : null;
-          patched.startBed = bed?.id ?? null;
-        }
-      }
+          const originalFieldDate = new Date(planting.fieldStartDate);
+          const newFieldDate = new Date(changes.fieldStartDate);
+          const deltaDays = Math.round((newFieldDate.getTime() - originalFieldDate.getTime()) / (1000 * 60 * 60 * 24));
 
-      // Apply date change
-      if (changes.fieldStartDate !== undefined) {
-        patched.fieldStartDate = changes.fieldStartDate;
-      }
+          const newStart = new Date(crop.startDate);
+          const newEnd = new Date(crop.endDate);
+          newStart.setDate(newStart.getDate() + deltaDays);
+          newEnd.setDate(newEnd.getDate() + deltaDays);
 
-      return patched;
-    }) ?? [];
-
-    // Create modified plan with patched plantings and run normal expansion
-    const previewPlan = { ...currentPlan, plantings: patchedPlantings };
-    return getTimelineCropsFromPlan(previewPlan);
+          return {
+            startDate: newStart.toISOString().split('T')[0],
+            endDate: newEnd.toISOString().split('T')[0],
+          };
+        })() : {}),
+      };
+    });
   }, [currentPlan, pendingDragChanges]);
 
   if (loading) {
