@@ -162,28 +162,12 @@ CREATE TABLE patches (
 
 ### Patch-Based Undo/Redo
 
-Instead of storing full plan snapshots for undo, we use immer patches:
-
-```typescript
-// All mutations use mutateWithPatches()
-function mutateWithPatches(state, mutator, description) {
-  const [nextPlan, patches, inversePatches] = produceWithPatches(currentPlan, mutator);
-  // patches: what changed
-  // inversePatches: how to reverse it
-}
-```
-
-**Benefits:**
-- Lightweight: patches are tiny compared to full plan snapshots
-- Persistent: patches stored in SQLite, survive page reload
-- Time-travel ready: can reconstruct any historical state
-
-**Undo/Redo flow:**
-- `undo()`: Apply `inversePatches` from last entry, move to future stack
-- `redo()`: Apply `patches` from future stack, move back to history
-- New action: Clears future stack (no redo after branching)
-
-**History limit:** 50 patches stored in SQLite (oldest trimmed automatically)
+- Every mutation produces immer patches (what changed) + inverse patches (how to undo)
+- Patches stored in SQLite, survive page reload
+- Plan hydrates from checkpoint + patches on load
+- `undo()` applies inverse patch; `redo()` reapplies forward patch
+- New mutation clears redo stack
+- 50 patch history limit; periodic checkpoints for fast hydration
 
 ### Entity CRUD Pattern
 
@@ -259,6 +243,16 @@ On cancel:
 - **CropConfig**: Static configuration (DTM, spacing, seasons) from the crop catalog
 - **Bed**: A 50-foot growing bed (92 total on the farm)
 - **Crop Year**: Plans span crop years, not calendar years - overwintering crops carry forward
+
+## UI Philosophy
+
+**Data-driven**: UI always reflects the data. Change the data, UI updates. No UI-only state that diverges from stored state.
+
+**Timeline view purpose**: Change `fieldStartDate` (horizontal) and `startBed` (vertical). Everything else (harvest dates, bed spanning, display) is derived.
+
+**Shared UI state**: Use `ui-store.ts` for state that should sync across views/windows (selection, search, toast). Multiple browser tabs viewing the same plan should stay in sync.
+
+**Reuse patterns**: No one-off components unless truly unique. Look for existing patterns before creating new ones. UI is built from simple primitives and simple rules that combine to represent complexity.
 
 ## Data Evolution Strategy
 
