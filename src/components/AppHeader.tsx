@@ -8,6 +8,15 @@ import SaveAsModal from './SaveAsModal';
 import { usePlanStore, useUndoRedo, copyPlan } from '@/lib/plan-store';
 import { Z_INDEX } from '@/lib/z-index';
 
+// Hook to check if we're on the client (avoids hydration mismatch)
+function useHasMounted() {
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+  return hasMounted;
+}
+
 interface AppHeaderProps {
   /** Optional toolbar content to render below the main nav */
   toolbar?: React.ReactNode;
@@ -15,9 +24,11 @@ interface AppHeaderProps {
 
 export default function AppHeader({ toolbar }: AppHeaderProps) {
   const pathname = usePathname();
+  const hasMounted = useHasMounted();
 
   // Use centralized store state - automatically syncs across tabs
-  const activePlanId = usePlanStore((state) => state.activePlanId);
+  // Only access activePlanId after mount to avoid hydration mismatch
+  const activePlanId = usePlanStore((state) => hasMounted ? state.activePlanId : null);
   const currentPlanName = usePlanStore((state) => state.currentPlan?.metadata.name ?? 'Untitled');
   const currentPlanNotes = usePlanStore((state) => state.currentPlan?.notes);
   const refreshPlanList = usePlanStore((state) => state.refreshPlanList);

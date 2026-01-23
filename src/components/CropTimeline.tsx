@@ -98,6 +98,10 @@ interface CropTimelineProps {
   bedLengths: Record<string, number>;
   onCropMove?: (cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => void;
   onCropDateChange?: (groupId: string, startDate: string, endDate: string) => void;
+  /** Bulk move multiple crops to a new bed (single API call) - preferred over onCropMove for multi-select */
+  onBulkCropMove?: (moves: { groupId: string; newResource: string; feetNeeded: number }[]) => void;
+  /** Bulk update dates for multiple crops (single API call) - preferred over onCropDateChange for multi-select */
+  onBulkCropDateChange?: (updates: { groupId: string; startDate: string }[]) => void;
   onDuplicateCrop?: (groupId: string) => Promise<string | void>;
   onDeleteCrop?: (groupIds: string[]) => void;
   /** Callback when user wants to edit the crop config. Receives the planting identifier. */
@@ -274,6 +278,8 @@ export default function CropTimeline({
   bedLengths,
   onCropMove,
   onCropDateChange,
+  onBulkCropMove,
+  onBulkCropDateChange,
   onDuplicateCrop,
   onDeleteCrop,
   onEditCropConfig,
@@ -344,36 +350,25 @@ export default function CropTimeline({
 
   // Live drag state - updated during drag WITHOUT triggering re-renders
   // These values drive the ghost preview via direct DOM updates
-  const dragDeltaRef = useRef<{
-    deltaX: number;
-    deltaDays: number;
-    targetResource: string | null;
-    laneOffsetY: number;
-    // Cursor position for fixed ghost positioning
-    cursorX: number;
-    cursorY: number;
-    // Target lane bounding rect (for positioning ghost relative to lane)
-    laneRect: DOMRect | null;
-  }>({ deltaX: 0, deltaDays: 0, targetResource: null, laneOffsetY: 0, cursorX: 0, cursorY: 0, laneRect: null });
+  // Removed dragDeltaRef - not needed with direct state updates
 
 
-  // For drag preview - minimal state, everything else derived
+  // Drag state: track dragged items and cache for rollback
   const [dragPreview, setDragPreview] = useState<{
-    // Which groups are being moved (dragged crop + selected + sequence members)
+    // Which groups are being moved
     draggedGroupIds: Set<string>;
-    deltaX: number;
-    deltaDays: number;
-    targetResource: string | null;
-    // Original position for the primary dragged crop (for visual feedback)
-    originalLeft: number;
-    originalWidth: number;
-    originalResource: string;
-    // Primary crop info (for ghost display)
+    // Primary crop info for ghost display
     primaryCropName: string;
     primaryGroupId: string;
-    // Y position within the lane for ghost placement
+    // Original position for visual feedback
+    originalLeft: number;
+    originalWidth: number;
+    // Y position within lane for ghost placement
     laneOffsetY?: number;
   } | null>(null);
+
+  // Cache original planting state for rollback on drag failure
+  const dragCache = useRef<Map<string, { startBed: string | null; fieldStartDate: string }>>(new Map());
 
   // Refs
   const plannerScrollRef = useRef<HTMLDivElement>(null);
@@ -452,108 +447,8 @@ export default function CropTimeline({
   }, [crops, searchQuery, showNoVarietyOnly]);
 
   // During drag: move all linked crops (groupings + sequences) to preview positions
-  const effectiveCrops = useMemo(() => {
-    if (!dragPreview?.targetResource) return filteredCrops;
-
-    const { targetResource, deltaDays, draggedGroupIds } = dragPreview;
-
-    // Inline date offset (can't use offsetDate callback - defined later)
-    const applyOffset = (dateStr: string, days: number): string => {
-      if (days === 0) return dateStr;
-      const d = parseISO(dateStr);
-      d.setDate(d.getDate() + days);
-      return d.toISOString().split('T')[0];
-    };
-
-    // For each dragged group, calculate total footage needed
-    // (sum bedFeet across all beds of the multi-bed planting)
-    const groupFootage = new Map<string, number>();
-    filteredCrops.forEach(crop => {
-      if (draggedGroupIds.has(crop.groupId)) {
-        // For multi-bed plantings, all crops with same groupId have same total footage
-        // Just use the feetNeeded from any crop (they should all be the same total)
-        if (!groupFootage.has(crop.groupId)) {
-          // Get total footage for this group (sum across all beds)
-          const groupCrops = filteredCrops.filter(c => c.groupId === crop.groupId);
-          const totalFeet = groupCrops.reduce((sum, c) => sum + (c.feetNeeded || 50), 0);
-          groupFootage.set(crop.groupId, totalFeet);
-        }
-      }
-    });
-
-    // Calculate which beds each group will span at target location
-    const baseTargetResource = targetResource === 'Unassigned' ? '' : targetResource;
-    const groupBedSpans = new Map<string, string[]>();
-
-    if (baseTargetResource && groups) {
-      const targetGroup = groups.find(g => g.beds.includes(baseTargetResource));
-      if (targetGroup) {
-        const startIndex = targetGroup.beds.indexOf(baseTargetResource);
-        if (startIndex >= 0) {
-          const consecutiveBeds = targetGroup.beds.slice(startIndex);
-
-          // For each dragged group, calculate which beds it will span
-          for (const [groupId, totalFeet] of groupFootage) {
-            const spanBeds: string[] = [];
-            let remainingFeet = totalFeet;
-
-            for (const bed of consecutiveBeds) {
-              if (remainingFeet <= 0) break;
-              spanBeds.push(bed);
-              const bedCapacity = bedLengths[bed] || 50;
-              remainingFeet -= bedCapacity;
-            }
-
-            groupBedSpans.set(groupId, spanBeds);
-          }
-        }
-      }
-    }
-
-    // Map all crops, updating dragged ones with new positions
-    return filteredCrops.flatMap(crop => {
-      // Not being dragged - keep as-is
-      if (!draggedGroupIds.has(crop.groupId)) return [crop];
-
-      // Pinned crops (have actual dates) don't move
-      const hasActualFieldDate = crop.actuals?.fieldDate && crop.actuals.fieldDate.length > 0;
-      const hasActualGreenhouseDate = crop.actuals?.greenhouseDate && crop.actuals.greenhouseDate.length > 0;
-      if (hasActualFieldDate || hasActualGreenhouseDate) {
-        return [crop];
-      }
-
-      // Get the new bed span for this group
-      const newBeds = groupBedSpans.get(crop.groupId);
-      if (!newBeds || newBeds.length === 0) {
-        // Moving to unassigned - show in unassigned lane
-        return [{
-          ...crop,
-          startDate: applyOffset(crop.startDate, deltaDays),
-          endDate: applyOffset(crop.endDate, deltaDays),
-          harvestStartDate: crop.harvestStartDate ? applyOffset(crop.harvestStartDate, deltaDays) : undefined,
-          resource: '',
-        }];
-      }
-
-      // Only show crops that will exist in the new split
-      // If old split was 3 beds but new split is 1 bed, only show bedIndex 1
-      if (crop.bedIndex > newBeds.length) {
-        return []; // This crop won't exist in new split
-      }
-
-      // Map to the correct bed in the new span
-      const newBedIndex = crop.bedIndex - 1; // Convert to 0-based
-      const finalResource = newBeds[newBedIndex];
-
-      return [{
-        ...crop,
-        startDate: applyOffset(crop.startDate, deltaDays),
-        endDate: applyOffset(crop.endDate, deltaDays),
-        harvestStartDate: crop.harvestStartDate ? applyOffset(crop.harvestStartDate, deltaDays) : undefined,
-        resource: finalResource,
-      }];
-    });
-  }, [filteredCrops, dragPreview, groups, bedLengths]);
+  // No complex preview logic - filtered crops are already the source of truth
+  const effectiveCrops = filteredCrops;
 
   // Set of resources that have matching crops (for filtering rows)
   const matchingResources = useMemo(() => {
@@ -898,23 +793,48 @@ export default function CropTimeline({
       }
     }
 
-    // Initialize drag preview with minimal state
-    // Normalize empty resource to 'Unassigned' so it matches how handleDragOver sets targetResource
-    const normalizedResource = effectiveCrop.resource || 'Unassigned';
+    // Cache original state for all dragged plantings (for rollback on failure)
+    dragCache.current.clear();
+    for (const groupId of draggedGroupIds) {
+      const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
+      if (groupCrop) {
+        dragCache.current.set(groupId, {
+          startBed: groupCrop.resource || null,
+          fieldStartDate: groupCrop.startDate,
+        });
+      }
+    }
+
+    // Initialize drag preview state (for visual styling and ghost)
     setDragPreview({
       draggedGroupIds,
-      deltaX: 0,
-      deltaDays: 0,
-      targetResource: normalizedResource,
-      originalLeft: originalPos.left,
-      originalWidth: originalPos.width,
-      originalResource: normalizedResource,
       primaryCropName: effectiveCrop.name,
       primaryGroupId: effectiveCrop.groupId,
+      originalLeft: originalPos.left,
+      originalWidth: originalPos.width,
     });
   };
 
   const handleDragEnd = () => {
+    // If cache still has data, drag was cancelled - restore original state
+    if (dragCache.current.size > 0 && onCropMove && onCropDateChange) {
+      for (const [groupId, original] of dragCache.current) {
+        const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
+        if (groupCrop) {
+          // Restore bed assignment if it changed
+          if (groupCrop.resource !== original.startBed) {
+            onCropMove(groupCrop.id, original.startBed || '', groupId, groupCrop.feetNeeded || 50);
+          }
+          // Restore date if it changed
+          if (groupCrop.startDate !== original.fieldStartDate) {
+            onCropDateChange(groupId, original.fieldStartDate, groupCrop.endDate);
+          }
+        }
+      }
+      dragCache.current.clear();
+    }
+
+    // Clear drag state
     setDraggedCropId(null);
     setDraggedGroupId(null);
     setDragOverResource(null);
@@ -932,41 +852,80 @@ export default function CropTimeline({
     const rect = laneElement.getBoundingClientRect();
     const laneOffsetY = e.clientY - rect.top;
 
-    // Update drag-over highlight (this is fast, just a string comparison)
+    // Update drag-over highlight
     if (dragOverResource !== resource) {
       setDragOverResource(resource);
-    }
 
-    // Update live drag state in ref (NO re-render)
-    // Always calculate deltaX for header indicator, but only calculate deltaDays when timing edit enabled
-    let deltaX = 0;
-    let deltaDays = 0;
-    if (dragStartX.current !== null) {
-      deltaX = e.clientX - dragStartX.current;
-      if (timingEditEnabled) {
-        deltaDays = pixelsToDays(deltaX);
+      // Directly update planting state when bed changes
+      if (dragPreview) {
+        const targetBed = resource === 'Unassigned' ? '' : resource;
+
+        // Collect all moves that need to happen
+        const moves: { groupId: string; newResource: string; feetNeeded: number }[] = [];
+        for (const groupId of dragPreview.draggedGroupIds) {
+          const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
+          if (groupCrop && groupCrop.resource !== targetBed) {
+            moves.push({ groupId, newResource: targetBed, feetNeeded: groupCrop.feetNeeded || 50 });
+          }
+        }
+
+        // Use bulk callback if available, otherwise fall back to individual calls
+        if (moves.length > 0) {
+          if (onBulkCropMove) {
+            onBulkCropMove(moves);
+          } else if (onCropMove) {
+            for (const move of moves) {
+              const groupCrop = crops.find(c => c.groupId === move.groupId && c.bedIndex === 1);
+              if (groupCrop) {
+                onCropMove(groupCrop.id, move.newResource, move.groupId, move.feetNeeded);
+              }
+            }
+          }
+        }
       }
     }
 
-    // Store in ref for drop handler
-    dragDeltaRef.current = {
-      deltaX,
-      deltaDays,
-      targetResource: resource,
-      laneOffsetY,
-      cursorX: e.clientX,
-      cursorY: e.clientY,
-      laneRect: rect,
-    };
+    // Calculate date changes if timing edit enabled
+    if (timingEditEnabled && dragStartX.current !== null && dragPreview) {
+      const deltaX = e.clientX - dragStartX.current;
+      const deltaDays = pixelsToDays(deltaX);
 
-    // Update dragPreview state so the ghost renders at the correct position
-    // This is a local state update (not store), so it's fast
+      if (deltaDays !== 0) {
+        // Collect all date updates that need to happen
+        const dateUpdates: { groupId: string; startDate: string }[] = [];
+        for (const groupId of dragPreview.draggedGroupIds) {
+          const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
+          if (groupCrop) {
+            const cachedOriginal = dragCache.current.get(groupId);
+            if (cachedOriginal) {
+              const newStart = offsetDate(cachedOriginal.fieldStartDate, deltaDays);
+              if (groupCrop.startDate !== newStart) {
+                dateUpdates.push({ groupId, startDate: newStart });
+              }
+            }
+          }
+        }
+
+        // Use bulk callback if available, otherwise fall back to individual calls
+        if (dateUpdates.length > 0) {
+          if (onBulkCropDateChange) {
+            onBulkCropDateChange(dateUpdates);
+          } else if (onCropDateChange) {
+            for (const update of dateUpdates) {
+              const groupCrop = crops.find(c => c.groupId === update.groupId && c.bedIndex === 1);
+              if (groupCrop) {
+                onCropDateChange(update.groupId, update.startDate, groupCrop.endDate);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Update laneOffsetY for ghost positioning
     if (dragPreview) {
       setDragPreview(prev => prev ? {
         ...prev,
-        deltaX,
-        deltaDays,
-        targetResource: resource,
         laneOffsetY,
       } : null);
     }
@@ -976,79 +935,13 @@ export default function CropTimeline({
     setDragOverResource(null);
   };
 
-  const handleDrop = (e: React.DragEvent, resource: string) => {
+  const handleDrop = (e: React.DragEvent, _resource: string) => {
     e.preventDefault();
     setDragOverResource(null);
 
-    try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
-
-      // Determine which groups to move: if dragged item is in selection, move all selected
-      // Otherwise just move the dragged item
-      let groupsToMove = selectedPlantingIds.has(data.groupId)
-        ? Array.from(selectedPlantingIds)
-        : [data.groupId];
-
-      // Expand to include sequence peers: when moving a planting, move its entire sequence
-      const expandedGroups = new Set<string>(groupsToMove);
-      for (const groupId of groupsToMove) {
-        const groupCrop = crops.find(c => c.groupId === groupId);
-        if (groupCrop?.sequenceId) {
-          // Add all plantings in this sequence
-          crops.forEach(c => {
-            if (c.sequenceId === groupCrop.sequenceId) {
-              expandedGroups.add(c.groupId);
-            }
-          });
-        }
-      }
-      groupsToMove = Array.from(expandedGroups);
-
-      // Apply timing changes if enabled and there was horizontal movement
-      if (timingEditEnabled && dragStartX.current !== null && dragOriginalDates.current) {
-        const deltaX = e.clientX - dragStartX.current;
-        const deltaDays = pixelsToDays(deltaX);
-
-        if (deltaDays !== 0 && onCropDateChange) {
-          // Apply date offset to all selected/dragged groups
-          for (const groupId of groupsToMove) {
-            const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
-            if (groupCrop) {
-              const newStart = offsetDate(groupCrop.startDate, deltaDays);
-              const newEnd = offsetDate(groupCrop.endDate, deltaDays);
-              onCropDateChange(groupId, newStart, newEnd);
-            }
-          }
-        }
-      }
-
-      // Only call onCropMove if the resource actually changed
-      // (avoid double undo entry when only dates changed)
-      const targetResource = resource === 'Unassigned' ? '' : resource;
-      const resourceChanged = data.originalResource !== targetResource;
-      if (onCropMove && resourceChanged) {
-        // Move all selected/dragged groups (includes sequence peers)
-        for (const groupId of groupsToMove) {
-          const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
-          if (groupCrop) {
-            onCropMove(
-              groupCrop.id,
-              targetResource,
-              groupCrop.groupId,
-              groupCrop.feetNeeded || 50
-            );
-          }
-        }
-      }
-    } catch {
-      // Fallback for simple drag data
-      const cropId = e.dataTransfer.getData('text/plain');
-      if (cropId && onCropMove) {
-        onCropMove(cropId, resource === 'Unassigned' ? '' : resource);
-      }
-    }
-
-    // Clear drag state (handleDragEnd may not fire reliably after drop)
+    // Drop succeeded - changes already applied during drag
+    // Just clear cache and drag state
+    dragCache.current.clear();
     setDraggedCropId(null);
     setDraggedGroupId(null);
     setDragPreview(null);
@@ -1625,60 +1518,20 @@ export default function CropTimeline({
       {/* Main content area with timeline + panels */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
         <div className="flex-1 min-w-0 overflow-auto bg-white border rounded-b" ref={plannerScrollRef}>
-        {/* Header indicators during drag */}
+        {/* Header indicator during drag - shows original position */}
         {dragPreview && (
-          <>
-            {/* Original time bounds - dashed gray outline */}
-            <div
-              className="rounded border-2 border-dashed border-gray-400 pointer-events-none"
-              style={{
-                position: 'sticky',
-                top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
-                zIndex: Z_INDEX.TIMELINE_HEADER + 2,
-                marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft,
-                width: Math.round(dragPreview.originalWidth),
-                height: CROP_HEIGHT,
-                marginBottom: -CROP_HEIGHT,
-              }}
-            />
-            {/* Preview time bounds - dashed outline, green if later, red if earlier */}
-            {Math.abs(dragPreview.deltaX) >= 1 && (() => {
-              const deltaDays = pixelsToDays(dragPreview.deltaX);
-              const isLater = dragPreview.deltaX > 0;
-              return (
-                <div
-                  className={`rounded border-2 border-dashed pointer-events-none ${
-                    isLater ? 'border-green-500' : 'border-red-500'
-                  }`}
-                  style={{
-                    position: 'sticky',
-                    top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
-                    zIndex: Z_INDEX.TIMELINE_HEADER + 2,
-                    marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft + dragPreview.deltaX,
-                    width: Math.round(dragPreview.originalWidth),
-                    height: CROP_HEIGHT,
-                    marginBottom: -CROP_HEIGHT,
-                  }}
-                >
-                  {/* Delta days badges - circles on left and right walls */}
-                  <div
-                    className={`absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                      isLater ? 'bg-green-500' : 'bg-red-500'
-                    }`}
-                  >
-                    {deltaDays}
-                  </div>
-                  <div
-                    className={`absolute top-1/2 -translate-y-1/2 -right-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                      isLater ? 'bg-green-500' : 'bg-red-500'
-                    }`}
-                  >
-                    {deltaDays}
-                  </div>
-                </div>
-              );
-            })()}
-          </>
+          <div
+            className="rounded border-2 border-dashed border-gray-400 pointer-events-none"
+            style={{
+              position: 'sticky',
+              top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
+              zIndex: Z_INDEX.TIMELINE_HEADER + 2,
+              marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft,
+              width: Math.round(dragPreview.originalWidth),
+              height: CROP_HEIGHT,
+              marginBottom: -CROP_HEIGHT,
+            }}
+          />
         )}
         {/* Using HTML table for reliable dual-axis sticky positioning */}
         <table style={{ borderCollapse: 'separate', borderSpacing: 0 }}>

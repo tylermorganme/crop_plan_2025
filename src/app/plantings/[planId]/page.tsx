@@ -1077,13 +1077,9 @@ export default function PlantingsPage() {
     }
   }, [selectedIds, bulkDeletePlantings, clearSelectionStore]);
 
-  // Selection - wraps UI store methods with debug logging
   const toggleSelection = useCallback((id: string) => {
-    console.log('toggleSelection called for', id);
-    const wasSelected = selectedIds.has(id);
     togglePlanting(id);
-    console.log('Selection changed:', wasSelected ? 'removed' : 'added', 'New size:', selectedIds.size + (wasSelected ? -1 : 1));
-  }, [selectedIds, togglePlanting]);
+  }, [togglePlanting]);
 
   const selectAllPlantings = useCallback(() => {
     selectAll(displayPlantings.map((p) => p.id));

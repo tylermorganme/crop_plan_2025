@@ -484,7 +484,7 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk add multiple plantings (single undo step) */
   bulkAddPlantings: (plantings: Planting[]) => Promise<number>;
   /** Bulk update multiple plantings (single undo step) */
-  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>> }[]) => Promise<number>;
+  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>> }[]) => Promise<number>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
   updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>>) => Promise<void>;
   /** Assign a seed variety or mix to a planting */
@@ -711,10 +711,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.isDirty = false;
         state.isLoading = false;
       });
-      // Fire-and-forget save to library (loadPlan is sync for compatibility)
-      savePlanToLibrary(plan).catch(e => {
-        console.error('Failed to save loaded plan:', e);
-      });
     },
 
     loadPlanById: async (planId: string) => {
@@ -798,26 +794,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         if (!state.currentPlan) return;
         state.currentPlan.metadata.name = newName;
         state.currentPlan.metadata.lastModified = Date.now();
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => {
-            state.isSaving = false;
-            state.isDirty = false;
-          });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-          throw e;
-        }
-      }
     },
 
     createNewPlan: async (name: string, plantings?: Planting[]) => {
@@ -997,26 +974,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      // Save to library
-      const newState = get();
-      if (newState.currentPlan) {
-        try {
-          await savePlanToLibrary(newState.currentPlan);
-          set((state) => {
-            state.isSaving = false;
-            state.isDirty = false;
-          });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     updateCropDates: async (groupId: string, startDate: string, _endDate: string) => {
@@ -1096,26 +1054,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      // Save to library
-      const newState = get();
-      if (newState.currentPlan) {
-        try {
-          await savePlanToLibrary(newState.currentPlan);
-          set((state) => {
-            state.isSaving = false;
-            state.isDirty = false;
-          });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     deleteCrop: async (groupId: string) => {
@@ -1145,26 +1084,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      // Save to library
-      const newState = get();
-      if (newState.currentPlan) {
-        try {
-          await savePlanToLibrary(newState.currentPlan);
-          set((state) => {
-            state.isSaving = false;
-            state.isDirty = false;
-          });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     bulkDeletePlantings: async (plantingIds: string[]) => {
@@ -1203,26 +1123,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           description
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      // Save to library (single save for all deletions)
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
-        } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return toDelete.length;
     },
@@ -1286,26 +1187,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      // Save to library
-      const newState = get();
-      if (newState.currentPlan) {
-        try {
-          await savePlanToLibrary(newState.currentPlan);
-          set((state) => {
-            state.isSaving = false;
-            state.isDirty = false;
-          });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     bulkAddPlantings: async (plantings: Planting[]) => {
@@ -1370,31 +1252,12 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           description
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      // Save to library (single save for all additions)
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
-        } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return processedPlantings.length;
     },
 
-    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>> }[]) => {
+    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>> }[]) => {
       const state = get();
       if (!state.currentPlan?.plantings) {
         return 0;
@@ -1431,6 +1294,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               }
               if (changes.bedFeet !== undefined) {
                 planting.bedFeet = changes.bedFeet;
+              }
+              if (changes.fieldStartDate !== undefined) {
+                planting.fieldStartDate = changes.fieldStartDate;
               }
               if (changes.overrides !== undefined) {
                 planting.overrides = {
@@ -1469,26 +1335,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           description
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      // Save to library (single save for all updates)
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
-        } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return validUpdates.length;
     },
@@ -1579,26 +1426,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      // Save to library
-      const newState = get();
-      if (newState.currentPlan) {
-        try {
-          await savePlanToLibrary(newState.currentPlan);
-          set((state) => {
-            state.isSaving = false;
-            state.isDirty = false;
-          });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     assignSeedSource: async (plantingId: string, seedSource) => {
@@ -1634,19 +1462,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Config changed: ${configIdentifier}`
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((s) => { s.isSaving = false; s.isDirty = false; });
-        } catch (e) {
-          set((s) => { s.isSaving = false; s.saveError = e instanceof Error ? e.message : 'Failed to save'; });
-        }
-      }
 
       return affected.length;
     },
@@ -1682,26 +1498,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Update config "${config.identifier}"`
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
-        } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return affectedPlantingIds.length;
     },
@@ -1742,26 +1539,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Add config "${config.identifier}"`
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
-        } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     deleteCropConfigs: async (identifiers: string[]) => {
@@ -1806,26 +1584,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           description
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
-        } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return existingIdentifiers.length;
     },
@@ -1862,26 +1621,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           description
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      // Save to library
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
-        } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     bulkUpdateCropConfigs: async (updates: { identifier: string; changes: Partial<CropConfig> }[]) => {
@@ -1917,26 +1657,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           description
         );
         storeState.isDirty = true;
-        storeState.isSaving = true;
-        storeState.saveError = null;
       });
-
-      // Save to library (single save for all changes)
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.isDirty = false;
-          });
-        } catch (e) {
-          set((storeState) => {
-            storeState.isSaving = false;
-            storeState.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return validUpdates.length;
     },
@@ -2110,22 +1831,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Rename bed to "${newName}"`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     updateBed: async (bedId: string, updates: { name?: string; lengthFt?: number }) => {
@@ -2179,23 +1885,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             `Update bed: ${changes.join(', ')}`
           );
           state.isDirty = true;
-          state.isSaving = true;
-          state.saveError = null;
         }
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     addBed: async (groupId: string, name: string, lengthFt: number) => {
@@ -2239,22 +1930,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Add bed "${name}"`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return newBedId;
     },
@@ -2337,27 +2013,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         if (added > 0 || updated > 0) {
           state.isDirty = true;
-          state.isSaving = true;
-          state.saveError = null;
         }
       });
-
-      // Single save at the end
-      if (added > 0 || updated > 0) {
-        const currentState = get();
-        if (currentState.currentPlan) {
-          try {
-            await savePlanToLibrary(currentState.currentPlan);
-            set((state) => { state.isSaving = false; state.isDirty = false; });
-          } catch (e) {
-            set((state) => {
-              state.isSaving = false;
-              state.saveError = e instanceof Error ? e.message : 'Failed to save';
-            });
-            errors.push(`Save failed: ${e instanceof Error ? e.message : 'Unknown error'}`);
-          }
-        }
-      }
 
       return { added, updated, errors };
     },
@@ -2396,22 +2053,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Delete bed "${bedName}"`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     reorderBed: async (bedId: string, newDisplayOrder: number) => {
@@ -2454,22 +2096,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Reorder bed "${bedName}"`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     deleteBedWithPlantings: async (bedId: string, action: 'unassign') => {
@@ -2501,22 +2128,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Delete bed "${bedName}" and unassign plantings`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     moveBedToGroup: async (bedId: string, newGroupId: string, newDisplayOrder: number) => {
@@ -2559,22 +2171,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Move bed "${bedName}" to different group`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     // ========================================
@@ -2614,22 +2211,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Rename group to "${newName}"`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     addBedGroup: async (name: string) => {
@@ -2668,22 +2250,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Add group "${name}"`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return newGroupId;
     },
@@ -2722,22 +2289,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Delete group "${groupName}"`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     deleteBedGroupWithBeds: async (groupId: string) => {
@@ -2794,22 +2346,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Delete group "${groupName}" with ${bedIds.size} beds`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     reorderBedGroup: async (groupId: string, newDisplayOrder: number) => {
@@ -2851,22 +2388,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           `Reorder group "${groupName}"`
         );
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     // ---- Variety Management ----
@@ -2888,22 +2410,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     updateVariety: async (variety: Variety) => {
@@ -2920,22 +2427,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     deleteVariety: async (varietyId: string) => {
@@ -2975,22 +2467,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     importVarieties: async (rawInputs: RawVarietyInput[]) => {
@@ -3037,22 +2514,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return { added, updated };
     },
@@ -3085,22 +2547,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     updateSeedMix: async (mix: SeedMix) => {
@@ -3117,22 +2564,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     deleteSeedMix: async (mixId: string) => {
@@ -3159,22 +2591,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     importSeedMixes: async (inputs: RawSeedMixInput[]) => {
@@ -3252,22 +2669,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return { added, updated, unresolvedVarieties };
     },
@@ -3300,22 +2702,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     updateProduct: async (product: Product) => {
@@ -3332,22 +2719,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     deleteProduct: async (productId: string) => {
@@ -3364,22 +2736,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
     },
 
     importProducts: async (inputs: CreateProductInput[]) => {
@@ -3425,22 +2782,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const currentState = get();
-      if (currentState.currentPlan) {
-        try {
-          await savePlanToLibrary(currentState.currentPlan);
-          set((state) => { state.isSaving = false; state.isDirty = false; });
-        } catch (e) {
-          set((state) => {
-            state.isSaving = false;
-            state.saveError = e instanceof Error ? e.message : 'Failed to save';
-          });
-        }
-      }
 
       return { added, updated };
     },
@@ -3473,20 +2815,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const plan = get().currentPlan;
-      if (plan) {
-        try {
-          await savePlanToLibrary(plan);
-        } finally {
-          set((state) => {
-            state.isSaving = false;
-          });
-        }
-      }
     },
 
     deleteSeedOrder: async (orderId: string) => {
@@ -3503,20 +2832,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const plan = get().currentPlan;
-      if (plan) {
-        try {
-          await savePlanToLibrary(plan);
-        } finally {
-          set((state) => {
-            state.isSaving = false;
-          });
-        }
-      }
     },
 
     importSeedOrders: async (inputs: CreateSeedOrderInput[]) => {
@@ -3557,20 +2873,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
 
         state.isDirty = true;
-        state.isSaving = true;
-        state.saveError = null;
       });
-
-      const plan = get().currentPlan;
-      if (plan) {
-        try {
-          await savePlanToLibrary(plan);
-        } finally {
-          set((state) => {
-            state.isSaving = false;
-          });
-        }
-      }
 
       return { added, updated };
     },
@@ -3620,8 +2923,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
     },
 
     updateMarket: async (id: string, updates: Partial<Omit<Market, 'id'>>) => {
@@ -3641,8 +2942,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
     },
 
     deactivateMarket: async (id: string) => {
@@ -3662,8 +2961,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
     },
 
     reactivateMarket: async (id: string) => {
@@ -3683,8 +2980,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         );
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
     },
 
     getMarket: (id: string) => {
@@ -3714,8 +3009,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.isDirty = true;
       });
 
-      await savePlanToLibrary(get().currentPlan!);
-
       // If name changed, update the plan list
       if (updates.name) {
         await get().refreshPlanList();
@@ -3739,7 +3032,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.isDirty = true;
       });
 
-      await savePlanToLibrary(get().currentPlan!);
       await get().refreshPlanList();
     },
 
@@ -3848,8 +3140,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.isDirty = true;
       });
 
-      await savePlanToLibrary(get().currentPlan!);
-
       return { sequenceId: sequence.id, plantingIds: allPlantingIds };
     },
 
@@ -3886,8 +3176,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
     },
 
     updateSequenceName: async (sequenceId, newName) => {
@@ -3918,8 +3206,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
     },
 
     reorderSequenceSlots: async (sequenceId, newSlotAssignments) => {
@@ -3980,8 +3266,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
     },
 
     unlinkFromSequence: async (plantingId) => {
@@ -4068,8 +3352,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
     },
 
     deleteSequence: async (sequenceId) => {
@@ -4110,8 +3392,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         state.isDirty = true;
       });
-
-      await savePlanToLibrary(get().currentPlan!);
 
       return count;
     },

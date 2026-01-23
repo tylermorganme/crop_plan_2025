@@ -3,25 +3,20 @@
  *
  * POST /api/sqlite/[planId]/undo - Perform undo operation
  *
- * This endpoint:
- * 1. Pops the last patch from the patches table
- * 2. Applies the inverse patches to the plan
- * 3. Pushes the patch to the redo stack
- * 4. Saves the updated plan
+ * Simplified implementation that just manipulates the patches table:
+ * 1. Moves the last patch from patches table to redo_stack
+ * 2. Returns the hydrated plan (reconstructed from checkpoint + remaining patches)
+ *
+ * No full plan save needed - patches are the source of truth.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { applyPatches, enablePatches } from 'immer';
-
-// Enable Immer patches plugin
-enablePatches();
 import {
-  loadPlan,
-  savePlan,
   planExists,
-  popLastPatch,
-  pushToRedoStack,
+  undoPatch,
+  hydratePlan,
   getPatchCount,
+  getRedoStackCount,
 } from '@/lib/sqlite-storage';
 
 interface RouteParams {
@@ -40,40 +35,25 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    // Pop the last patch
-    const lastPatch = popLastPatch(planId);
-    if (!lastPatch) {
+    // Move last patch to redo stack (simplified - no plan load/save)
+    const result = undoPatch(planId);
+    if (!result) {
       return NextResponse.json({ error: 'Nothing to undo' }, { status: 400 });
     }
 
-    // Load current plan
-    const plan = loadPlan(planId);
-    if (!plan) {
-      return NextResponse.json({ error: 'Failed to load plan' }, { status: 500 });
-    }
-
-    // Apply inverse patches to restore previous state
-    const restoredPlan = applyPatches(plan, lastPatch.inversePatches);
-
-    // Save the restored plan
-    savePlan(planId, restoredPlan);
-
-    // Push to redo stack
-    pushToRedoStack(planId, {
-      patches: lastPatch.patches,
-      inversePatches: lastPatch.inversePatches,
-      description: lastPatch.description,
-    });
+    // Get the freshly hydrated plan
+    const plan = hydratePlan(planId);
 
     // Get updated counts
     const canUndo = getPatchCount(planId) > 0;
+    const canRedo = getRedoStackCount(planId) > 0;
 
     return NextResponse.json({
       ok: true,
-      plan: restoredPlan,
+      plan,
       canUndo,
-      canRedo: true,
-      description: lastPatch.description,
+      canRedo,
+      description: result.description,
     });
   } catch (error) {
     console.error('Failed to undo:', error);

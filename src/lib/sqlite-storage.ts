@@ -133,7 +133,16 @@ const SCHEMA = `
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  -- Checkpoint metadata: tracks which patches are included in each checkpoint
+  CREATE TABLE IF NOT EXISTS checkpoint_metadata (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    last_patch_id INTEGER NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE INDEX IF NOT EXISTS idx_patches_time ON patches(created_at);
+  CREATE INDEX IF NOT EXISTS idx_checkpoint_metadata_time ON checkpoint_metadata(created_at);
 `;
 
 // =============================================================================
@@ -166,7 +175,8 @@ export function planExists(planId: string): boolean {
 }
 
 /**
- * Load a plan from its database.
+ * Load a plan from its database using hydration.
+ * Reconstructs the plan from checkpoint + patches.
  * Runs migrations if the plan is on an older schema version.
  *
  * @throws PlanFromFutureError if plan is from a newer schema version
@@ -176,35 +186,8 @@ export function loadPlan(planId: string): Plan | null {
     return null;
   }
 
-  const db = openPlanDb(planId);
-  try {
-    const row = db.prepare('SELECT data, schema_version FROM plan WHERE id = ?').get('main') as
-      | { data: string; schema_version: number }
-      | undefined;
-
-    if (!row) {
-      return null;
-    }
-
-    const plan = JSON.parse(row.data) as Plan;
-    const storedVersion = row.schema_version;
-
-    // Check for plan from the future
-    if (storedVersion > CURRENT_SCHEMA_VERSION) {
-      throw new PlanFromFutureError(storedVersion, CURRENT_SCHEMA_VERSION);
-    }
-
-    // Migrate if needed
-    if (storedVersion < CURRENT_SCHEMA_VERSION) {
-      const migrated = migratePlan(plan);
-      savePlan(planId, migrated);
-      return migrated;
-    }
-
-    return plan;
-  } finally {
-    db.close();
-  }
+  // Use hydration to reconstruct plan from checkpoint + patches
+  return hydratePlan(planId);
 }
 
 /**
@@ -691,6 +674,14 @@ export interface CheckpointInfo {
   createdAt: number;
 }
 
+/** Checkpoint metadata with patch tracking (stored in database) */
+export interface CheckpointMetadata {
+  id: string;
+  name: string;
+  lastPatchId: number;
+  createdAt: string;
+}
+
 /** Get path to a plan's checkpoints directory */
 function getCheckpointsDir(planId: string): string {
   return join(PLANS_DIR, `${planId}.checkpoints`);
@@ -832,5 +823,444 @@ export function deleteAllCheckpoints(planId: string): void {
     rmdirSync(dir);
   } catch {
     // Directory might not be empty or already removed
+  }
+}
+
+// =============================================================================
+// HYDRATION FUNCTIONS
+// =============================================================================
+
+/** Default threshold for auto-checkpoint creation */
+const AUTO_CHECKPOINT_THRESHOLD = 500;
+
+/**
+ * Get all patches created after a given patch ID.
+ * Used for hydration to apply only patches since last checkpoint.
+ */
+export function getPatchesAfter(planId: string, afterPatchId: number): StoredPatchEntry[] {
+  if (!planExists(planId)) {
+    return [];
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    const rows = db
+      .prepare(
+        `
+        SELECT id, patches, inverse_patches, description, created_at
+        FROM patches
+        WHERE id > ?
+        ORDER BY id ASC
+      `
+      )
+      .all(afterPatchId) as Array<{
+      id: number;
+      patches: string;
+      inverse_patches: string;
+      description: string | null;
+      created_at: string;
+    }>;
+
+    return rows.map((row) => ({
+      id: row.id,
+      patches: JSON.parse(row.patches),
+      inversePatches: JSON.parse(row.inverse_patches),
+      description: row.description ?? '',
+      createdAt: row.created_at,
+    }));
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Get the most recent checkpoint metadata.
+ * Returns null if no checkpoints exist.
+ */
+export function getLatestCheckpointMetadata(planId: string): CheckpointMetadata | null {
+  if (!planExists(planId)) {
+    return null;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    const row = db
+      .prepare(
+        `
+        SELECT id, name, last_patch_id, created_at
+        FROM checkpoint_metadata
+        ORDER BY last_patch_id DESC
+        LIMIT 1
+      `
+      )
+      .get() as
+      | {
+          id: string;
+          name: string;
+          last_patch_id: number;
+          created_at: string;
+        }
+      | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      id: row.id,
+      name: row.name,
+      lastPatchId: row.last_patch_id,
+      createdAt: row.created_at,
+    };
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Record checkpoint metadata in the database.
+ * Called by createCheckpointWithMetadata.
+ */
+function recordCheckpointMetadata(
+  planId: string,
+  checkpointId: string,
+  name: string,
+  lastPatchId: number
+): void {
+  const db = openPlanDb(planId);
+  try {
+    db.prepare(
+      `
+      INSERT INTO checkpoint_metadata (id, name, last_patch_id)
+      VALUES (?, ?, ?)
+    `
+    ).run(checkpointId, name, lastPatchId);
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Perform undo by moving the last patch to the redo stack.
+ * No plan loading or saving - patches are the source of truth.
+ * Returns the description of what was undone, or null if nothing to undo.
+ */
+export function undoPatch(planId: string): { description: string } | null {
+  if (!planExists(planId)) {
+    return null;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    // Get the most recent patch
+    const row = db
+      .prepare(
+        `
+        SELECT id, patches, inverse_patches, description, created_at
+        FROM patches
+        ORDER BY id DESC
+        LIMIT 1
+      `
+      )
+      .get() as
+      | {
+          id: number;
+          patches: string;
+          inverse_patches: string;
+          description: string | null;
+          created_at: string;
+        }
+      | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    // Move to redo stack (in a transaction)
+    db.prepare('BEGIN TRANSACTION').run();
+    try {
+      // Delete from patches
+      db.prepare('DELETE FROM patches WHERE id = ?').run(row.id);
+
+      // Insert into redo_stack
+      db.prepare(
+        `
+        INSERT INTO redo_stack (patches, inverse_patches, description)
+        VALUES (?, ?, ?)
+      `
+      ).run(row.patches, row.inverse_patches, row.description);
+
+      db.prepare('COMMIT').run();
+    } catch (error) {
+      db.prepare('ROLLBACK').run();
+      throw error;
+    }
+
+    return { description: row.description ?? '' };
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Perform redo by moving the last redo entry back to patches.
+ * Returns the description of what was redone, or null if nothing to redo.
+ */
+export function redoPatch(planId: string): { description: string } | null {
+  if (!planExists(planId)) {
+    return null;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    // Get the most recent redo entry
+    const row = db
+      .prepare(
+        `
+        SELECT id, patches, inverse_patches, description, created_at
+        FROM redo_stack
+        ORDER BY id DESC
+        LIMIT 1
+      `
+      )
+      .get() as
+      | {
+          id: number;
+          patches: string;
+          inverse_patches: string;
+          description: string | null;
+          created_at: string;
+        }
+      | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    // Move to patches table (in a transaction)
+    db.prepare('BEGIN TRANSACTION').run();
+    try {
+      // Delete from redo_stack
+      db.prepare('DELETE FROM redo_stack WHERE id = ?').run(row.id);
+
+      // Insert into patches
+      db.prepare(
+        `
+        INSERT INTO patches (patches, inverse_patches, description)
+        VALUES (?, ?, ?)
+      `
+      ).run(row.patches, row.inverse_patches, row.description);
+
+      db.prepare('COMMIT').run();
+    } catch (error) {
+      db.prepare('ROLLBACK').run();
+      throw error;
+    }
+
+    return { description: row.description ?? '' };
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Count patches since the last checkpoint.
+ * Used by maybeCreateCheckpoint to determine if auto-checkpoint is needed.
+ */
+export function getPatchesSinceCheckpointCount(planId: string): number {
+  const metadata = getLatestCheckpointMetadata(planId);
+  const lastPatchId = metadata?.lastPatchId ?? 0;
+  return getPatchesAfter(planId, lastPatchId).length;
+}
+
+/**
+ * Create a checkpoint and record its metadata.
+ * This hydrates the current state, saves it to the plan table,
+ * then copies the .db file as a checkpoint.
+ */
+export function createCheckpointWithMetadata(planId: string, name: string): string {
+  if (!planExists(planId)) {
+    throw new Error(`Plan ${planId} not found`);
+  }
+
+  // First, hydrate the plan to get current state
+  const currentPlan = hydratePlan(planId);
+
+  // Save hydrated state to plan table
+  savePlan(planId, currentPlan);
+
+  // Get last patch ID for metadata
+  const lastPatch = getLastPatch(planId);
+  const lastPatchId = lastPatch?.id ?? 0;
+
+  ensureCheckpointsDir(planId);
+
+  const checkpointId = crypto.randomUUID();
+
+  // Copy the database file
+  const srcPath = getDbPath(planId);
+  const destPath = getCheckpointDbPath(planId, checkpointId);
+  copyFileSync(srcPath, destPath);
+
+  // Update file-based index (for listCheckpoints compatibility)
+  const index = loadCheckpointsIndex(planId);
+  index.push({ id: checkpointId, name, createdAt: Date.now() });
+  index.sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id));
+  saveCheckpointsIndex(planId, index);
+
+  // Record metadata in database
+  recordCheckpointMetadata(planId, checkpointId, name, lastPatchId);
+
+  return checkpointId;
+}
+
+/**
+ * Create a checkpoint if patches since last checkpoint exceeds threshold.
+ * Returns the checkpoint ID if created, null otherwise.
+ */
+export function maybeCreateCheckpoint(
+  planId: string,
+  threshold: number = AUTO_CHECKPOINT_THRESHOLD
+): string | null {
+  const patchesSinceCheckpoint = getPatchesSinceCheckpointCount(planId);
+
+  if (patchesSinceCheckpoint >= threshold) {
+    return createCheckpointWithMetadata(planId, `Auto-checkpoint (${patchesSinceCheckpoint} patches)`);
+  }
+
+  return null;
+}
+
+/**
+ * Load plan data from a checkpoint database.
+ * Used internally by hydratePlan.
+ */
+function loadPlanFromCheckpointDb(checkpointDbPath: string): Plan | null {
+  if (!existsSync(checkpointDbPath)) {
+    return null;
+  }
+
+  const db = new Database(checkpointDbPath);
+  try {
+    const row = db.prepare('SELECT data, schema_version FROM plan WHERE id = ?').get('main') as
+      | { data: string; schema_version: number }
+      | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    return JSON.parse(row.data) as Plan;
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Reconstruct a plan from checkpoint + patches.
+ * This is THE way to load a plan. No fallback.
+ *
+ * Algorithm:
+ * 1. Find latest checkpoint (if any)
+ * 2. Load plan from checkpoint database (or main db if no checkpoint)
+ * 3. Get patches created after checkpoint
+ * 4. Apply patches sequentially
+ * 5. Run migrations if needed
+ * 6. Return reconstructed plan
+ *
+ * @throws Error if plan doesn't exist or hydration fails
+ */
+export function hydratePlan(planId: string): Plan {
+  if (!planExists(planId)) {
+    throw new Error(`Plan ${planId} not found`);
+  }
+
+  // Import applyPatches from immer (lazy import to avoid circular deps)
+  const { applyPatches, enablePatches } = require('immer');
+  enablePatches();
+
+  // Get latest checkpoint metadata
+  const checkpointMetadata = getLatestCheckpointMetadata(planId);
+
+  let basePlan: Plan | null;
+  let patchesAfterCheckpoint: StoredPatchEntry[];
+
+  if (checkpointMetadata) {
+    // Load from checkpoint .db file
+    const checkpointDbPath = getCheckpointDbPath(planId, checkpointMetadata.id);
+    basePlan = loadPlanFromCheckpointDb(checkpointDbPath);
+
+    if (!basePlan) {
+      // Checkpoint file missing - fall back to main db
+      // (This shouldn't happen, but handle gracefully during migration)
+      basePlan = loadPlanFromMainDb(planId);
+      patchesAfterCheckpoint = getPatchesAfter(planId, 0);
+    } else {
+      // Only get patches after the checkpoint
+      patchesAfterCheckpoint = getPatchesAfter(planId, checkpointMetadata.lastPatchId);
+    }
+  } else {
+    // No checkpoint - load from main db and apply all patches
+    basePlan = loadPlanFromMainDb(planId);
+    patchesAfterCheckpoint = getPatchesAfter(planId, 0);
+  }
+
+  if (!basePlan) {
+    throw new Error(`Failed to load base plan for ${planId}`);
+  }
+
+  // Apply patches sequentially
+  let currentPlan = basePlan;
+  for (const patchEntry of patchesAfterCheckpoint) {
+    try {
+      currentPlan = applyPatches(currentPlan, patchEntry.patches);
+    } catch (error) {
+      throw new Error(
+        `Failed to apply patch ${patchEntry.id} (${patchEntry.description}): ${error}`
+      );
+    }
+  }
+
+  // Check for plan from the future
+  const storedVersion = currentPlan.schemaVersion ?? 1;
+  if (storedVersion > CURRENT_SCHEMA_VERSION) {
+    throw new PlanFromFutureError(storedVersion, CURRENT_SCHEMA_VERSION);
+  }
+
+  // Run migrations if needed
+  if (storedVersion < CURRENT_SCHEMA_VERSION) {
+    currentPlan = migratePlan(currentPlan);
+
+    // Create a checkpoint at the new schema version so we don't re-migrate every load
+    // (Only if we have patches, otherwise the base plan is fine)
+    if (patchesAfterCheckpoint.length > 0) {
+      createCheckpointWithMetadata(planId, `Schema migration v${CURRENT_SCHEMA_VERSION}`);
+    } else {
+      // Just save the migrated plan to the main db
+      savePlan(planId, currentPlan);
+    }
+  }
+
+  return currentPlan;
+}
+
+/**
+ * Load plan directly from the main database (plan table).
+ * Used internally by hydratePlan when no checkpoint exists.
+ */
+function loadPlanFromMainDb(planId: string): Plan | null {
+  const db = openPlanDb(planId);
+  try {
+    const row = db.prepare('SELECT data FROM plan WHERE id = ?').get('main') as
+      | { data: string }
+      | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    return JSON.parse(row.data) as Plan;
+  } finally {
+    db.close();
   }
 }

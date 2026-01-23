@@ -62,17 +62,14 @@ function broadcastUISync(message: { type: 'selection-changed'; selectedIds: stri
 export function onUIStoreSyncMessage(callback: (message: UIStoreSyncMessage) => void): () => void {
   const channel = getSyncChannel();
   if (!channel || listenerRegistered) {
-    console.log('[onUIStoreSyncMessage] skipping registration - channel:', !!channel, 'listenerRegistered:', listenerRegistered);
     return () => {};
   }
 
-  console.log('[onUIStoreSyncMessage] registering new listener, tabId:', TAB_ID);
   listenerRegistered = true;
   const handler = (event: MessageEvent<UIStoreSyncMessage>) => callback(event.data);
   channel.addEventListener('message', handler);
 
   return () => {
-    console.log('[onUIStoreSyncMessage] cleaning up listener, tabId:', TAB_ID);
     listenerRegistered = false;
     channel.removeEventListener('message', handler);
   };

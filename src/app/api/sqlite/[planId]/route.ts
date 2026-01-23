@@ -1,11 +1,14 @@
 /**
  * SQLite Plan API Routes
  *
- * Provides REST endpoints for plan CRUD operations using SQLite storage.
+ * Provides REST endpoints for plan operations using SQLite storage.
  *
- * GET /api/sqlite/[planId] - Load a plan
- * PUT /api/sqlite/[planId] - Save a plan
+ * GET /api/sqlite/[planId] - Load a plan (uses hydration: checkpoint + patches)
+ * PUT /api/sqlite/[planId] - Save initial plan state (for createNewPlan/copyPlan only)
  * DELETE /api/sqlite/[planId] - Delete a plan
+ *
+ * NOTE: PUT should only be used for initial plan creation.
+ * Regular mutations use POST /api/sqlite/[planId]/patches to append patches.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -25,7 +28,7 @@ interface RouteParams {
 
 /**
  * GET /api/sqlite/[planId]
- * Load a plan from SQLite storage.
+ * Load a plan from SQLite storage using hydration.
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { planId } = await params;
@@ -57,7 +60,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
 /**
  * PUT /api/sqlite/[planId]
- * Save a plan to SQLite storage.
+ * Save initial plan state to SQLite storage.
+ *
+ * NOTE: This should only be used for initial plan creation (createNewPlan/copyPlan).
+ * Regular mutations should use POST /patches to append patches instead.
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   const { planId } = await params;

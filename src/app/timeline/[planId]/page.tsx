@@ -71,6 +71,7 @@ export default function TimelinePlanPage() {
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const moveCrop = usePlanStore((state) => state.moveCrop);
   const updateCropDates = usePlanStore((state) => state.updateCropDates);
+  const bulkUpdatePlantings = usePlanStore((state) => state.bulkUpdatePlantings);
 
   // Note: Cross-tab sync is handled centrally by PlanStoreProvider
 
@@ -175,6 +176,60 @@ export default function TimelinePlanPage() {
   const handleDateChange = useCallback((groupId: string, startDate: string, endDate: string) => {
     updateCropDates(groupId, startDate, endDate);
   }, [updateCropDates]);
+
+  // Bulk handlers for multi-planting drag operations (single API call for all)
+  const handleBulkCropMove = useCallback((moves: { groupId: string; newResource: string; feetNeeded: number }[]) => {
+    if (moves.length === 0) return;
+
+    // For bulk moves, we need to resolve bed names to UUIDs and validate capacity
+    // For simplicity in drag operations, we'll just update startBed directly
+    // Capacity checking is already done visually during drag
+    const updates: { id: string; changes: { startBed: string | null; bedFeet?: number } }[] = [];
+
+    for (const move of moves) {
+      // Moving to Unassigned
+      if (move.newResource === '') {
+        updates.push({ id: move.groupId, changes: { startBed: null } });
+        continue;
+      }
+
+      // Moving to a real bed - calculate span
+      const { bedSpanInfo, isComplete } = calculateRowSpan(
+        move.feetNeeded,
+        move.newResource,
+        bedMappings.nameGroups,
+        bedMappings.bedLengths
+      );
+
+      if (!isComplete) {
+        // Skip this one if not enough room (shouldn't happen during drag)
+        continue;
+      }
+
+      // Get the bed UUID from the first bed in the span
+      const targetBedName = move.newResource;
+      const bed = currentPlan?.beds ? Object.values(currentPlan.beds).find(b => b.name === targetBedName) : null;
+      if (bed) {
+        const totalBedFeet = bedSpanInfo?.reduce((sum, b) => sum + b.feetUsed, 0) ?? move.feetNeeded;
+        updates.push({ id: move.groupId, changes: { startBed: bed.id, bedFeet: totalBedFeet } });
+      }
+    }
+
+    if (updates.length > 0) {
+      bulkUpdatePlantings(updates);
+    }
+  }, [bulkUpdatePlantings, bedMappings, currentPlan?.beds]);
+
+  const handleBulkCropDateChange = useCallback((dateUpdates: { groupId: string; startDate: string }[]) => {
+    if (dateUpdates.length === 0) return;
+
+    const updates = dateUpdates.map(u => ({
+      id: u.groupId,
+      changes: { fieldStartDate: u.startDate }
+    }));
+
+    bulkUpdatePlantings(updates);
+  }, [bulkUpdatePlantings]);
 
   const duplicatePlanting = usePlanStore((state) => state.duplicatePlanting);
   const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
@@ -364,6 +419,8 @@ export default function TimelinePlanPage() {
         bedLengths={bedMappings.bedLengths}
         onCropMove={handleCropMove}
         onCropDateChange={handleDateChange}
+        onBulkCropMove={handleBulkCropMove}
+        onBulkCropDateChange={handleBulkCropDateChange}
         onDuplicateCrop={handleDuplicateCrop}
         onDeleteCrop={handleDeleteCrop}
         onEditCropConfig={handleEditCropConfig}

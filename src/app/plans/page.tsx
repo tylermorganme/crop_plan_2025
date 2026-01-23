@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseISO } from 'date-fns';
 import {
@@ -13,6 +13,17 @@ import { Z_INDEX } from '@/lib/z-index';
 import CopyPlanModal from '@/components/CopyPlanModal';
 import type { CopyPlanOptions } from '@/components/CopyPlanModal';
 import AppHeader from '@/components/AppHeader';
+
+type SortOption = 'modified-desc' | 'modified-asc' | 'created-desc' | 'created-asc' | 'name-asc' | 'name-desc';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'modified-desc', label: 'Last Modified (Newest)' },
+  { value: 'modified-asc', label: 'Last Modified (Oldest)' },
+  { value: 'created-desc', label: 'Created (Newest)' },
+  { value: 'created-asc', label: 'Created (Oldest)' },
+  { value: 'name-asc', label: 'Name (A-Z)' },
+  { value: 'name-desc', label: 'Name (Z-A)' },
+];
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -50,9 +61,31 @@ export default function PlansPage() {
   const [copyModalPlan, setCopyModalPlan] = useState<{ id: string; name: string } | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('modified-desc');
 
   // Use centralized store state - automatically syncs across tabs
   const plans = usePlanStore((state) => state.planList);
+
+  // Sort plans based on selected option
+  const sortedPlans = useMemo(() => {
+    const sorted = [...plans];
+    switch (sortBy) {
+      case 'modified-desc':
+        return sorted.sort((a, b) => b.lastModified - a.lastModified);
+      case 'modified-asc':
+        return sorted.sort((a, b) => a.lastModified - b.lastModified);
+      case 'created-desc':
+        return sorted.sort((a, b) => b.createdAt - a.createdAt);
+      case 'created-asc':
+        return sorted.sort((a, b) => a.createdAt - b.createdAt);
+      case 'name-asc':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'name-desc':
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      default:
+        return sorted;
+    }
+  }, [plans, sortBy]);
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const createNewPlan = usePlanStore((state) => state.createNewPlan);
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
@@ -174,6 +207,17 @@ export default function PlansPage() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <h1 className="text-xl font-semibold text-gray-900">All Plans</h1>
           <div className="flex items-center gap-3">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
             <button
               onClick={handleCreateBlank}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
@@ -193,7 +237,7 @@ export default function PlansPage() {
 
       {/* Plan List */}
       <div className="max-w-4xl mx-auto px-6 py-8">
-        {plans.length === 0 ? (
+        {sortedPlans.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-4">📋</div>
             <h2 className="text-xl font-medium text-gray-700 mb-2">No plans yet</h2>
@@ -216,7 +260,7 @@ export default function PlansPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {plans.map((plan) => (
+            {sortedPlans.map((plan) => (
               <div
                 key={plan.id}
                 className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all"
