@@ -496,7 +496,97 @@ export default function CropTimeline({
     setAutocompleteIndex(0);
   }, [autocompleteSuggestions.length]);
 
-  // Filter crops by search query and no-variety filter
+  // ==========================================================================
+  // SEARCH DSL: Parse sort directive from search query
+  // ==========================================================================
+  const { sortField, sortDir, filterTerms: parsedFilterTerms } = useMemo(() => {
+    let field: string | null = null;
+    let dir: 'asc' | 'desc' = 'asc';
+    const terms: string[] = [];
+
+    if (searchQuery.trim()) {
+      const allTerms = searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
+      const sortPattern = /^(?:sort|s):(\w+)(?::(asc|desc))?$/i;
+
+      for (const term of allTerms) {
+        const sortMatch = term.match(sortPattern);
+        if (sortMatch) {
+          field = sortMatch[1].toLowerCase();
+          dir = (sortMatch[2]?.toLowerCase() as 'asc' | 'desc') || 'asc';
+        } else {
+          terms.push(term);
+        }
+      }
+    }
+
+    return { sortField: field, sortDir: dir, filterTerms: terms };
+  }, [searchQuery]);
+
+  // ==========================================================================
+  // SEARCH DSL: Revenue calculator for sorting
+  // ==========================================================================
+  const getRevenue = useCallback((crop: TimelineCrop): number => {
+    if (!cropCatalog || !products || !crop.cropConfigId) return 0;
+    const config = cropCatalog[crop.cropConfigId];
+    if (!config) return 0;
+    return calculateConfigRevenue(config, crop.feetNeeded || 50, products) ?? 0;
+  }, [cropCatalog, products]);
+
+  // ==========================================================================
+  // SEARCH DSL: Crop comparator for sorting
+  // ==========================================================================
+  const compareCrops = useCallback((a: TimelineCrop, b: TimelineCrop): number => {
+    if (!sortField) return 0;
+
+    let aVal: number | string = 0;
+    let bVal: number | string = 0;
+
+    switch (sortField) {
+      case 'revenue':
+        aVal = getRevenue(a);
+        bVal = getRevenue(b);
+        break;
+      case 'date':
+      case 'start':
+        aVal = a.startDate || '';
+        bVal = b.startDate || '';
+        break;
+      case 'end':
+        aVal = a.endDate || '';
+        bVal = b.endDate || '';
+        break;
+      case 'name':
+        aVal = a.name?.toLowerCase() || '';
+        bVal = b.name?.toLowerCase() || '';
+        break;
+      case 'bed':
+        aVal = a.resource || '';
+        bVal = b.resource || '';
+        break;
+      case 'category':
+        aVal = a.category?.toLowerCase() || '';
+        bVal = b.category?.toLowerCase() || '';
+        break;
+      case 'feet':
+      case 'size':
+        aVal = a.feetNeeded || 0;
+        bVal = b.feetNeeded || 0;
+        break;
+    }
+
+    // Compare values
+    let cmp: number;
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
+      cmp = aVal.localeCompare(bVal);
+    } else {
+      cmp = (aVal as number) - (bVal as number);
+    }
+    return sortDir === 'desc' ? -cmp : cmp;
+  }, [sortField, sortDir, getRevenue]);
+
+  // ==========================================================================
+  // SEARCH DSL: Filter crops by search terms
+  // ==========================================================================
   const filteredCrops = useMemo(() => {
     let result = crops;
 
@@ -505,136 +595,56 @@ export default function CropTimeline({
       result = result.filter(crop => !crop.seedSource);
     }
 
-    // Then apply search query (multi-term AND search with field-specific syntax)
-    // Also parse sort directives (e.g., sort:revenue:desc)
-    let sortField: string | null = null;
-    let sortDir: 'asc' | 'desc' = 'asc';
-
-    if (searchQuery.trim()) {
-      // Split query into terms - all terms must match somewhere
-      const allTerms = searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
-
-      // Extract sort directive (e.g., sort:revenue:desc, s:date, s:revenue:desc)
-      const sortPattern = /^(?:sort|s):(\w+)(?::(asc|desc))?$/i;
-      const filterTerms: string[] = [];
-
-      for (const term of allTerms) {
-        const sortMatch = term.match(sortPattern);
-        if (sortMatch) {
-          sortField = sortMatch[1].toLowerCase();
-          sortDir = (sortMatch[2]?.toLowerCase() as 'asc' | 'desc') || 'asc';
-        } else {
-          filterTerms.push(term);
-        }
-      }
-
-      // Parse field-specific terms (e.g., bed:A1, group:H, category:greens)
-      // bedGroup is an alias for group
+    // Apply search filter terms
+    if (parsedFilterTerms.length > 0) {
       const fieldPattern = /^(bed|group|bedGroup|category|method|crop|notes):(.+)$/i;
 
-      if (filterTerms.length > 0) {
-        result = result.filter(crop => {
-          // Build searchable text from all relevant fields (for general terms)
-          const searchText = [
-            crop.name,
-            crop.category,
-            crop.cropConfigId,
-            crop.resource,
-            crop.crop,
-            crop.notes,
-            crop.plantingMethod,
-            crop.groupId,
-          ].filter(Boolean).join(' ').toLowerCase();
+      result = result.filter(crop => {
+        const searchText = [
+          crop.name,
+          crop.category,
+          crop.cropConfigId,
+          crop.resource,
+          crop.crop,
+          crop.notes,
+          crop.plantingMethod,
+          crop.groupId,
+        ].filter(Boolean).join(' ').toLowerCase();
 
-          // All terms must match
-          return filterTerms.every(term => {
-            const fieldMatch = term.match(fieldPattern);
-            if (fieldMatch) {
-              const [, field, value] = fieldMatch;
-              switch (field.toLowerCase()) {
-                case 'bed':
-                  return crop.resource?.toLowerCase().includes(value);
-                case 'group':
-                case 'bedgroup':
-                  return getBedGroup(crop.resource || '').toLowerCase().includes(value);
-                case 'category':
-                  return crop.category?.toLowerCase().includes(value);
-                case 'method':
-                  return crop.plantingMethod?.toLowerCase().includes(value);
-                case 'crop':
-                  return crop.crop?.toLowerCase().includes(value) || crop.name?.toLowerCase().includes(value);
-                case 'notes':
-                  return crop.notes?.toLowerCase().includes(value);
-                default:
-                  return searchText.includes(term);
-              }
+        return parsedFilterTerms.every(term => {
+          const fieldMatch = term.match(fieldPattern);
+          if (fieldMatch) {
+            const [, field, value] = fieldMatch;
+            switch (field.toLowerCase()) {
+              case 'bed':
+                return crop.resource?.toLowerCase().includes(value);
+              case 'group':
+              case 'bedgroup':
+                return getBedGroup(crop.resource || '').toLowerCase().includes(value);
+              case 'category':
+                return crop.category?.toLowerCase().includes(value);
+              case 'method':
+                return crop.plantingMethod?.toLowerCase().includes(value);
+              case 'crop':
+                return crop.crop?.toLowerCase().includes(value) || crop.name?.toLowerCase().includes(value);
+              case 'notes':
+                return crop.notes?.toLowerCase().includes(value);
+              default:
+                return searchText.includes(term);
             }
-            // General term - search all fields
-            return searchText.includes(term);
-          });
+          }
+          return searchText.includes(term);
         });
-      }
-    }
-
-    // Apply sorting if specified
-    if (sortField) {
-      // Helper to get revenue for a crop
-      const getRevenue = (crop: TimelineCrop): number => {
-        if (!cropCatalog || !products || !crop.cropConfigId) return 0;
-        const config = cropCatalog[crop.cropConfigId];
-        if (!config) return 0;
-        return calculateConfigRevenue(config, crop.feetNeeded || 50, products) ?? 0;
-      };
-
-      result = [...result].sort((a, b) => {
-        let aVal: number | string = 0;
-        let bVal: number | string = 0;
-
-        switch (sortField) {
-          case 'revenue':
-            aVal = getRevenue(a);
-            bVal = getRevenue(b);
-            break;
-          case 'date':
-          case 'start':
-            aVal = a.startDate || '';
-            bVal = b.startDate || '';
-            break;
-          case 'end':
-            aVal = a.endDate || '';
-            bVal = b.endDate || '';
-            break;
-          case 'name':
-            aVal = a.name?.toLowerCase() || '';
-            bVal = b.name?.toLowerCase() || '';
-            break;
-          case 'bed':
-            aVal = a.resource || '';
-            bVal = b.resource || '';
-            break;
-          case 'category':
-            aVal = a.category?.toLowerCase() || '';
-            bVal = b.category?.toLowerCase() || '';
-            break;
-          case 'feet':
-          case 'size':
-            aVal = a.feetNeeded || 0;
-            bVal = b.feetNeeded || 0;
-            break;
-        }
-
-        // Compare
-        if (typeof aVal === 'string' && typeof bVal === 'string') {
-          const cmp = aVal.localeCompare(bVal);
-          return sortDir === 'desc' ? -cmp : cmp;
-        }
-        const cmp = (aVal as number) - (bVal as number);
-        return sortDir === 'desc' ? -cmp : cmp;
       });
     }
 
+    // Sort filtered crops
+    if (sortField) {
+      result = [...result].sort(compareCrops);
+    }
+
     return result;
-  }, [crops, searchQuery, showNoVarietyOnly]);
+  }, [crops, showNoVarietyOnly, parsedFilterTerms, sortField, compareCrops]);
 
   // During drag: parent applies pending changes to crops prop for preview
   // CropTimeline just renders what it's given
@@ -660,6 +670,7 @@ export default function CropTimeline({
 
   // Group crops by resource with render-time bed spanning
   // Each crop is 1:1 with a planting; we expand to per-bed entries here
+  // Also sort within each bed when sort is active
   const cropsByResource = useMemo(() => {
     const result: Record<string, TimelineCrop[]> = {};
 
@@ -695,8 +706,15 @@ export default function CropTimeline({
       }
     }
 
+    // Sort within each bed when sort is active
+    if (sortField) {
+      for (const bedCrops of Object.values(result)) {
+        bedCrops.sort(compareCrops);
+      }
+    }
+
     return result;
-  }, [effectiveCrops, nameGroups, bedLengths]);
+  }, [effectiveCrops, nameGroups, bedLengths, sortField, compareCrops]);
 
   // Set of resources that have matching crops (for filtering rows)
   const matchingResources = useMemo(() => {
@@ -1206,7 +1224,83 @@ export default function CropTimeline({
     document.addEventListener('mouseup', handleMouseUp);
   }, [unassignedHeight]);
 
+  // ==========================================================================
+  // SEARCH DSL: Compute bed aggregates for sorting
+  // ==========================================================================
+  const bedAggregates = useMemo(() => {
+    const agg: Record<string, { revenue: number; count: number; totalFeet: number }> = {};
+
+    for (const [bed, crops] of Object.entries(cropsByResource)) {
+      if (bed === 'Unassigned') continue;
+      let revenue = 0;
+      let totalFeet = 0;
+      // Use unique groupIds to avoid counting multi-bed plantings multiple times
+      const countedGroups = new Set<string>();
+
+      for (const crop of crops) {
+        // Only count primary bed entry (bedIndex === 1) for aggregates
+        if (crop.bedIndex === 1 || crop.totalBeds === 1) {
+          revenue += getRevenue(crop);
+          totalFeet += crop.feetNeeded || 0;
+        }
+        countedGroups.add(crop.groupId);
+      }
+
+      agg[bed] = { revenue, count: countedGroups.size, totalFeet };
+    }
+
+    return agg;
+  }, [cropsByResource, getRevenue]);
+
+  // ==========================================================================
+  // SEARCH DSL: Bed comparator for sorting bed rows
+  // ==========================================================================
+  const compareBeds = useCallback((a: string, b: string): number => {
+    if (!sortField) return 0;
+
+    const aAgg = bedAggregates[a] || { revenue: 0, count: 0, totalFeet: 0 };
+    const bAgg = bedAggregates[b] || { revenue: 0, count: 0, totalFeet: 0 };
+
+    let aVal: number | string = 0;
+    let bVal: number | string = 0;
+
+    switch (sortField) {
+      case 'revenue':
+        aVal = aAgg.revenue;
+        bVal = bAgg.revenue;
+        break;
+      case 'count':
+        aVal = aAgg.count;
+        bVal = bAgg.count;
+        break;
+      case 'feet':
+      case 'size':
+        aVal = aAgg.totalFeet;
+        bVal = bAgg.totalFeet;
+        break;
+      case 'bed':
+      case 'name':
+        aVal = a;
+        bVal = b;
+        break;
+      default:
+        // For other sort fields (date, category), use first crop's value
+        const aCrops = cropsByResource[a] || [];
+        const bCrops = cropsByResource[b] || [];
+        const aCrop = aCrops[0];
+        const bCrop = bCrops[0];
+        if (aCrop && bCrop) {
+          return compareCrops(aCrop, bCrop);
+        }
+        return 0;
+    }
+
+    const cmp = typeof aVal === 'string' ? aVal.localeCompare(bVal as string) : (aVal - (bVal as number));
+    return sortDir === 'desc' ? -cmp : cmp;
+  }, [sortField, sortDir, bedAggregates, cropsByResource, compareCrops]);
+
   // Build resources list for rendering (filtered by search when active)
+  // Sorts beds within groups when sort is active
   const resourcesForRendering = useMemo(() => {
     if (groups && groups.length > 0) {
       const result: { resource: string; groupName: string | null; groupIndex: number; resourceIndex: number }[] = [];
@@ -1228,15 +1322,20 @@ export default function CropTimeline({
           result.push({ resource: `__collapsed__${group.name}`, groupName: group.name, groupIndex, resourceIndex });
           resourceIndex++;
         } else {
-          for (const bed of group.beds) {
-            if (bed !== 'Unassigned') {
-              // When filtering, only show beds with matching crops
-              if (matchingResources && !matchingResources.has(bed)) {
-                continue;
-              }
-              result.push({ resource: bed, groupName: group.name, groupIndex, resourceIndex });
-              resourceIndex++;
-            }
+          // Get beds for this group, optionally sorted
+          let beds = group.beds.filter(bed => bed !== 'Unassigned');
+          if (matchingResources) {
+            beds = beds.filter(bed => matchingResources.has(bed));
+          }
+
+          // Sort beds within group when sort is active
+          if (sortField) {
+            beds = [...beds].sort(compareBeds);
+          }
+
+          for (const bed of beds) {
+            result.push({ resource: bed, groupName: group.name, groupIndex, resourceIndex });
+            resourceIndex++;
           }
         }
         groupIndex++;
@@ -1245,11 +1344,18 @@ export default function CropTimeline({
       return result;
     }
 
-    return resources
+    // No groups - just flat list of resources
+    let flatResources = resources
       .filter(r => r !== 'Unassigned')
-      .filter(r => !matchingResources || matchingResources.has(r))
-      .map((r, i) => ({ resource: r, groupName: null, groupIndex: 0, resourceIndex: i }));
-  }, [resources, groups, collapsedGroups, matchingResources]);
+      .filter(r => !matchingResources || matchingResources.has(r));
+
+    // Sort when sort is active
+    if (sortField) {
+      flatResources = [...flatResources].sort(compareBeds);
+    }
+
+    return flatResources.map((r, i) => ({ resource: r, groupName: null, groupIndex: 0, resourceIndex: i }));
+  }, [resources, groups, collapsedGroups, matchingResources, sortField, compareBeds]);
 
   // Render a crop box
   const renderCropBox = (crop: TimelineCrop, stackRow: number = 0) => {
@@ -2218,15 +2324,15 @@ export default function CropTimeline({
               <div>
                 <h3 className="font-medium text-gray-900 mb-2">Sorting</h3>
                 <p className="text-sm text-gray-600 mb-2">
-                  Use <code className="bg-gray-200 px-1 rounded">s:field</code> or <code className="bg-gray-200 px-1 rounded">s:field:desc</code> to sort results.
+                  Use <code className="bg-gray-200 px-1 rounded">s:field</code> or <code className="bg-gray-200 px-1 rounded">s:field:desc</code> to sort. Sorts both bed rows (by aggregate) and crops within beds.
                 </p>
                 <div className="bg-gray-50 rounded p-3 space-y-2 text-sm">
-                  <div><code className="bg-gray-200 px-1 rounded">s:revenue:desc</code> → highest revenue first</div>
-                  <div><code className="bg-gray-200 px-1 rounded">s:date</code> → earliest start date first</div>
-                  <div><code className="bg-gray-200 px-1 rounded">greens s:revenue:desc</code> → greens sorted by revenue</div>
+                  <div><code className="bg-gray-200 px-1 rounded">s:revenue:desc</code> → highest revenue beds first</div>
+                  <div><code className="bg-gray-200 px-1 rounded">s:date</code> → beds with earliest crops first</div>
+                  <div><code className="bg-gray-200 px-1 rounded">greens s:revenue:desc</code> → greens beds by revenue</div>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Sort fields: revenue, date, end, name, bed, category, feet (also <code className="bg-gray-200 px-1 rounded">sort:</code> works)
+                  Fields: revenue, date, end, name, bed, category, feet, count
                 </p>
               </div>
 
