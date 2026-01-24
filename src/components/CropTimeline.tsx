@@ -9,8 +9,15 @@ import { useUIStore } from '@/lib/ui-store';
 import { calculateRowSpan } from '@/lib/timeline-data';
 import { getBedGroup } from '@/lib/plan-types';
 import { calculateConfigRevenue } from '@/lib/revenue';
+import type { CropBoxDisplayConfig } from '@/lib/entities/plan';
 import AddToBedPanel from './AddToBedPanel';
 import { PlantingInspectorPanel } from './PlantingInspectorPanel';
+import CropBoxDisplayEditor, {
+  resolveTemplate,
+  DEFAULT_HEADER_TEMPLATE,
+  DEFAULT_DESCRIPTION_TEMPLATE,
+  type CropForDisplay,
+} from './CropBoxDisplayEditor';
 
 // =============================================================================
 // Types
@@ -140,6 +147,10 @@ interface CropTimelineProps {
   onUnlinkFromSequence?: (plantingId: string) => void;
   /** Callback when user wants to edit a sequence's properties */
   onEditSequence?: (sequenceId: string) => void;
+  /** Crop box display configuration */
+  cropBoxDisplay?: CropBoxDisplayConfig;
+  /** Callback when user updates crop box display settings */
+  onUpdateCropBoxDisplay?: (config: CropBoxDisplayConfig) => void;
 }
 
 // =============================================================================
@@ -302,6 +313,8 @@ export default function CropTimeline({
   onCreateSequence,
   onUnlinkFromSequence,
   onEditSequence,
+  cropBoxDisplay,
+  onUpdateCropBoxDisplay,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -346,6 +359,8 @@ export default function CropTimeline({
   const [showAllBeds, setShowAllBeds] = useState(false);
   // State for search help modal
   const [showSearchHelp, setShowSearchHelp] = useState(false);
+  // State for crop box display editor
+  const [showDisplayEditor, setShowDisplayEditor] = useState(false);
   // State for search autocomplete
   const [autocompleteIndex, setAutocompleteIndex] = useState(0);
   // State for hover preview when browsing crops in AddToBedPanel
@@ -756,12 +771,18 @@ export default function CropTimeline({
   }, [crops]);
 
   // Calculate stacking for crops in a lane
+  // When sortField is active (non-date), use the input order (already sorted by revenue, etc.)
+  // This gives priority row assignment to higher-ranked crops in the sort
   const calculateStacking = useCallback((laneCrops: TimelineCrop[]) => {
     if (laneCrops.length === 0) return { rows: {} as Record<string, number>, maxRow: 1 };
 
-    const sorted = [...laneCrops].sort((a, b) =>
-      parseDate(a.startDate).getTime() - parseDate(b.startDate).getTime()
-    );
+    // When sorting by a non-date field, preserve the input order (already sorted)
+    // Otherwise sort by date for traditional timeline stacking
+    const sorted = sortField && sortField !== 'date' && sortField !== 'start' && sortField !== 'end'
+      ? laneCrops  // Already sorted by revenue/name/etc - preserve order
+      : [...laneCrops].sort((a, b) =>
+          parseDate(a.startDate).getTime() - parseDate(b.startDate).getTime()
+        );
 
     const rows: Record<string, number> = {};
     const rowEndTimes: number[] = [];
@@ -789,7 +810,7 @@ export default function CropTimeline({
     }
 
     return { rows, maxRow: Math.max(1, rowEndTimes.length) };
-  }, []);
+  }, [sortField]);
 
   // Find overlapping crops - checks each resource for time overlaps
   const overlappingIds = useMemo(() => {
@@ -1619,11 +1640,21 @@ export default function CropTimeline({
                       </div>
                     )}
                   </div>
-                  {/* Main content */}
+                  {/* Main content - uses configurable templates */}
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-xs truncate">{crop.name}</div>
-                    <div className="text-[9px] opacity-90">
-                      {formatDate(crop.startDate)} - {formatDate(crop.endDate)}
+                    <div className="font-bold text-xs truncate">
+                      {resolveTemplate(
+                        cropBoxDisplay?.headerTemplate ?? DEFAULT_HEADER_TEMPLATE,
+                        crop as CropForDisplay,
+                        { cropCatalog, products }
+                      )}
+                    </div>
+                    <div className="text-[9px] opacity-90 truncate">
+                      {resolveTemplate(
+                        cropBoxDisplay?.descriptionTemplate ?? DEFAULT_DESCRIPTION_TEMPLATE,
+                        crop as CropForDisplay,
+                        { cropCatalog, products }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1897,6 +1928,15 @@ export default function CropTimeline({
           title="Search help"
         >
           ?
+        </button>
+
+        {/* Crop box display settings */}
+        <button
+          onClick={() => setShowDisplayEditor(true)}
+          className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-300 rounded hover:bg-gray-100"
+          title="Configure crop box display"
+        >
+          Display
         </button>
 
         {/* Show all beds toggle */}
@@ -2358,6 +2398,17 @@ export default function CropTimeline({
           </div>
         </div>
       )}
+
+      {/* Crop Box Display Editor */}
+      <CropBoxDisplayEditor
+        isOpen={showDisplayEditor}
+        onClose={() => setShowDisplayEditor(false)}
+        config={cropBoxDisplay}
+        onSave={(config) => onUpdateCropBoxDisplay?.(config)}
+        sampleCrops={crops.slice(0, 20)}
+        cropCatalog={cropCatalog}
+        products={products}
+      />
     </div>
   );
 }
