@@ -43,6 +43,7 @@ next-env.d.ts
 
 # plan data (user data, not committed)
 /data/plans/
+/data/logs/
 
 # python virtual environments
 .venv/

@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, unlinkSync, readdirSync, readFileSync, writeFile
 import type { Plan } from './entities/plan';
 import { CURRENT_SCHEMA_VERSION, migratePlan } from './migrations';
 import type { Patch } from 'immer';
+import { logEvent } from './server-logger';
 
 // =============================================================================
 // TYPES
@@ -252,6 +253,8 @@ export function appendPatch(planId: string, entry: Omit<StoredPatchEntry, 'id' |
       entry.description
     );
 
+    const patchId = result.lastInsertRowid as number;
+
     // Enforce limit - delete oldest patches if over limit
     const countResult = db.prepare('SELECT COUNT(*) as count FROM patches').get() as { count: number };
     if (countResult.count > MAX_STORED_PATCHES) {
@@ -263,7 +266,15 @@ export function appendPatch(planId: string, entry: Omit<StoredPatchEntry, 'id' |
       `).run(deleteCount);
     }
 
-    return result.lastInsertRowid as number;
+    // Log patch save
+    logEvent({
+      event: 'patch_save',
+      planId,
+      description: entry.description,
+      patchId,
+    });
+
+    return patchId;
   } finally {
     db.close();
   }
@@ -996,7 +1007,9 @@ export function undoPatch(planId: string): { description: string } | null {
       throw error;
     }
 
-    return { description: row.description ?? '' };
+    const description = row.description ?? '';
+    logEvent({ event: 'undo', planId, description });
+    return { description };
   } finally {
     db.close();
   }
@@ -1057,7 +1070,9 @@ export function redoPatch(planId: string): { description: string } | null {
       throw error;
     }
 
-    return { description: row.description ?? '' };
+    const description = row.description ?? '';
+    logEvent({ event: 'redo', planId, description });
+    return { description };
   } finally {
     db.close();
   }
@@ -1075,16 +1090,20 @@ export function getPatchesSinceCheckpointCount(planId: string): number {
 
 /**
  * Create a checkpoint and record its metadata.
- * This hydrates the current state, saves it to the plan table,
- * then copies the .db file as a checkpoint.
+ * This saves the current state to the plan table, then copies the .db file as a checkpoint.
+ *
+ * @param planId - The plan ID
+ * @param name - Human-readable checkpoint name
+ * @param plan - Optional: pre-hydrated plan to use. If not provided, will hydrate from storage.
+ *               Pass this when you already have the current plan state to avoid redundant hydration.
  */
-export function createCheckpointWithMetadata(planId: string, name: string): string {
+export function createCheckpointWithMetadata(planId: string, name: string, plan?: Plan): string {
   if (!planExists(planId)) {
     throw new Error(`Plan ${planId} not found`);
   }
 
-  // First, hydrate the plan to get current state
-  const currentPlan = hydratePlan(planId);
+  // Use provided plan or hydrate from storage
+  const currentPlan = plan ?? hydratePlan(planId);
 
   // Save hydrated state to plan table
   savePlan(planId, currentPlan);
@@ -1171,6 +1190,8 @@ function loadPlanFromCheckpointDb(checkpointDbPath: string): Plan | null {
  * @throws Error if plan doesn't exist or hydration fails
  */
 export function hydratePlan(planId: string): Plan {
+  const startTime = Date.now();
+
   if (!planExists(planId)) {
     throw new Error(`Plan ${planId} not found`);
   }
@@ -1228,18 +1249,35 @@ export function hydratePlan(planId: string): Plan {
   }
 
   // Run migrations if needed
-  if (storedVersion < CURRENT_SCHEMA_VERSION) {
+  const didMigrate = storedVersion < CURRENT_SCHEMA_VERSION;
+  if (didMigrate) {
+    const migrationStart = Date.now();
     currentPlan = migratePlan(currentPlan);
 
-    // Create a checkpoint at the new schema version so we don't re-migrate every load
-    // (Only if we have patches, otherwise the base plan is fine)
-    if (patchesAfterCheckpoint.length > 0) {
-      createCheckpointWithMetadata(planId, `Schema migration v${CURRENT_SCHEMA_VERSION}`);
-    } else {
-      // Just save the migrated plan to the main db
-      savePlan(planId, currentPlan);
-    }
+    // Log migration event
+    logEvent({
+      event: 'migration',
+      planId,
+      fromVersion: storedVersion,
+      toVersion: CURRENT_SCHEMA_VERSION,
+      durationMs: Date.now() - migrationStart,
+    });
+
+    // Save the migrated plan to the main db
+    // NOTE: We save directly instead of calling createCheckpointWithMetadata
+    // because that function calls hydratePlan, which would cause infinite recursion.
+    savePlan(planId, currentPlan);
   }
+
+  // Log hydration event
+  logEvent({
+    event: 'hydration',
+    planId,
+    checkpointId: checkpointMetadata?.id ?? null,
+    patchesApplied: patchesAfterCheckpoint.length,
+    migrated: didMigrate,
+    durationMs: Date.now() - startTime,
+  });
 
   return currentPlan;
 }
