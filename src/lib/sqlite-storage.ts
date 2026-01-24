@@ -900,7 +900,7 @@ export function getLatestCheckpointMetadata(planId: string): CheckpointMetadata 
         `
         SELECT id, name, last_patch_id, created_at
         FROM checkpoint_metadata
-        ORDER BY last_patch_id DESC
+        ORDER BY created_at DESC
         LIMIT 1
       `
       )

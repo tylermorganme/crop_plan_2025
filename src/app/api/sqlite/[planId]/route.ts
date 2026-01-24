@@ -21,6 +21,7 @@ import {
 } from '@/lib/sqlite-storage';
 import { CURRENT_SCHEMA_VERSION } from '@/lib/migrations';
 import type { Plan } from '@/lib/entities/plan';
+import { logEvent } from '@/lib/server-logger';
 
 interface RouteParams {
   params: Promise<{ planId: string }>;
@@ -31,18 +32,22 @@ interface RouteParams {
  * Load a plan from SQLite storage using hydration.
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
+  const startTime = Date.now();
   const { planId } = await params;
 
   try {
     const plan = loadPlan(planId);
 
     if (!plan) {
+      logEvent({ event: 'api_call', method: 'GET', path: `/api/sqlite/${planId}`, planId, status: 404, durationMs: Date.now() - startTime });
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
+    logEvent({ event: 'api_call', method: 'GET', path: `/api/sqlite/${planId}`, planId, status: 200, durationMs: Date.now() - startTime });
     return NextResponse.json({ plan });
   } catch (error) {
     if (error instanceof PlanFromFutureError) {
+      logEvent({ event: 'api_call', method: 'GET', path: `/api/sqlite/${planId}`, planId, status: 409, durationMs: Date.now() - startTime });
       return NextResponse.json(
         {
           error: 'Plan requires newer app version',
@@ -54,6 +59,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     }
 
     console.error('Failed to load plan:', error);
+    logEvent({ event: 'api_call', method: 'GET', path: `/api/sqlite/${planId}`, planId, status: 500, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Failed to load plan' }, { status: 500 });
   }
 }
@@ -66,6 +72,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  * Regular mutations should use POST /patches to append patches instead.
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const startTime = Date.now();
   const { planId } = await params;
 
   try {
@@ -73,11 +80,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const plan = body.plan as Plan;
 
     if (!plan) {
+      logEvent({ event: 'api_call', method: 'PUT', path: `/api/sqlite/${planId}`, planId, status: 400, durationMs: Date.now() - startTime });
       return NextResponse.json({ error: 'Missing plan data' }, { status: 400 });
     }
 
     // Ensure plan has required fields
     if (!plan.id || !plan.metadata) {
+      logEvent({ event: 'api_call', method: 'PUT', path: `/api/sqlite/${planId}`, planId, status: 400, durationMs: Date.now() - startTime });
       return NextResponse.json({ error: 'Invalid plan structure' }, { status: 400 });
     }
 
@@ -91,9 +100,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Update plan index
     updatePlanIndex(plan);
 
+    logEvent({ event: 'api_call', method: 'PUT', path: `/api/sqlite/${planId}`, planId, status: 200, durationMs: Date.now() - startTime });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Failed to save plan:', error);
+    logEvent({ event: 'api_call', method: 'PUT', path: `/api/sqlite/${planId}`, planId, status: 500, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Failed to save plan' }, { status: 500 });
   }
 }
@@ -103,18 +114,22 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  * Delete a plan from SQLite storage.
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+  const startTime = Date.now();
   const { planId } = await params;
 
   try {
     const deleted = deletePlan(planId);
 
     if (!deleted) {
+      logEvent({ event: 'api_call', method: 'DELETE', path: `/api/sqlite/${planId}`, planId, status: 404, durationMs: Date.now() - startTime });
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
     }
 
+    logEvent({ event: 'api_call', method: 'DELETE', path: `/api/sqlite/${planId}`, planId, status: 200, durationMs: Date.now() - startTime });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Failed to delete plan:', error);
+    logEvent({ event: 'api_call', method: 'DELETE', path: `/api/sqlite/${planId}`, planId, status: 500, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Failed to delete plan' }, { status: 500 });
   }
 }

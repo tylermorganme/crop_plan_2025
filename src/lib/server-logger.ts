@@ -60,6 +60,14 @@ export type LogEvent =
       operation: string;
       error: string;
       stack?: string;
+    }
+  | {
+      event: 'api_call';
+      method: string;
+      path: string;
+      planId?: string;
+      status: number;
+      durationMs: number;
     };
 
 /**

@@ -18,6 +18,7 @@ import {
   getPatchCount,
   getRedoStackCount,
 } from '@/lib/sqlite-storage';
+import { logEvent } from '@/lib/server-logger';
 
 interface RouteParams {
   params: Promise<{ planId: string }>;
@@ -28,9 +29,11 @@ interface RouteParams {
  * Performs a redo operation on the plan.
  */
 export async function POST(_request: NextRequest, { params }: RouteParams) {
+  const startTime = Date.now();
   const { planId } = await params;
 
   if (!planExists(planId)) {
+    logEvent({ event: 'api_call', method: 'POST', path: `/api/sqlite/${planId}/redo`, planId, status: 404, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
   }
 
@@ -38,6 +41,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     // Move last redo entry back to patches (simplified - no plan load/save)
     const result = redoPatch(planId);
     if (!result) {
+      logEvent({ event: 'api_call', method: 'POST', path: `/api/sqlite/${planId}/redo`, planId, status: 400, durationMs: Date.now() - startTime });
       return NextResponse.json({ error: 'Nothing to redo' }, { status: 400 });
     }
 
@@ -48,6 +52,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     const canUndo = getPatchCount(planId) > 0;
     const canRedo = getRedoStackCount(planId) > 0;
 
+    logEvent({ event: 'api_call', method: 'POST', path: `/api/sqlite/${planId}/redo`, planId, status: 200, durationMs: Date.now() - startTime });
     return NextResponse.json({
       ok: true,
       plan,
@@ -57,6 +62,7 @@ export async function POST(_request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error('Failed to redo:', error);
+    logEvent({ event: 'api_call', method: 'POST', path: `/api/sqlite/${planId}/redo`, planId, status: 500, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Failed to redo' }, { status: 500 });
   }
 }

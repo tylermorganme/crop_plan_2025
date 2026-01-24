@@ -17,6 +17,7 @@ import {
   fromStoredPatch,
 } from '@/lib/sqlite-storage';
 import type { PatchEntry } from '@/lib/plan-types';
+import { logEvent } from '@/lib/server-logger';
 
 interface RouteParams {
   params: Promise<{ planId: string }>;
@@ -27,18 +28,22 @@ interface RouteParams {
  * Returns all patches for a plan, converted to client format.
  */
 export async function GET(_request: NextRequest, { params }: RouteParams) {
+  const startTime = Date.now();
   const { planId } = await params;
 
   if (!planExists(planId)) {
+    logEvent({ event: 'api_call', method: 'GET', path: `/api/sqlite/${planId}/patches`, planId, status: 404, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
   }
 
   try {
     const storedPatches = getPatches(planId);
     const patches = storedPatches.map(fromStoredPatch);
+    logEvent({ event: 'api_call', method: 'GET', path: `/api/sqlite/${planId}/patches`, planId, status: 200, durationMs: Date.now() - startTime });
     return NextResponse.json({ patches });
   } catch (error) {
     console.error('Failed to get patches:', error);
+    logEvent({ event: 'api_call', method: 'GET', path: `/api/sqlite/${planId}/patches`, planId, status: 500, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Failed to get patches' }, { status: 500 });
   }
 }
@@ -48,6 +53,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  * Appends a new patch entry.
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
+  const startTime = Date.now();
   const { planId } = await params;
 
   try {
@@ -55,6 +61,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const entry = body.patch as PatchEntry;
 
     if (!entry || !entry.patches || !entry.inversePatches) {
+      logEvent({ event: 'api_call', method: 'POST', path: `/api/sqlite/${planId}/patches`, planId, status: 400, durationMs: Date.now() - startTime });
       return NextResponse.json({ error: 'Invalid patch data' }, { status: 400 });
     }
 
@@ -62,9 +69,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     clearRedoStack(planId);
 
     const id = appendPatch(planId, toStoredPatch(entry));
+    logEvent({ event: 'api_call', method: 'POST', path: `/api/sqlite/${planId}/patches`, planId, status: 200, durationMs: Date.now() - startTime });
     return NextResponse.json({ ok: true, id });
   } catch (error) {
     console.error('Failed to append patch:', error);
+    logEvent({ event: 'api_call', method: 'POST', path: `/api/sqlite/${planId}/patches`, planId, status: 500, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Failed to append patch' }, { status: 500 });
   }
 }
@@ -74,13 +83,16 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
  * Clears all patches for a plan.
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
+  const startTime = Date.now();
   const { planId } = await params;
 
   try {
     clearPatches(planId);
+    logEvent({ event: 'api_call', method: 'DELETE', path: `/api/sqlite/${planId}/patches`, planId, status: 200, durationMs: Date.now() - startTime });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Failed to clear patches:', error);
+    logEvent({ event: 'api_call', method: 'DELETE', path: `/api/sqlite/${planId}/patches`, planId, status: 500, durationMs: Date.now() - startTime });
     return NextResponse.json({ error: 'Failed to clear patches' }, { status: 500 });
   }
 }
