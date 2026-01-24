@@ -357,6 +357,8 @@ export default function CropTimeline({
   const [showNoVarietyOnly, setShowNoVarietyOnly] = useState(initialNoVarietyFilter ?? false);
   // When true, show all bed rows even when filtering (for drag-to-assign workflow)
   const [showAllBeds, setShowAllBeds] = useState(false);
+  // When true, sort bed rows by aggregate values; when false only sort crops within beds
+  const [sortBedRows, setSortBedRows] = useState(true);
   // State for search help modal
   const [showSearchHelp, setShowSearchHelp] = useState(false);
   // State for crop box display editor
@@ -1349,8 +1351,8 @@ export default function CropTimeline({
             beds = beds.filter(bed => matchingResources.has(bed));
           }
 
-          // Sort beds within group when sort is active (but not during drag)
-          if (sortField && !draggedCropId) {
+          // Sort beds within group when sort is active (but not during drag, and only if sortBedRows is enabled)
+          if (sortField && !draggedCropId && sortBedRows) {
             beds = [...beds].sort(compareBeds);
           }
 
@@ -1370,13 +1372,13 @@ export default function CropTimeline({
       .filter(r => r !== 'Unassigned')
       .filter(r => !matchingResources || matchingResources.has(r));
 
-    // Sort when sort is active (but not during drag)
-    if (sortField && !draggedCropId) {
+    // Sort when sort is active (but not during drag, and only if sortBedRows is enabled)
+    if (sortField && !draggedCropId && sortBedRows) {
       flatResources = [...flatResources].sort(compareBeds);
     }
 
     return flatResources.map((r, i) => ({ resource: r, groupName: null, groupIndex: 0, resourceIndex: i }));
-  }, [resources, groups, collapsedGroups, matchingResources, sortField, compareBeds, draggedCropId]);
+  }, [resources, groups, collapsedGroups, matchingResources, sortField, compareBeds, draggedCropId, sortBedRows]);
 
   // Render a crop box
   const renderCropBox = (crop: TimelineCrop, stackRow: number = 0) => {
@@ -1951,6 +1953,21 @@ export default function CropTimeline({
         >
           All beds
         </button>
+
+        {/* Sort bed rows toggle - only show when sort is active */}
+        {sortField && (
+          <button
+            onClick={() => setSortBedRows(!sortBedRows)}
+            className={`px-2 py-1 text-xs font-medium rounded border ${
+              sortBedRows
+                ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                : 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'
+            }`}
+            title={sortBedRows ? 'Stop sorting bed rows (only sort crops within beds)' : 'Sort bed rows by aggregate values'}
+          >
+            Sort beds
+          </button>
+        )}
 
         {/* No Variety filter button */}
         {noVarietyCount > 0 && (
