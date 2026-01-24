@@ -7,8 +7,12 @@ import {
   calculateSeedToHarvest,
   calculateHarvestWindow,
   calculateDaysInCells,
+  buildYieldContext,
+  evaluateYieldFormula,
 } from '@/lib/entities/crop-config';
+import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
 import type { Planting, CropConfig } from '@/lib/plan-types';
+import type { Product } from '@/lib/entities/product';
 import type { TimelineCrop } from '@/lib/entities/plan';
 import type { SeedSource } from '@/lib/entities/planting';
 
@@ -239,6 +243,7 @@ export interface PlantingInspectorPanelProps {
   usedVarietyIds?: Set<string>;
   usedMixIds?: Set<string>;
   bedLengths?: Record<string, number>;
+  products?: Record<string, Product>;
 
   // UI options
   showTimingEdits?: boolean;
@@ -263,6 +268,7 @@ export function PlantingInspectorPanel({
   usedVarietyIds,
   usedMixIds,
   bedLengths,
+  products,
   showTimingEdits = false,
   className = '',
 }: PlantingInspectorPanelProps) {
@@ -493,6 +499,55 @@ export function PlantingInspectorPanel({
               )}
             </div>
           </div>
+
+          {/* Structure, Yield, Revenue - compact row */}
+          {baseConfig && (
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Structure</div>
+                <div className="text-sm text-gray-900 py-1">
+                  {baseConfig.growingStructure === 'greenhouse' ? 'Greenhouse' :
+                   baseConfig.growingStructure === 'high-tunnel' ? 'High Tunnel' : 'Field'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Yield</div>
+                <div className="text-sm text-gray-900 py-1">
+                  {(() => {
+                    if (!baseConfig.productYields?.length) return '—';
+                    let totalYield = 0;
+                    let unit = '';
+                    for (const py of baseConfig.productYields) {
+                      if (!py.yieldFormula) continue;
+                      const ctx = buildYieldContext(baseConfig, crop.feetNeeded || 50);
+                      ctx.harvests = py.numberOfHarvests ?? 1;
+                      const result = evaluateYieldFormula(py.yieldFormula, ctx);
+                      if (result.value !== null) {
+                        totalYield += result.value;
+                        // Get unit from product
+                        if (products && !unit) {
+                          const product = products[py.productId];
+                          if (product) unit = product.unit;
+                        }
+                      }
+                    }
+                    if (totalYield === 0) return '—';
+                    return `${totalYield.toLocaleString(undefined, { maximumFractionDigits: 0 })}${unit ? ` ${unit}` : ''}`;
+                  })()}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Revenue</div>
+                <div className="text-sm text-gray-900 py-1">
+                  {(() => {
+                    if (!products) return '—';
+                    const revenue = calculateConfigRevenue(baseConfig, crop.feetNeeded || 50, products);
+                    return revenue ? formatCurrency(revenue) : '—';
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Dates - Seeding, Field (editable), Remove */}
           {(() => {

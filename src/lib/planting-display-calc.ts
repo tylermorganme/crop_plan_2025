@@ -274,6 +274,7 @@ export function expandToTimelineCrops(
     category: config.category,
     feetNeeded,
     structure: config.growingStructure,
+    growingStructure: config.growingStructure as 'field' | 'greenhouse' | 'high-tunnel' | undefined,
     plantingId: planting.id,
     cropConfigId: planting.cropConfigId,
     totalBeds: 1,   // Default - computed at render time

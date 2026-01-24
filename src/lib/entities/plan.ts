@@ -57,6 +57,31 @@ export interface PlanChange {
 }
 
 /**
+ * Configuration for crop box display in timeline.
+ * Uses token-based templates for header and description lines.
+ *
+ * Available tokens:
+ * - {name} - Crop name
+ * - {configId} - Config identifier
+ * - {category} - Category
+ * - {startDate} - Field start date (formatted)
+ * - {endDate} - End date (formatted)
+ * - {harvestDate} - Harvest start date (formatted)
+ * - {feet} - Total feet needed
+ * - {revenue} - Calculated revenue
+ * - {method} - Planting method (DS/TP/PE)
+ * - {bed} - Current bed name
+ * - {beds} - Bed span (e.g., "1/3")
+ * - {seq} - Sequence slot (e.g., "S2")
+ */
+export interface CropBoxDisplayConfig {
+  /** Template for the header line. Default: "{name}" */
+  headerTemplate: string;
+  /** Template for the description line. Default: "{startDate} - {endDate}" */
+  descriptionTemplate: string;
+}
+
+/**
  * TimelineCrop - Display format for timeline rendering (one entry per bed).
  * Computed at runtime from Planting[] via expandPlantingsToTimelineCrops().
  */
@@ -71,6 +96,8 @@ export interface TimelineCrop {
   textColor?: string;
   feetNeeded?: number;
   structure?: string;
+  /** Growing structure with proper typing for display */
+  growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
   plantingId?: string;
   cropConfigId: string;
   totalBeds: number;
@@ -145,6 +172,9 @@ export interface Plan {
 
   /** Planting sequences for succession planting (keyed by ID) */
   sequences?: Record<string, PlantingSequence>;
+
+  /** Crop box display configuration for timeline */
+  cropBoxDisplay?: CropBoxDisplayConfig;
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];

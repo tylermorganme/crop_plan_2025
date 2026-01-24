@@ -348,6 +348,14 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
       const rawMethod = assignment.dsTp;
       const plantingMethod = rawMethod ? dsTpMap[rawMethod] : baseConfig?.plantingMethod ?? undefined;
 
+      // Map structure string to typed growingStructure
+      const growingStructureMap: Record<string, 'field' | 'greenhouse' | 'high-tunnel'> = {
+        'Field': 'field', 'field': 'field',
+        'Greenhouse': 'greenhouse', 'greenhouse': 'greenhouse', 'GH': 'greenhouse',
+        'Tunnel': 'high-tunnel', 'high-tunnel': 'high-tunnel', 'HT': 'high-tunnel', 'High Tunnel': 'high-tunnel',
+      };
+      const growingStructure = growingStructureMap[structure] || 'field';
+
       bedSpanInfo.forEach((info, index) => {
         timelineCrops.push({
           id: `${assignment.identifier}_bed${index}`,
@@ -359,6 +367,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
           category,
           feetNeeded,
           structure,
+          growingStructure,
           plantingId: assignment.identifier,
           cropConfigId: assignment.crop,
           totalBeds: bedSpanInfo.length,

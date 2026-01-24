@@ -2298,6 +2298,7 @@ export default function CropTimeline({
           usedVarietyIds={usedVarietyIds}
           usedMixIds={usedMixIds}
           bedLengths={bedLengths}
+          products={products}
           showTimingEdits={true}
           className="w-80 bg-white border-l flex flex-col shrink-0 h-full overflow-hidden"
         />
