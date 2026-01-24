@@ -1349,8 +1349,8 @@ export default function CropTimeline({
             beds = beds.filter(bed => matchingResources.has(bed));
           }
 
-          // Sort beds within group when sort is active
-          if (sortField) {
+          // Sort beds within group when sort is active (but not during drag)
+          if (sortField && !draggedCropId) {
             beds = [...beds].sort(compareBeds);
           }
 
@@ -1370,13 +1370,13 @@ export default function CropTimeline({
       .filter(r => r !== 'Unassigned')
       .filter(r => !matchingResources || matchingResources.has(r));
 
-    // Sort when sort is active
-    if (sortField) {
+    // Sort when sort is active (but not during drag)
+    if (sortField && !draggedCropId) {
       flatResources = [...flatResources].sort(compareBeds);
     }
 
     return flatResources.map((r, i) => ({ resource: r, groupName: null, groupIndex: 0, resourceIndex: i }));
-  }, [resources, groups, collapsedGroups, matchingResources, sortField, compareBeds]);
+  }, [resources, groups, collapsedGroups, matchingResources, sortField, compareBeds, draggedCropId]);
 
   // Render a crop box
   const renderCropBox = (crop: TimelineCrop, stackRow: number = 0) => {
