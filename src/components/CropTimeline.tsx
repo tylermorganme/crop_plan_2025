@@ -843,6 +843,69 @@ export default function CropTimeline({
     return overlapping;
   }, [cropsByResource]);
 
+  // Calculate over-capacity time ranges for each bed
+  // Returns { [bedName]: Array<{ start: string; end: string }> }
+  const overCapacityRanges = useMemo(() => {
+    const result: Record<string, Array<{ start: Date; end: Date }>> = {};
+
+    for (const [bed, crops] of Object.entries(cropsByResource)) {
+      if (bed === 'Unassigned' || crops.length < 2) continue;
+
+      const bedCapacity = bedLengths[bed] ?? 50;
+
+      // Build events: +feet at start, -feet at end
+      type Event = { date: Date; delta: number };
+      const events: Event[] = [];
+
+      for (const crop of crops) {
+        const feet = crop.feetUsed ?? crop.feetNeeded ?? 50;
+        const start = parseDate(crop.startDate);
+        const end = parseDate(crop.endDate);
+        events.push({ date: start, delta: feet });
+        // End is exclusive (crop leaves the day after endDate)
+        const endNext = new Date(end);
+        endNext.setDate(endNext.getDate() + 1);
+        events.push({ date: endNext, delta: -feet });
+      }
+
+      // Sort events by date
+      events.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      // Walk through events tracking cumulative feet
+      let cumulative = 0;
+      let overStart: Date | null = null;
+      const ranges: Array<{ start: Date; end: Date }> = [];
+
+      for (let i = 0; i < events.length; i++) {
+        const event = events[i];
+        const prevCumulative = cumulative;
+        cumulative += event.delta;
+
+        // Started being over capacity
+        if (prevCumulative <= bedCapacity && cumulative > bedCapacity) {
+          overStart = event.date;
+        }
+        // Stopped being over capacity
+        if (prevCumulative > bedCapacity && cumulative <= bedCapacity && overStart) {
+          ranges.push({ start: overStart, end: event.date });
+          overStart = null;
+        }
+      }
+
+      // Handle case where still over capacity at end
+      if (overStart) {
+        const lastEvent = events[events.length - 1];
+        ranges.push({ start: overStart, end: lastEvent.date });
+      }
+
+      if (ranges.length > 0) {
+        result[bed] = ranges;
+      }
+    }
+
+    return result;
+  }, [cropsByResource, bedLengths]);
+
   // Generate month headers
   const monthHeaders = useMemo(() => {
     const headers: { month: string; year: number; width: number }[] = [];
@@ -2240,6 +2303,27 @@ export default function CropTimeline({
                     onDrop={(e) => handleDrop(e, resource)}
                     onClick={handleTimelineCellClick}
                   >
+                    {/* Over-capacity warning backgrounds */}
+                    {overCapacityRanges[resource]?.map((range, idx) => {
+                      const startStr = range.start.toISOString().split('T')[0];
+                      const endStr = range.end.toISOString().split('T')[0];
+                      const pos = getTimelinePosition(startStr, endStr);
+                      if (!pos) return null;
+                      return (
+                        <div
+                          key={`overcap-${idx}`}
+                          className="absolute top-0 bottom-0"
+                          style={{
+                            left: pos.left,
+                            width: pos.width,
+                            backgroundColor: 'rgba(251, 191, 36, 0.3)', // amber-400 with opacity
+                            zIndex: Z_INDEX.BASE,
+                            pointerEvents: 'none',
+                          }}
+                          title={`Over capacity: ${startStr} to ${endStr}`}
+                        />
+                      );
+                    })}
                     {/* Today line */}
                     {todayPosition !== null && (
                       <div
