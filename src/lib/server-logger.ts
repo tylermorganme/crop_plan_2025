@@ -49,6 +49,12 @@ export type LogEvent =
       description: string;
     }
   | {
+      event: 'checkpoint';
+      planId: string;
+      checkpointId: string;
+      name: string;
+    }
+  | {
       event: 'error';
       planId: string;
       operation: string;

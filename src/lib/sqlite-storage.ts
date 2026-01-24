@@ -1130,6 +1130,14 @@ export function createCheckpointWithMetadata(planId: string, name: string, plan?
   // Record metadata in database
   recordCheckpointMetadata(planId, checkpointId, name, lastPatchId);
 
+  // Log checkpoint creation
+  logEvent({
+    event: 'checkpoint',
+    planId,
+    checkpointId,
+    name,
+  });
+
   return checkpointId;
 }
 
@@ -1264,10 +1272,14 @@ export function hydratePlan(planId: string): Plan {
     });
 
     // Save the migrated plan to the main db
-    // NOTE: We save directly instead of calling createCheckpointWithMetadata
-    // because that function calls hydratePlan, which would cause infinite recursion.
     savePlan(planId, currentPlan);
+
+    // Create checkpoint after migration to avoid re-migrating on future loads
+    // Pass the plan to avoid recursion (createCheckpointWithMetadata would otherwise call hydratePlan)
+    createCheckpointWithMetadata(planId, `post-migration-v${CURRENT_SCHEMA_VERSION}`, currentPlan);
   }
+
+  const hydrationDuration = Date.now() - startTime;
 
   // Log hydration event
   logEvent({
@@ -1276,8 +1288,15 @@ export function hydratePlan(planId: string): Plan {
     checkpointId: checkpointMetadata?.id ?? null,
     patchesApplied: patchesAfterCheckpoint.length,
     migrated: didMigrate,
-    durationMs: Date.now() - startTime,
+    durationMs: hydrationDuration,
   });
+
+  // Auto-checkpoint on slow hydration (self-healing performance)
+  // Skip if we just created a checkpoint from migration
+  const SLOW_HYDRATION_THRESHOLD_MS = 300;
+  if (!didMigrate && hydrationDuration > SLOW_HYDRATION_THRESHOLD_MS) {
+    createCheckpointWithMetadata(planId, 'auto-checkpoint-slow-hydration', currentPlan);
+  }
 
   return currentPlan;
 }
