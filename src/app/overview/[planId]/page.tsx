@@ -305,8 +305,19 @@ function calculateStacking(crops: CropBlock[]): StackResult {
 /**
  * A single bed row with crops positioned by date.
  * Fixed row height - overlapping crops shrink vertically to fit.
+ * Acts as a drop target for unassigned plantings.
  */
-function BedRowComponent({ row, isEven }: { row: BedRow; isEven: boolean }) {
+function BedRowComponent({
+  row,
+  isEven,
+  onAssignPlanting,
+}: {
+  row: BedRow;
+  isEven: boolean;
+  onAssignPlanting?: (plantingId: string, bedId: string) => void;
+}) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
   // Calculate stacking for overlapping crops
   const stacks: StackResult = useMemo(() => calculateStacking(row.crops), [row.crops]);
 
@@ -317,17 +328,56 @@ function BedRowComponent({ row, isEven }: { row: BedRow; isEven: boolean }) {
   const cropHeight = (ROW_HEIGHT - 2) / maxLevels;
 
   // Alternate row background for visual distinction
-  const rowBg = isEven ? 'bg-gray-50' : 'bg-white';
+  const rowBg = isDragOver ? 'bg-blue-100' : (isEven ? 'bg-gray-50' : 'bg-white');
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.type === 'unassigned-planting' && data.plantingId && onAssignPlanting) {
+        onAssignPlanting(data.plantingId, row.bedId);
+      }
+    } catch {
+      // Invalid drop data, ignore
+    }
+  }, [onAssignPlanting, row.bedId]);
 
   return (
-    <div className={`flex items-stretch border-b border-gray-100 ${rowBg} overflow-hidden`} style={{ height: ROW_HEIGHT }}>
+    <div
+      className={`flex items-stretch border-b border-gray-100 ${rowBg} overflow-hidden transition-colors`}
+      style={{ height: ROW_HEIGHT }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* Bed label */}
       <div className="w-12 flex-shrink-0 text-xs font-medium text-gray-600 pr-2 text-right flex items-center justify-end">
         {row.bedName}
       </div>
 
-      {/* Timeline area */}
-      <div className="flex-1 relative overflow-hidden">
+      {/* Timeline area with month grid lines */}
+      <div className="flex-1 relative overflow-hidden pointer-events-none">
+        {/* Month grid lines */}
+        {MONTH_LABELS.map((_, i) => (
+          <div
+            key={i}
+            className="absolute top-0 bottom-0 border-l border-gray-100"
+            style={{ left: `${(i / 12) * 100}%` }}
+          />
+        ))}
+        {/* Crop blocks */}
         {stacks.crops.map((crop) => {
           const topPx = crop.stackLevel * cropHeight + 1;
 
@@ -365,11 +415,44 @@ function BedRowComponent({ row, isEven }: { row: BedRow; isEven: boolean }) {
 /** Fixed width for each bed group in the grid */
 const GROUP_WIDTH = 280;
 
+/** Month labels for timeline headers */
+const MONTH_LABELS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+
 /**
- * A bed group section with header and bed rows.
+ * Month header row for bed groups - shows J F M A M J J A S O N D
+ */
+function MonthHeaderRow() {
+  return (
+    <div className="flex items-center border-b border-gray-200" style={{ height: 16 }}>
+      {/* Spacer for bed label column */}
+      <div className="w-12 flex-shrink-0" />
+      {/* Month labels */}
+      <div className="flex-1 flex">
+        {MONTH_LABELS.map((label, i) => (
+          <div
+            key={i}
+            className="text-[8px] text-gray-400 text-center border-l border-gray-100 first:border-l-0"
+            style={{ width: `${100 / 12}%` }}
+          >
+            {label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A bed group section with header, month labels, and bed rows.
  * Fixed width for grid layout.
  */
-function BedGroupComponent({ section }: { section: BedGroupSection }) {
+function BedGroupComponent({
+  section,
+  onAssignPlanting,
+}: {
+  section: BedGroupSection;
+  onAssignPlanting?: (plantingId: string, bedId: string) => void;
+}) {
   return (
     <div style={{ width: GROUP_WIDTH }}>
       {/* Group header */}
@@ -377,10 +460,16 @@ function BedGroupComponent({ section }: { section: BedGroupSection }) {
         {section.groupName}
       </div>
 
-      {/* Beds */}
+      {/* Month headers + Beds */}
       <div className="bg-white border border-t-0 border-gray-200 rounded-b">
+        <MonthHeaderRow />
         {section.beds.map((bed, index) => (
-          <BedRowComponent key={bed.bedId} row={bed} isEven={index % 2 === 0} />
+          <BedRowComponent
+            key={bed.bedId}
+            row={bed}
+            isEven={index % 2 === 0}
+            onAssignPlanting={onAssignPlanting}
+          />
         ))}
         {section.beds.length === 0 && (
           <div className="h-6 flex items-center justify-center text-xs text-gray-400">
@@ -400,6 +489,159 @@ function getRowLetter(groupName: string): string {
   // Try patterns like "Row A", "A Block", "Block A", or just "A"
   const match = groupName.match(/\b([A-Z])\b/i);
   return match ? match[1].toUpperCase() : groupName.charAt(0).toUpperCase();
+}
+
+// =============================================================================
+// UNASSIGNED PLANTINGS PANEL (Sidebar Gantt Chart)
+// =============================================================================
+
+interface EnrichedUnassignedCrop {
+  id: string;
+  plantingId?: string;
+  name: string;
+  cropName: string;
+  category: string;
+  identifier: string;
+  startDate: string;
+  endDate: string;
+  feetNeeded: number;
+}
+
+/**
+ * Gantt chart panel showing unassigned plantings for the selected year.
+ * Supports search filtering and displays crops as colored boxes.
+ */
+function UnassignedPlantingsPanel({
+  plantings,
+  year,
+  searchQuery,
+}: {
+  plantings: EnrichedUnassignedCrop[];
+  year: number;
+  searchQuery: string;
+}) {
+  // Filter plantings based on search query
+  const filteredPlantings = useMemo(() => {
+    if (!searchQuery.trim()) return plantings;
+
+    const terms = searchQuery.toLowerCase().trim().split(/\s+/);
+
+    return plantings.filter(p => {
+      const searchText = [
+        p.cropName,
+        p.category,
+        p.identifier,
+        p.name,
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      return terms.every(term => {
+        if (term.startsWith('-') && term.length > 1) {
+          return !searchText.includes(term.slice(1));
+        }
+        return searchText.includes(term);
+      });
+    });
+  }, [plantings, searchQuery]);
+
+  // Sort by start date
+  const sortedPlantings = useMemo(() => {
+    return [...filteredPlantings].sort((a, b) =>
+      a.startDate.localeCompare(b.startDate)
+    );
+  }, [filteredPlantings]);
+
+  if (sortedPlantings.length === 0) {
+    return (
+      <div className="p-4 text-center text-gray-500 text-sm">
+        {searchQuery ? 'No matching unassigned plantings' : 'No unassigned plantings for this year'}
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-xs">
+      {/* Month headers */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 flex" style={{ height: 20 }}>
+        <div className="w-24 flex-shrink-0 px-1 text-gray-500 font-medium flex items-center">
+          Crop
+        </div>
+        <div className="flex-1 flex">
+          {MONTH_LABELS.map((label, i) => (
+            <div
+              key={i}
+              className="text-[9px] text-gray-400 text-center border-l border-gray-100 first:border-l-0 flex items-center justify-center"
+              style={{ width: `${100 / 12}%` }}
+            >
+              {label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Planting rows */}
+      {sortedPlantings.map((planting, index) => {
+        const startPercent = dateToYearPercent(planting.startDate, year);
+        const endPercent = dateToYearPercent(planting.endDate, year);
+        const widthPercent = Math.max(2, endPercent - startPercent);
+        const colors = getColorForCategory(planting.category);
+        const isEven = index % 2 === 0;
+
+        return (
+          <div
+            key={planting.id}
+            className={`flex items-center border-b border-gray-100 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
+            style={{ height: 28 }}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData('application/json', JSON.stringify({
+                type: 'unassigned-planting',
+                plantingId: planting.plantingId || planting.id,
+              }));
+              e.dataTransfer.effectAllowed = 'move';
+            }}
+          >
+            {/* Crop label */}
+            <div
+              className="w-24 flex-shrink-0 px-1 truncate text-gray-700 cursor-grab"
+              title={`${planting.cropName} - ${planting.identifier}`}
+            >
+              {planting.cropName}
+            </div>
+
+            {/* Timeline area */}
+            <div className="flex-1 relative">
+              {/* Month grid lines */}
+              {MONTH_LABELS.map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute top-0 bottom-0 border-l border-gray-100"
+                  style={{ left: `${(i / 12) * 100}%` }}
+                />
+              ))}
+              {/* Crop box */}
+              <div
+                className="absolute top-1 bottom-1 rounded-sm overflow-hidden cursor-grab"
+                style={{
+                  left: `${Math.max(0, startPercent)}%`,
+                  width: `${widthPercent}%`,
+                  backgroundColor: colors.bg,
+                  minWidth: 4,
+                }}
+                title={`${planting.identifier}: ${planting.startDate} to ${planting.endDate} (${planting.feetNeeded}ft)`}
+              >
+                <span
+                  className="text-[9px] px-0.5 truncate block whitespace-nowrap"
+                  style={{ color: colors.text }}
+                >
+                  {planting.identifier}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 /**
@@ -701,7 +943,19 @@ function LayoutEditorModal({
  * Farm grid layout - arranges bed groups in rows with tabs for different fields.
  * Now uses configurable layout stored in localStorage.
  */
-function FarmGrid({ sections, year }: { sections: BedGroupSection[]; year: number }) {
+function FarmGrid({
+  sections,
+  year,
+  baseYear,
+  onYearChange,
+  onAssignPlanting,
+}: {
+  sections: BedGroupSection[];
+  year: number;
+  baseYear: number;
+  onYearChange: (year: number) => void;
+  onAssignPlanting?: (plantingId: string, bedId: string) => void;
+}) {
   const [layout, setLayout] = useState<FieldLayoutConfig>(DEFAULT_LAYOUT);
   const [showEditor, setShowEditor] = useState(false);
 
@@ -739,11 +993,30 @@ function FarmGrid({ sections, year }: { sections: BedGroupSection[]; year: numbe
     saveLayoutToStorage(newLayout);
   }, [layout]);
 
+  // Year options: baseYear - 1, baseYear, baseYear + 1
+  const yearOptions = [baseYear - 1, baseYear, baseYear + 1];
+
   return (
     <div className="flex flex-col gap-4">
       {/* Tab bar */}
       <div className="flex items-center gap-4">
-        <div className="text-lg font-semibold text-gray-700">{year}</div>
+        {/* Year toggle */}
+        <div className="flex gap-0.5 bg-gray-100 p-0.5 rounded-lg">
+          {yearOptions.map(y => (
+            <button
+              key={y}
+              onClick={() => onYearChange(y)}
+              className={`px-2 py-0.5 text-sm font-medium rounded transition-colors ${
+                year === y
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+        {/* Field tabs */}
         <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
           {layout.fields.map(field => (
             <button
@@ -781,7 +1054,11 @@ function FarmGrid({ sections, year }: { sections: BedGroupSection[]; year: numbe
             return (
               <div key={laneIndex} className="flex gap-3 flex-wrap">
                 {laneSections.map((section: BedGroupSection) => (
-                  <BedGroupComponent key={section.groupId} section={section} />
+                  <BedGroupComponent
+                    key={section.groupId}
+                    section={section}
+                    onAssignPlanting={onAssignPlanting}
+                  />
                 ))}
               </div>
             );
@@ -817,10 +1094,15 @@ export default function OverviewPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [sidebarWidth, setSidebarWidth] = useState(350);
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
+  const updatePlanting = usePlanStore((state) => state.updatePlanting);
 
   // Load the specific plan by ID
   useEffect(() => {
@@ -857,10 +1139,10 @@ export default function OverviewPage() {
     loadPlan();
   }, [planId, currentPlan?.id, loadPlanById]);
 
-  // Build overview data
-  const { overviewData, displayYear } = useMemo(() => {
+  // Determine base year from plan data
+  const baseYear = useMemo(() => {
     if (!currentPlan?.beds || !currentPlan?.bedGroups) {
-      return { overviewData: [], displayYear: new Date().getFullYear() };
+      return new Date().getFullYear();
     }
 
     const crops = getTimelineCropsFromPlan(currentPlan);
@@ -885,16 +1167,94 @@ export default function OverviewPage() {
       }
     }
 
-    return {
-      overviewData: buildOverviewData(
-        currentPlan.beds,
-        currentPlan.bedGroups,
-        crops,
-        year
-      ),
-      displayYear: year,
-    };
+    return year;
   }, [currentPlan]);
+
+  // Initialize selectedYear when baseYear is determined
+  useEffect(() => {
+    if (selectedYear === null && baseYear) {
+      setSelectedYear(baseYear);
+    }
+  }, [baseYear, selectedYear]);
+
+  // Build overview data for the selected year
+  const overviewData = useMemo(() => {
+    if (!currentPlan?.beds || !currentPlan?.bedGroups || selectedYear === null) {
+      return [];
+    }
+
+    const crops = getTimelineCropsFromPlan(currentPlan);
+
+    return buildOverviewData(
+      currentPlan.beds,
+      currentPlan.bedGroups,
+      crops,
+      selectedYear
+    );
+  }, [currentPlan, selectedYear]);
+
+  // Year for display (use selectedYear or fall back to baseYear)
+  const displayYear = selectedYear ?? baseYear;
+
+  // Get unassigned plantings with computed dates for the selected year
+  const unassignedPlantings = useMemo(() => {
+    if (!currentPlan || selectedYear === null) return [];
+
+    const crops = getTimelineCropsFromPlan(currentPlan);
+    const catalog = currentPlan.cropCatalog ?? {};
+
+    // Filter to unassigned crops that overlap with the selected year
+    return crops
+      .filter(crop => {
+        if (crop.resource) return false; // Skip assigned crops
+        if (!crop.startDate || !crop.endDate) return false;
+
+        const start = parseISO(crop.startDate);
+        const end = parseISO(crop.endDate);
+        const yearStart = new Date(selectedYear, 0, 1);
+        const yearEnd = new Date(selectedYear, 11, 31);
+
+        // Check if crop overlaps with selected year
+        return start <= yearEnd && end >= yearStart;
+      })
+      .map(crop => {
+        const config = catalog[crop.cropConfigId];
+        return {
+          ...crop,
+          cropName: config?.crop ?? crop.name,
+          category: config?.category ?? crop.category ?? '',
+          identifier: config?.identifier ?? crop.cropConfigId,
+        };
+      });
+  }, [currentPlan, selectedYear]);
+
+  // Resize handler for sidebar
+  const handleSidebarResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingSidebar(true);
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const delta = startX - moveEvent.clientX; // Reversed because dragging left increases width
+      const newWidth = Math.max(250, Math.min(600, startWidth + delta));
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingSidebar(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [sidebarWidth]);
+
+  // Handler for assigning a planting to a bed via drag-drop
+  const handleAssignPlanting = useCallback((plantingId: string, bedId: string) => {
+    updatePlanting(plantingId, { startBed: bedId });
+  }, [updatePlanting]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -956,22 +1316,75 @@ export default function OverviewPage() {
         </div>
       </header>
 
-      {/* Content */}
-      <main className="px-4 sm:px-6 lg:px-8 py-6">
-        {overviewData.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-            <p className="text-gray-500">No beds configured for this plan.</p>
-            <Link
-              href={`/beds/${planId}`}
-              className="text-blue-600 hover:text-blue-800 text-sm"
-            >
-              Configure beds
-            </Link>
+      {/* Content - flex layout with map and sidebar */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Main map area */}
+        <main className="flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-6">
+          {overviewData.length === 0 ? (
+            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+              <p className="text-gray-500">No beds configured for this plan.</p>
+              <Link
+                href={`/beds/${planId}`}
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                Configure beds
+              </Link>
+            </div>
+          ) : (
+            <FarmGrid
+              sections={overviewData}
+              year={displayYear}
+              baseYear={baseYear}
+              onYearChange={setSelectedYear}
+              onAssignPlanting={handleAssignPlanting}
+            />
+          )}
+        </main>
+
+        {/* Resize handle */}
+        <div
+          className={`w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex-shrink-0 ${
+            isResizingSidebar ? 'bg-gray-400' : ''
+          }`}
+          onMouseDown={handleSidebarResizeStart}
+        >
+          <div className="h-full flex items-center justify-center">
+            <div className="w-0.5 h-8 bg-gray-400 rounded" />
           </div>
-        ) : (
-          <FarmGrid sections={overviewData} year={displayYear} />
-        )}
-      </main>
+        </div>
+
+        {/* Unassigned plantings sidebar */}
+        <aside
+          className="flex-shrink-0 bg-white border-l border-gray-200 overflow-hidden flex flex-col"
+          style={{ width: sidebarWidth }}
+        >
+          {/* Sidebar header */}
+          <div className="p-3 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-semibold text-gray-700">
+                Unassigned ({unassignedPlantings.length})
+              </h2>
+            </div>
+            {/* Search input */}
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search crops..."
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Unassigned plantings gantt */}
+          <div className="flex-1 overflow-auto">
+            <UnassignedPlantingsPanel
+              plantings={unassignedPlantings}
+              year={displayYear}
+              searchQuery={searchQuery}
+            />
+          </div>
+        </aside>
+      </div>
     </div>
     </>
   );
