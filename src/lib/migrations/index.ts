@@ -342,9 +342,10 @@ function migrateV6ToV7(rawPlan: unknown): unknown {
 }
 
 /**
- * v7 → v8: Add colorDefs field for named color palettes
- * Simply adds an empty colorDefs record if not present.
- * No data transformation needed (additive change).
+ * v7 → v8: Add colorDefs field (DEPRECATED - feature was removed)
+ * This migration added colorDefs for a named color palette feature that was
+ * subsequently removed. Keeping this migration for schema compatibility with
+ * existing plans that have empty colorDefs: {} in their data.
  */
 function migrateV7ToV8(rawPlan: unknown): unknown {
   const plan = rawPlan as { colorDefs?: Record<string, unknown>; [key: string]: unknown };

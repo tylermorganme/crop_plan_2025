@@ -169,6 +169,23 @@ CREATE TABLE patches (
 - New mutation clears redo stack
 - 50 patch history limit; periodic checkpoints for fast hydration
 
+### Cross-Tab Sync
+
+Multiple browser tabs viewing the same plan stay synchronized via BroadcastChannel:
+
+```
+Tab A mutates plan → appendPatch() → SQLite saved → broadcasts 'plan-updated'
+                                                            ↓
+Tab B receives message → loadPlanById(id, { force: true }) → reloads from SQLite
+```
+
+**Key files:**
+- `sqlite-client.ts`: `withBroadcast()` wraps mutations, `onSyncMessage()` subscribes
+- `plan-store.ts`: `initializePlanStore()` sets up cross-tab listener
+- `ui-store.ts`: Separate BroadcastChannel for UI state (selection, search, toast)
+
+**Important:** `loadPlanById` has an early return to avoid race conditions during same-tab navigation. For cross-tab sync, pass `{ force: true }` to bypass this check and reload from SQLite.
+
 ### Entity CRUD Pattern
 
 All entity creation flows through functions in `src/lib/entities/`:
