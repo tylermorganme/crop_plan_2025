@@ -3,10 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { usePlanStore } from '@/lib/plan-store';
-import { DEFAULT_CROP_COLOR, getCropId, getCropColors } from '@/lib/entities/crop';
-import { getColorDefId } from '@/lib/entities/color-def';
+import { DEFAULT_CROP_COLOR, getCropId } from '@/lib/entities/crop';
 import type { Crop } from '@/lib/entities/crop';
-import type { ColorDef } from '@/lib/entities/color-def';
 import AppHeader from '@/components/AppHeader';
 
 /**
@@ -31,6 +29,17 @@ function getContrastingTextColor(bgColor: string): string {
   return getLuminance(bgColor) > 0.5 ? '#000000' : '#ffffff';
 }
 
+/**
+ * Get unique colors from crops for filtering.
+ */
+function getUniqueColors(crops: Crop[]): string[] {
+  const colors = new Set<string>();
+  for (const crop of crops) {
+    colors.add(crop.bgColor);
+  }
+  return Array.from(colors).sort();
+}
+
 export default function CropsPage() {
   const params = useParams();
   const planId = params.planId as string;
@@ -41,24 +50,21 @@ export default function CropsPage() {
     updateCrop,
     addCropEntity,
     deleteCropEntity,
-    addColorDef,
-    updateColorDef,
-    deleteColorDef,
+    bulkUpdateCropEntities,
   } = usePlanStore();
 
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [colorFilter, setColorFilter] = useState<string | null>(null);
   const [editingCropId, setEditingCropId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [showAddCropForm, setShowAddCropForm] = useState(false);
   const [newCropName, setNewCropName] = useState('');
 
-  // Color palette state
-  const [showAddColorForm, setShowAddColorForm] = useState(false);
-  const [newColorName, setNewColorName] = useState('');
-  const [newColorBg, setNewColorBg] = useState('#4a9d4a');
-  const [editingColorId, setEditingColorId] = useState<string | null>(null);
-  const [editingColorName, setEditingColorName] = useState('');
+  // Multi-select state
+  const [selectedCropIds, setSelectedCropIds] = useState<Set<string>>(new Set());
+  const [bulkBgColor, setBulkBgColor] = useState('#4a9d4a');
+  const [bulkTextColor, setBulkTextColor] = useState('#ffffff');
 
   // Load plan on mount
   useEffect(() => {
@@ -75,22 +81,26 @@ export default function CropsPage() {
     );
   }, [currentPlan?.crops]);
 
-  // Sort color definitions alphabetically
-  const sortedColorDefs = useMemo(() => {
-    if (!currentPlan?.colorDefs) return [];
-    return Object.values(currentPlan.colorDefs).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-  }, [currentPlan?.colorDefs]);
+  // Get unique colors for filter
+  const uniqueColors = useMemo(() => getUniqueColors(sortedCrops), [sortedCrops]);
 
-  // Filter crops by search
+  // Filter crops by search and color
   const filteredCrops = useMemo(() => {
-    if (!searchQuery.trim()) return sortedCrops;
-    const query = searchQuery.toLowerCase().trim();
-    return sortedCrops.filter(crop =>
-      crop.name.toLowerCase().includes(query)
-    );
-  }, [sortedCrops, searchQuery]);
+    let result = sortedCrops;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(crop =>
+        crop.name.toLowerCase().includes(query)
+      );
+    }
+
+    if (colorFilter) {
+      result = result.filter(crop => crop.bgColor === colorFilter);
+    }
+
+    return result;
+  }, [sortedCrops, searchQuery, colorFilter]);
 
   // Count crops by usage in configs
   const cropUsage = useMemo(() => {
@@ -107,37 +117,18 @@ export default function CropsPage() {
     return usage;
   }, [currentPlan]);
 
-  // Count crops using each color definition
-  const colorDefUsage = useMemo(() => {
-    if (!currentPlan?.crops) return new Map<string, number>();
-    const usage = new Map<string, number>();
-
-    for (const crop of Object.values(currentPlan.crops)) {
-      if (crop.colorDefId) {
-        usage.set(crop.colorDefId, (usage.get(crop.colorDefId) || 0) + 1);
-      }
-    }
-
-    return usage;
-  }, [currentPlan?.crops]);
-
-  // Get resolved colors for a crop (handles colorDefId)
-  const getResolvedColors = (crop: Crop) => {
-    return getCropColors(currentPlan?.crops, crop.name, currentPlan?.colorDefs);
-  };
+  // Clear selection when filter changes
+  useEffect(() => {
+    setSelectedCropIds(new Set());
+  }, [searchQuery, colorFilter]);
 
   const handleBgColorChange = (cropId: string, newColor: string) => {
     const textColor = getContrastingTextColor(newColor);
-    // Clear colorDefId when setting custom color
-    updateCrop(cropId, { bgColor: newColor, textColor, colorDefId: null });
+    updateCrop(cropId, { bgColor: newColor, textColor });
   };
 
   const handleTextColorChange = (cropId: string, newColor: string) => {
     updateCrop(cropId, { textColor: newColor });
-  };
-
-  const handleColorDefSelect = (cropId: string, colorDefId: string | null) => {
-    updateCrop(cropId, { colorDefId });
   };
 
   const handleStartRename = (crop: Crop) => {
@@ -192,58 +183,46 @@ export default function CropsPage() {
     }
   };
 
-  // Color definition handlers
-  const handleAddColorDef = () => {
-    if (!newColorName.trim()) return;
-
-    const name = newColorName.trim();
-    const id = getColorDefId(name);
-
-    if (currentPlan?.colorDefs?.[id]) {
-      alert(`Color "${name}" already exists`);
-      return;
-    }
-
-    addColorDef({
-      id,
-      name,
-      bgColor: newColorBg,
-      textColor: getContrastingTextColor(newColorBg),
+  // Multi-select handlers
+  const toggleSelect = (cropId: string) => {
+    setSelectedCropIds(prev => {
+      const next = new Set(prev);
+      if (next.has(cropId)) {
+        next.delete(cropId);
+      } else {
+        next.add(cropId);
+      }
+      return next;
     });
-
-    setNewColorName('');
-    setNewColorBg('#4a9d4a');
-    setShowAddColorForm(false);
   };
 
-  const handleColorDefBgChange = (colorDefId: string, newColor: string) => {
-    const textColor = getContrastingTextColor(newColor);
-    updateColorDef(colorDefId, { bgColor: newColor, textColor });
+  const selectAll = () => {
+    setSelectedCropIds(new Set(filteredCrops.map(c => c.id)));
   };
 
-  const handleStartColorRename = (colorDef: ColorDef) => {
-    setEditingColorId(colorDef.id);
-    setEditingColorName(colorDef.name);
+  const selectNone = () => {
+    setSelectedCropIds(new Set());
   };
 
-  const handleSaveColorRename = () => {
-    if (editingColorId && editingColorName.trim()) {
-      updateColorDef(editingColorId, { name: editingColorName.trim() });
-    }
-    setEditingColorId(null);
-    setEditingColorName('');
+  const handleBulkColorChange = async () => {
+    if (selectedCropIds.size === 0) return;
+
+    const updates = Array.from(selectedCropIds).map(cropId => ({
+      cropId,
+      changes: {
+        bgColor: bulkBgColor,
+        textColor: bulkTextColor,
+      },
+    }));
+
+    await bulkUpdateCropEntities(updates);
+    setSelectedCropIds(new Set());
   };
 
-  const handleDeleteColorDef = (colorDef: ColorDef) => {
-    const usageCount = colorDefUsage.get(colorDef.id) || 0;
-    if (usageCount > 0) {
-      alert(`Cannot delete "${colorDef.name}" - it's used by ${usageCount} crop(s)`);
-      return;
-    }
-
-    if (confirm(`Delete color "${colorDef.name}"?`)) {
-      deleteColorDef(colorDef.id);
-    }
+  // When bulk bg color changes, auto-calculate text color
+  const handleBulkBgColorChange = (color: string) => {
+    setBulkBgColor(color);
+    setBulkTextColor(getContrastingTextColor(color));
   };
 
   if (isLoading) {
@@ -268,29 +247,65 @@ export default function CropsPage() {
     );
   }
 
+  const hasSelection = selectedCropIds.size > 0;
+
   return (
     <>
       <AppHeader />
-      <div className="h-[calc(100vh-51px)] flex bg-gray-50">
-        {/* Main Content - Crops */}
-        <div className="flex-1 overflow-auto px-6 py-8">
+      <div className="h-[calc(100vh-51px)] overflow-auto bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-8">
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Crops</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Manage crop colors and assign named color palettes
+              Manage crop colors - select multiple to bulk edit
             </p>
           </div>
 
-          {/* Search and Add */}
-          <div className="flex items-center gap-4 mb-4">
+          {/* Search, Filter, and Add */}
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search crops..."
-              className="flex-1 max-w-sm px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 min-w-[200px] max-w-sm px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+
+            {/* Color filter */}
+            {uniqueColors.length > 1 && (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500 mr-1">Filter:</span>
+                <button
+                  onClick={() => setColorFilter(null)}
+                  className={`w-6 h-6 rounded border text-xs ${
+                    colorFilter === null
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  title="Show all"
+                >
+                  All
+                </button>
+                {uniqueColors.slice(0, 8).map(color => (
+                  <button
+                    key={color}
+                    onClick={() => setColorFilter(colorFilter === color ? null : color)}
+                    className={`w-6 h-6 rounded border-2 ${
+                      colorFilter === color
+                        ? 'border-blue-500 ring-2 ring-blue-200'
+                        : 'border-white hover:border-gray-300'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    title={`Filter by this color`}
+                  />
+                ))}
+                {uniqueColors.length > 8 && (
+                  <span className="text-xs text-gray-400">+{uniqueColors.length - 8}</span>
+                )}
+              </div>
+            )}
+
             <button
               onClick={() => setShowAddCropForm(true)}
               className="px-3 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50"
@@ -298,6 +313,55 @@ export default function CropsPage() {
               Add Crop
             </button>
           </div>
+
+          {/* Bulk Action Bar */}
+          {hasSelection && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center gap-4 flex-wrap">
+              <div className="text-sm font-medium text-blue-900">
+                {selectedCropIds.size} selected
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-blue-700">Set color:</span>
+                <input
+                  type="color"
+                  value={bulkBgColor}
+                  onChange={(e) => handleBulkBgColorChange(e.target.value)}
+                  className="w-8 h-8 cursor-pointer rounded border border-gray-300"
+                  title="Background color"
+                />
+                <input
+                  type="color"
+                  value={bulkTextColor}
+                  onChange={(e) => setBulkTextColor(e.target.value)}
+                  className="w-8 h-8 cursor-pointer rounded border border-gray-300"
+                  title="Text color"
+                />
+                <div
+                  className="px-3 py-1 rounded text-sm font-medium"
+                  style={{ backgroundColor: bulkBgColor, color: bulkTextColor }}
+                >
+                  Preview
+                </div>
+              </div>
+
+              <button
+                onClick={handleBulkColorChange}
+                className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Apply Color
+              </button>
+
+              <div className="flex-1" />
+
+              <button
+                onClick={selectNone}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Clear selection
+              </button>
+            </div>
+          )}
 
           {/* Add Crop Form */}
           {showAddCropForm && (
@@ -338,29 +402,59 @@ export default function CropsPage() {
 
           {/* Crops List */}
           <div className="bg-white rounded-lg border border-gray-200">
+            {/* Select all header */}
+            {filteredCrops.length > 0 && (
+              <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-100 bg-gray-50">
+                <input
+                  type="checkbox"
+                  checked={selectedCropIds.size === filteredCrops.length && filteredCrops.length > 0}
+                  onChange={() => {
+                    if (selectedCropIds.size === filteredCrops.length) {
+                      selectNone();
+                    } else {
+                      selectAll();
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-500">
+                  {selectedCropIds.size === filteredCrops.length ? 'Deselect all' : 'Select all'}
+                </span>
+              </div>
+            )}
+
             {filteredCrops.length === 0 ? (
               <div className="text-center text-gray-500 py-12">
-                {searchQuery ? 'No matching crops found' : 'No crops defined yet'}
+                {searchQuery || colorFilter ? 'No matching crops found' : 'No crops defined yet'}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
                 {filteredCrops.map((crop) => {
                   const usageCount = cropUsage.get(crop.id) || 0;
                   const isEditing = editingCropId === crop.id;
-                  const resolvedColors = getResolvedColors(crop);
-                  const hasColorDef = !!crop.colorDefId;
+                  const isSelected = selectedCropIds.has(crop.id);
 
                   return (
                     <div
                       key={crop.id}
-                      className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50"
+                      className={`flex items-center gap-4 px-4 py-3 hover:bg-gray-50 ${
+                        isSelected ? 'bg-blue-50' : ''
+                      }`}
                     >
+                      {/* Checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelect(crop.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+
                       {/* Color preview chip */}
                       <div
                         className="w-24 px-3 py-1.5 rounded text-sm font-medium text-center truncate flex-shrink-0"
                         style={{
-                          backgroundColor: resolvedColors.bg,
-                          color: resolvedColors.text,
+                          backgroundColor: crop.bgColor,
+                          color: crop.textColor,
                         }}
                         title={crop.name}
                       >
@@ -398,40 +492,22 @@ export default function CropsPage() {
                         )}
                       </div>
 
-                      {/* Color selection - dropdown or custom */}
+                      {/* Color pickers */}
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <select
-                          value={crop.colorDefId || ''}
-                          onChange={(e) => handleColorDefSelect(crop.id, e.target.value || null)}
-                          className="px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[120px]"
-                        >
-                          <option value="">Custom</option>
-                          {sortedColorDefs.map((cd) => (
-                            <option key={cd.id} value={cd.id}>
-                              {cd.name}
-                            </option>
-                          ))}
-                        </select>
-
-                        {/* Show color pickers only for custom colors */}
-                        {!hasColorDef && (
-                          <>
-                            <input
-                              type="color"
-                              value={crop.bgColor || DEFAULT_CROP_COLOR.bg}
-                              onChange={(e) => handleBgColorChange(crop.id, e.target.value)}
-                              className="w-8 h-8 cursor-pointer rounded border border-gray-300"
-                              title="Background color"
-                            />
-                            <input
-                              type="color"
-                              value={crop.textColor || DEFAULT_CROP_COLOR.text}
-                              onChange={(e) => handleTextColorChange(crop.id, e.target.value)}
-                              className="w-8 h-8 cursor-pointer rounded border border-gray-300"
-                              title="Text color"
-                            />
-                          </>
-                        )}
+                        <input
+                          type="color"
+                          value={crop.bgColor}
+                          onChange={(e) => handleBgColorChange(crop.id, e.target.value)}
+                          className="w-8 h-8 cursor-pointer rounded border border-gray-300"
+                          title="Background color"
+                        />
+                        <input
+                          type="color"
+                          value={crop.textColor}
+                          onChange={(e) => handleTextColorChange(crop.id, e.target.value)}
+                          className="w-8 h-8 cursor-pointer rounded border border-gray-300"
+                          title="Text color"
+                        />
                       </div>
 
                       {/* Delete button */}
@@ -460,165 +536,7 @@ export default function CropsPage() {
           <div className="mt-4 text-sm text-gray-500">
             {filteredCrops.length} crop{filteredCrops.length !== 1 ? 's' : ''}
             {searchQuery && ` matching "${searchQuery}"`}
-          </div>
-        </div>
-
-        {/* Right Side Panel - Color Palette */}
-        <div className="w-80 border-l border-gray-200 bg-white overflow-auto">
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Color Palette</h2>
-              <button
-                onClick={() => setShowAddColorForm(true)}
-                className="px-2 py-1 text-xs font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50"
-              >
-                Add
-              </button>
-            </div>
-
-            {/* Add Color Form */}
-            {showAddColorForm && (
-              <div className="bg-gray-50 rounded-lg border border-gray-200 p-3 mb-4">
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={newColorName}
-                    onChange={(e) => setNewColorName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAddColorDef();
-                      if (e.key === 'Escape') setShowAddColorForm(false);
-                    }}
-                    placeholder="Name (e.g., Cucurbit)"
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    autoFocus
-                  />
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={newColorBg}
-                      onChange={(e) => setNewColorBg(e.target.value)}
-                      className="w-10 h-10 cursor-pointer rounded border border-gray-300"
-                    />
-                    <div
-                      className="flex-1 px-3 py-2 rounded text-sm font-medium text-center"
-                      style={{
-                        backgroundColor: newColorBg,
-                        color: getContrastingTextColor(newColorBg),
-                      }}
-                    >
-                      Preview
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleAddColorDef}
-                      disabled={!newColorName.trim()}
-                      className="flex-1 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      Add
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowAddColorForm(false);
-                        setNewColorName('');
-                      }}
-                      className="px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Color Definitions */}
-            {sortedColorDefs.length === 0 ? (
-              <div className="text-center text-gray-500 py-8 text-sm">
-                No colors defined yet
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {sortedColorDefs.map((colorDef) => {
-                  const usageCount = colorDefUsage.get(colorDef.id) || 0;
-                  const isEditing = editingColorId === colorDef.id;
-
-                  return (
-                    <div
-                      key={colorDef.id}
-                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 group"
-                    >
-                      {/* Color swatch */}
-                      <div
-                        className="w-12 h-8 rounded text-xs font-medium flex items-center justify-center flex-shrink-0"
-                        style={{
-                          backgroundColor: colorDef.bgColor,
-                          color: colorDef.textColor,
-                        }}
-                      >
-                        Aa
-                      </div>
-
-                      {/* Name and usage */}
-                      <div className="flex-1 min-w-0">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={editingColorName}
-                            onChange={(e) => setEditingColorName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveColorRename();
-                              if (e.key === 'Escape') {
-                                setEditingColorId(null);
-                                setEditingColorName('');
-                              }
-                            }}
-                            onBlur={handleSaveColorRename}
-                            className="w-full px-2 py-0.5 text-sm border border-blue-500 rounded focus:outline-none"
-                            autoFocus
-                          />
-                        ) : (
-                          <div
-                            className="text-sm font-medium text-gray-900 truncate cursor-pointer hover:text-blue-600"
-                            onClick={() => handleStartColorRename(colorDef)}
-                          >
-                            {colorDef.name}
-                          </div>
-                        )}
-                        {usageCount > 0 && (
-                          <div className="text-xs text-gray-400">
-                            {usageCount} crop{usageCount !== 1 ? 's' : ''}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Color picker */}
-                      <input
-                        type="color"
-                        value={colorDef.bgColor}
-                        onChange={(e) => handleColorDefBgChange(colorDef.id, e.target.value)}
-                        className="w-6 h-6 cursor-pointer rounded border border-gray-300 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-
-                      {/* Delete button */}
-                      <button
-                        onClick={() => handleDeleteColorDef(colorDef)}
-                        disabled={usageCount > 0}
-                        className={`p-1 rounded flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${
-                          usageCount > 0
-                            ? 'text-gray-300 cursor-not-allowed'
-                            : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
-                        }`}
-                        title={usageCount > 0 ? `Cannot delete - used by ${usageCount} crop(s)` : 'Delete color'}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {colorFilter && ' with selected color'}
           </div>
         </div>
       </div>
