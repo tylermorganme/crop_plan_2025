@@ -503,6 +503,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   toggleConfigFavorite: (identifier: string) => Promise<void>;
   /** Bulk update multiple crop configs (single undo step) */
   bulkUpdateCropConfigs: (updates: { identifier: string; changes: Partial<import('./entities/crop-config').CropConfig> }[]) => Promise<number>;
+  /** Update a crop's colors */
+  updateCrop: (cropId: string, updates: { bgColor?: string; textColor?: string }) => Promise<void>;
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -1725,6 +1727,42 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       });
 
       return validUpdates.length;
+    },
+
+    updateCrop: async (cropId: string, updates: { bgColor?: string; textColor?: string }) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      const existingCrop = state.currentPlan.crops?.[cropId];
+      if (!existingCrop) {
+        throw new Error(`Crop not found: ${cropId}`);
+      }
+
+      const cropName = existingCrop.name;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.crops) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            const crop = plan.crops?.[cropId];
+            if (crop) {
+              if (updates.bgColor !== undefined) {
+                crop.bgColor = updates.bgColor;
+              }
+              if (updates.textColor !== undefined) {
+                crop.textColor = updates.textColor;
+              }
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update crop color: ${cropName}`
+        );
+        storeState.isDirty = true;
+      });
     },
 
     // History - uses SQLite as single source of truth

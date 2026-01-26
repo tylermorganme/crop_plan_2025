@@ -20,37 +20,12 @@ import type { SeedSource } from '@/lib/entities/planting';
 // Constants
 // =============================================================================
 
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  'Root': { bg: '#ff7043', text: '#fff' },
-  'Brassica': { bg: '#66bb6a', text: '#fff' },
-  'Green': { bg: '#43a047', text: '#fff' },
-  'Herb': { bg: '#7cb342', text: '#fff' },
-  'Tomato': { bg: '#ef5350', text: '#fff' },
-  'Pepper': { bg: '#ab47bc', text: '#fff' },
-  'Cucumber': { bg: '#26a69a', text: '#fff' },
-  'Onion': { bg: '#8d6e63', text: '#fff' },
-  'Garlic': { bg: '#a1887f', text: '#fff' },
-  'Winter Squash': { bg: '#ffa726', text: '#000' },
-  'Summer Squash': { bg: '#ffca28', text: '#000' },
-  'Beans': { bg: '#5c6bc0', text: '#fff' },
-  'Flower': { bg: '#ec407a', text: '#fff' },
-  'Melon': { bg: '#ffee58', text: '#000' },
-  'Corn': { bg: '#ffeb3b', text: '#000' },
-  'Celery': { bg: '#aed581', text: '#000' },
-  'Fennel': { bg: '#dce775', text: '#000' },
-  'Fava Bean': { bg: '#4db6ac', text: '#fff' },
-};
-
+// Colors now come from TimelineCrop.bgColor/textColor (populated from plan.crops)
 const DEFAULT_COLOR = { bg: '#78909c', text: '#fff' };
 
 // =============================================================================
 // Utility Functions
 // =============================================================================
-
-function getColorForCategory(category?: string): { bg: string; text: string } {
-  if (!category) return DEFAULT_COLOR;
-  return CATEGORY_COLORS[category] || DEFAULT_COLOR;
-}
 
 function parseDate(dateStr: string): Date {
   return parseISO(dateStr);
@@ -325,9 +300,11 @@ export function PlantingInspectorPanel({
             {/* List of selected plantings */}
             <div className="space-y-2 max-h-60 overflow-auto">
               {plantings.map((crop) => {
-                const colors = crop.bgColor
-                  ? { bg: crop.bgColor, text: crop.textColor || '#fff' }
-                  : getColorForCategory(crop.category);
+                // Colors come from plan.crops via timeline-data.ts
+                const colors = {
+                  bg: crop.bgColor || DEFAULT_COLOR.bg,
+                  text: crop.textColor || DEFAULT_COLOR.text,
+                };
                 return (
                   <div
                     key={crop.groupId}

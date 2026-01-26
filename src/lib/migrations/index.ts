@@ -266,6 +266,81 @@ function migrateV5ToV6(rawPlan: unknown): unknown {
   };
 }
 
+/**
+ * v6 → v7: Add crops entity with colors
+ * Creates crops record from unique crop names in cropCatalog and products.
+ * Colors are sourced from crops-template.json (extracted from Excel).
+ */
+function migrateV6ToV7(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    cropCatalog?: Record<string, { crop: string }>;
+    products?: Record<string, { crop: string }>;
+    crops?: Record<string, { id: string; name: string; bgColor: string; textColor: string }>;
+  };
+
+  // Already migrated
+  if (plan.crops && Object.keys(plan.crops).length > 0) {
+    return plan;
+  }
+
+  // Load crops template for default colors
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const cropsTemplate: Array<{
+    id: string;
+    name: string;
+    bgColor: string;
+    textColor: string;
+  }> = require('@/data/crops-template.json');
+  const templateMap = new Map(cropsTemplate.map((c) => [c.name, c]));
+
+  // Default color for crops not in template
+  const DEFAULT_BG = '#78909c';
+  const DEFAULT_TEXT = '#ffffff';
+
+  // Helper to generate crop ID
+  const getCropId = (name: string) =>
+    `crop_${name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')}`;
+
+  // Collect unique crop names from this plan
+  const cropNames = new Set<string>();
+
+  if (plan.cropCatalog) {
+    for (const config of Object.values(plan.cropCatalog)) {
+      if (config.crop) cropNames.add(config.crop);
+    }
+  }
+
+  if (plan.products) {
+    for (const product of Object.values(plan.products)) {
+      if (product.crop) cropNames.add(product.crop);
+    }
+  }
+
+  // Create crops record with colors from template
+  const crops: Record<
+    string,
+    { id: string; name: string; bgColor: string; textColor: string }
+  > = {};
+
+  for (const name of cropNames) {
+    const id = getCropId(name);
+    const templateCrop = templateMap.get(name);
+
+    crops[id] = {
+      id,
+      name,
+      bgColor: templateCrop?.bgColor || DEFAULT_BG,
+      textColor: templateCrop?.textColor || DEFAULT_TEXT,
+    };
+  }
+
+  return { ...plan, crops };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -293,6 +368,7 @@ const migrations: MigrationFn[] = [
   migrateV3ToV4, // Index 2: v3 → v4
   migrateV4ToV5, // Index 3: v4 → v5 (sequenceIndex → sequenceSlot)
   migrateV5ToV6, // Index 4: v5 → v6 (ensure bedFeet exists on all plantings)
+  migrateV6ToV7, // Index 5: v6 → v7 (add crops entity with colors)
 ];
 
 // =============================================================================

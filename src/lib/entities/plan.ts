@@ -14,6 +14,7 @@ import type { Product } from './product';
 import type { SeedOrder } from './seed-order';
 import type { Market } from './market';
 import type { PlantingSequence } from './planting-sequence';
+import type { Crop } from './crop';
 
 // Re-export migration utilities for backwards compatibility
 export { CURRENT_SCHEMA_VERSION, migratePlan } from '../migrations';
@@ -173,6 +174,9 @@ export interface Plan {
 
   /** Products for revenue calculation (keyed by ID) */
   products?: Record<string, Product>;
+
+  /** Crop definitions with colors (keyed by ID) */
+  crops?: Record<string, Crop>;
 
   /** Seed orders (keyed by ID) - tracks ordering decisions per variety */
   seedOrders?: Record<string, SeedOrder>;

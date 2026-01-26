@@ -97,34 +97,8 @@ function saveLayoutToStorage(layout: FieldLayoutConfig): void {
 // CONSTANTS
 // =============================================================================
 
-/** Colors by category (matching CropTimeline.tsx) */
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  'Root': { bg: '#ff7043', text: '#fff' },
-  'Brassica': { bg: '#66bb6a', text: '#fff' },
-  'Green': { bg: '#43a047', text: '#fff' },
-  'Herb': { bg: '#7cb342', text: '#fff' },
-  'Tomato': { bg: '#ef5350', text: '#fff' },
-  'Pepper': { bg: '#ab47bc', text: '#fff' },
-  'Cucumber': { bg: '#26a69a', text: '#fff' },
-  'Onion': { bg: '#8d6e63', text: '#fff' },
-  'Garlic': { bg: '#a1887f', text: '#fff' },
-  'Winter Squash': { bg: '#ffa726', text: '#000' },
-  'Summer Squash': { bg: '#ffca28', text: '#000' },
-  'Beans': { bg: '#5c6bc0', text: '#fff' },
-  'Flower': { bg: '#ec407a', text: '#fff' },
-  'Melon': { bg: '#ffee58', text: '#000' },
-  'Corn': { bg: '#ffeb3b', text: '#000' },
-  'Celery': { bg: '#aed581', text: '#000' },
-  'Fennel': { bg: '#dce775', text: '#000' },
-  'Fava Bean': { bg: '#4db6ac', text: '#fff' },
-};
-
+/** Default color when crop doesn't have colors defined */
 const DEFAULT_COLOR = { bg: '#78909c', text: '#fff' };
-
-function getColorForCategory(category?: string): { bg: string; text: string } {
-  if (!category) return DEFAULT_COLOR;
-  return CATEGORY_COLORS[category] || DEFAULT_COLOR;
-}
 
 // =============================================================================
 // TYPES
@@ -220,7 +194,6 @@ function buildOverviewData(
       const cropBlocks: CropBlock[] = bedCrops.map((crop) => {
         const startPercent = dateToYearPercent(crop.startDate, year);
         const endPercent = dateToYearPercent(crop.endDate, year);
-        const colors = getColorForCategory(crop.category);
 
         return {
           id: crop.id,
@@ -229,8 +202,8 @@ function buildOverviewData(
           category: crop.category,
           startPercent,
           widthPercent: Math.max(0.5, endPercent - startPercent), // min width
-          bgColor: colors.bg,
-          textColor: colors.text,
+          bgColor: crop.bgColor || DEFAULT_COLOR.bg,
+          textColor: crop.textColor || DEFAULT_COLOR.text,
         };
       });
 
@@ -542,6 +515,8 @@ interface EnrichedUnassignedCrop {
   endDate: string;
   feetNeeded: number;
   revenue: number | null;
+  bgColor?: string;
+  textColor?: string;
 }
 
 /**
@@ -638,7 +613,10 @@ function UnassignedPlantingsPanel({
       </thead>
       <tbody>
         {sortedPlantings.map((planting, index) => {
-          const colors = getColorForCategory(planting.category);
+          const colors = {
+            bg: planting.bgColor || DEFAULT_COLOR.bg,
+            text: planting.textColor || DEFAULT_COLOR.text,
+          };
           const isEven = index % 2 === 0;
           const plantingId = planting.plantingId || planting.id;
 
@@ -1280,6 +1258,8 @@ export default function OverviewPage() {
           category: config?.category ?? crop.category ?? '',
           identifier: config?.identifier ?? crop.cropConfigId,
           revenue,
+          bgColor: crop.bgColor,
+          textColor: crop.textColor,
         };
       });
   }, [currentPlan, selectedYear]);

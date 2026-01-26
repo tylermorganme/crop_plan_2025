@@ -50,6 +50,10 @@ export interface CropForDisplay {
   plantingMethod?: 'direct-seed' | 'transplant' | 'perennial';
   growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
   sequenceSlot?: number;
+  /** Background color (from plan.crops) */
+  bgColor?: string;
+  /** Text color (from plan.crops) */
+  textColor?: string;
 }
 
 // =============================================================================
@@ -842,20 +846,12 @@ export default function CropBoxDisplayEditor({
 
   if (!isOpen) return null;
 
-  // Category colors for preview
-  const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-    'Root': { bg: '#ff7043', text: '#fff' },
-    'Brassica': { bg: '#66bb6a', text: '#fff' },
-    'Green': { bg: '#43a047', text: '#fff' },
-    'Herb': { bg: '#7cb342', text: '#fff' },
-    'Tomato': { bg: '#ef5350', text: '#fff' },
-    'Pepper': { bg: '#ab47bc', text: '#fff' },
-    'Cucumber': { bg: '#26a69a', text: '#fff' },
-    'Onion': { bg: '#8d6e63', text: '#fff' },
-    'Flower': { bg: '#ec407a', text: '#fff' },
-  };
+  // Use crop colors from the preview crop, with fallback to default
   const DEFAULT_COLOR = { bg: '#78909c', text: '#fff' };
-  const colors = previewCrop?.category ? (CATEGORY_COLORS[previewCrop.category] || DEFAULT_COLOR) : DEFAULT_COLOR;
+  const colors = {
+    bg: previewCrop?.bgColor || DEFAULT_COLOR.bg,
+    text: previewCrop?.textColor || DEFAULT_COLOR.text,
+  };
 
   const activeTokenKey = getActiveTokenKey();
 

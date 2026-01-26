@@ -27,6 +27,7 @@ import {
 import type { Plan, Planting, Bed, BedGroup } from './plan-types';
 import { getBedGroup, getBedNumber } from './plan-types';
 import { buildBedLengthsFromTemplate } from './entities/bed';
+import { getCropColors } from './entities/crop';
 
 // Re-export for consumers
 export type { CropCatalogEntry };
@@ -636,13 +637,24 @@ export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
     return [];
   }
 
-  return expandPlantingsToTimelineCrops(
+  const timelineCrops = expandPlantingsToTimelineCrops(
     plan.plantings,
     plan.beds,
     plan.cropCatalog,
     plan.bedGroups,
     plan.sequences
   );
+
+  // Add colors from plan.crops (or defaults if not found)
+  for (const crop of timelineCrops) {
+    if (crop.crop) {
+      const colors = getCropColors(plan.crops, crop.crop);
+      crop.bgColor = colors.bg;
+      crop.textColor = colors.text;
+    }
+  }
+
+  return timelineCrops;
 }
 
 // Re-export collapseToPlantings for use in plan-store
