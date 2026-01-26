@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { parseISO } from 'date-fns';
@@ -12,6 +12,71 @@ import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import type { TimelineCrop } from '@/lib/plan-types';
 import type { BedGroup, Bed } from '@/lib/entities/bed';
 import AppHeader from '@/components/AppHeader';
+
+// =============================================================================
+// FIELD LAYOUT CONFIGURATION (UI-level, stored in localStorage)
+// =============================================================================
+
+/** A field/area of the farm (e.g., "Old Field", "Reed Canary Island") */
+interface FieldConfig {
+  id: string;
+  name: string;
+  /** Grid layout: lanes of bed group letters. Each inner array is one visual lane (horizontal strip). */
+  lanes: string[][];
+}
+
+/** Complete layout configuration */
+interface FieldLayoutConfig {
+  fields: FieldConfig[];
+  /** Which field is currently active/visible */
+  activeFieldId: string;
+}
+
+const LAYOUT_STORAGE_KEY = 'farm-map-layout-v1';
+
+/** Default layout matching the hardcoded original */
+const DEFAULT_LAYOUT: FieldLayoutConfig = {
+  fields: [
+    {
+      id: 'old-field',
+      name: 'Old Field',
+      lanes: [
+        ['F', 'G', 'H', 'I', 'J'],
+        ['A', 'B', 'C', 'D', 'E'],
+      ],
+    },
+    {
+      id: 'reed-canary',
+      name: 'Reed Canary Island',
+      lanes: [
+        ['U', 'X'],
+      ],
+    },
+  ],
+  activeFieldId: 'old-field',
+};
+
+function loadLayoutFromStorage(): FieldLayoutConfig {
+  if (typeof window === 'undefined') return DEFAULT_LAYOUT;
+  try {
+    const stored = localStorage.getItem(LAYOUT_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored) as FieldLayoutConfig;
+    }
+  } catch (e) {
+    console.warn('Failed to load layout from storage:', e);
+  }
+  return DEFAULT_LAYOUT;
+}
+
+function saveLayoutToStorage(layout: FieldLayoutConfig): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(layout));
+  } catch (e) {
+    console.warn('Failed to save layout to storage:', e);
+  }
+}
 
 // =============================================================================
 // CONSTANTS
@@ -327,13 +392,313 @@ function getRowLetter(groupName: string): string {
   return match ? match[1].toUpperCase() : groupName.charAt(0).toUpperCase();
 }
 
-type FieldTab = 'old-field' | 'reed-canary';
+/**
+ * Layout Editor Modal - allows configuring field layout
+ */
+function LayoutEditorModal({
+  layout,
+  availableGroups,
+  onSave,
+  onClose,
+}: {
+  layout: FieldLayoutConfig;
+  availableGroups: string[]; // Available bed group letters
+  onSave: (layout: FieldLayoutConfig) => void;
+  onClose: () => void;
+}) {
+  const [editLayout, setEditLayout] = useState<FieldLayoutConfig>(JSON.parse(JSON.stringify(layout)));
+  const [selectedFieldId, setSelectedFieldId] = useState(editLayout.fields[0]?.id || '');
+
+  const selectedField = editLayout.fields.find(f => f.id === selectedFieldId);
+
+  // Get all groups currently assigned to any field
+  const assignedGroups = useMemo(() => {
+    const assigned = new Set<string>();
+    for (const field of editLayout.fields) {
+      for (const lane of field.lanes) {
+        for (const letter of lane) {
+          assigned.add(letter);
+        }
+      }
+    }
+    return assigned;
+  }, [editLayout]);
+
+  // Groups not yet assigned
+  const unassignedGroups = availableGroups.filter(g => !assignedGroups.has(g));
+
+  const addField = () => {
+    const newId = `field-${Date.now()}`;
+    setEditLayout({
+      ...editLayout,
+      fields: [...editLayout.fields, { id: newId, name: 'New Field', lanes: [[]] }],
+    });
+    setSelectedFieldId(newId);
+  };
+
+  const deleteField = (fieldId: string) => {
+    if (editLayout.fields.length <= 1) return; // Keep at least one
+    const newFields = editLayout.fields.filter(f => f.id !== fieldId);
+    setEditLayout({ ...editLayout, fields: newFields });
+    if (selectedFieldId === fieldId) {
+      setSelectedFieldId(newFields[0]?.id || '');
+    }
+  };
+
+  const updateFieldName = (fieldId: string, name: string) => {
+    setEditLayout({
+      ...editLayout,
+      fields: editLayout.fields.map(f => f.id === fieldId ? { ...f, name } : f),
+    });
+  };
+
+  const addLaneToField = (fieldId: string) => {
+    setEditLayout({
+      ...editLayout,
+      fields: editLayout.fields.map(f =>
+        f.id === fieldId ? { ...f, lanes: [...f.lanes, []] } : f
+      ),
+    });
+  };
+
+  const removeLaneFromField = (fieldId: string, laneIndex: number) => {
+    setEditLayout({
+      ...editLayout,
+      fields: editLayout.fields.map(f =>
+        f.id === fieldId ? { ...f, lanes: f.lanes.filter((_: string[], i: number) => i !== laneIndex) } : f
+      ),
+    });
+  };
+
+  const moveLane = (fieldId: string, fromIndex: number, toIndex: number) => {
+    setEditLayout({
+      ...editLayout,
+      fields: editLayout.fields.map(f => {
+        if (f.id !== fieldId) return f;
+        const newLanes = [...f.lanes];
+        const [removed] = newLanes.splice(fromIndex, 1);
+        newLanes.splice(toIndex, 0, removed);
+        return { ...f, lanes: newLanes };
+      }),
+    });
+  };
+
+  const addGroupToLane = (fieldId: string, laneIndex: number, letter: string) => {
+    setEditLayout({
+      ...editLayout,
+      fields: editLayout.fields.map(f =>
+        f.id === fieldId
+          ? {
+              ...f,
+              lanes: f.lanes.map((lane: string[], i: number) => i === laneIndex ? [...lane, letter] : lane),
+            }
+          : f
+      ),
+    });
+  };
+
+  const removeGroupFromLane = (fieldId: string, laneIndex: number, letter: string) => {
+    setEditLayout({
+      ...editLayout,
+      fields: editLayout.fields.map(f =>
+        f.id === fieldId
+          ? {
+              ...f,
+              lanes: f.lanes.map((lane: string[], i: number) => i === laneIndex ? lane.filter((l: string) => l !== letter) : lane),
+            }
+          : f
+      ),
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Configure Map Layout</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+
+        <div className="flex h-[60vh]">
+          {/* Field list sidebar */}
+          <div className="w-48 border-r border-gray-200 p-3 flex flex-col gap-2">
+            <div className="text-xs font-medium text-gray-500 uppercase">Fields</div>
+            {editLayout.fields.map(field => (
+              <button
+                key={field.id}
+                onClick={() => setSelectedFieldId(field.id)}
+                className={`text-left px-2 py-1.5 rounded text-sm ${
+                  selectedFieldId === field.id
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                {field.name}
+              </button>
+            ))}
+            <button
+              onClick={addField}
+              className="text-left px-2 py-1.5 rounded text-sm text-blue-600 hover:bg-blue-50"
+            >
+              + Add Field
+            </button>
+          </div>
+
+          {/* Field editor */}
+          <div className="flex-1 p-4 overflow-auto">
+            {selectedField && (
+              <div className="space-y-4">
+                {/* Field name */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={selectedField.name}
+                    onChange={e => updateFieldName(selectedField.id, e.target.value)}
+                    className="px-2 py-1 border border-gray-300 rounded text-lg font-medium w-64"
+                  />
+                  {editLayout.fields.length > 1 && (
+                    <button
+                      onClick={() => deleteField(selectedField.id)}
+                      className="text-red-600 text-sm hover:underline"
+                    >
+                      Delete Field
+                    </button>
+                  )}
+                </div>
+
+                {/* Lanes */}
+                <div className="space-y-3">
+                  <div className="text-sm font-medium text-gray-700">Layout Lanes</div>
+                  {selectedField.lanes.map((lane: string[], laneIndex: number) => (
+                    <div key={laneIndex} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                      {/* Reorder buttons */}
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          onClick={() => laneIndex > 0 && moveLane(selectedField.id, laneIndex, laneIndex - 1)}
+                          disabled={laneIndex === 0}
+                          className={`text-xs px-1 ${laneIndex === 0 ? 'text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+                          title="Move up"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => laneIndex < selectedField.lanes.length - 1 && moveLane(selectedField.id, laneIndex, laneIndex + 1)}
+                          disabled={laneIndex === selectedField.lanes.length - 1}
+                          className={`text-xs px-1 ${laneIndex === selectedField.lanes.length - 1 ? 'text-gray-300' : 'text-gray-500 hover:text-gray-700'}`}
+                          title="Move down"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                      <span className="text-xs text-gray-500 w-14">Lane {laneIndex + 1}</span>
+                      <div className="flex flex-wrap gap-1 flex-1 min-h-[32px]">
+                        {lane.map((letter: string) => (
+                          <span
+                            key={letter}
+                            className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm flex items-center gap-1"
+                          >
+                            {letter}
+                            <button
+                              onClick={() => removeGroupFromLane(selectedField.id, laneIndex, letter)}
+                              className="text-blue-400 hover:text-blue-600"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                        {/* Add group dropdown */}
+                        {unassignedGroups.length > 0 && (
+                          <select
+                            className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
+                            value=""
+                            onChange={e => {
+                              if (e.target.value) {
+                                addGroupToLane(selectedField.id, laneIndex, e.target.value);
+                              }
+                            }}
+                          >
+                            <option value="">+ Add</option>
+                            {unassignedGroups.map(g => (
+                              <option key={g} value={g}>{g}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => removeLaneFromField(selectedField.id, laneIndex)}
+                        className="text-gray-400 hover:text-red-600 text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => addLaneToField(selectedField.id)}
+                    className="text-blue-600 text-sm hover:underline"
+                  >
+                    + Add Lane
+                  </button>
+                </div>
+
+                {/* Unassigned groups */}
+                {unassignedGroups.length > 0 && (
+                  <div className="pt-3 border-t border-gray-200">
+                    <div className="text-sm font-medium text-gray-700 mb-2">Unassigned Groups</div>
+                    <div className="flex flex-wrap gap-1">
+                      {unassignedGroups.map(g => (
+                        <span key={g} className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-sm">
+                          {g}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="px-4 py-3 border-t border-gray-200 flex justify-between">
+          <button
+            onClick={() => {
+              setEditLayout(JSON.parse(JSON.stringify(DEFAULT_LAYOUT)));
+            }}
+            className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+          >
+            Reset to Default
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onSave(editLayout)}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Save Layout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Farm grid layout - arranges bed groups in rows with tabs for different fields.
+ * Now uses configurable layout stored in localStorage.
  */
 function FarmGrid({ sections, year }: { sections: BedGroupSection[]; year: number }) {
-  const [activeTab, setActiveTab] = useState<FieldTab>('old-field');
+  const [layout, setLayout] = useState<FieldLayoutConfig>(DEFAULT_LAYOUT);
+  const [showEditor, setShowEditor] = useState(false);
+
+  // Load layout from localStorage on mount
+  useEffect(() => {
+    setLayout(loadLayoutFromStorage());
+  }, []);
 
   // Create a map for quick lookup by row letter (e.g., "Row A" -> "A")
   const sectionsByLetter = useMemo(() => {
@@ -345,24 +710,24 @@ function FarmGrid({ sections, year }: { sections: BedGroupSection[]; year: numbe
     return map;
   }, [sections]);
 
-  // Old Field rows (A-J)
-  const oldFieldTopLetters = ['F', 'G', 'H', 'I', 'J'];
-  const oldFieldBottomLetters = ['A', 'B', 'C', 'D', 'E'];
+  // Get all available group letters from sections
+  const availableGroups = useMemo(() => {
+    return Array.from(sectionsByLetter.keys()).sort();
+  }, [sectionsByLetter]);
 
-  // Reed Canary Island rows (U, X)
-  const reedCanaryLetters = ['U', 'X'];
+  const activeField = layout.fields.find(f => f.id === layout.activeFieldId) || layout.fields[0];
 
-  const oldFieldTop = oldFieldTopLetters
-    .map(letter => sectionsByLetter.get(letter))
-    .filter((s): s is BedGroupSection => s !== undefined);
+  const handleSaveLayout = useCallback((newLayout: FieldLayoutConfig) => {
+    setLayout(newLayout);
+    saveLayoutToStorage(newLayout);
+    setShowEditor(false);
+  }, []);
 
-  const oldFieldBottom = oldFieldBottomLetters
-    .map(letter => sectionsByLetter.get(letter))
-    .filter((s): s is BedGroupSection => s !== undefined);
-
-  const reedCanary = reedCanaryLetters
-    .map(letter => sectionsByLetter.get(letter))
-    .filter((s): s is BedGroupSection => s !== undefined);
+  const setActiveField = useCallback((fieldId: string) => {
+    const newLayout = { ...layout, activeFieldId: fieldId };
+    setLayout(newLayout);
+    saveLayoutToStorage(newLayout);
+  }, [layout]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -370,58 +735,63 @@ function FarmGrid({ sections, year }: { sections: BedGroupSection[]; year: numbe
       <div className="flex items-center gap-4">
         <div className="text-lg font-semibold text-gray-700">{year}</div>
         <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setActiveTab('old-field')}
-            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'old-field'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Old Field
-          </button>
-          <button
-            onClick={() => setActiveTab('reed-canary')}
-            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'reed-canary'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Reed Canary Island
-          </button>
+          {layout.fields.map(field => (
+            <button
+              key={field.id}
+              onClick={() => setActiveField(field.id)}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                layout.activeFieldId === field.id
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {field.name}
+            </button>
+          ))}
         </div>
+        <button
+          onClick={() => setShowEditor(true)}
+          className="ml-auto px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+          title="Configure layout"
+        >
+          ⚙️ Layout
+        </button>
       </div>
 
-      {/* Old Field layout */}
-      {activeTab === 'old-field' && (
+      {/* Field layout */}
+      {activeField && (
         <div className="flex flex-col gap-3">
-          {/* Top row: F-J */}
-          <div className="flex gap-3 flex-wrap">
-            {oldFieldTop.map((section) => (
-              <BedGroupComponent key={section.groupId} section={section} />
-            ))}
-          </div>
+          {activeField.lanes.map((lane: string[], laneIndex: number) => {
+            const laneSections = lane
+              .map((letter: string) => sectionsByLetter.get(letter))
+              .filter((s): s is BedGroupSection => s !== undefined);
 
-          {/* Bottom row: A-E */}
-          <div className="flex gap-3 flex-wrap">
-            {oldFieldBottom.map((section) => (
-              <BedGroupComponent key={section.groupId} section={section} />
-            ))}
-          </div>
+            if (laneSections.length === 0) return null;
+
+            return (
+              <div key={laneIndex} className="flex gap-3 flex-wrap">
+                {laneSections.map((section: BedGroupSection) => (
+                  <BedGroupComponent key={section.groupId} section={section} />
+                ))}
+              </div>
+            );
+          })}
+          {activeField.lanes.every((lane: string[]) => lane.length === 0) && (
+            <div className="text-gray-500 text-sm">
+              No bed groups assigned to this field. Click Layout to configure.
+            </div>
+          )}
         </div>
       )}
 
-      {/* Reed Canary Island layout */}
-      {activeTab === 'reed-canary' && (
-        <div className="flex gap-3 flex-wrap">
-          {reedCanary.map((section) => (
-            <BedGroupComponent key={section.groupId} section={section} />
-          ))}
-          {reedCanary.length === 0 && (
-            <div className="text-gray-500 text-sm">No beds in Reed Canary Island</div>
-          )}
-        </div>
+      {/* Layout Editor Modal */}
+      {showEditor && (
+        <LayoutEditorModal
+          layout={layout}
+          availableGroups={availableGroups}
+          onSave={handleSaveLayout}
+          onClose={() => setShowEditor(false)}
+        />
       )}
     </div>
   );
