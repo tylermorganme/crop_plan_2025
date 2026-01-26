@@ -12,7 +12,9 @@ import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
 import { parseSearchQuery } from '@/lib/search-dsl';
 import { SearchInput } from '@/components/SearchInput';
-import type { TimelineCrop } from '@/lib/plan-types';
+import { ConnectedPlantingInspector } from '@/components/ConnectedPlantingInspector';
+import { useUIStore } from '@/lib/ui-store';
+import type { TimelineCrop, Planting } from '@/lib/plan-types';
 import type { BedGroup, Bed } from '@/lib/entities/bed';
 import AppHeader from '@/components/AppHeader';
 
@@ -316,10 +318,14 @@ function BedRowComponent({
   row,
   isEven,
   onAssignPlanting,
+  onCropClick,
+  selectedPlantingIds,
 }: {
   row: BedRow;
   isEven: boolean;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
+  onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  selectedPlantingIds?: Set<string>;
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -383,15 +389,24 @@ function BedRowComponent({
             style={{ left: `${(i / 12) * 100}%` }}
           />
         ))}
-        {/* Crop blocks - draggable for reassignment */}
+        {/* Crop blocks - draggable for reassignment, clickable for selection */}
         {stacks.crops.map((crop) => {
           const topPx = crop.stackLevel * cropHeight + 1;
+          const isSelected = selectedPlantingIds?.has(crop.plantingId);
 
           return (
             <div
               key={crop.id}
-              className="absolute overflow-hidden rounded-sm border border-white/20 cursor-grab"
+              className={`absolute overflow-hidden rounded-sm cursor-pointer ${
+                isSelected
+                  ? 'ring-2 ring-blue-500 ring-offset-1 z-10'
+                  : 'border border-white/20'
+              }`}
               draggable
+              onClick={(e) => {
+                e.stopPropagation();
+                onCropClick?.(crop.plantingId, e);
+              }}
               onDragStart={(e) => {
                 e.stopPropagation();
                 e.dataTransfer.setData('application/json', JSON.stringify({
@@ -408,7 +423,7 @@ function BedRowComponent({
                 backgroundColor: crop.bgColor,
                 minWidth: '4px',
               }}
-              title={`${crop.name} (${crop.category || 'Unknown'}) - Drag to move`}
+              title={`${crop.name} (${crop.category || 'Unknown'}) - Click to select, drag to move`}
             >
               {/* Only show text if there's enough height */}
               {cropHeight >= 12 && (
@@ -464,9 +479,13 @@ function MonthHeaderRow() {
 function BedGroupComponent({
   section,
   onAssignPlanting,
+  onCropClick,
+  selectedPlantingIds,
 }: {
   section: BedGroupSection;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
+  onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  selectedPlantingIds?: Set<string>;
 }) {
   return (
     <div style={{ width: GROUP_WIDTH }}>
@@ -484,6 +503,8 @@ function BedGroupComponent({
             row={bed}
             isEven={index % 2 === 0}
             onAssignPlanting={onAssignPlanting}
+            onCropClick={onCropClick}
+            selectedPlantingIds={selectedPlantingIds}
           />
         ))}
         {section.beds.length === 0 && (
@@ -963,12 +984,16 @@ function FarmGrid({
   baseYear,
   onYearChange,
   onAssignPlanting,
+  onCropClick,
+  selectedPlantingIds,
 }: {
   sections: BedGroupSection[];
   year: number;
   baseYear: number;
   onYearChange: (year: number) => void;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
+  onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  selectedPlantingIds?: Set<string>;
 }) {
   const [layout, setLayout] = useState<FieldLayoutConfig>(DEFAULT_LAYOUT);
   const [showEditor, setShowEditor] = useState(false);
@@ -1072,6 +1097,8 @@ function FarmGrid({
                     key={section.groupId}
                     section={section}
                     onAssignPlanting={onAssignPlanting}
+                    onCropClick={onCropClick}
+                    selectedPlantingIds={selectedPlantingIds}
                   />
                 ))}
               </div>
@@ -1117,6 +1144,18 @@ export default function OverviewPage() {
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const updatePlanting = usePlanStore((state) => state.updatePlanting);
+  const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
+  const duplicatePlanting = usePlanStore((state) => state.duplicatePlanting);
+
+  // UI store - selection state (shared across views)
+  const selectedPlantingIds = useUIStore((state) => state.selectedPlantingIds);
+  const selectPlanting = useUIStore((state) => state.selectPlanting);
+  const togglePlanting = useUIStore((state) => state.togglePlanting);
+  const clearSelection = useUIStore((state) => state.clearSelection);
+
+  // Right panel width state
+  const [rightPanelWidth, setRightPanelWidth] = useState(320);
+  const [isResizingRightPanel, setIsResizingRightPanel] = useState(false);
 
   // Load the specific plan by ID
   useEffect(() => {
@@ -1253,7 +1292,7 @@ export default function OverviewPage() {
     const startWidth = sidebarWidth;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
-      const delta = startX - moveEvent.clientX; // Reversed because dragging left increases width
+      const delta = moveEvent.clientX - startX; // Dragging right increases width for left panel
       const newWidth = Math.max(250, Math.min(600, startWidth + delta));
       setSidebarWidth(newWidth);
     };
@@ -1280,6 +1319,55 @@ export default function OverviewPage() {
 
   // State for sidebar drop highlight
   const [isSidebarDragOver, setIsSidebarDragOver] = useState(false);
+
+  // Handler for clicking on a crop box - toggles selection
+  const handleCropClick = useCallback((plantingId: string, e: React.MouseEvent) => {
+    if (e.shiftKey || e.metaKey || e.ctrlKey) {
+      // Multi-select with modifier keys
+      togglePlanting(plantingId);
+    } else {
+      // Single select - clear others and select this one
+      clearSelection();
+      selectPlanting(plantingId);
+    }
+  }, [togglePlanting, clearSelection, selectPlanting]);
+
+  // Get all timeline crops for computing selected crops data
+  const allTimelineCrops = useMemo(() => {
+    if (!currentPlan) return [];
+    return getTimelineCropsFromPlan(currentPlan);
+  }, [currentPlan]);
+
+  // Convert selected planting IDs to TimelineCrop[] for the inspector panel
+  const selectedCropsData = useMemo(() => {
+    if (selectedPlantingIds.size === 0) return [];
+    return allTimelineCrops.filter(crop =>
+      crop.plantingId && selectedPlantingIds.has(crop.plantingId)
+    );
+  }, [selectedPlantingIds, allTimelineCrops]);
+
+  // Right panel resize handler
+  const handleRightPanelResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizingRightPanel(true);
+    const startX = e.clientX;
+    const startWidth = rightPanelWidth;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const delta = startX - moveEvent.clientX;
+      const newWidth = Math.max(280, Math.min(500, startWidth + delta));
+      setRightPanelWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingRightPanel(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [rightPanelWidth]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -1341,46 +1429,11 @@ export default function OverviewPage() {
         </div>
       </header>
 
-      {/* Content - flex layout with map and sidebar */}
+      {/* Content - flex layout with left sidebar, map, and right panel */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Main map area */}
-        <main className="flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-6">
-          {overviewData.length === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-              <p className="text-gray-500">No beds configured for this plan.</p>
-              <Link
-                href={`/beds/${planId}`}
-                className="text-blue-600 hover:text-blue-800 text-sm"
-              >
-                Configure beds
-              </Link>
-            </div>
-          ) : (
-            <FarmGrid
-              sections={overviewData}
-              year={displayYear}
-              baseYear={baseYear}
-              onYearChange={setSelectedYear}
-              onAssignPlanting={handleAssignPlanting}
-            />
-          )}
-        </main>
-
-        {/* Resize handle */}
-        <div
-          className={`w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex-shrink-0 ${
-            isResizingSidebar ? 'bg-gray-400' : ''
-          }`}
-          onMouseDown={handleSidebarResizeStart}
-        >
-          <div className="h-full flex items-center justify-center">
-            <div className="w-0.5 h-8 bg-gray-400 rounded" />
-          </div>
-        </div>
-
-        {/* Unassigned plantings sidebar - drop zone for unassigning */}
+        {/* Left sidebar - Unassigned plantings - drop zone for unassigning */}
         <aside
-          className={`flex-shrink-0 border-l border-gray-200 overflow-hidden flex flex-col transition-colors ${
+          className={`flex-shrink-0 border-r border-gray-200 overflow-hidden flex flex-col transition-colors ${
             isSidebarDragOver ? 'bg-red-50 border-red-300' : 'bg-white'
           }`}
           style={{ width: sidebarWidth }}
@@ -1431,6 +1484,67 @@ export default function OverviewPage() {
             />
           </div>
         </aside>
+
+        {/* Left resize handle */}
+        <div
+          className={`w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex-shrink-0 ${
+            isResizingSidebar ? 'bg-gray-400' : ''
+          }`}
+          onMouseDown={handleSidebarResizeStart}
+        >
+          <div className="h-full flex items-center justify-center">
+            <div className="w-0.5 h-8 bg-gray-400 rounded" />
+          </div>
+        </div>
+
+        {/* Main map area */}
+        <main className="flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-6" onClick={() => clearSelection()}>
+          {overviewData.length === 0 ? (
+            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+              <p className="text-gray-500">No beds configured for this plan.</p>
+              <Link
+                href={`/beds/${planId}`}
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                Configure beds
+              </Link>
+            </div>
+          ) : (
+            <FarmGrid
+              sections={overviewData}
+              year={displayYear}
+              baseYear={baseYear}
+              onYearChange={setSelectedYear}
+              onAssignPlanting={handleAssignPlanting}
+              onCropClick={handleCropClick}
+              selectedPlantingIds={selectedPlantingIds}
+            />
+          )}
+        </main>
+
+        {/* Right panel - Planting Inspector (shown when crops selected) */}
+        {selectedCropsData.length > 0 && (
+          <>
+            {/* Right resize handle */}
+            <div
+              className={`w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex-shrink-0 ${
+                isResizingRightPanel ? 'bg-gray-400' : ''
+              }`}
+              onMouseDown={handleRightPanelResizeStart}
+            >
+              <div className="h-full flex items-center justify-center">
+                <div className="w-0.5 h-8 bg-gray-400 rounded" />
+              </div>
+            </div>
+
+            <aside
+              className="flex-shrink-0 border-l border-gray-200 bg-white overflow-auto"
+              style={{ width: rightPanelWidth }}
+            >
+              <ConnectedPlantingInspector />
+            </aside>
+          </>
+        )}
       </div>
     </div>
     </>

@@ -5,8 +5,6 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
 import CropConfigEditor from '@/components/CropConfigEditor';
-import CreateSequenceModal, { type CreateSequenceOptions } from '@/components/CreateSequenceModal';
-import SequenceEditorModal from '@/components/SequenceEditorModal';
 import { PageLayout } from '@/components/PageLayout';
 import AppHeader from '@/components/AppHeader';
 import { type CropConfig } from '@/lib/entities/crop-config';
@@ -58,13 +56,6 @@ export default function TimelinePlanPage() {
   const toast = useUIStore((state) => state.toast);
   const setToast = useUIStore((state) => state.setToast);
   const [editingCrop, setEditingCrop] = useState<CropConfig | null>(null);
-  const [sequenceModalOpen, setSequenceModalOpen] = useState(false);
-  const [sequenceModalData, setSequenceModalData] = useState<{
-    plantingId: string;
-    cropName: string;
-    fieldStartDate: string;
-  } | null>(null);
-  const [editSequenceId, setEditSequenceId] = useState<string | null>(null);
 
   // Pending drag changes - queued during drag, committed on drop
   // Key is groupId (plantingId), value contains pending changes
@@ -85,16 +76,7 @@ export default function TimelinePlanPage() {
   // Update crop config action from store
   const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
   const addPlanting = usePlanStore((state) => state.addPlanting);
-  const updatePlanting = usePlanStore((state) => state.updatePlanting);
-
-  // Sequence actions from store
-  const createSequenceFromPlanting = usePlanStore((state) => state.createSequenceFromPlanting);
-  const unlinkFromSequence = usePlanStore((state) => state.unlinkFromSequence);
-  const updateSequenceOffset = usePlanStore((state) => state.updateSequenceOffset);
-  const updateSequenceName = usePlanStore((state) => state.updateSequenceName);
-  const reorderSequenceSlots = usePlanStore((state) => state.reorderSequenceSlots);
-  const getSequence = usePlanStore((state) => state.getSequence);
-  const getSequencePlantings = usePlanStore((state) => state.getSequencePlantings);
+  const updateCropBoxDisplay = usePlanStore((state) => state.updateCropBoxDisplay);
 
   // Helper to get crop config from plan's catalog (falls back to master)
   const getCropByIdentifier = useCallback((identifier: string) => {
@@ -148,8 +130,7 @@ export default function TimelinePlanPage() {
 
   // Keyboard shortcuts for undo/redo are now handled in AppHeader
 
-  const handleCropMove = useCallback((cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => {
-    const feet = feetNeeded || 50;
+  const handleCropMove = useCallback((cropId: string, newResource: string, groupId: string | undefined, feetNeeded: number) => {
     const targetGroupId = groupId || cropId;
 
     // Moving to Unassigned - no capacity check needed
@@ -160,7 +141,7 @@ export default function TimelinePlanPage() {
 
     // Moving to a real bed - calculate span based on feetNeeded and target row's bed size
     const { bedSpanInfo, isComplete, feetNeeded: neededFeet, feetAvailable } = calculateRowSpan(
-      feet,
+      feetNeeded,
       newResource,
       bedMappings.nameGroups,
       bedMappings.bedLengths
@@ -244,10 +225,13 @@ export default function TimelinePlanPage() {
         } else {
           // Moving to a real bed - resolve name to UUID
           const planting = currentPlan?.plantings?.find(p => p.id === groupId);
-          const feetNeeded = planting?.bedFeet || 50;
+          if (!planting) {
+            console.error(`handleDragEnd: planting not found for groupId ${groupId}`);
+            continue;
+          }
 
           const { bedSpanInfo, isComplete } = calculateRowSpan(
-            feetNeeded,
+            planting.bedFeet,
             changes.startBed,
             bedMappings.nameGroups,
             bedMappings.bedLengths
@@ -257,7 +241,7 @@ export default function TimelinePlanPage() {
             const bed = currentPlan?.beds ? Object.values(currentPlan.beds).find(b => b.name === changes.startBed) : null;
             if (bed) {
               updateChanges.startBed = bed.id;
-              updateChanges.bedFeet = bedSpanInfo?.reduce((sum, b) => sum + b.feetUsed, 0) ?? feetNeeded;
+              updateChanges.bedFeet = bedSpanInfo?.reduce((sum, b) => sum + b.feetUsed, 0) ?? planting.bedFeet;
             }
           }
         }
@@ -281,28 +265,6 @@ export default function TimelinePlanPage() {
     setPendingDragChanges(new Map());
   }, [pendingDragChanges, bulkUpdatePlantings, bedMappings, currentPlan?.beds, currentPlan?.plantings]);
 
-  const duplicatePlanting = usePlanStore((state) => state.duplicatePlanting);
-  const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
-
-  const handleDuplicateCrop = useCallback(async (groupId: string): Promise<string | void> => {
-    try {
-      const newId = await duplicatePlanting(groupId);
-      setToast({ message: 'Planting duplicated - find it in Unassigned', type: 'success' });
-      return newId;
-    } catch (e) {
-      setToast({ message: `Failed to duplicate: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
-    }
-  }, [duplicatePlanting]);
-
-  const handleDeleteCrop = useCallback(async (groupIds: string[]) => {
-    try {
-      const count = await bulkDeletePlantings(groupIds);
-      setToast({ message: `Deleted ${count} planting${count !== 1 ? 's' : ''}`, type: 'success' });
-    } catch (e) {
-      setToast({ message: `Failed to delete: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
-    }
-  }, [bulkDeletePlantings]);
-
   const handleAddPlanting = useCallback(async (configId: string, fieldStartDate: string, bedId: string): Promise<string> => {
     const newPlanting = createPlanting({
       configId,
@@ -320,27 +282,6 @@ export default function TimelinePlanPage() {
       throw e;
     }
   }, [addPlanting]);
-
-  const handleUpdatePlanting = useCallback(async (plantingId: string, updates: {
-    bedFeet?: number;
-    overrides?: { additionalDaysOfHarvest?: number; additionalDaysInField?: number; additionalDaysInCells?: number };
-    notes?: string;
-    seedSource?: { type: 'variety' | 'mix'; id: string } | null;
-    useDefaultSeedSource?: boolean;
-    actuals?: { greenhouseDate?: string; fieldDate?: string; failed?: boolean };
-  }) => {
-    try {
-      // Convert null to undefined for store compatibility
-      const storeUpdates = {
-        ...updates,
-        seedSource: updates.seedSource === null ? undefined : updates.seedSource,
-      };
-      await updatePlanting(plantingId, storeUpdates);
-      // Silent success - the UI updates immediately via state
-    } catch (e) {
-      setToast({ message: `Failed to update: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
-    }
-  }, [updatePlanting]);
 
   const handleEditCropConfig = useCallback((plantingId: string) => {
     // Find the planting to get the configId
@@ -381,51 +322,6 @@ export default function TimelinePlanPage() {
       });
     }
   }, [updateCropConfig]);
-
-  // Sequence handlers
-  const handleCreateSequence = useCallback((plantingId: string, cropName: string, fieldStartDate: string) => {
-    setSequenceModalData({ plantingId, cropName, fieldStartDate });
-    setSequenceModalOpen(true);
-  }, []);
-
-  const handleConfirmCreateSequence = useCallback(async (options: CreateSequenceOptions) => {
-    if (!sequenceModalData) return;
-
-    try {
-      const result = await createSequenceFromPlanting(sequenceModalData.plantingId, options);
-      setSequenceModalOpen(false);
-      setSequenceModalData(null);
-      setToast({
-        message: `Created sequence with ${result.plantingIds.length} plantings`,
-        type: 'success',
-      });
-    } catch (e) {
-      setToast({
-        message: `Failed to create sequence: ${e instanceof Error ? e.message : 'Unknown error'}`,
-        type: 'error',
-      });
-    }
-  }, [sequenceModalData, createSequenceFromPlanting]);
-
-  const handleUnlinkFromSequence = useCallback(async (plantingId: string) => {
-    try {
-      await unlinkFromSequence(plantingId);
-      setToast({ message: 'Planting unlinked from sequence', type: 'success' });
-    } catch (e) {
-      setToast({
-        message: `Failed to unlink: ${e instanceof Error ? e.message : 'Unknown error'}`,
-        type: 'error',
-      });
-    }
-  }, [unlinkFromSequence]);
-
-  const handleEditSequence = useCallback((sequenceId: string) => {
-    setEditSequenceId(sequenceId);
-  }, []);
-
-  // Get the sequence being edited (if any)
-  const editingSequence = editSequenceId ? getSequence(editSequenceId) : undefined;
-  const editingSequencePlantings = editSequenceId ? getSequencePlantings(editSequenceId) : [];
 
   // Compute preview crops: just update resource/dates on 1:1 crop entries
   // Bed spanning is computed at render time in CropTimeline's cropsByResource
@@ -519,20 +415,13 @@ export default function TimelinePlanPage() {
         onBulkCropMove={handleBulkCropMove}
         onBulkCropDateChange={handleBulkCropDateChange}
         onDragEnd={handleDragEnd}
-        onDuplicateCrop={handleDuplicateCrop}
-        onDeleteCrop={handleDeleteCrop}
-        onEditCropConfig={handleEditCropConfig}
         cropCatalog={currentPlan.cropCatalog}
         planYear={currentPlan.metadata.year}
         onAddPlanting={handleAddPlanting}
-        onUpdatePlanting={handleUpdatePlanting}
-        varieties={currentPlan.varieties}
-        seedMixes={currentPlan.seedMixes}
         products={currentPlan.products}
         initialNoVarietyFilter={initialNoVarietyFilter}
-        onCreateSequence={handleCreateSequence}
-        onUnlinkFromSequence={handleUnlinkFromSequence}
-        onEditSequence={handleEditSequence}
+        cropBoxDisplay={currentPlan.cropBoxDisplay}
+        onUpdateCropBoxDisplay={updateCropBoxDisplay}
       />
 
       {/* Toast notification */}
@@ -557,75 +446,8 @@ export default function TimelinePlanPage() {
         seedMixes={currentPlan?.seedMixes}
         products={currentPlan?.products}
         markets={currentPlan?.markets}
+        lastFrostDate={currentPlan?.metadata.lastFrostDate}
       />
-
-      {/* Create sequence modal */}
-      <CreateSequenceModal
-        isOpen={sequenceModalOpen}
-        anchorFieldStartDate={sequenceModalData?.fieldStartDate || ''}
-        cropName={sequenceModalData?.cropName || ''}
-        onClose={() => {
-          setSequenceModalOpen(false);
-          setSequenceModalData(null);
-        }}
-        onCreate={handleConfirmCreateSequence}
-      />
-
-      {/* Edit sequence modal */}
-      {editingSequence && (
-        <SequenceEditorModal
-          isOpen={!!editSequenceId}
-          sequence={editingSequence}
-          plantings={editingSequencePlantings}
-          cropCatalog={currentPlan.cropCatalog ?? {}}
-          beds={currentPlan.beds ?? {}}
-          onClose={() => setEditSequenceId(null)}
-          onUpdateOffset={async (newOffsetDays) => {
-            try {
-              await updateSequenceOffset(editSequenceId!, newOffsetDays);
-              setToast({ message: 'Sequence offset updated', type: 'success' });
-            } catch (e) {
-              setToast({
-                message: `Failed to update offset: ${e instanceof Error ? e.message : 'Unknown error'}`,
-                type: 'error',
-              });
-            }
-          }}
-          onUpdateName={async (newName) => {
-            try {
-              await updateSequenceName(editSequenceId!, newName);
-              setToast({ message: 'Sequence name updated', type: 'success' });
-            } catch (e) {
-              setToast({
-                message: `Failed to update name: ${e instanceof Error ? e.message : 'Unknown error'}`,
-                type: 'error',
-              });
-            }
-          }}
-          onUnlinkPlanting={async (plantingId) => {
-            try {
-              await unlinkFromSequence(plantingId);
-              setToast({ message: 'Planting removed from sequence', type: 'success' });
-            } catch (e) {
-              setToast({
-                message: `Failed to unlink: ${e instanceof Error ? e.message : 'Unknown error'}`,
-                type: 'error',
-              });
-            }
-          }}
-          onReorderSlots={async (newSlotAssignments) => {
-            try {
-              await reorderSequenceSlots(editSequenceId!, newSlotAssignments);
-              setToast({ message: 'Sequence reordered', type: 'success' });
-            } catch (e) {
-              setToast({
-                message: `Failed to reorder: ${e instanceof Error ? e.message : 'Unknown error'}`,
-                type: 'error',
-              });
-            }
-          }}
-        />
-      )}
     </PageLayout>
   );
 }

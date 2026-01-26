@@ -8,9 +8,7 @@ import { usePlanStore } from '@/lib/plan-store';
 import { useUIStore } from '@/lib/ui-store';
 import { Z_INDEX } from '@/lib/z-index';
 import { DateInputWithButtons } from '@/components/DateInputWithButtons';
-import { PlantingInspectorPanel } from '@/components/PlantingInspectorPanel';
-import CreateSequenceModal from '@/components/CreateSequenceModal';
-import SequenceEditorModal from '@/components/SequenceEditorModal';
+import { ConnectedPlantingInspector } from '@/components/ConnectedPlantingInspector';
 import { PageLayout } from '@/components/PageLayout';
 import AppHeader from '@/components/AppHeader';
 import {
@@ -699,11 +697,6 @@ export default function PlantingsPage() {
     updatePlanting,
     updateCropDates,
     bulkDeletePlantings,
-    createSequenceFromPlanting,
-    unlinkFromSequence,
-    updateSequenceOffset,
-    updateSequenceName,
-    reorderSequenceSlots,
   } = usePlanStore();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -734,14 +727,6 @@ export default function PlantingsPage() {
   const togglePlanting = useUIStore((state) => state.togglePlanting);
   const clearSelectionStore = useUIStore((state) => state.clearSelection);
   const selectAll = useUIStore((state) => state.selectMultiple);
-
-  // Sequence modal state
-  const [sequenceModalData, setSequenceModalData] = useState<{
-    plantingId: string;
-    cropName: string;
-    fieldStartDate: string;
-  } | null>(null);
-  const [editingSequenceId, setEditingSequenceId] = useState<string | null>(null);
 
   // Drag state for column reordering
   const [draggedColumn, setDraggedColumn] = useState<ColumnId | null>(null);
@@ -1656,50 +1641,9 @@ export default function PlantingsPage() {
         </div>
       }
       rightPanel={
-        inspectedCrops.length > 0 ? (
-          <PlantingInspectorPanel
-            selectedCrops={inspectedCrops}
-            onDeselect={(groupId) => togglePlanting(groupId)}
-            onClearSelection={() => clearSelectionStore()}
-            onUpdatePlanting={async (plantingId, updates) => {
-              await updatePlanting(plantingId, updates);
-            }}
-            onCropDateChange={(groupId, startDate, endDate) => {
-              updateCropDates(groupId, startDate, endDate);
-            }}
-            onDeleteCrop={(groupIds) => {
-              const plantingIds = displayPlantings
-                .filter(p => {
-                  const crops = cropsByPlanting.get(p.id);
-                  return crops && groupIds.some(gid =>
-                    crops.some(c => c.groupId === gid)
-                  );
-                })
-                .map(p => p.id);
-
-              if (plantingIds.length > 0) {
-                bulkDeletePlantings(plantingIds);
-                clearSelectionStore();
-              }
-            }}
-            onCreateSequence={(plantingId, cropName, fieldStartDate) => {
-              setSequenceModalData({ plantingId, cropName, fieldStartDate });
-            }}
-            onEditSequence={(sequenceId) => {
-              setEditingSequenceId(sequenceId);
-            }}
-            onUnlinkFromSequence={(plantingId) => {
-              unlinkFromSequence(plantingId);
-            }}
-            cropCatalog={catalogLookup}
-            varieties={varietiesLookup}
-            seedMixes={seedMixesLookup}
-            usedVarietyIds={usedVarietyIds}
-            usedMixIds={usedMixIds}
-            showTimingEdits={true}
-            className="w-80 bg-white border-l flex flex-col shrink-0"
-          />
-        ) : null
+        <ConnectedPlantingInspector
+          className="w-80 bg-white border-l flex flex-col shrink-0"
+        />
       }
       contentClassName="bg-gray-50"
     >
@@ -1886,44 +1830,6 @@ export default function PlantingsPage() {
 
       {/* Toast */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
-      {/* Create Sequence Modal */}
-      {sequenceModalData && (
-        <CreateSequenceModal
-          isOpen={true}
-          anchorFieldStartDate={sequenceModalData.fieldStartDate}
-          cropName={sequenceModalData.cropName}
-          onClose={() => setSequenceModalData(null)}
-          onCreate={async (options) => {
-            await createSequenceFromPlanting(sequenceModalData.plantingId, options);
-            setSequenceModalData(null);
-          }}
-        />
-      )}
-
-      {/* Sequence Editor Modal */}
-      {editingSequenceId && currentPlan?.sequences?.[editingSequenceId] && (
-        <SequenceEditorModal
-          isOpen={true}
-          sequence={currentPlan.sequences[editingSequenceId]}
-          plantings={plantings}
-          cropCatalog={catalogLookup}
-          beds={bedsLookup}
-          onClose={() => setEditingSequenceId(null)}
-          onUpdateOffset={(newOffsetDays) => {
-            updateSequenceOffset(editingSequenceId, newOffsetDays);
-          }}
-          onUpdateName={(newName) => {
-            updateSequenceName(editingSequenceId, newName);
-          }}
-          onUnlinkPlanting={(plantingId) => {
-            unlinkFromSequence(plantingId);
-          }}
-          onReorderSlots={(newSlotAssignments) => {
-            reorderSequenceSlots(editingSequenceId, newSlotAssignments);
-          }}
-        />
-      )}
 
       {/* Resize overlay */}
       {resizingColumn && <div className="fixed inset-0 cursor-col-resize" style={{ zIndex: Z_INDEX.RESIZE_OVERLAY ?? 9999 }} />}

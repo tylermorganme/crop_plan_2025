@@ -12,7 +12,7 @@ import { calculateConfigRevenue } from '@/lib/revenue';
 import { parseSearchQuery } from '@/lib/search-dsl';
 import type { CropBoxDisplayConfig } from '@/lib/entities/plan';
 import AddToBedPanel from './AddToBedPanel';
-import { PlantingInspectorPanel } from './PlantingInspectorPanel';
+import { ConnectedPlantingInspector } from './ConnectedPlantingInspector';
 import { SearchInput } from './SearchInput';
 import CropBoxDisplayEditor, {
   resolveTemplate,
@@ -122,39 +122,16 @@ interface CropTimelineProps {
   onBulkCropDateChange?: (updates: { groupId: string; startDate: string }[]) => void;
   /** Called when drag operation ends - committed=true on drop, false on cancel */
   onDragEnd?: (committed: boolean) => void;
-  onDuplicateCrop?: (groupId: string) => Promise<string | void>;
-  onDeleteCrop?: (groupIds: string[]) => void;
-  /** Callback when user wants to edit the crop config. Receives the planting identifier. */
-  onEditCropConfig?: (identifier: string) => void;
   /** Crop catalog for adding new plantings */
   cropCatalog?: Record<string, CropConfig>;
   /** Plan year for computing target dates */
   planYear?: number;
   /** Callback when user adds a planting from timeline */
   onAddPlanting?: (configId: string, fieldStartDate: string, bedId: string) => Promise<string | void>;
-  /** Callback when user updates planting fields (bedFeet, overrides, notes, seedSource, useDefaultSeedSource, actuals) */
-  onUpdatePlanting?: (plantingId: string, updates: {
-    bedFeet?: number;
-    overrides?: PlantingOverrides;
-    notes?: string;
-    seedSource?: SeedSource | null;
-    useDefaultSeedSource?: boolean;
-    actuals?: PlantingActuals;
-  }) => Promise<void>;
-  /** Varieties available in the plan (for seed source picker) */
-  varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
-  /** Seed mixes available in the plan (for seed source picker) */
-  seedMixes?: Record<string, { id: string; crop: string; name: string }>;
   /** Products available in the plan (for revenue calculation) */
   products?: Record<string, import('@/lib/entities/product').Product>;
   /** Initial state for no-variety filter (set via URL param) */
   initialNoVarietyFilter?: boolean;
-  /** Callback when user wants to create a sequence from a planting */
-  onCreateSequence?: (plantingId: string, cropName: string, fieldStartDate: string) => void;
-  /** Callback when user wants to unlink a planting from its sequence */
-  onUnlinkFromSequence?: (plantingId: string) => void;
-  /** Callback when user wants to edit a sequence's properties */
-  onEditSequence?: (sequenceId: string) => void;
   /** Crop box display configuration */
   cropBoxDisplay?: CropBoxDisplayConfig;
   /** Callback when user updates crop box display settings */
@@ -309,20 +286,11 @@ export default function CropTimeline({
   onBulkCropMove,
   onBulkCropDateChange,
   onDragEnd,
-  onDuplicateCrop,
-  onDeleteCrop,
-  onEditCropConfig,
   cropCatalog,
   planYear,
   onAddPlanting,
-  onUpdatePlanting,
-  varieties,
-  seedMixes,
   products,
   initialNoVarietyFilter,
-  onCreateSequence,
-  onUnlinkFromSequence,
-  onEditSequence,
   cropBoxDisplay,
   onUpdateCropBoxDisplay,
 }: CropTimelineProps) {
@@ -2236,41 +2204,11 @@ export default function CropTimeline({
             onHoverChange={handleHoverChange}
           />
         </div>
-      ) : selectedCropsData && selectedCropsData.length > 0 ? (
-        <PlantingInspectorPanel
-          selectedCrops={selectedCropsData as import('@/lib/plan-types').TimelineCrop[]}
-          onDeselect={(groupId) => {
-            // groupId is actually a plantingId in the context of TimelineCrop
-            togglePlanting(groupId);
-          }}
-          onClearSelection={() => clearSelection()}
-          onUpdatePlanting={onUpdatePlanting}
-          onCropDateChange={onCropDateChange}
-          onDeleteCrop={onDeleteCrop}
-          onDuplicateCrop={async (groupId) => {
-            if (onDuplicateCrop) {
-              const newId = await onDuplicateCrop(groupId);
-              if (newId) {
-                clearSelection();
-                selectPlanting(newId);
-              }
-              return newId;
-            }
-          }}
-          onCreateSequence={onCreateSequence}
-          onEditSequence={onEditSequence}
-          onUnlinkFromSequence={onUnlinkFromSequence}
-          onEditCropConfig={onEditCropConfig}
-          cropCatalog={cropCatalog}
-          varieties={varieties}
-          seedMixes={seedMixes}
-          usedVarietyIds={usedVarietyIds}
-          usedMixIds={usedMixIds}
-          products={products}
-          showTimingEdits={true}
+      ) : (
+        <ConnectedPlantingInspector
           className="w-80 bg-white border-l flex flex-col shrink-0 h-full overflow-hidden"
         />
-      ) : null}
+      )}
       </div>
 
       {/* Search Help Modal */}
