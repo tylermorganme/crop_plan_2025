@@ -153,6 +153,8 @@ const ZOOM_LEVELS = [
 ];
 
 const CROP_HEIGHT = 34;
+const MIN_UNASSIGNED_HEIGHT = 80;
+const MAX_UNASSIGNED_HEIGHT = 400;
 const CROP_SPACING = 4;
 const CROP_TOP_PADDING = 8;
 const TIMELINE_PADDING_MONTHS = 3;
@@ -325,7 +327,7 @@ export default function CropTimeline({
     fieldStartDate: string;
   } | null>(null);
   const [unassignedHeight, setUnassignedHeight] = useState(
-    savedState.current.unassignedHeight ?? 150
+    Math.min(MAX_UNASSIGNED_HEIGHT, savedState.current.unassignedHeight ?? 150)
   );
   const [isResizing, setIsResizing] = useState(false);
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -1196,7 +1198,7 @@ export default function CropTimeline({
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const delta = moveEvent.clientY - startY;
-      const newHeight = Math.max(80, Math.min(500, startHeight + delta));
+      const newHeight = Math.max(MIN_UNASSIGNED_HEIGHT, Math.min(MAX_UNASSIGNED_HEIGHT, startHeight + delta));
       setUnassignedHeight(newHeight);
     };
 
@@ -1931,7 +1933,7 @@ export default function CropTimeline({
             {(() => {
               const unassignedStacking = calculateStacking(unassignedCrops);
               // Use user-set height with a minimum, allowing overflow scroll when content exceeds
-              const effectiveHeight = Math.max(unassignedHeight, 80);
+              const effectiveHeight = Math.max(unassignedHeight, MIN_UNASSIGNED_HEIGHT);
               const isDragOverUnassigned = dragOverResource === 'Unassigned';
               const bgColor = unassignedCrops.length > 0 ? '#fffbeb' : '#f9fafb';
               // Calculate content height based on stacking (same formula as regular lanes)
@@ -1972,7 +1974,7 @@ export default function CropTimeline({
                       top: HEADER_HEIGHT,
                       zIndex: Z_INDEX.TIMELINE_UNASSIGNED_LANE,
                       height: effectiveHeight,
-                      overflowY: 'auto',
+                      // NOTE: overflow on td is ignored by browsers - use inner div instead
                       backgroundColor: isDragOverUnassigned ? '#fef3c7' : bgColor,
                       boxShadow: isDragOverUnassigned ? 'inset 0 0 0 3px #f59e0b' : undefined,
                       borderBottom: 'none',
@@ -1982,11 +1984,19 @@ export default function CropTimeline({
                     onDrop={(e) => handleDrop(e, 'Unassigned')}
                     onClick={handleTimelineCellClick}
                   >
-                    {/* Inner content container with calculated height for scrolling */}
+                    {/* Scrollable wrapper - overflow must be on a div, not td (browser limitation) */}
                     <div
-                      className="relative"
-                      style={{ minHeight: contentHeight }}
+                      style={{
+                        height: effectiveHeight,
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                      }}
                     >
+                      {/* Inner content container with calculated height for scrolling */}
+                      <div
+                        className="relative"
+                        style={{ minHeight: contentHeight }}
+                      >
                       {/* Today line */}
                       {todayPosition !== null && (
                         <div
@@ -2002,6 +2012,7 @@ export default function CropTimeline({
                       {/* Unassigned crop boxes */}
                       {unassignedCrops.map(crop => renderCropBox(crop, unassignedStacking.rows[crop.id] || 0))}
                     </div>
+                    </div>{/* Close scrollable wrapper */}
                   </td>
                 </tr>
               );
