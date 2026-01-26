@@ -61,7 +61,17 @@ function loadLayoutFromStorage(): FieldLayoutConfig {
   try {
     const stored = localStorage.getItem(LAYOUT_STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored) as FieldLayoutConfig;
+      const parsed = JSON.parse(stored);
+      // Migrate old 'rows' to 'lanes' if needed
+      if (parsed.fields) {
+        for (const field of parsed.fields) {
+          if (field.rows && !field.lanes) {
+            field.lanes = field.rows;
+            delete field.rows;
+          }
+        }
+      }
+      return parsed as FieldLayoutConfig;
     }
   } catch (e) {
     console.warn('Failed to load layout from storage:', e);
