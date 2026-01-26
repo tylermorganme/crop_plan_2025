@@ -1954,7 +1954,10 @@ export default function CropTimeline({
               const effectiveHeight = Math.max(unassignedHeight, 80);
               const isDragOverUnassigned = dragOverResource === 'Unassigned';
               const bgColor = unassignedCrops.length > 0 ? '#fffbeb' : '#f9fafb';
-              // Use the constant header height for consistent positioning
+              // Calculate content height based on stacking (same formula as regular lanes)
+              const contentHeight = viewMode === 'stacked' && unassignedCrops.length > 0
+                ? CROP_TOP_PADDING * 2 + unassignedStacking.maxRow * CROP_HEIGHT + (unassignedStacking.maxRow - 1) * CROP_SPACING
+                : 50;
 
               return (
                 <tr key="Unassigned">
@@ -1983,7 +1986,7 @@ export default function CropTimeline({
                   {/* Unassigned timeline lane - also sticky */}
                   <td
                     colSpan={monthHeaders.length}
-                    className={`relative p-0 transition-all duration-150`}
+                    className={`p-0 transition-all duration-150`}
                     style={{
                       position: 'sticky',
                       top: HEADER_HEIGHT,
@@ -1999,19 +2002,26 @@ export default function CropTimeline({
                     onDrop={(e) => handleDrop(e, 'Unassigned')}
                     onClick={handleTimelineCellClick}
                   >
-                    {/* Today line */}
-                    {todayPosition !== null && (
-                      <div
-                        className="absolute top-0 bottom-0 w-0.5 bg-red-500"
-                        style={{
-                          left: todayPosition,
-                          zIndex: Z_INDEX.BASE + 5,
-                          pointerEvents: 'none', // Make click-through for deselection
-                        }}
-                      />
-                    )}
-                    {/* Unassigned crop boxes */}
-                    {unassignedCrops.map(crop => renderCropBox(crop, unassignedStacking.rows[crop.id] || 0))}
+                    {/* Inner content container with calculated height for scrolling */}
+                    <div
+                      className="relative"
+                      style={{ minHeight: contentHeight }}
+                    >
+                      {/* Today line */}
+                      {todayPosition !== null && (
+                        <div
+                          className="absolute top-0 w-0.5 bg-red-500"
+                          style={{
+                            left: todayPosition,
+                            height: Math.max(contentHeight, effectiveHeight),
+                            zIndex: Z_INDEX.BASE + 5,
+                            pointerEvents: 'none', // Make click-through for deselection
+                          }}
+                        />
+                      )}
+                      {/* Unassigned crop boxes */}
+                      {unassignedCrops.map(crop => renderCropBox(crop, unassignedStacking.rows[crop.id] || 0))}
+                    </div>
                   </td>
                 </tr>
               );
