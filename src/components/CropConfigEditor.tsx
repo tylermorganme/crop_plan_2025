@@ -17,6 +17,7 @@ import type { SeedMix } from '@/lib/entities/seed-mix';
 import type { Product } from '@/lib/entities/product';
 import type { Market, MarketSplit } from '@/lib/entities/market';
 import { getMarketSplitTotal, validateMarketSplit, getActiveMarkets } from '@/lib/entities/market';
+import { weeksFromFrost, targetFromWeeks } from '@/lib/date-utils';
 import { Z_INDEX } from '@/lib/z-index';
 
 /** Standard tray sizes (cells per tray) */
@@ -43,6 +44,8 @@ interface CropConfigEditorProps {
   products?: Record<string, Product>;
   /** Markets available for market split selection */
   markets?: Record<string, Market>;
+  /** Last frost date for weeks-from-frost calculation (MM-DD format, e.g., "04-01") */
+  lastFrostDate?: string;
 }
 
 /**
@@ -214,7 +217,6 @@ const FORMULA_TEMPLATES: FormulaTemplate[] = [
   },
 ];
 
-
 // =============================================================================
 // MAIN COMPONENT
 // =============================================================================
@@ -243,6 +245,7 @@ export default function CropConfigEditor({
   seedMixes = {},
   products = {},
   markets = {},
+  lastFrostDate,
 }: CropConfigEditorProps) {
   // Form state - initialize from crop when opened
   const [formData, setFormData] = useState<Partial<CropConfig>>({});
@@ -586,6 +589,101 @@ export default function CropConfigEditor({
                     />
                     <span className="text-sm text-gray-700">Deprecated</span>
                   </label>
+                </div>
+              </div>
+            </section>
+
+            {/* Planting Layout Section */}
+            <section>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Planting Layout</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Rows per Bed</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={formData.rows ?? ''}
+                    onChange={(e) => updateNumberField('rows', e.target.value)}
+                    placeholder="e.g., 3"
+                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Number of planting rows across the bed</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">In-Row Spacing (inches)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="72"
+                    value={formData.spacing ?? ''}
+                    onChange={(e) => updateNumberField('spacing', e.target.value)}
+                    placeholder="e.g., 12"
+                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Space between plants within a row</p>
+                </div>
+              </div>
+              {/* Show calculated plants per bed when both values are set */}
+              {formData.rows && formData.spacing && (
+                <div className="mt-3 p-2 bg-blue-50 rounded text-sm text-blue-700">
+                  <span className="font-medium">
+                    {Math.floor((12 / formData.spacing) * formData.rows * 50)} plants per 50ft bed
+                  </span>
+                  <span className="text-blue-500 ml-2">
+                    ({formData.rows} rows × {Math.floor(12 / formData.spacing)} plants/row/ft × 50ft)
+                  </span>
+                </div>
+              )}
+            </section>
+
+            {/* Scheduling Section */}
+            <section>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Scheduling</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Target Field Date</label>
+                  <input
+                    type="text"
+                    value={formData.targetFieldDate ?? ''}
+                    onChange={(e) => updateField('targetFieldDate', e.target.value || undefined)}
+                    placeholder="4/15 or 04-15"
+                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Default date when adding this crop</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Weeks from Last Frost</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      value={weeksFromFrost(formData.targetFieldDate, lastFrostDate) ?? ''}
+                      onChange={(e) => {
+                        const weeks = parseInt(e.target.value, 10);
+                        if (isNaN(weeks)) {
+                          updateField('targetFieldDate', undefined);
+                          return;
+                        }
+                        const target = targetFromWeeks(lastFrostDate, weeks);
+                        if (target) {
+                          updateField('targetFieldDate', target);
+                        }
+                      }}
+                      placeholder={lastFrostDate ? '0' : 'Set frost date'}
+                      disabled={!lastFrostDate}
+                      className="w-20 px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                    />
+                    <span className="text-sm text-gray-500 self-center">
+                      {lastFrostDate ? (
+                        <>weeks (frost: {lastFrostDate})</>
+                      ) : (
+                        <span className="text-amber-600">No frost date set in plan</span>
+                      )}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Negative = before frost, Positive = after frost
+                  </p>
                 </div>
               </div>
             </section>

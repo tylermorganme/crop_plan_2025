@@ -211,6 +211,61 @@ function migrateV4ToV5(rawPlan: unknown): unknown {
   };
 }
 
+/**
+ * v5 → v6: Ensure all plantings have bedFeet
+ * Converts legacy bedsCount (fractions of 50ft beds) to bedFeet (actual feet).
+ * Defaults to 50 if neither field is present.
+ */
+function migrateV5ToV6(rawPlan: unknown): unknown {
+  const LEGACY_BED_FT = 50;
+
+  const plan = rawPlan as {
+    plantings?: Array<{
+      bedFeet?: number;
+      bedsCount?: number;
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+  };
+
+  if (!plan.plantings) {
+    return plan;
+  }
+
+  // Migrate plantings: ensure bedFeet exists
+  const migratedPlantings = plan.plantings.map(planting => {
+    // Already has bedFeet - no change needed
+    if (typeof planting.bedFeet === 'number' && planting.bedFeet > 0) {
+      // Remove legacy bedsCount if present
+      if ('bedsCount' in planting) {
+        const { bedsCount, ...rest } = planting;
+        return rest;
+      }
+      return planting;
+    }
+
+    // Convert bedsCount to bedFeet
+    if (typeof planting.bedsCount === 'number' && planting.bedsCount > 0) {
+      const { bedsCount, ...rest } = planting;
+      return {
+        ...rest,
+        bedFeet: bedsCount * LEGACY_BED_FT,
+      };
+    }
+
+    // Neither field exists - default to 50ft
+    return {
+      ...planting,
+      bedFeet: LEGACY_BED_FT,
+    };
+  });
+
+  return {
+    ...plan,
+    plantings: migratedPlantings,
+  };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -227,12 +282,17 @@ function migrateV4ToV5(rawPlan: unknown): unknown {
  * 1. Create the migration function above
  * 2. Append it to this array
  * 3. CURRENT_SCHEMA_VERSION automatically updates
+ *
+ * For simple field renames/transforms, also add declarative operations
+ * in dsl.ts (declarativeMigrations) to enable automatic patch migration.
+ * This preserves undo history across schema changes.
  */
 const migrations: MigrationFn[] = [
   migrateV1ToV2, // Index 0: v1 → v2
   migrateV2ToV3, // Index 1: v2 → v3
   migrateV3ToV4, // Index 2: v3 → v4
   migrateV4ToV5, // Index 3: v4 → v5 (sequenceIndex → sequenceSlot)
+  migrateV5ToV6, // Index 4: v5 → v6 (ensure bedFeet exists on all plantings)
 ];
 
 // =============================================================================

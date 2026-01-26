@@ -14,6 +14,10 @@ import { join } from 'path';
 import { existsSync, mkdirSync, unlinkSync, readdirSync, readFileSync, writeFileSync, copyFileSync } from 'fs';
 import type { Plan } from './entities/plan';
 import { CURRENT_SCHEMA_VERSION, migratePlan } from './migrations';
+import {
+  getDeclarativeOperationsForRange,
+  migratePatch as dslMigratePatch,
+} from './migrations/dsl';
 import type { Patch } from 'immer';
 import { logEvent } from './server-logger';
 
@@ -30,6 +34,12 @@ export interface StoredPatchEntry {
   inversePatches: Patch[];
   description: string;
   createdAt: string;
+  /** Schema version when patch was originally created (never changes) */
+  originalSchemaVersion?: number;
+  /** Schema version patch has been migrated to (updated on migration) */
+  currentSchemaVersion?: number;
+  /** Whether this patch became a no-op after migration (touched deleted field) */
+  isNoOp?: boolean;
 }
 
 /** Max number of patches to keep per plan (at ~700 bytes each, 10k = ~7MB) */
@@ -147,6 +157,43 @@ const SCHEMA = `
 `;
 
 // =============================================================================
+// DATABASE SCHEMA MIGRATIONS
+// =============================================================================
+
+/**
+ * Migrate database schema using PRAGMA user_version.
+ * Runs BEFORE data operations - columns must exist before code uses them.
+ *
+ * This handles structural changes to SQLite tables (adding columns, indices).
+ * Data schema changes (plan JSON structure) are handled separately by migratePlan().
+ */
+function migrateDbSchema(db: Database.Database): void {
+  const version = db.pragma('user_version', { simple: true }) as number;
+
+  // Migration 1: Add schema version tracking columns to patches and redo_stack
+  if (version < 1) {
+    db.exec(`
+      ALTER TABLE patches ADD COLUMN original_schema_version INTEGER;
+      ALTER TABLE patches ADD COLUMN current_schema_version INTEGER;
+      ALTER TABLE redo_stack ADD COLUMN original_schema_version INTEGER;
+      ALTER TABLE redo_stack ADD COLUMN current_schema_version INTEGER;
+    `);
+    db.pragma('user_version = 1');
+  }
+
+  // Migration 2: Add is_no_op column for patches that became no-ops after migration
+  if (version < 2) {
+    db.exec(`
+      ALTER TABLE patches ADD COLUMN is_no_op INTEGER DEFAULT 0;
+      ALTER TABLE redo_stack ADD COLUMN is_no_op INTEGER DEFAULT 0;
+    `);
+    db.pragma('user_version = 2');
+  }
+
+  // Future database schema migrations go here...
+}
+
+// =============================================================================
 // DATABASE OPERATIONS
 // =============================================================================
 
@@ -162,8 +209,12 @@ export function openPlanDb(planId: string): Database.Database {
   // Enable WAL mode for better concurrent access
   db.pragma('journal_mode = WAL');
 
-  // Initialize schema
+  // Initialize schema (creates tables if they don't exist)
   db.exec(SCHEMA);
+
+  // Run database schema migrations (adds columns, indices)
+  // Must run BEFORE any data operations that use new columns
+  migrateDbSchema(db);
 
   return db;
 }
@@ -192,6 +243,26 @@ export function loadPlan(planId: string): Plan | null {
 }
 
 /**
+ * Get the schema version of a plan from its database.
+ * Returns the version from the plan table without loading the full plan data.
+ */
+export function getPlanSchemaVersion(planId: string): number | null {
+  if (!planExists(planId)) {
+    return null;
+  }
+
+  const db = openPlanDb(planId);
+  try {
+    const row = db.prepare('SELECT schema_version FROM plan WHERE id = ?').get('main') as
+      | { schema_version: number }
+      | undefined;
+    return row?.schema_version ?? null;
+  } finally {
+    db.close();
+  }
+}
+
+/**
  * Save a plan to its database.
  * Creates the database if it doesn't exist.
  */
@@ -203,6 +274,161 @@ export function savePlan(planId: string, plan: Plan): void {
       VALUES ('main', ?, ?, datetime('now'))
     `);
     stmt.run(JSON.stringify(plan), plan.schemaVersion ?? CURRENT_SCHEMA_VERSION);
+  } finally {
+    db.close();
+  }
+}
+
+/**
+ * Migrate stored patches when plan schema is upgraded.
+ *
+ * For each patch with current_schema_version < targetVersion:
+ * 1. Apply declarative migration operations to transform patch paths/values
+ * 2. Mark patches as no-op if they touched deleted fields
+ * 3. Update current_schema_version to targetVersion
+ *
+ * Also migrates the redo_stack table.
+ */
+export function migrateStoredPatches(
+  planId: string,
+  fromVersion: number,
+  toVersion: number
+): { migrated: number; markedNoOp: number } {
+  const operations = getDeclarativeOperationsForRange(fromVersion, toVersion);
+
+  // If no declarative operations, just update schema versions
+  if (operations.length === 0) {
+    const db = openPlanDb(planId);
+    try {
+      const result = db
+        .prepare(
+          `UPDATE patches SET current_schema_version = ? WHERE current_schema_version < ?`
+        )
+        .run(toVersion, toVersion);
+      db.prepare(
+        `UPDATE redo_stack SET current_schema_version = ? WHERE current_schema_version < ?`
+      ).run(toVersion, toVersion);
+      return { migrated: result.changes, markedNoOp: 0 };
+    } finally {
+      db.close();
+    }
+  }
+
+  // Get patches that need migration
+  const db = openPlanDb(planId);
+  try {
+    const patches = db
+      .prepare(
+        `SELECT id, patches, inverse_patches, current_schema_version
+         FROM patches
+         WHERE current_schema_version < ?`
+      )
+      .all(toVersion) as Array<{
+      id: number;
+      patches: string;
+      inverse_patches: string;
+      current_schema_version: number;
+    }>;
+
+    let migrated = 0;
+    let markedNoOp = 0;
+
+    for (const row of patches) {
+      const patchArray: import('immer').Patch[] = JSON.parse(row.patches);
+      const inversePatchArray: import('immer').Patch[] = JSON.parse(row.inverse_patches);
+
+      // Migrate each patch in the entry
+      let hasNoOp = false;
+      const migratedPatches: import('immer').Patch[] = [];
+      const migratedInversePatches: import('immer').Patch[] = [];
+
+      for (const patch of patchArray) {
+        const result = dslMigratePatch(patch, operations);
+        if (result.isNoOp) {
+          hasNoOp = true;
+        }
+        migratedPatches.push(result.patch);
+      }
+
+      for (const patch of inversePatchArray) {
+        const result = dslMigratePatch(patch, operations);
+        if (result.isNoOp) {
+          hasNoOp = true;
+        }
+        migratedInversePatches.push(result.patch);
+      }
+
+      // Update the patch entry
+      db.prepare(
+        `UPDATE patches
+         SET patches = ?, inverse_patches = ?, current_schema_version = ?, is_no_op = ?
+         WHERE id = ?`
+      ).run(
+        JSON.stringify(migratedPatches),
+        JSON.stringify(migratedInversePatches),
+        toVersion,
+        hasNoOp ? 1 : 0,
+        row.id
+      );
+
+      migrated++;
+      if (hasNoOp) {
+        markedNoOp++;
+      }
+    }
+
+    // Also migrate redo_stack (same logic)
+    const redoPatches = db
+      .prepare(
+        `SELECT id, patches, inverse_patches, current_schema_version
+         FROM redo_stack
+         WHERE current_schema_version < ?`
+      )
+      .all(toVersion) as Array<{
+      id: number;
+      patches: string;
+      inverse_patches: string;
+      current_schema_version: number;
+    }>;
+
+    for (const row of redoPatches) {
+      const patchArray: import('immer').Patch[] = JSON.parse(row.patches);
+      const inversePatchArray: import('immer').Patch[] = JSON.parse(row.inverse_patches);
+
+      let hasNoOp = false;
+      const migratedPatches: import('immer').Patch[] = [];
+      const migratedInversePatches: import('immer').Patch[] = [];
+
+      for (const patch of patchArray) {
+        const result = dslMigratePatch(patch, operations);
+        if (result.isNoOp) {
+          hasNoOp = true;
+        }
+        migratedPatches.push(result.patch);
+      }
+
+      for (const patch of inversePatchArray) {
+        const result = dslMigratePatch(patch, operations);
+        if (result.isNoOp) {
+          hasNoOp = true;
+        }
+        migratedInversePatches.push(result.patch);
+      }
+
+      db.prepare(
+        `UPDATE redo_stack
+         SET patches = ?, inverse_patches = ?, current_schema_version = ?, is_no_op = ?
+         WHERE id = ?`
+      ).run(
+        JSON.stringify(migratedPatches),
+        JSON.stringify(migratedInversePatches),
+        toVersion,
+        hasNoOp ? 1 : 0,
+        row.id
+      );
+    }
+
+    return { migrated, markedNoOp };
   } finally {
     db.close();
   }
@@ -243,14 +469,21 @@ export function deletePlan(planId: string): boolean {
 export function appendPatch(planId: string, entry: Omit<StoredPatchEntry, 'id' | 'createdAt'>): number {
   const db = openPlanDb(planId);
   try {
+    // Use current schema version for new patches
+    // Both original and current are the same for new patches
+    // (current_schema_version gets updated during migration in Phase 4/5)
+    const schemaVersion = CURRENT_SCHEMA_VERSION;
+
     const stmt = db.prepare(`
-      INSERT INTO patches (patches, inverse_patches, description)
-      VALUES (?, ?, ?)
+      INSERT INTO patches (patches, inverse_patches, description, original_schema_version, current_schema_version)
+      VALUES (?, ?, ?, ?, ?)
     `);
     const result = stmt.run(
       JSON.stringify(entry.patches),
       JSON.stringify(entry.inversePatches),
-      entry.description
+      entry.description,
+      schemaVersion,
+      schemaVersion
     );
 
     const patchId = result.lastInsertRowid as number;
@@ -293,7 +526,8 @@ export function getPatches(planId: string): StoredPatchEntry[] {
     const rows = db
       .prepare(
         `
-      SELECT id, patches, inverse_patches, description, created_at
+      SELECT id, patches, inverse_patches, description, created_at,
+             original_schema_version, current_schema_version, is_no_op
       FROM patches
       ORDER BY created_at ASC, id ASC
     `
@@ -304,6 +538,9 @@ export function getPatches(planId: string): StoredPatchEntry[] {
       inverse_patches: string;
       description: string | null;
       created_at: string;
+      original_schema_version: number | null;
+      current_schema_version: number | null;
+      is_no_op: number | null;
     }>;
 
     return rows.map((row) => ({
@@ -312,6 +549,9 @@ export function getPatches(planId: string): StoredPatchEntry[] {
       inversePatches: JSON.parse(row.inverse_patches),
       description: row.description ?? '',
       createdAt: row.created_at,
+      originalSchemaVersion: row.original_schema_version ?? undefined,
+      currentSchemaVersion: row.current_schema_version ?? undefined,
+      isNoOp: row.is_no_op === 1,
     }));
   } finally {
     db.close();
@@ -331,7 +571,8 @@ export function getLastPatch(planId: string): StoredPatchEntry | null {
     const row = db
       .prepare(
         `
-      SELECT id, patches, inverse_patches, description, created_at
+      SELECT id, patches, inverse_patches, description, created_at,
+             original_schema_version, current_schema_version, is_no_op
       FROM patches
       ORDER BY id DESC
       LIMIT 1
@@ -344,6 +585,9 @@ export function getLastPatch(planId: string): StoredPatchEntry | null {
           inverse_patches: string;
           description: string | null;
           created_at: string;
+          original_schema_version: number | null;
+          current_schema_version: number | null;
+          is_no_op: number | null;
         }
       | undefined;
 
@@ -357,6 +601,9 @@ export function getLastPatch(planId: string): StoredPatchEntry | null {
       inversePatches: JSON.parse(row.inverse_patches),
       description: row.description ?? '',
       createdAt: row.created_at,
+      originalSchemaVersion: row.original_schema_version ?? undefined,
+      currentSchemaVersion: row.current_schema_version ?? undefined,
+      isNoOp: row.is_no_op === 1,
     };
   } finally {
     db.close();
@@ -409,13 +656,16 @@ export function pushToRedoStack(planId: string, entry: Omit<StoredPatchEntry, 'i
   const db = openPlanDb(planId);
   try {
     const stmt = db.prepare(`
-      INSERT INTO redo_stack (patches, inverse_patches, description)
-      VALUES (?, ?, ?)
+      INSERT INTO redo_stack (patches, inverse_patches, description, original_schema_version, current_schema_version, is_no_op)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
     const result = stmt.run(
       JSON.stringify(entry.patches),
       JSON.stringify(entry.inversePatches),
-      entry.description
+      entry.description,
+      entry.originalSchemaVersion ?? null,
+      entry.currentSchemaVersion ?? null,
+      entry.isNoOp ? 1 : 0
     );
     return result.lastInsertRowid as number;
   } finally {
@@ -437,7 +687,8 @@ export function popFromRedoStack(planId: string): StoredPatchEntry | null {
     // Get the most recent entry
     const row = db
       .prepare(`
-        SELECT id, patches, inverse_patches, description, created_at
+        SELECT id, patches, inverse_patches, description, created_at,
+               original_schema_version, current_schema_version, is_no_op
         FROM redo_stack
         ORDER BY id DESC
         LIMIT 1
@@ -448,6 +699,9 @@ export function popFromRedoStack(planId: string): StoredPatchEntry | null {
         inverse_patches: string;
         description: string | null;
         created_at: string;
+        original_schema_version: number | null;
+        current_schema_version: number | null;
+        is_no_op: number | null;
       } | undefined;
 
     if (!row) {
@@ -463,6 +717,9 @@ export function popFromRedoStack(planId: string): StoredPatchEntry | null {
       inversePatches: JSON.parse(row.inverse_patches),
       description: row.description ?? '',
       createdAt: row.created_at,
+      originalSchemaVersion: row.original_schema_version ?? undefined,
+      currentSchemaVersion: row.current_schema_version ?? undefined,
+      isNoOp: row.is_no_op === 1,
     };
   } finally {
     db.close();
@@ -858,7 +1115,8 @@ export function getPatchesAfter(planId: string, afterPatchId: number): StoredPat
     const rows = db
       .prepare(
         `
-        SELECT id, patches, inverse_patches, description, created_at
+        SELECT id, patches, inverse_patches, description, created_at,
+               original_schema_version, current_schema_version, is_no_op
         FROM patches
         WHERE id > ?
         ORDER BY id ASC
@@ -870,6 +1128,9 @@ export function getPatchesAfter(planId: string, afterPatchId: number): StoredPat
       inverse_patches: string;
       description: string | null;
       created_at: string;
+      original_schema_version: number | null;
+      current_schema_version: number | null;
+      is_no_op: number | null;
     }>;
 
     return rows.map((row) => ({
@@ -878,6 +1139,9 @@ export function getPatchesAfter(planId: string, afterPatchId: number): StoredPat
       inversePatches: JSON.parse(row.inverse_patches),
       description: row.description ?? '',
       createdAt: row.created_at,
+      originalSchemaVersion: row.original_schema_version ?? undefined,
+      currentSchemaVersion: row.current_schema_version ?? undefined,
+      isNoOp: row.is_no_op === 1,
     }));
   } finally {
     db.close();
@@ -963,11 +1227,12 @@ export function undoPatch(planId: string): { description: string } | null {
 
   const db = openPlanDb(planId);
   try {
-    // Get the most recent patch
+    // Get the most recent patch (including schema versions and no-op flag)
     const row = db
       .prepare(
         `
-        SELECT id, patches, inverse_patches, description, created_at
+        SELECT id, patches, inverse_patches, description, created_at,
+               original_schema_version, current_schema_version, is_no_op
         FROM patches
         ORDER BY id DESC
         LIMIT 1
@@ -980,6 +1245,9 @@ export function undoPatch(planId: string): { description: string } | null {
           inverse_patches: string;
           description: string | null;
           created_at: string;
+          original_schema_version: number | null;
+          current_schema_version: number | null;
+          is_no_op: number | null;
         }
       | undefined;
 
@@ -993,13 +1261,13 @@ export function undoPatch(planId: string): { description: string } | null {
       // Delete from patches
       db.prepare('DELETE FROM patches WHERE id = ?').run(row.id);
 
-      // Insert into redo_stack
+      // Insert into redo_stack (preserving schema versions and no-op flag)
       db.prepare(
         `
-        INSERT INTO redo_stack (patches, inverse_patches, description)
-        VALUES (?, ?, ?)
+        INSERT INTO redo_stack (patches, inverse_patches, description, original_schema_version, current_schema_version, is_no_op)
+        VALUES (?, ?, ?, ?, ?, ?)
       `
-      ).run(row.patches, row.inverse_patches, row.description);
+      ).run(row.patches, row.inverse_patches, row.description, row.original_schema_version, row.current_schema_version, row.is_no_op ?? 0);
 
       db.prepare('COMMIT').run();
     } catch (error) {
@@ -1026,11 +1294,12 @@ export function redoPatch(planId: string): { description: string } | null {
 
   const db = openPlanDb(planId);
   try {
-    // Get the most recent redo entry
+    // Get the most recent redo entry (including schema versions and no-op flag)
     const row = db
       .prepare(
         `
-        SELECT id, patches, inverse_patches, description, created_at
+        SELECT id, patches, inverse_patches, description, created_at,
+               original_schema_version, current_schema_version, is_no_op
         FROM redo_stack
         ORDER BY id DESC
         LIMIT 1
@@ -1043,6 +1312,9 @@ export function redoPatch(planId: string): { description: string } | null {
           inverse_patches: string;
           description: string | null;
           created_at: string;
+          original_schema_version: number | null;
+          current_schema_version: number | null;
+          is_no_op: number | null;
         }
       | undefined;
 
@@ -1056,13 +1328,13 @@ export function redoPatch(planId: string): { description: string } | null {
       // Delete from redo_stack
       db.prepare('DELETE FROM redo_stack WHERE id = ?').run(row.id);
 
-      // Insert into patches
+      // Insert into patches (preserving schema versions and no-op flag)
       db.prepare(
         `
-        INSERT INTO patches (patches, inverse_patches, description)
-        VALUES (?, ?, ?)
+        INSERT INTO patches (patches, inverse_patches, description, original_schema_version, current_schema_version, is_no_op)
+        VALUES (?, ?, ?, ?, ?, ?)
       `
-      ).run(row.patches, row.inverse_patches, row.description);
+      ).run(row.patches, row.inverse_patches, row.description, row.original_schema_version, row.current_schema_version, row.is_no_op ?? 0);
 
       db.prepare('COMMIT').run();
     } catch (error) {
@@ -1238,9 +1510,15 @@ export function hydratePlan(planId: string): Plan {
     throw new Error(`Failed to load base plan for ${planId}`);
   }
 
-  // Apply patches sequentially
+  // Apply patches sequentially (skipping no-ops)
   let currentPlan = basePlan;
+  let skippedNoOps = 0;
   for (const patchEntry of patchesAfterCheckpoint) {
+    // Skip patches marked as no-ops (touched deleted fields during migration)
+    if (patchEntry.isNoOp) {
+      skippedNoOps++;
+      continue;
+    }
     try {
       currentPlan = applyPatches(currentPlan, patchEntry.patches);
     } catch (error) {
@@ -1248,6 +1526,9 @@ export function hydratePlan(planId: string): Plan {
         `Failed to apply patch ${patchEntry.id} (${patchEntry.description}): ${error}`
       );
     }
+  }
+  if (skippedNoOps > 0) {
+    console.log(`[hydratePlan] Skipped ${skippedNoOps} no-op patches for plan ${planId}`);
   }
 
   // Check for plan from the future
@@ -1261,6 +1542,16 @@ export function hydratePlan(planId: string): Plan {
   if (didMigrate) {
     const migrationStart = Date.now();
     currentPlan = migratePlan(currentPlan);
+
+    // Migrate stored patches to match new schema
+    // This transforms patch paths/values and marks no-ops for deleted fields
+    const patchMigrationResult = migrateStoredPatches(planId, storedVersion, CURRENT_SCHEMA_VERSION);
+    if (patchMigrationResult.markedNoOp > 0) {
+      console.log(
+        `[hydratePlan] Migrated ${patchMigrationResult.migrated} patches, ` +
+          `${patchMigrationResult.markedNoOp} marked as no-op for plan ${planId}`
+      );
+    }
 
     // Log migration event
     logEvent({
@@ -1287,6 +1578,7 @@ export function hydratePlan(planId: string): Plan {
     planId,
     checkpointId: checkpointMetadata?.id ?? null,
     patchesApplied: patchesAfterCheckpoint.length,
+    skippedNoOps: skippedNoOps > 0 ? skippedNoOps : undefined,
     migrated: didMigrate,
     durationMs: hydrationDuration,
   });

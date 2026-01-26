@@ -44,6 +44,8 @@ export interface PlanMetadata {
   parentVersion?: number;
   /** IANA timezone identifier (e.g., "America/Los_Angeles"). Defaults to "America/Los_Angeles" */
   timezone?: string;
+  /** Last frost date for the growing season (MM-DD format, e.g., "04-01"). Used for scheduling calculations. */
+  lastFrostDate?: string;
 }
 
 /** A single change entry for history/undo */
@@ -94,7 +96,15 @@ export interface TimelineCrop {
   category?: string;
   bgColor?: string;
   textColor?: string;
-  feetNeeded?: number;
+  /**
+   * Total bed-feet needed for this planting.
+   * REQUIRED - derived from Planting.bedFeet. This is the source of truth for
+   * planting size in all timeline calculations (span, revenue, yield, etc.).
+   *
+   * If you see `|| 50` fallbacks in code that uses this field, that's a bug -
+   * feetNeeded should always be set when the TimelineCrop is created.
+   */
+  feetNeeded: number;
   structure?: string;
   /** Growing structure with proper typing for display */
   growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';

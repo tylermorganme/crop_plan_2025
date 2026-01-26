@@ -22,6 +22,7 @@ export type LogEvent =
       planId: string;
       checkpointId: string | null;
       patchesApplied: number;
+      skippedNoOps?: number;
       migrated: boolean;
       durationMs: number;
     }
@@ -60,6 +61,13 @@ export type LogEvent =
       operation: string;
       error: string;
       stack?: string;
+    }
+  | {
+      event: 'schema_mismatch';
+      planId: string;
+      clientVersion: number;
+      planVersion: number;
+      operation: 'patch_save' | 'plan_load';
     }
   | {
       event: 'api_call';

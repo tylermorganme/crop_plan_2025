@@ -22,6 +22,11 @@ import {
   restoreCheckpoint,
   deleteCheckpoint,
   deleteAllCheckpoints,
+  undoPatch,
+  redoPatch,
+  getRedoStackCount,
+  getPlanSchemaVersion,
+  migrateStoredPatches,
 } from '../sqlite-storage';
 import { CURRENT_SCHEMA_VERSION } from '../migrations';
 import type { Plan } from '../entities/plan';
@@ -549,6 +554,344 @@ describe('sqlite-storage', () => {
       expect(patches).toHaveLength(2);
       expect(patches[0].description).toBe('Edit 1');
       expect(patches[1].description).toBe('Edit 2');
+    });
+  });
+
+  describe('database schema migration', () => {
+    it('sets PRAGMA user_version after migration', () => {
+      const db = openPlanDb(TEST_PLAN_ID);
+      try {
+        const version = db.pragma('user_version', { simple: true }) as number;
+        // Currently at db schema version 2 (migration 1: schema versions, migration 2: is_no_op)
+        expect(version).toBe(2);
+      } finally {
+        db.close();
+      }
+    });
+
+    it('adds schema version columns to patches table', () => {
+      const db = openPlanDb(TEST_PLAN_ID);
+      try {
+        const columns = db.prepare('PRAGMA table_info(patches)').all() as Array<{ name: string }>;
+        const columnNames = columns.map((c) => c.name);
+
+        expect(columnNames).toContain('original_schema_version');
+        expect(columnNames).toContain('current_schema_version');
+      } finally {
+        db.close();
+      }
+    });
+
+    it('adds schema version columns to redo_stack table', () => {
+      const db = openPlanDb(TEST_PLAN_ID);
+      try {
+        const columns = db.prepare('PRAGMA table_info(redo_stack)').all() as Array<{ name: string }>;
+        const columnNames = columns.map((c) => c.name);
+
+        expect(columnNames).toContain('original_schema_version');
+        expect(columnNames).toContain('current_schema_version');
+      } finally {
+        db.close();
+      }
+    });
+
+    it('adds is_no_op column to patches and redo_stack tables', () => {
+      const db = openPlanDb(TEST_PLAN_ID);
+      try {
+        const patchColumns = db.prepare('PRAGMA table_info(patches)').all() as Array<{ name: string }>;
+        const redoColumns = db.prepare('PRAGMA table_info(redo_stack)').all() as Array<{ name: string }>;
+
+        expect(patchColumns.map((c) => c.name)).toContain('is_no_op');
+        expect(redoColumns.map((c) => c.name)).toContain('is_no_op');
+      } finally {
+        db.close();
+      }
+    });
+
+    it('migration is idempotent (running twice is safe)', () => {
+      // Open twice to trigger migration logic twice
+      let db = openPlanDb(TEST_PLAN_ID);
+      db.close();
+
+      db = openPlanDb(TEST_PLAN_ID);
+      try {
+        const version = db.pragma('user_version', { simple: true }) as number;
+        expect(version).toBe(2);
+
+        // Table should still be valid
+        const columns = db.prepare('PRAGMA table_info(patches)').all() as Array<{ name: string }>;
+        expect(columns.map((c) => c.name)).toContain('original_schema_version');
+        expect(columns.map((c) => c.name)).toContain('is_no_op');
+      } finally {
+        db.close();
+      }
+    });
+  });
+
+  describe('patch schema version tracking', () => {
+    beforeEach(() => {
+      savePlan(TEST_PLAN_ID, createTestPlan());
+    });
+
+    it('appendPatch sets schema versions on new patches', () => {
+      appendPatch(TEST_PLAN_ID, {
+        patches: [{ op: 'replace', path: ['test'], value: 'value' }],
+        inversePatches: [{ op: 'replace', path: ['test'], value: null }],
+        description: 'Test patch',
+      });
+
+      const patches = getPatches(TEST_PLAN_ID);
+      expect(patches).toHaveLength(1);
+      expect(patches[0].originalSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+      expect(patches[0].currentSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    });
+
+    it('getPatches returns schema versions', () => {
+      appendPatch(TEST_PLAN_ID, {
+        patches: [],
+        inversePatches: [],
+        description: 'Patch 1',
+      });
+      appendPatch(TEST_PLAN_ID, {
+        patches: [],
+        inversePatches: [],
+        description: 'Patch 2',
+      });
+
+      const patches = getPatches(TEST_PLAN_ID);
+
+      expect(patches).toHaveLength(2);
+      patches.forEach((patch) => {
+        expect(patch.originalSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+        expect(patch.currentSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+      });
+    });
+
+    it('getLastPatch returns schema versions', () => {
+      appendPatch(TEST_PLAN_ID, {
+        patches: [],
+        inversePatches: [],
+        description: 'Test',
+      });
+
+      const last = getLastPatch(TEST_PLAN_ID);
+
+      expect(last).not.toBeNull();
+      expect(last!.originalSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+      expect(last!.currentSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    });
+
+    it('undoPatch preserves schema versions in redo stack', () => {
+      appendPatch(TEST_PLAN_ID, {
+        patches: [{ op: 'replace', path: ['test'], value: 'value' }],
+        inversePatches: [{ op: 'replace', path: ['test'], value: null }],
+        description: 'To undo',
+      });
+
+      // Verify patch has schema version
+      const patchesBefore = getPatches(TEST_PLAN_ID);
+      expect(patchesBefore[0].originalSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+
+      // Undo
+      undoPatch(TEST_PLAN_ID);
+
+      // Verify it moved to redo stack with schema version preserved
+      const db = openPlanDb(TEST_PLAN_ID);
+      try {
+        const redoEntry = db.prepare(`
+          SELECT original_schema_version, current_schema_version
+          FROM redo_stack
+          ORDER BY id DESC
+          LIMIT 1
+        `).get() as { original_schema_version: number; current_schema_version: number };
+
+        expect(redoEntry.original_schema_version).toBe(CURRENT_SCHEMA_VERSION);
+        expect(redoEntry.current_schema_version).toBe(CURRENT_SCHEMA_VERSION);
+      } finally {
+        db.close();
+      }
+    });
+
+    it('redoPatch preserves schema versions back in patches', () => {
+      appendPatch(TEST_PLAN_ID, {
+        patches: [{ op: 'replace', path: ['test'], value: 'value' }],
+        inversePatches: [{ op: 'replace', path: ['test'], value: null }],
+        description: 'To undo then redo',
+      });
+
+      // Undo then redo
+      undoPatch(TEST_PLAN_ID);
+      expect(getRedoStackCount(TEST_PLAN_ID)).toBe(1);
+
+      redoPatch(TEST_PLAN_ID);
+
+      // Verify schema versions are preserved
+      const patches = getPatches(TEST_PLAN_ID);
+      expect(patches).toHaveLength(1);
+      expect(patches[0].originalSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+      expect(patches[0].currentSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    });
+
+    it('handles patches without schema versions (legacy data)', () => {
+      // Manually insert a patch without schema versions (simulates pre-migration data)
+      const db = openPlanDb(TEST_PLAN_ID);
+      try {
+        db.prepare(`
+          INSERT INTO patches (patches, inverse_patches, description)
+          VALUES (?, ?, ?)
+        `).run('[]', '[]', 'Legacy patch');
+      } finally {
+        db.close();
+      }
+
+      // Should not crash, schema versions should be undefined
+      const patches = getPatches(TEST_PLAN_ID);
+      expect(patches).toHaveLength(1);
+      expect(patches[0].originalSchemaVersion).toBeUndefined();
+      expect(patches[0].currentSchemaVersion).toBeUndefined();
+    });
+  });
+
+  describe('getPlanSchemaVersion', () => {
+    it('returns null for non-existent plan', () => {
+      const version = getPlanSchemaVersion('non-existent-plan');
+      expect(version).toBeNull();
+    });
+
+    it('returns schema version for existing plan', () => {
+      const plan = createTestPlan({ schemaVersion: CURRENT_SCHEMA_VERSION });
+      savePlan(TEST_PLAN_ID, plan);
+
+      const version = getPlanSchemaVersion(TEST_PLAN_ID);
+      expect(version).toBe(CURRENT_SCHEMA_VERSION);
+    });
+
+    it('returns correct version after plan is saved with different version', () => {
+      // Save with version 1
+      const plan1 = createTestPlan({ schemaVersion: 1 } as never);
+      savePlan(TEST_PLAN_ID, plan1);
+      expect(getPlanSchemaVersion(TEST_PLAN_ID)).toBe(1);
+
+      // Save with version 5
+      const plan5 = createTestPlan({ schemaVersion: 5 });
+      savePlan(TEST_PLAN_ID, plan5);
+      expect(getPlanSchemaVersion(TEST_PLAN_ID)).toBe(5);
+    });
+  });
+
+  describe('migrateStoredPatches', () => {
+    it('updates current_schema_version when no declarative operations exist', () => {
+      const plan = createTestPlan();
+      savePlan(TEST_PLAN_ID, plan);
+
+      // Manually insert a patch with old schema version
+      const db = openPlanDb(TEST_PLAN_ID);
+      db.prepare(
+        `INSERT INTO patches (patches, inverse_patches, description, original_schema_version, current_schema_version)
+         VALUES (?, ?, ?, ?, ?)`
+      ).run(
+        JSON.stringify([{ op: 'replace', path: ['metadata', 'name'], value: 'New Name' }]),
+        JSON.stringify([{ op: 'replace', path: ['metadata', 'name'], value: 'Old Name' }]),
+        'Rename plan',
+        1,
+        1
+      );
+      db.close();
+
+      // Migrate patches from v1 to v4 (no declarative operations exist for these)
+      const result = migrateStoredPatches(TEST_PLAN_ID, 1, 4);
+
+      expect(result.migrated).toBe(1);
+      expect(result.markedNoOp).toBe(0);
+
+      // Verify current_schema_version was updated
+      const patches = getPatches(TEST_PLAN_ID);
+      expect(patches[0].currentSchemaVersion).toBe(4);
+    });
+
+    it('transforms patch paths for renamePath operations (v4→v5)', () => {
+      const plan = createTestPlan();
+      savePlan(TEST_PLAN_ID, plan);
+
+      // Insert a patch that touches plantings.*.sequenceIndex (the old field name)
+      const db = openPlanDb(TEST_PLAN_ID);
+      db.prepare(
+        `INSERT INTO patches (patches, inverse_patches, description, original_schema_version, current_schema_version)
+         VALUES (?, ?, ?, ?, ?)`
+      ).run(
+        JSON.stringify([{ op: 'replace', path: ['plantings', 0, 'sequenceIndex'], value: 5 }]),
+        JSON.stringify([{ op: 'replace', path: ['plantings', 0, 'sequenceIndex'], value: 3 }]),
+        'Update sequence index',
+        4,
+        4
+      );
+      db.close();
+
+      // Migrate patches from v4 to v5 (has renamePath operation)
+      const result = migrateStoredPatches(TEST_PLAN_ID, 4, 5);
+
+      expect(result.migrated).toBe(1);
+      expect(result.markedNoOp).toBe(0);
+
+      // Verify patch paths were transformed
+      const patches = getPatches(TEST_PLAN_ID);
+      expect(patches[0].patches[0].path).toEqual(['plantings', 0, 'sequenceSlot']);
+      expect(patches[0].inversePatches[0].path).toEqual(['plantings', 0, 'sequenceSlot']);
+      expect(patches[0].currentSchemaVersion).toBe(5);
+    });
+
+    it('transforms patch values for transformValue operations (v5→v6)', () => {
+      const plan = createTestPlan();
+      savePlan(TEST_PLAN_ID, plan);
+
+      // Insert a patch that touches plantings.*.bedsCount (the old field name with value)
+      const db = openPlanDb(TEST_PLAN_ID);
+      db.prepare(
+        `INSERT INTO patches (patches, inverse_patches, description, original_schema_version, current_schema_version)
+         VALUES (?, ?, ?, ?, ?)`
+      ).run(
+        JSON.stringify([{ op: 'replace', path: ['plantings', 0, 'bedsCount'], value: 2 }]),
+        JSON.stringify([{ op: 'replace', path: ['plantings', 0, 'bedsCount'], value: 1 }]),
+        'Update beds count',
+        5,
+        5
+      );
+      db.close();
+
+      // Migrate patches from v5 to v6 (has transformValue + renamePath)
+      const result = migrateStoredPatches(TEST_PLAN_ID, 5, 6);
+
+      expect(result.migrated).toBe(1);
+      expect(result.markedNoOp).toBe(0);
+
+      // Verify patch paths and values were transformed
+      const patches = getPatches(TEST_PLAN_ID);
+      // Path renamed from bedsCount to bedFeet
+      expect(patches[0].patches[0].path).toEqual(['plantings', 0, 'bedFeet']);
+      // Value multiplied by 50 (2 * 50 = 100)
+      expect(patches[0].patches[0].value).toBe(100);
+      // Inverse also transformed
+      expect(patches[0].inversePatches[0].path).toEqual(['plantings', 0, 'bedFeet']);
+      expect(patches[0].inversePatches[0].value).toBe(50);
+      expect(patches[0].currentSchemaVersion).toBe(6);
+    });
+
+    it('returns zero counts when no patches need migration', () => {
+      const plan = createTestPlan();
+      savePlan(TEST_PLAN_ID, plan);
+
+      // Add a patch with current schema version
+      appendPatch(TEST_PLAN_ID, {
+        patches: [{ op: 'replace', path: ['metadata', 'name'], value: 'New' }],
+        inversePatches: [{ op: 'replace', path: ['metadata', 'name'], value: 'Old' }],
+        description: 'Test',
+      });
+
+      // Try to migrate (patches already at CURRENT_SCHEMA_VERSION)
+      const result = migrateStoredPatches(TEST_PLAN_ID, CURRENT_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION);
+
+      expect(result.migrated).toBe(0);
+      expect(result.markedNoOp).toBe(0);
     });
   });
 });

@@ -242,7 +242,6 @@ export interface PlantingInspectorPanelProps {
   seedMixes?: Record<string, { id: string; crop: string; name: string }>;
   usedVarietyIds?: Set<string>;
   usedMixIds?: Set<string>;
-  bedLengths?: Record<string, number>;
   products?: Record<string, Product>;
 
   // UI options
@@ -267,7 +266,6 @@ export function PlantingInspectorPanel({
   seedMixes,
   usedVarietyIds,
   usedMixIds,
-  bedLengths,
   products,
   showTimingEdits = false,
   className = '',
@@ -477,13 +475,14 @@ export function PlantingInspectorPanel({
               <div className="text-xs text-gray-600 mb-1">Length</div>
               {onUpdatePlanting ? (
                 <input
+                  key={`length-${crop.groupId}-${crop.feetNeeded}`}
                   type="number"
                   min={1}
                   step={25}
-                  defaultValue={crop.feetNeeded || 50}
+                  defaultValue={crop.feetNeeded}
                   onBlur={(e) => {
                     const val = parseInt(e.target.value, 10);
-                    if (!isNaN(val) && val > 0 && val !== (crop.feetNeeded || 50)) {
+                    if (!isNaN(val) && val > 0 && val !== crop.feetNeeded) {
                       onUpdatePlanting(crop.groupId, { bedFeet: val });
                     }
                   }}
@@ -495,10 +494,26 @@ export function PlantingInspectorPanel({
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
                 />
               ) : (
-                <div className="text-sm text-gray-900 py-1">{crop.feetNeeded || 50}&apos;</div>
+                <div className="text-sm text-gray-900 py-1">{crop.feetNeeded}&apos;</div>
               )}
             </div>
           </div>
+
+          {/* Config Info - show what config this planting was created from */}
+          {baseConfig && (
+            <div className="bg-gray-50 rounded p-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-gray-500">Config</div>
+                  <div className="text-sm font-medium text-gray-900">{baseConfig.identifier}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-500">Category</div>
+                  <div className="text-sm text-gray-700">{baseConfig.category || '—'}</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Structure, Yield, Revenue - compact row */}
           {baseConfig && (
@@ -519,7 +534,7 @@ export function PlantingInspectorPanel({
                     let unit = '';
                     for (const py of baseConfig.productYields) {
                       if (!py.yieldFormula) continue;
-                      const ctx = buildYieldContext(baseConfig, crop.feetNeeded || 50);
+                      const ctx = buildYieldContext(baseConfig, crop.feetNeeded);
                       ctx.harvests = py.numberOfHarvests ?? 1;
                       const result = evaluateYieldFormula(py.yieldFormula, ctx);
                       if (result.value !== null) {
@@ -541,7 +556,7 @@ export function PlantingInspectorPanel({
                 <div className="text-sm text-gray-900 py-1">
                   {(() => {
                     if (!products) return '—';
-                    const revenue = calculateConfigRevenue(baseConfig, crop.feetNeeded || 50, products);
+                    const revenue = calculateConfigRevenue(baseConfig, crop.feetNeeded, products);
                     return revenue ? formatCurrency(revenue) : '—';
                   })()}
                 </div>

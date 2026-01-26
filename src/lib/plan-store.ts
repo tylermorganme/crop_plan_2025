@@ -48,6 +48,7 @@ import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput, ty
 import { createSeedMix, getSeedMixKey, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
 import { createProduct, getProductKey, type Product, type CreateProductInput } from './entities/product';
 import { createSeedOrder, getSeedOrderId, type SeedOrder, type CreateSeedOrderInput } from './entities/seed-order';
+import { useUIStore } from './ui-store';
 import { createMarket, getActiveMarkets as getActiveMarketsFromRecord, type Market } from './entities/market';
 
 /**
@@ -621,6 +622,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   updatePlanMetadata: (updates: Partial<Omit<import('./entities/plan').PlanMetadata, 'id' | 'createdAt' | 'lastModified'>>) => Promise<void>;
   /** Update plan notes */
   updatePlanNotes: (notes: string) => Promise<void>;
+  /** Update crop box display configuration */
+  updateCropBoxDisplay: (config: import('./entities/plan').CropBoxDisplayConfig) => Promise<void>;
 
   // ---- Sequence Management (Succession Planting) ----
   /**
@@ -724,6 +727,18 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           state.isLoading = false;
         });
         throw new Error(`Plan not found: ${planId}`);
+      }
+
+      // Client staleness check: warn if plan was saved by newer code
+      const planSchemaVersion = (data.plan as { schemaVersion?: number }).schemaVersion ?? 1;
+      if (planSchemaVersion > CURRENT_SCHEMA_VERSION) {
+        useUIStore.getState().setToast({
+          message: `This plan was saved with a newer version of the app. Please refresh to get the latest code.`,
+          type: 'error',
+        });
+        console.warn(
+          `[loadPlanById] Schema mismatch: plan has version ${planSchemaVersion}, client has ${CURRENT_SCHEMA_VERSION}`
+        );
       }
 
       // Migrate plan to current schema version
@@ -3033,6 +3048,24 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       });
 
       await get().refreshPlanList();
+    },
+
+    updateCropBoxDisplay: async (config) => {
+      const { currentPlan } = get();
+      if (!currentPlan) return;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.cropBoxDisplay = config;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update crop box display settings`
+        );
+        state.isDirty = true;
+      });
     },
 
     // ---- Sequence Management (Succession Planting) ----

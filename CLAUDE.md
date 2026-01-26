@@ -279,6 +279,11 @@ For structural changes to the Plan schema, use the migration system in `src/lib/
 1. Create function in `migrations/index.ts`
 2. Append to `migrations` array
 3. `CURRENT_SCHEMA_VERSION` auto-increments
+4. For simple renames/transforms, also add declarative operations to `dsl.ts`
+
+**Declarative DSL** (`migrations/dsl.ts`): For field renames, deletions, or value transforms, add operations to `declarativeMigrations`. This enables automatic patch migration - stored patches get their paths/values transformed to match the new schema, preserving undo history across schema changes. Complex migrations (like v2→v3 bed UUID migration) remain imperative-only.
+
+**Recursion hazard:** Migrations run inside `hydratePlan()`. Never call functions that trigger `hydratePlan()` from migration code (e.g., `createCheckpointWithMetadata()`). Use `savePlan()` directly if needed.
 
 **Testing:** After any schema change, verify old plans still load by opening the app with existing data.
 

@@ -217,11 +217,12 @@ export interface CreateTimelineCropInput {
   resource: string;
   totalBeds: number;
   bedIndex: number;
+  /** Total bed-feet needed - derived from Planting.bedFeet */
+  feetNeeded: number;
   groupId?: string;
   category?: string;
   bgColor?: string;
   textColor?: string;
-  feetNeeded?: number;
   structure?: string;
   feetUsed?: number;
   bedCapacityFt?: number;

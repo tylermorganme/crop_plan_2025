@@ -40,7 +40,8 @@ export interface CropForDisplay {
   endDate: string;
   resource: string;
   category?: string;
-  feetNeeded?: number;
+  /** Total bed-feet needed - derived from Planting.bedFeet */
+  feetNeeded: number;
   cropConfigId?: string;
   totalBeds: number;
   bedIndex: number;
@@ -252,7 +253,7 @@ const TOKENS: TokenDef[] = [
       if (!ctx.cropCatalog || !ctx.products || !crop.cropConfigId) return null;
       const config = ctx.cropCatalog[crop.cropConfigId];
       if (!config) return null;
-      const rev = calculateConfigRevenue(config, crop.feetNeeded || 50, ctx.products);
+      const rev = calculateConfigRevenue(config, crop.feetNeeded, ctx.products);
       return rev ?? null;
     },
   },
@@ -321,7 +322,7 @@ const TOKENS: TokenDef[] = [
       let totalYield = 0;
       for (const py of config.productYields) {
         if (!py.yieldFormula) continue;
-        const context = buildYieldContext(config, crop.feetNeeded || 50);
+        const context = buildYieldContext(config, crop.feetNeeded);
         context.harvests = py.numberOfHarvests ?? 1;
         const result = evaluateYieldFormula(py.yieldFormula, context);
         if (result.value !== null) {

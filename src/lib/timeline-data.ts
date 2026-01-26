@@ -39,7 +39,7 @@ interface BedAssignment {
   crop: string;
   identifier: string;
   bed: string;
-  bedsCount?: number;  // Number of 50ft beds (e.g., 0.4 = 20ft, 1 = 50ft, 2 = 100ft)
+  bedFeet?: number;  // Total feet needed for this planting
   // Dates from the bed plan (for comparison/fallback)
   tpOrDsDate: string;
   endOfHarvest: string;
@@ -74,14 +74,6 @@ interface BedPlanData {
   beds: string[];
   bedGroups: Record<string, string[]>;
 }
-
-/**
- * Standard bed length used for bedsCount conversion in legacy import data.
- * bed-plan.json stores bedsCount as fractions of 50ft beds (e.g., 0.4 = 20ft).
- * This constant is ONLY for converting that legacy format - actual bed lengths
- * come from the Bed entity's lengthFt property.
- */
-const LEGACY_IMPORT_BED_FT = 50;
 
 // Cache for seed source resolution
 let seedSourceCache: {
@@ -296,8 +288,10 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
     const allAssignments = assignmentsByCrop.get(assignment.crop) || [];
     const displayName = allAssignments.length > 1 ? `${name} (${assignment.identifier})` : name;
 
-    // Calculate feet needed
-    const feetNeeded = (assignment.bedsCount ?? 1) * LEGACY_IMPORT_BED_FT;
+    // Use bedFeet from template data (defaults to 50ft for legacy imports without bedFeet)
+    // NOTE: This fallback is for template/import data only. Stored Planting records
+    // always have bedFeet set (enforced by migration v5→v6).
+    const feetNeeded = assignment.bedFeet ?? 50;
 
     // Resolve seed source from assignment fields
     const seedSource = resolveSeedSource(assignment);
@@ -529,7 +523,7 @@ function preparePlantingForCalc(
     id: planting.id,
     cropConfigId: planting.configId,
     bed: bedName,
-    bedsCount: planting.bedFeet / LEGACY_IMPORT_BED_FT,
+    bedFeet: planting.bedFeet,
     fixedFieldStartDate: effectiveFieldStartDate ?? planting.fieldStartDate,
     overrides: planting.overrides,
     actuals: planting.actuals,

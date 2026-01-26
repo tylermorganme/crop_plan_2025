@@ -4,7 +4,6 @@
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
       "identifier": "ARU002",
       "bed": "X2",
-      "bedsCount": 0.5,
       "startDate": "2025-04-07T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -37,13 +36,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Arugala Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
       "identifier": "ARU003",
       "bed": "H8",
-      "bedsCount": 1,
       "startDate": "2025-04-07T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -76,13 +75,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Arugala Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
       "identifier": "ARU001",
       "bed": "A5",
-      "bedsCount": 0.25,
       "startDate": "2025-04-11T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -115,13 +114,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Arugala Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
       "identifier": "ARU004",
       "bed": "D5",
-      "bedsCount": 0.5,
       "startDate": "2025-06-15T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -154,13 +153,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Arugala Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Arugula - Baby Leaf 1X | Field DS Sp",
       "identifier": "ARU005",
       "bed": "D5",
-      "bedsCount": 0.5,
       "startDate": "2025-08-15T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -193,13 +192,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Arugala Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Asian Greens - Mature Head 1X | Field TP ",
       "identifier": "BOK001",
       "bed": "E3",
-      "bedsCount": 1.6,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": "2025-04-14T00:00:00",
@@ -232,13 +231,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Asian Green Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 80
     },
     {
       "crop": "Asian Greens - Mature Head 1X | Field TP ",
       "identifier": "ASI002",
       "bed": "A2",
-      "bedsCount": 1,
       "startDate": "2025-07-18T00:00:00",
       "plannedGreenhouseStartDate": "2025-07-18T00:00:00",
       "actualGreenhouseDate": null,
@@ -271,13 +270,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Asian Green Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Asian Greens - Young Leaf 1X | Field DS ",
       "identifier": "ASI001",
       "bed": "X2",
-      "bedsCount": 0.5,
       "startDate": "2025-04-07T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -310,13 +309,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Spring Asian Greens Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Basil (Interplant) - Mature Leaf 1X | Tunnel TP SpSuOw",
       "identifier": "BAS001",
       "bed": "A4",
-      "bedsCount": 1,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -349,13 +348,13 @@
       "growingStructure": "Tunnel",
       "seedSourceName": "Basil Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Basil (Italian) - Mature Leaf 1X | Tunnel TP SpSuOw",
       "identifier": "BAS002",
       "bed": "A6",
-      "bedsCount": 1,
       "startDate": "2025-05-06T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-06T00:00:00",
       "actualGreenhouseDate": "2025-05-19T00:00:00",
@@ -388,13 +387,13 @@
       "growingStructure": "Tunnel",
       "seedSourceName": "Basil Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Basil (Tulsi) - Mature Leaf 1X | Field TP ",
       "identifier": "BAS003",
       "bed": "J1",
-      "bedsCount": 0.4,
       "startDate": "2025-04-11T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-11T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -427,13 +426,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Tulsi",
       "seedSourceSupplier": "Uprising",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 20
     },
     {
       "crop": "Bean (Pole) - Young Pod 3X | Field TP SuFa",
       "identifier": "BEA001",
       "bed": "G6",
-      "bedsCount": 2,
       "startDate": "2025-05-06T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-06T00:00:00",
       "actualGreenhouseDate": "2025-05-19T00:00:00",
@@ -466,13 +465,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Pole Bean Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Bean (Pole) - Young Pod 3X | Field TP SuFa",
       "identifier": "BEA002",
       "bed": "I3",
-      "bedsCount": 1,
       "startDate": "2025-05-06T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-06T00:00:00",
       "actualGreenhouseDate": "2025-05-19T00:00:00",
@@ -505,13 +504,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Pole Bean Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Beet - Mature Root 3X | Field TP Sp",
       "identifier": "BEE001",
       "bed": "C7",
-      "bedsCount": 2,
       "startDate": "2025-03-22T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-22T00:00:00",
       "actualGreenhouseDate": "2025-03-28T00:00:00",
@@ -544,13 +543,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Beet Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Beet - Mature Root 3X | Field TP SuFa",
       "identifier": "BEE002",
       "bed": "I7",
-      "bedsCount": 2,
       "startDate": "2025-05-31T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-31T00:00:00",
       "actualGreenhouseDate": "2025-06-21T00:00:00",
@@ -583,13 +582,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Beet Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Beet - Mature Root 3X | Field TP SuFa",
       "identifier": "BEE003",
       "bed": "A8",
-      "bedsCount": 1,
       "startDate": "2025-07-11T00:00:00",
       "plannedGreenhouseStartDate": "2025-07-11T00:00:00",
       "actualGreenhouseDate": null,
@@ -619,13 +618,13 @@
       "daysUntilHarvest": 1002,
       "trueHarvestWindow": 35,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "bedFeet": 50
     },
     {
       "crop": "Broccoli (Sprouting) - Loose Florets 1X | Field TP SuFa",
       "identifier": "BRO001",
       "bed": "I2",
-      "bedsCount": 1,
       "startDate": "2025-06-10T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-10T00:00:00",
       "actualGreenhouseDate": "2025-06-21T00:00:00",
@@ -658,13 +657,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Sprouting Broccoli Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Cabbage - Large Head 1X | Field TP Fa",
       "identifier": "CAB001",
       "bed": "F4",
-      "bedsCount": 1,
       "startDate": "2025-06-10T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-10T00:00:00",
       "actualGreenhouseDate": "2025-06-21T00:00:00",
@@ -697,13 +696,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cabbage Fall Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Cabbage (Chinese) - Large Head 1X | Field TP Wi",
       "identifier": "CAB002",
       "bed": "I5",
-      "bedsCount": 1,
       "startDate": "2025-06-09T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-09T00:00:00",
       "actualGreenhouseDate": "2025-06-21T00:00:00",
@@ -736,13 +735,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Chinese Cabbage Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Cabbage (Chinese) - Small Head 1X | Field TP Fa",
       "identifier": "CAB010",
       "bed": "I6",
-      "bedsCount": 1,
       "startDate": "2025-06-09T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-09T00:00:00",
       "actualGreenhouseDate": "2025-07-03T00:00:00",
@@ -775,13 +774,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Mini Chinese Cabbage Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Cabbage (Fast Early 9\") - Large Head 1X | Field TP Sp",
       "identifier": "CAB003",
       "bed": "E7",
-      "bedsCount": 0.4,
       "startDate": "2025-02-25T00:00:00",
       "plannedGreenhouseStartDate": "2025-02-25T00:00:00",
       "actualGreenhouseDate": "2025-03-28T00:00:00",
@@ -814,13 +813,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Mini Cabbage Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 20
     },
     {
       "crop": "Cabbage (Fast Mid 9\") - Large Head 1X | Field TP Sp",
       "identifier": "CAB004",
       "bed": "D1",
-      "bedsCount": 1,
       "startDate": "2025-03-17T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-17T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -853,13 +852,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Farao F1",
       "seedSourceSupplier": "High Mowing",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 50
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
       "identifier": "CAR001",
       "bed": "A1",
-      "bedsCount": 1,
       "startDate": "2025-03-27T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -892,13 +891,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Early Carrot Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
       "identifier": "CAR002",
       "bed": "D3",
-      "bedsCount": 0.5,
       "startDate": "2025-04-17T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -931,13 +930,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Early Carrot Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
       "identifier": "CAR004",
       "bed": "D3",
-      "bedsCount": 0.5,
       "startDate": "2025-05-08T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -970,13 +969,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Early Carrot Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
       "identifier": "CAR005",
       "bed": "D4",
-      "bedsCount": 0.5,
       "startDate": "2025-05-29T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -1009,13 +1008,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Early Carrot Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Sp",
       "identifier": "CAR006",
       "bed": "D4",
-      "bedsCount": 0.5,
       "startDate": "2025-06-19T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -1048,13 +1047,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Early Carrot Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Carrot (Early) - Mature Root 1X | Field DS Su",
       "identifier": "CAR008",
       "bed": "B1",
-      "bedsCount": 1,
       "startDate": "2025-08-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -1084,13 +1083,13 @@
       "daysUntilHarvest": 1013,
       "trueHarvestWindow": 21,
       "category": "Root",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "bedFeet": 50
     },
     {
       "crop": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi",
       "identifier": "CAR003",
       "bed": "D6",
-      "bedsCount": 1,
       "startDate": "2025-05-31T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -1123,13 +1122,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Maincrop Carrot Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi",
       "identifier": "CAR007",
       "bed": "D2",
-      "bedsCount": 1,
       "startDate": "2025-07-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -1162,13 +1161,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Maincrop Carrot Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Cauliflower - Mature Head 1X | Field TP Fa",
       "identifier": "CAU001",
       "bed": "F3",
-      "bedsCount": 1,
       "startDate": "2025-06-10T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-10T00:00:00",
       "actualGreenhouseDate": "2025-06-21T00:00:00",
@@ -1201,13 +1200,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Fall Cauliflower Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Cauliflower (Green-Stem) - Mature Head 1X | Field TP Su",
       "identifier": "CAU002",
       "bed": "I1",
-      "bedsCount": 1,
       "startDate": "2025-06-27T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-27T00:00:00",
       "actualGreenhouseDate": "2025-07-01T00:00:00",
@@ -1240,13 +1239,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Song TJS-65",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 50
     },
     {
       "crop": "Celery - Loose Rib 1X | Field TP SpSu",
       "identifier": "CEL001",
       "bed": "G1",
-      "bedsCount": 1,
       "startDate": "2025-02-20T00:00:00",
       "plannedGreenhouseStartDate": "2025-02-20T00:00:00",
       "actualGreenhouseDate": "2025-03-28T00:00:00",
@@ -1279,13 +1278,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Celery Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Choi Sum - Mature Head 1X | Field TP ",
       "identifier": "CHO001",
       "bed": "A3",
-      "bedsCount": 1,
       "startDate": "2025-02-20T00:00:00",
       "plannedGreenhouseStartDate": "2025-02-20T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -1318,13 +1317,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Green 70 D",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 50
     },
     {
       "crop": "Choi Sum - Mature Head 1X | Field TP ",
       "identifier": "CHO002",
       "bed": "C8",
-      "bedsCount": 1,
       "startDate": "2025-07-08T00:00:00",
       "plannedGreenhouseStartDate": "2025-07-08T00:00:00",
       "actualGreenhouseDate": null,
@@ -1357,13 +1356,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Green 70 D",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 50
     },
     {
       "crop": "Chrysanthemum Greens - Mature Leaf 1X | Field DS Ow",
       "identifier": "CHR001",
       "bed": "A5",
-      "bedsCount": 0.25,
       "startDate": "2025-03-27T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -1396,13 +1395,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Shungiku, Komi",
       "seedSourceSupplier": "Adaptive",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 12.5
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
       "identifier": "CIL002",
       "bed": "A4",
-      "bedsCount": 0.25,
       "startDate": "2025-03-12T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-12T00:00:00",
       "actualGreenhouseDate": "2025-03-28T00:00:00",
@@ -1435,13 +1434,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cilantro Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
       "identifier": "CIL003",
       "bed": "B2",
-      "bedsCount": 0.25,
       "startDate": "2025-03-13T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-13T00:00:00",
       "actualGreenhouseDate": "2025-03-28T00:00:00",
@@ -1474,13 +1473,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cilantro Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
       "identifier": "CIL004",
       "bed": "B2",
-      "bedsCount": 0.25,
       "startDate": "2025-03-26T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-26T00:00:00",
       "actualGreenhouseDate": "2025-03-28T00:00:00",
@@ -1513,13 +1512,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cilantro Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
       "identifier": "CIL005",
       "bed": "B2",
-      "bedsCount": 0.25,
       "startDate": "2025-04-09T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-09T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -1552,13 +1551,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cilantro Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
       "identifier": "CIL006",
       "bed": "B2",
-      "bedsCount": 0.25,
       "startDate": "2025-04-23T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-23T00:00:00",
       "actualGreenhouseDate": "2025-04-20T00:00:00",
@@ -1591,13 +1590,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cilantro Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
       "identifier": "CIL007",
       "bed": "B2",
-      "bedsCount": 0.25,
       "startDate": "2025-05-07T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-07T00:00:00",
       "actualGreenhouseDate": "2025-05-14T00:00:00",
@@ -1630,13 +1629,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cilantro Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Cilantro - Loose Leaf 3X | Field TP Su",
       "identifier": "CIL012",
       "bed": "D5",
-      "bedsCount": 0.25,
       "startDate": "2025-07-16T00:00:00",
       "plannedGreenhouseStartDate": "2025-07-16T00:00:00",
       "actualGreenhouseDate": null,
@@ -1669,13 +1668,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cilantro Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Corn  (Sweet Early) - Mature Cob 2X | Field DS ",
       "identifier": "COR001",
       "bed": "C1",
-      "bedsCount": 2,
       "startDate": "2025-06-15T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -1708,13 +1707,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Corn Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Cucumber (Asian Long) - Large Fruit 1X | Greenhouse TP ",
       "identifier": "CUC001",
       "bed": "A5",
-      "bedsCount": 0.75,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -1747,13 +1746,13 @@
       "growingStructure": "Greenhouse",
       "seedSourceName": "Asian Cucumber Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 37.5
     },
     {
       "crop": "Cucumber (Asian Long) - Ripe Fruit 1X | Field TP ",
       "identifier": "CUC003",
       "bed": "F0",
-      "bedsCount": 1,
       "startDate": "2025-04-11T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-11T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -1786,13 +1785,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Asian Cucumber Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Cucumber (Lebanese) - Small Fruit 1X | Greenhouse TP ",
       "identifier": "CUC002",
       "bed": "A4",
-      "bedsCount": 0.25,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -1825,13 +1824,13 @@
       "growingStructure": "Greenhouse",
       "seedSourceName": "Lebanese Cucumber Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Cucumber (Slicer) - Ripe Fruit 1X | Field TP ",
       "identifier": "CUC004",
       "bed": "F1",
-      "bedsCount": 1,
       "startDate": "2025-04-11T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-11T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -1864,13 +1863,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Slicing Cucumber Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Dahlia - Cut Flower 1X | Field DS ",
       "identifier": "DAH001",
       "bed": "U",
-      "bedsCount": 4,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -1900,13 +1899,13 @@
       "daysUntilHarvest": 924,
       "trueHarvestWindow": 7,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "bedFeet": 200
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Sp",
       "identifier": "DIL004",
       "bed": "B2",
-      "bedsCount": 0.25,
       "startDate": "2025-04-09T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-09T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -1939,13 +1938,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Dill Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Su",
       "identifier": "DIL001",
       "bed": "A4",
-      "bedsCount": 0.25,
       "startDate": "2025-03-12T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-12T00:00:00",
       "actualGreenhouseDate": "2025-03-25T00:00:00",
@@ -1978,13 +1977,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Dill Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Su",
       "identifier": "DIL002",
       "bed": "B2",
-      "bedsCount": 0.25,
       "startDate": "2025-03-12T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-12T00:00:00",
       "actualGreenhouseDate": "2025-03-25T00:00:00",
@@ -2017,13 +2016,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Dill Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Su",
       "identifier": "DIL005",
       "bed": "B2",
-      "bedsCount": 0.25,
       "startDate": "2025-04-23T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-23T00:00:00",
       "actualGreenhouseDate": "2025-04-20T00:00:00",
@@ -2056,13 +2055,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Dill Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Dill - Mature Leaf 4X | Field TP Su",
       "identifier": "DIL006",
       "bed": "D5",
-      "bedsCount": 0.25,
       "startDate": "2025-05-07T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-07T00:00:00",
       "actualGreenhouseDate": "2025-05-14T00:00:00",
@@ -2095,13 +2094,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Dill Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Fava Bean - Mature Pod 1X | Field DS Sp",
       "identifier": "FAV001",
       "bed": "B1",
-      "bedsCount": 1,
       "startDate": "2025-01-31T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -2134,13 +2133,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Aquadulce",
       "seedSourceSupplier": "Sustainable Seed Company",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 50
     },
     {
       "crop": "Fennel - Mini Bulb 1X | Field TP Sp",
       "identifier": "FEN003",
       "bed": "D2",
-      "bedsCount": 1,
       "startDate": "2025-03-07T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-07T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -2173,13 +2172,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Fennel Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Garlic (Green) - Young Bulb 1X | Field DS Ow",
       "identifier": "GAR535",
       "bed": "I8",
-      "bedsCount": 1,
       "startDate": "2014-12-21T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -2212,13 +2211,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Saved Seed",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Garlic (Hardneck) - Storage Bulb 1X | Field DS Ow",
       "identifier": "GAR533",
       "bed": "I5",
-      "bedsCount": 2,
       "startDate": "2024-12-21T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -2251,13 +2250,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Saved Seed",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Garlic (Softneck) - Storage Bulb 1X | Field DS Ow",
       "identifier": "GAR534",
       "bed": "I7",
-      "bedsCount": 1,
       "startDate": "2024-12-21T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -2290,13 +2289,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Saved Seed",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Gooseberry (Cape) - Mature Berry 1X | Field TP ",
       "identifier": "GOO001",
       "bed": "A6",
-      "bedsCount": 0.5,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": null,
@@ -2329,13 +2328,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Peruvian Ground Cherry",
       "seedSourceSupplier": "Garden Hoard",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Kale - Mature Leaf 2X | Field TP Sp",
       "identifier": "KAL003",
       "bed": "B3",
-      "bedsCount": 2,
       "startDate": "2025-03-22T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-22T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -2368,13 +2367,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Warm Kale Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Fa",
       "identifier": "KOH002",
       "bed": "A1",
-      "bedsCount": 1,
       "startDate": "2025-06-15T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-15T00:00:00",
       "actualGreenhouseDate": "2025-07-03T00:00:00",
@@ -2407,13 +2406,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Fresh Kholrabi Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Sp",
       "identifier": "KOH003",
       "bed": "A2",
-      "bedsCount": 1,
       "startDate": "2025-03-02T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-02T00:00:00",
       "actualGreenhouseDate": "2025-03-25T00:00:00",
@@ -2446,13 +2445,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Fresh Kholrabi Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Leek - Mature Stalk 5X | Field TP Su",
       "identifier": "LEE001",
       "bed": "G2",
-      "bedsCount": 2,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": "2025-04-15T00:00:00",
@@ -2485,13 +2484,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Summer Leek Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Lemongrass - Mature Stalks 1X | Field TP SpSu",
       "identifier": "LEM001",
       "bed": "H5",
-      "bedsCount": 1,
       "startDate": "2025-03-22T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-22T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -2524,13 +2523,13 @@
       "growingStructure": "Field",
       "seedSourceName": "East Indian Lemongrass",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 50
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
       "identifier": "LET014",
       "bed": "E2",
-      "bedsCount": 0.4,
       "startDate": "2025-03-12T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-12T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -2563,13 +2562,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Brown Goldring",
       "seedSourceSupplier": "Wild Garden",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 20
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
       "identifier": "LET015",
       "bed": "E1",
-      "bedsCount": 0.4,
       "startDate": "2025-04-02T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-02T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -2602,13 +2601,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Rouge D'Hiver",
       "seedSourceSupplier": "High Mowing",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 20
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
       "identifier": "LET016",
       "bed": "E6",
-      "bedsCount": 0.4,
       "startDate": "2025-04-23T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-23T00:00:00",
       "actualGreenhouseDate": "2025-04-24T00:00:00",
@@ -2641,13 +2640,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Jester",
       "seedSourceSupplier": "Wild Garden",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 20
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
       "identifier": "LET030",
       "bed": "H7",
-      "bedsCount": 1,
       "startDate": "2025-05-02T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-02T00:00:00",
       "actualGreenhouseDate": "2025-05-19T00:00:00",
@@ -2680,13 +2679,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Cool Lettuce Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
       "identifier": "LET017",
       "bed": "E8",
-      "bedsCount": 0.4,
       "startDate": "2025-05-14T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-14T00:00:00",
       "actualGreenhouseDate": "2025-05-14T00:00:00",
@@ -2719,13 +2718,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Truchas - Pelleted",
       "seedSourceSupplier": "Osborne",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 20
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa",
       "identifier": "LET024",
       "bed": "E7",
-      "bedsCount": 0.4,
       "startDate": "2025-06-04T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-04T00:00:00",
       "actualGreenhouseDate": "2025-07-01T00:00:00",
@@ -2758,13 +2757,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Summertime",
       "seedSourceSupplier": "Uprising",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 20
     },
     {
       "crop": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa",
       "identifier": "LET026",
       "bed": "E8",
-      "bedsCount": 0.4,
       "startDate": "2025-07-16T00:00:00",
       "plannedGreenhouseStartDate": "2025-07-16T00:00:00",
       "actualGreenhouseDate": null,
@@ -2797,13 +2796,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Lovelock",
       "seedSourceSupplier": "High Mowing",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 20
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP Sp",
       "identifier": "LET012",
       "bed": "F5",
-      "bedsCount": 2,
       "startDate": "2025-03-12T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-12T00:00:00",
       "actualGreenhouseDate": "2025-03-30T00:00:00",
@@ -2836,13 +2835,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Salanova Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
       "identifier": "LET018",
       "bed": "G4",
-      "bedsCount": 1,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -2875,13 +2874,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Salanova Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
       "identifier": "LET019",
       "bed": "G5",
-      "bedsCount": 1,
       "startDate": "2025-04-22T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-22T00:00:00",
       "actualGreenhouseDate": "2025-04-20T00:00:00",
@@ -2914,13 +2913,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Salanova Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
       "identifier": "LET021",
       "bed": "G5",
-      "bedsCount": 1,
       "startDate": "2025-06-03T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-03T00:00:00",
       "actualGreenhouseDate": "2025-07-01T00:00:00",
@@ -2953,13 +2952,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Salanova Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
       "identifier": "LET023",
       "bed": "G4",
-      "bedsCount": 1,
       "startDate": "2025-07-15T00:00:00",
       "plannedGreenhouseStartDate": "2025-07-15T00:00:00",
       "actualGreenhouseDate": null,
@@ -2992,13 +2991,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Salanova Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Lettuce (Salanova) - Loose Leaf 1X | Tunnel TP Sp",
       "identifier": "LET013",
       "bed": "A6",
-      "bedsCount": 1,
       "startDate": "2025-02-25T00:00:00",
       "plannedGreenhouseStartDate": "2025-02-25T00:00:00",
       "actualGreenhouseDate": "2025-03-28T00:00:00",
@@ -3031,13 +3030,13 @@
       "growingStructure": "Tunnel",
       "seedSourceName": "Salanova Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Lovage (Perennial) - Mature Leaf 1X | Field DS ",
       "identifier": "LOV366",
       "bed": "J8",
-      "bedsCount": 0.4,
       "startDate": "2024-01-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": "2024-01-01T00:00:00",
@@ -3070,13 +3069,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Perennial",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 20
     },
     {
       "crop": "Magenta Spreen - Young Stem 1X |  DS Sp",
       "identifier": "MAG001",
       "bed": "A4",
-      "bedsCount": 0.25,
       "startDate": "2025-03-17T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3109,13 +3108,13 @@
       "growingStructure": 0,
       "seedSourceName": "Magenta Spreen",
       "seedSourceSupplier": "Adaptive",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 12.5
     },
     {
       "crop": "Melon - Ripe Fruit 1X | Field TP ",
       "identifier": "MEL001",
       "bed": "B7",
-      "bedsCount": 2,
       "startDate": "2025-04-16T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-16T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -3148,13 +3147,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Melon Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Onion - Mature Bulb 6X | Field TP SpSu",
       "identifier": "ONI003",
       "bed": "F2",
-      "bedsCount": 1,
       "startDate": "2025-03-02T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-02T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -3187,13 +3186,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Rot Resistant Onions Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Onion (Salad Early) - Young Bulb 10X | Field TP Sp",
       "identifier": "ONI004",
       "bed": "A8",
-      "bedsCount": 1,
       "startDate": "2025-02-25T00:00:00",
       "plannedGreenhouseStartDate": "2025-02-25T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -3226,13 +3225,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Rot Resistant Onions Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Onion (Salad Late) - Young Bulb 10X | Field TP Sp",
       "identifier": "ONI005",
       "bed": "C4",
-      "bedsCount": 1,
       "startDate": "2025-03-22T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-22T00:00:00",
       "actualGreenhouseDate": "2025-03-28T00:00:00",
@@ -3265,13 +3264,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Rot Resistant Onions Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Parsley - Mature Leaf 3X | Field TP Sp",
       "identifier": "PAR001",
       "bed": "G0",
-      "bedsCount": 1,
       "startDate": "2025-03-22T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-22T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -3304,13 +3303,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Parsley Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Peas (Snap) - Young Pod 3X | Field TP SpSu",
       "identifier": "PEA001",
       "bed": "I1",
-      "bedsCount": 2,
       "startDate": "2025-03-02T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-02T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -3343,13 +3342,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Snap Pea Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Pepper (Bell) - Ripe Fruit Large 1X | Field TP ",
       "identifier": "PEP001",
       "bed": "H8",
-      "bedsCount": 0.5,
       "startDate": "2025-03-07T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-07T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -3382,13 +3381,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Shishito",
       "seedSourceSupplier": "Osborne",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Pepper (Bell) - Ripe Fruit Large 1X | Greenhouse TP ",
       "identifier": "PEP002",
       "bed": "A3",
-      "bedsCount": 0.5,
       "startDate": "2025-02-20T00:00:00",
       "plannedGreenhouseStartDate": "2025-02-20T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -3421,13 +3420,13 @@
       "growingStructure": "Greenhouse",
       "seedSourceName": "Sweet Pepper Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP ",
       "identifier": "PEP003",
       "bed": "H8",
-      "bedsCount": 0.5,
       "startDate": "2025-03-07T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-07T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -3460,13 +3459,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Shishito",
       "seedSourceSupplier": "Osborne",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP ",
       "identifier": "PEP005",
       "bed": "J3",
-      "bedsCount": 0.4,
       "startDate": "2025-03-07T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-07T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -3499,13 +3498,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Hot Pepper Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 20
     },
     {
       "crop": "Pepper (Hot) - Ripe Fruit Small 1X | Greenhouse TP ",
       "identifier": "PEP004",
       "bed": "A3",
-      "bedsCount": 0.5,
       "startDate": "2025-02-20T00:00:00",
       "plannedGreenhouseStartDate": "2025-02-20T00:00:00",
       "actualGreenhouseDate": "2025-03-21T00:00:00",
@@ -3538,13 +3537,13 @@
       "growingStructure": "Greenhouse",
       "seedSourceName": "Sweet Pepper Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Potato (Early) - Mature Root 1X | Field DS ",
       "identifier": "POT001",
       "bed": "F3",
-      "bedsCount": 2,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3577,13 +3576,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Early Potato Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Potato (Main Crop) - Storage Root 1X | Field DS ",
       "identifier": "POT002",
       "bed": "C5",
-      "bedsCount": 2,
       "startDate": "2025-04-21T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3616,13 +3615,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Main Potato Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Radicchio (90 Day) - Forced Head 1X | Field TP Su",
       "identifier": "RAD002",
       "bed": "C7",
-      "bedsCount": 1.6,
       "startDate": "2025-05-31T00:00:00",
       "plannedGreenhouseStartDate": "2025-05-31T00:00:00",
       "actualGreenhouseDate": "2025-06-21T00:00:00",
@@ -3655,13 +3654,13 @@
       "growingStructure": "Field",
       "seedSourceName": "90 Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 80
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Sp",
       "identifier": "RAD003",
       "bed": "A5",
-      "bedsCount": 0.25,
       "startDate": "2025-03-12T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3694,13 +3693,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Sp",
       "identifier": "RAD449",
       "bed": "B6",
-      "bedsCount": 0.5,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3733,13 +3732,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
       "identifier": "RAD455",
       "bed": "X1",
-      "bedsCount": 1,
       "startDate": "2025-04-07T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3772,13 +3771,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
       "identifier": "RAD451",
       "bed": "D7",
-      "bedsCount": 0.5,
       "startDate": "2025-05-31T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3811,13 +3810,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
       "identifier": "RAD452",
       "bed": "D8",
-      "bedsCount": 0.5,
       "startDate": "2025-06-30T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3850,13 +3849,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
       "identifier": "RAD453",
       "bed": "D7",
-      "bedsCount": 0.5,
       "startDate": "2025-07-30T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3889,13 +3888,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
       "identifier": "RAD456",
       "bed": "D3",
-      "bedsCount": 0.5,
       "startDate": "2025-08-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3928,13 +3927,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
       "identifier": "RAD457",
       "bed": "D1",
-      "bedsCount": 0.5,
       "startDate": "2025-08-20T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -3967,13 +3966,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Radish (6r) - Mature Root 1X | Field DS Su",
       "identifier": "RAD454",
       "bed": "D8",
-      "bedsCount": 0.5,
       "startDate": "2025-08-29T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -4006,13 +4005,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Radish (Daikon) - Storage Root 1X | Field TP FaWi",
       "identifier": "RAD005",
       "bed": "B6",
-      "bedsCount": 1,
       "startDate": "2025-06-20T00:00:00",
       "plannedGreenhouseStartDate": "2025-06-20T00:00:00",
       "actualGreenhouseDate": "2025-07-01T00:00:00",
@@ -4045,13 +4044,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Winter Radish Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Radish (Munchen Bier) - Storage Root 1X | Field DS ",
       "identifier": "RAD006",
       "bed": "B5",
-      "bedsCount": 1,
       "startDate": "2025-06-30T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -4084,13 +4083,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Schwarzer Runder",
       "seedSourceSupplier": "High Mowing",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 50
     },
     {
       "crop": "Rutabaga - Mature Root 2X | Field TP Fa",
       "identifier": "RUT001",
       "bed": "F5",
-      "bedsCount": 2,
       "startDate": "2025-07-18T00:00:00",
       "plannedGreenhouseStartDate": "2025-07-18T00:00:00",
       "actualGreenhouseDate": null,
@@ -4120,13 +4119,13 @@
       "daysUntilHarvest": 1049,
       "trueHarvestWindow": 21,
       "category": 0,
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "bedFeet": 100
     },
     {
       "crop": "Scallion - Mature Stalk 6X | Field DS Fa",
       "identifier": "SCA638",
       "bed": "C3",
-      "bedsCount": 0.5,
       "startDate": "2025-06-25T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -4156,13 +4155,13 @@
       "daysUntilHarvest": 983,
       "trueHarvestWindow": 14,
       "category": "Onion",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "bedFeet": 25
     },
     {
       "crop": "Scallion - Mature Stalk 6X | Field DS Fa",
       "identifier": "SCA636",
       "bed": "C3",
-      "bedsCount": 0.5,
       "startDate": "2025-08-15T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -4192,13 +4191,13 @@
       "daysUntilHarvest": 1034,
       "trueHarvestWindow": 14,
       "category": "Onion",
-      "growingStructure": "Field"
+      "growingStructure": "Field",
+      "bedFeet": 25
     },
     {
       "crop": "Scallion - Mature Stalk 6X | Field TP Sp",
       "identifier": "SCA633",
       "bed": "A4",
-      "bedsCount": 0.25,
       "startDate": "2025-03-02T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-02T00:00:00",
       "actualGreenhouseDate": null,
@@ -4231,13 +4230,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Scallion Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 12.5
     },
     {
       "crop": "Scallion - Mature Stalk 6X | Field TP Sp",
       "identifier": "SCA634",
       "bed": "J5",
-      "bedsCount": 0.8,
       "startDate": "2025-03-23T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-23T00:00:00",
       "actualGreenhouseDate": "2025-05-14T00:00:00",
@@ -4270,13 +4269,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Scallion Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 40
     },
     {
       "crop": "Scallion - Mature Stalk 6X | Field TP Sp",
       "identifier": "SCA635",
       "bed": "C3",
-      "bedsCount": 0.5,
       "startDate": "2025-04-13T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-13T00:00:00",
       "actualGreenhouseDate": "2025-04-14T00:00:00",
@@ -4309,13 +4308,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Scallion Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Sorrel - Mature Leaf 3X | Field TP ",
       "identifier": "SOR485",
       "bed": "J2",
-      "bedsCount": 0.4,
       "startDate": "2024-03-23T00:00:00",
       "plannedGreenhouseStartDate": "2024-04-01T00:00:00",
       "actualGreenhouseDate": "2024-03-23T00:00:00",
@@ -4348,13 +4347,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Sorrel Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 20
     },
     {
       "crop": "Squash (Delicata) - Storage 1X | Field TP ",
       "identifier": "SQU002",
       "bed": "U",
-      "bedsCount": 1,
       "startDate": "2025-04-11T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-11T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4387,13 +4386,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Delicata Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Squash (Kuri) - Storage 1X | Field TP ",
       "identifier": "SQU004",
       "bed": "U",
-      "bedsCount": 16,
       "startDate": "2025-04-11T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-11T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4426,13 +4425,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Winter Squash Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 800
     },
     {
       "crop": "Summer Squash (Long Season) - Ripe Fruit 1X | Field TP Su",
       "identifier": "SUM001",
       "bed": "G8",
-      "bedsCount": 1,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4465,13 +4464,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Centercut",
       "seedSourceSupplier": "Row 7",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 50
     },
     {
       "crop": "Summer Squash (Short Season) - Ripe Fruit 1X | Field TP Su",
       "identifier": "SUM002",
       "bed": "F7",
-      "bedsCount": 2,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-01T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4504,13 +4503,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Summer Squash Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Swiss Chard - Mature Leaf 1X | Field TP SpSuFa",
       "identifier": "SWI002",
       "bed": "I4",
-      "bedsCount": 1,
       "startDate": "2025-04-21T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-21T00:00:00",
       "actualGreenhouseDate": "2025-04-20T00:00:00",
@@ -4543,13 +4542,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Swiss Chard Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Tomatillo - Ripe Fruit 1X | Field TP ",
       "identifier": "TOM001",
       "bed": "A7",
-      "bedsCount": 1,
       "startDate": "2025-03-22T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-22T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -4582,13 +4581,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Tomatillo Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su",
       "identifier": "TOM006",
       "bed": "U",
-      "bedsCount": 6,
       "startDate": "2025-03-20T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-20T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4621,13 +4620,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Determinate Beefsteak Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 300
     },
     {
       "crop": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su",
       "identifier": "TOM010",
       "bed": "X2",
-      "bedsCount": 2,
       "startDate": "2025-03-20T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-20T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4660,13 +4659,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Determinate Beefsteak Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Field TP Su",
       "identifier": "TOM002",
       "bed": "H1",
-      "bedsCount": 2,
       "startDate": "2025-03-17T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-17T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -4699,13 +4698,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Large Tomato Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Greenhouse TP Su",
       "identifier": "TOM003",
       "bed": "A5",
-      "bedsCount": 0.5,
       "startDate": "2025-03-07T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-07T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -4738,13 +4737,13 @@
       "growingStructure": "Greenhouse",
       "seedSourceName": "Large Tomato Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su",
       "identifier": "TOM007",
       "bed": "U",
-      "bedsCount": 8,
       "startDate": "2025-04-05T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-05T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4777,13 +4776,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Determinate Cherry Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 400
     },
     {
       "crop": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su",
       "identifier": "TOM011",
       "bed": "X4",
-      "bedsCount": 1,
       "startDate": "2025-04-05T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-05T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4816,13 +4815,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Determinate Cherry Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Tomato (Cherry) - Ripe Fruit Small 1X | Greenhouse TP Su",
       "identifier": "TOM004",
       "bed": "A4",
-      "bedsCount": 0.5,
       "startDate": "2025-03-07T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-07T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -4855,13 +4854,13 @@
       "growingStructure": "Greenhouse",
       "seedSourceName": "Cherry Tomato Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 25
     },
     {
       "crop": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su",
       "identifier": "TOM008",
       "bed": "U",
-      "bedsCount": 8,
       "startDate": "2025-04-05T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-05T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4894,13 +4893,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Determinate Medium Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 400
     },
     {
       "crop": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su",
       "identifier": "TOM012",
       "bed": "X1",
-      "bedsCount": 1,
       "startDate": "2025-04-05T00:00:00",
       "plannedGreenhouseStartDate": "2025-04-05T00:00:00",
       "actualGreenhouseDate": "2025-04-16T00:00:00",
@@ -4933,13 +4932,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Determinate Medium Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 50
     },
     {
       "crop": "Tomato (Medium) - Ripe Fruit Medium 1X | Field TP Su",
       "identifier": "TOM005",
       "bed": "H3",
-      "bedsCount": 2,
       "startDate": "2025-03-17T00:00:00",
       "plannedGreenhouseStartDate": "2025-03-17T00:00:00",
       "actualGreenhouseDate": "2025-04-01T00:00:00",
@@ -4972,13 +4971,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Medium Tomato Mix",
       "seedSourceSupplier": null,
-      "seedSourceIsMix": true
+      "seedSourceIsMix": true,
+      "bedFeet": 100
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp",
       "identifier": "TUR001",
       "bed": "B6",
-      "bedsCount": 0.5,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -5011,13 +5010,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Hakurei",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp",
       "identifier": "TUR003",
       "bed": "A5",
-      "bedsCount": 0.25,
       "startDate": "2025-04-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -5050,13 +5049,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Hakurei",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 12.5
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
       "identifier": "TUR002",
       "bed": "D7",
-      "bedsCount": 0.5,
       "startDate": "2025-06-14T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -5089,13 +5088,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Hakurei",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
       "identifier": "TUR528",
       "bed": "D8",
-      "bedsCount": 0.5,
       "startDate": "2025-07-07T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -5128,13 +5127,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Hakurei",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
       "identifier": "TUR531",
       "bed": "D3",
-      "bedsCount": 0.5,
       "startDate": "2025-08-01T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -5167,13 +5166,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Hakurei",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
       "identifier": "TUR529",
       "bed": "D7",
-      "bedsCount": 0.5,
       "startDate": "2025-08-07T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -5206,13 +5205,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Hakurei",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
       "identifier": "TUR532",
       "bed": "F6",
-      "bedsCount": 0.5,
       "startDate": "2025-08-20T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -5245,13 +5244,13 @@
       "growingStructure": "Field",
       "seedSourceName": "Hakurei",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     },
     {
       "crop": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
       "identifier": "TUR530",
       "bed": "D8",
-      "bedsCount": 0.5,
       "startDate": "2025-09-07T00:00:00",
       "plannedGreenhouseStartDate": null,
       "actualGreenhouseDate": null,
@@ -5284,7 +5283,8 @@
       "growingStructure": "Field",
       "seedSourceName": "Hakurei",
       "seedSourceSupplier": "Johnny's",
-      "seedSourceIsMix": false
+      "seedSourceIsMix": false,
+      "bedFeet": 25
     }
   ],
   "beds": [

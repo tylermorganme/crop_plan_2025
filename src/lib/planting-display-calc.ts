@@ -49,8 +49,8 @@ export interface PlantingWithDates {
   /** Assigned bed, or null if unassigned */
   bed: string | null;
 
-  /** Number of beds in 50ft units (e.g., 0.5 = 25ft, 1 = 50ft) */
-  bedsCount: number;
+  /** Total feet needed for this planting */
+  bedFeet: number;
 
   /** Fixed field start date (ISO string) - when crop enters field */
   fixedFieldStartDate?: string;
@@ -197,14 +197,6 @@ export function resolveEffectiveTiming(
 // =============================================================================
 
 /**
- * Standard bed length used for bedsCount conversion in legacy import data.
- * The PlantingWithDates.bedsCount field stores bed fractions based on 50ft beds
- * (e.g., 0.4 = 20ft, 1.0 = 50ft). This constant is ONLY for converting
- * that legacy format - actual bed lengths come from Bed.lengthFt.
- */
-const LEGACY_IMPORT_BED_FT = 50;
-
-/**
  * Converts a planting (with computed dates) into a single TimelineCrop.
  *
  * Takes: PlantingWithDates (one planting, dates calculated)
@@ -254,8 +246,8 @@ export function expandToTimelineCrops(
   const endDate = format(timing.endDate, "yyyy-MM-dd'T'HH:mm:ss");
   const harvestStartDate = format(timing.beginningOfHarvest, "yyyy-MM-dd'T'HH:mm:ss");
 
-  // Calculate feet needed from legacy bedsCount format
-  const feetNeeded = planting.bedsCount * LEGACY_IMPORT_BED_FT;
+  // Use bedFeet directly
+  const feetNeeded = planting.bedFeet;
 
   // Build display name - include product if not 'General'
   const name = config.product && config.product !== 'General'
@@ -334,12 +326,11 @@ export function recalculateCropsForConfig(
     }
 
     // Extract slim planting from existing timeline crop
-    // Convert feet back to legacy bedsCount format for recalculation
     const slim: PlantingWithDates = {
       id: firstCrop.plantingId || groupId,
       cropConfigId: configIdentifier,
       bed: firstCrop.resource || null,
-      bedsCount: (firstCrop.feetNeeded || 50) / LEGACY_IMPORT_BED_FT,
+      bedFeet: firstCrop.feetNeeded,
       fixedFieldStartDate: firstCrop.startDate, // Use current start as fixed date
     };
 
@@ -399,7 +390,7 @@ export function extractPlantingFromImport(assignment: {
   identifier: string;
   crop: string;
   bed: string;
-  bedsCount?: number;
+  bedFeet?: number;
   fixedFieldStartDate?: string | null;
   additionalDaysOfHarvest?: number | string | null;
   additionalDaysInField?: number | string | null;
@@ -412,7 +403,7 @@ export function extractPlantingFromImport(assignment: {
     id: assignment.identifier,
     cropConfigId: assignment.crop, // For now, use the full crop identifier as the config ID
     bed: assignment.bed || null,
-    bedsCount: assignment.bedsCount ?? 1,
+    bedFeet: assignment.bedFeet ?? 50,
     fixedFieldStartDate: assignment.fixedFieldStartDate ?? undefined,
     overrides: {
       additionalDaysOfHarvest: safeParseNumber(assignment.additionalDaysOfHarvest),

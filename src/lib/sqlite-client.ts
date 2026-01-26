@@ -6,6 +6,7 @@
  */
 
 import type { Plan, PatchEntry } from './plan-types';
+import { CURRENT_SCHEMA_VERSION } from './migrations';
 
 // =============================================================================
 // TYPES (matching what storage-adapter.ts exported)
@@ -134,6 +135,7 @@ export class SQLiteClientAdapter {
   /**
    * Append a patch entry to the plan's patch history.
    * Fire-and-forget: returns null on error instead of throwing.
+   * Sends client's schema version for staleness detection.
    */
   async appendPatch(planId: string, entry: PatchEntry): Promise<number | null> {
     try {
@@ -142,10 +144,19 @@ export class SQLiteClientAdapter {
           const response = await fetch(`/api/sqlite/${planId}/patches`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ patch: entry }),
+            body: JSON.stringify({
+              patch: entry,
+              clientSchemaVersion: CURRENT_SCHEMA_VERSION,
+            }),
           });
           if (!response.ok) {
-            console.warn('Failed to append patch:', response.statusText);
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 409 && data.error === 'SCHEMA_MISMATCH') {
+              // Schema mismatch - plan was migrated by newer code
+              console.error('[appendPatch] Schema mismatch: plan was updated by newer code. Please refresh.');
+            } else {
+              console.warn('Failed to append patch:', response.statusText);
+            }
             return null;
           }
           const data = await response.json();

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { usePlanStore } from '@/lib/plan-store';
-import { TIMEZONE_OPTIONS, DEFAULT_TIMEZONE } from '@/lib/date-utils';
+import { TIMEZONE_OPTIONS, DEFAULT_TIMEZONE, parseMonthDay, formatMonthDay } from '@/lib/date-utils';
 import AppHeader from '@/components/AppHeader';
 
 export default function SettingsPage() {
@@ -126,6 +126,68 @@ export default function SettingsPage() {
               </select>
               <p className="mt-1 text-sm text-gray-500">
                 Used for date calculations and display. All dates are interpreted in this timezone.
+              </p>
+            </div>
+
+            {/* Last Frost Date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Last Frost Date
+              </label>
+              <div className="flex gap-2 items-center">
+                {(() => {
+                  const parsed = parseMonthDay(metadata.lastFrostDate);
+                  const monthStr = parsed ? String(parsed.month).padStart(2, '0') : '';
+                  const dayStr = parsed ? String(parsed.day).padStart(2, '0') : '';
+                  return (
+                    <>
+                      <select
+                        value={monthStr}
+                        onChange={(e) => {
+                          const month = e.target.value;
+                          const currentDay = parsed?.day ?? 1;
+                          updatePlanMetadata({
+                            lastFrostDate: month ? formatMonthDay(parseInt(month), currentDay) : undefined
+                          });
+                        }}
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Month</option>
+                        <option value="01">January</option>
+                        <option value="02">February</option>
+                        <option value="03">March</option>
+                        <option value="04">April</option>
+                        <option value="05">May</option>
+                        <option value="06">June</option>
+                        <option value="07">July</option>
+                        <option value="08">August</option>
+                        <option value="09">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                      </select>
+                      <select
+                        value={dayStr}
+                        onChange={(e) => {
+                          const day = e.target.value;
+                          const currentMonth = parsed?.month ?? 4;
+                          updatePlanMetadata({
+                            lastFrostDate: day ? formatMonthDay(currentMonth, parseInt(day)) : undefined
+                          });
+                        }}
+                        className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Day</option>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                          <option key={d} value={String(d).padStart(2, '0')}>{d}</option>
+                        ))}
+                      </select>
+                    </>
+                  );
+                })()}
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Average last frost date for your area. Used to calculate weeks-from-frost for crop scheduling.
               </p>
             </div>
           </div>

@@ -149,6 +149,75 @@ export function daysBetween(dateLeft: Date, dateRight: Date): number {
 }
 
 // =============================================================================
+// MONTH-DAY (MM-DD) UTILITIES
+// =============================================================================
+
+/**
+ * Parse MM-DD format string into month and day numbers.
+ * Accepts "04-01", "4-1", "4/1", "04/01", etc.
+ *
+ * @param mmdd - Month-day string (e.g., "04-15" or "4/15")
+ * @returns Object with month (1-12) and day (1-31), or null if invalid
+ */
+export function parseMonthDay(mmdd: string | undefined): { month: number; day: number } | null {
+  if (!mmdd || typeof mmdd !== 'string') return null;
+  // Accept both dash and slash separators
+  const parts = mmdd.split(/[-/]/);
+  if (parts.length !== 2) return null;
+  const month = parseInt(parts[0], 10);
+  const day = parseInt(parts[1], 10);
+  if (isNaN(month) || isNaN(day) || month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { month, day };
+}
+
+/**
+ * Format month and day as MM-DD string.
+ *
+ * @param month - Month (1-12)
+ * @param day - Day (1-31)
+ * @returns Formatted string (e.g., "04-15")
+ */
+export function formatMonthDay(month: number, day: number): string {
+  return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+/**
+ * Calculate weeks between a target date and frost date (both as MM-DD).
+ * Positive = target is after frost, negative = target is before frost.
+ *
+ * @param targetDate - Target date in MM-DD format
+ * @param frostDate - Frost date in MM-DD format
+ * @returns Number of weeks, or null if either date is invalid
+ */
+export function weeksFromFrost(targetDate: string | undefined, frostDate: string | undefined): number | null {
+  const target = parseMonthDay(targetDate);
+  const frost = parseMonthDay(frostDate);
+  if (!target || !frost) return null;
+
+  // Use a reference year for calculation (any non-leap year works)
+  const targetD = new Date(2001, target.month - 1, target.day);
+  const frostD = new Date(2001, frost.month - 1, frost.day);
+  const diffDays = Math.round((targetD.getTime() - frostD.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.round(diffDays / 7);
+}
+
+/**
+ * Calculate target date (MM-DD) from frost date and weeks offset.
+ *
+ * @param frostDate - Frost date in MM-DD format
+ * @param weeks - Number of weeks from frost (positive = after, negative = before)
+ * @returns Target date in MM-DD format, or null if frost date is invalid
+ */
+export function targetFromWeeks(frostDate: string | undefined, weeks: number): string | null {
+  const frost = parseMonthDay(frostDate);
+  if (!frost) return null;
+
+  const date = new Date(2001, frost.month - 1, frost.day);
+  date.setDate(date.getDate() + weeks * 7);
+  return formatMonthDay(date.getMonth() + 1, date.getDate());
+}
+
+// =============================================================================
 // TIMEZONE UTILITIES
 // =============================================================================
 

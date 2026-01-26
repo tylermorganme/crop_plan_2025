@@ -6,6 +6,31 @@ import { create } from 'zustand';
 
 const SYNC_CHANNEL_NAME = 'ui-store-sync';
 const TAB_ID_KEY = 'ui-store-tab-id';
+const SEARCH_QUERY_KEY = 'ui-store-search-query';
+
+/** Load persisted search query from localStorage */
+function loadPersistedSearchQuery(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    return localStorage.getItem(SEARCH_QUERY_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+/** Save search query to localStorage */
+function saveSearchQuery(query: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (query) {
+      localStorage.setItem(SEARCH_QUERY_KEY, query);
+    } else {
+      localStorage.removeItem(SEARCH_QUERY_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 /**
  * Unique ID for this tab (to filter out own broadcasts).
@@ -248,10 +273,11 @@ export const useUIStore = create<UIState>((set, get) => ({
     return plantingIds.length > 0 && plantingIds.every((id) => state.selectedPlantingIds.has(id));
   },
 
-  // Search
-  searchQuery: '',
+  // Search - persisted to localStorage
+  searchQuery: loadPersistedSearchQuery(),
   setSearchQuery: (query: string) => {
     set({ searchQuery: query });
+    saveSearchQuery(query);
     broadcastUISync({ type: 'search-changed', query });
   },
 

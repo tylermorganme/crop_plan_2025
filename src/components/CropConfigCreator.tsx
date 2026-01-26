@@ -28,6 +28,8 @@ interface CropConfigCreatorProps {
   markets?: Record<string, Market>;
   /** Optional: Pre-select a config to copy (skips the choose step) */
   initialSourceConfig?: CropConfig | null;
+  /** Last frost date for weeks-from-frost calculation (ISO date string) */
+  lastFrostDate?: string;
 }
 
 type Step = 'choose' | 'edit';
@@ -50,6 +52,7 @@ export default function CropConfigCreator({
   products,
   markets,
   initialSourceConfig,
+  lastFrostDate,
 }: CropConfigCreatorProps) {
   const [step, setStep] = useState<Step>('choose');
   const [createMode, setCreateMode] = useState<CreateMode>('blank');
@@ -145,6 +148,7 @@ export default function CropConfigCreator({
         seedMixes={seedMixes}
         products={products}
         markets={markets}
+        lastFrostDate={lastFrostDate}
       />
     );
   }

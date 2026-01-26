@@ -266,6 +266,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const cropCatalog = usePlanStore((state) => state.currentPlan?.cropCatalog);
   const currentPlanId = usePlanStore((state) => state.currentPlan?.id);
   const planYear = usePlanStore((state) => state.currentPlan?.metadata?.year) ?? new Date().getFullYear();
+  const lastFrostDate = usePlanStore((state) => state.currentPlan?.metadata?.lastFrostDate);
   const varieties = usePlanStore((state) => state.currentPlan?.varieties);
   const seedMixes = usePlanStore((state) => state.currentPlan?.seedMixes);
   const products = usePlanStore((state) => state.currentPlan?.products);
@@ -1920,6 +1921,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         products={products}
         markets={markets}
         initialSourceConfig={copySourceConfig as CropConfig | null}
+        lastFrostDate={lastFrostDate}
       />
 
       {/* Edit Config Modal */}
@@ -1934,6 +1936,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         seedMixes={seedMixes}
         products={products}
         markets={markets}
+        lastFrostDate={lastFrostDate}
       />
 
       {/* Delete Confirmation Modal */}
