@@ -31,6 +31,8 @@ interface FieldConfig {
   name: string;
   /** Grid layout: lanes of bed group letters. Each inner array is one visual lane (horizontal strip). */
   lanes: string[][];
+  /** Reverse the order of beds within each group (e.g., J10→J1 instead of J1→J10) */
+  reverseBedOrder?: boolean;
 }
 
 /** Complete layout configuration */
@@ -329,13 +331,24 @@ function BedRowComponent({
     setIsDragOver(false);
 
     try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      // Try application/json first, fall back to text/plain
+      let rawData = e.dataTransfer.getData('application/json');
+      if (!rawData) {
+        rawData = e.dataTransfer.getData('text/plain');
+      }
+
+      if (!rawData) {
+        console.warn('[handleDrop] No drag data available');
+        return;
+      }
+
+      const data = JSON.parse(rawData);
       // Accept both unassigned and assigned plantings for (re)assignment
       if ((data.type === 'unassigned-planting' || data.type === 'assigned-planting') && data.plantingId && onAssignPlanting) {
         onAssignPlanting(data.plantingId, row.bedId);
       }
-    } catch {
-      // Invalid drop data, ignore
+    } catch (err) {
+      console.error('[handleDrop] Error:', err);
     }
   }, [onAssignPlanting, row.bedId]);
 
@@ -386,10 +399,12 @@ function BedRowComponent({
               }}
               onDragStart={(e) => {
                 e.stopPropagation();
-                e.dataTransfer.setData('application/json', JSON.stringify({
+                const jsonStr = JSON.stringify({
                   type: 'assigned-planting',
                   plantingId: crop.plantingId,
-                }));
+                });
+                e.dataTransfer.setData('application/json', jsonStr);
+                e.dataTransfer.setData('text/plain', jsonStr);
                 e.dataTransfer.effectAllowed = 'move';
               }}
               style={{
@@ -461,6 +476,7 @@ function BedGroupComponent({
   selectedPlantingIds,
   filterTerms,
   filterMode,
+  reverseBedOrder,
 }: {
   section: BedGroupSection;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
@@ -469,7 +485,13 @@ function BedGroupComponent({
   selectedPlantingIds?: Set<string>;
   filterTerms?: string[];
   filterMode?: 'highlight' | 'filter';
+  reverseBedOrder?: boolean;
 }) {
+  // Optionally reverse bed order within the group
+  const displayBeds = useMemo(() => {
+    return reverseBedOrder ? [...section.beds].reverse() : section.beds;
+  }, [section.beds, reverseBedOrder]);
+
   return (
     <div style={{ width: GROUP_WIDTH }}>
       {/* Group header - clickable to view timeline */}
@@ -484,7 +506,7 @@ function BedGroupComponent({
       {/* Month headers + Beds */}
       <div className="bg-white border border-t-0 border-gray-200 rounded-b">
         <MonthHeaderRow />
-        {section.beds.map((bed, index) => (
+        {displayBeds.map((bed, index) => (
           <BedRowComponent
             key={bed.bedId}
             row={bed}
@@ -633,10 +655,12 @@ function UnassignedPlantingsPanel({
               className={`border-b border-gray-100 cursor-grab hover:bg-blue-50 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
               draggable
               onDragStart={(e) => {
-                e.dataTransfer.setData('application/json', JSON.stringify({
+                const jsonStr = JSON.stringify({
                   type: 'unassigned-planting',
                   plantingId,
-                }));
+                });
+                e.dataTransfer.setData('application/json', jsonStr);
+                e.dataTransfer.setData('text/plain', jsonStr);
                 e.dataTransfer.effectAllowed = 'move';
               }}
             >
@@ -721,6 +745,15 @@ function LayoutEditorModal({
     setEditLayout({
       ...editLayout,
       fields: editLayout.fields.map(f => f.id === fieldId ? { ...f, name } : f),
+    });
+  };
+
+  const toggleReverseBedOrder = (fieldId: string) => {
+    setEditLayout({
+      ...editLayout,
+      fields: editLayout.fields.map(f =>
+        f.id === fieldId ? { ...f, reverseBedOrder: !f.reverseBedOrder } : f
+      ),
     });
   };
 
@@ -820,7 +853,7 @@ function LayoutEditorModal({
           <div className="flex-1 p-4 overflow-auto">
             {selectedField && (
               <div className="space-y-4">
-                {/* Field name */}
+                {/* Field name and settings */}
                 <div className="flex items-center gap-3">
                   <input
                     type="text"
@@ -828,6 +861,15 @@ function LayoutEditorModal({
                     onChange={e => updateFieldName(selectedField.id, e.target.value)}
                     className="px-2 py-1 border border-gray-300 rounded text-lg font-medium w-64"
                   />
+                  <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedField.reverseBedOrder ?? false}
+                      onChange={() => toggleReverseBedOrder(selectedField.id)}
+                      className="rounded border-gray-300"
+                    />
+                    Reverse bed order
+                  </label>
                   {editLayout.fields.length > 1 && (
                     <button
                       onClick={() => deleteField(selectedField.id)}
@@ -1067,7 +1109,7 @@ function FarmGrid({
           className="ml-auto px-2 py-1 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
           title="Configure layout"
         >
-          ⚙️ Layout
+          Layout
         </button>
       </div>
 
@@ -1093,6 +1135,7 @@ function FarmGrid({
                     selectedPlantingIds={selectedPlantingIds}
                     filterTerms={filterTerms}
                     filterMode={filterMode}
+                    reverseBedOrder={activeField.reverseBedOrder}
                   />
                 ))}
               </div>
