@@ -319,10 +319,10 @@ export default function CropsPage() {
                     <button
                       key={color}
                       onClick={() => setBgColorFilter(bgColorFilter === color ? null : color)}
-                      className={`w-6 h-6 rounded border-2 ${
+                      className={`w-6 h-6 rounded border ${
                         bgColorFilter === color
                           ? 'border-blue-500 ring-2 ring-blue-200'
-                          : 'border-transparent hover:border-gray-300'
+                          : 'border-gray-400 hover:border-gray-600'
                       }`}
                       style={{ backgroundColor: color }}
                       title={`Filter by background ${color}`}
@@ -353,10 +353,10 @@ export default function CropsPage() {
                     <button
                       key={color}
                       onClick={() => setTextColorFilter(textColorFilter === color ? null : color)}
-                      className={`w-6 h-6 rounded border-2 ${
+                      className={`w-6 h-6 rounded border ${
                         textColorFilter === color
                           ? 'border-blue-500 ring-2 ring-blue-200'
-                          : 'border-transparent hover:border-gray-300'
+                          : 'border-gray-400 hover:border-gray-600'
                       }`}
                       style={{ backgroundColor: color }}
                       title={`Filter by text ${color}`}
