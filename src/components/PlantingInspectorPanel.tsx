@@ -228,6 +228,10 @@ export interface PlantingInspectorPanelProps {
   onDeleteCrop?: (groupIds: string[]) => void;
   onDuplicateCrop?: (groupId: string) => Promise<string | void>;
 
+  // Bulk actions (for multi-select)
+  onBulkDuplicatePlantings?: (plantingIds: string[]) => Promise<string[]>;
+  onBulkRefreshFromConfig?: (plantingIds: string[]) => Promise<void>;
+
   // Sequence actions
   onCreateSequence?: (plantingId: string, cropName: string, fieldStartDate: string) => void;
   onEditSequence?: (sequenceId: string) => void;
@@ -235,6 +239,8 @@ export interface PlantingInspectorPanelProps {
 
   // Config actions
   onEditCropConfig?: (identifier: string) => void;
+  /** Reset planting to use config defaults (clears overrides, uses default seed source) */
+  onRefreshFromConfig?: (plantingId: string) => void;
 
   // Lookup data
   cropCatalog?: Record<string, CropConfig>;
@@ -257,10 +263,13 @@ export function PlantingInspectorPanel({
   onCropDateChange,
   onDeleteCrop,
   onDuplicateCrop,
+  onBulkDuplicatePlantings,
+  onBulkRefreshFromConfig,
   onCreateSequence,
   onEditSequence,
   onUnlinkFromSequence,
   onEditCropConfig,
+  onRefreshFromConfig,
   cropCatalog,
   varieties,
   seedMixes,
@@ -348,6 +357,32 @@ export function PlantingInspectorPanel({
               <div className="text-xs text-gray-600 mb-2">
                 Tip: {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Click to add/remove from selection
               </div>
+              {onBulkDuplicatePlantings && (
+                <button
+                  onClick={async () => {
+                    const plantingIds = plantings
+                      .map((p) => p.plantingId)
+                      .filter((id): id is string => id !== undefined);
+                    await onBulkDuplicatePlantings(plantingIds);
+                  }}
+                  className="w-full px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                >
+                  Duplicate {plantings.length} Planting{plantings.length > 1 ? 's' : ''}
+                </button>
+              )}
+              {onBulkRefreshFromConfig && (
+                <button
+                  onClick={async () => {
+                    const plantingIds = plantings
+                      .map((p) => p.plantingId)
+                      .filter((id): id is string => id !== undefined);
+                    await onBulkRefreshFromConfig(plantingIds);
+                  }}
+                  className="w-full px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Refresh {plantings.length} from Config
+                </button>
+              )}
               {onDeleteCrop && (
                 <button
                   onClick={() => {
@@ -921,6 +956,19 @@ export function PlantingInspectorPanel({
               <div className="font-mono text-xs text-gray-900">{crop.groupId}</div>
             </div>
           </div>
+
+          {/* Refresh from Config - at bottom */}
+          {onRefreshFromConfig && crop.plantingId && (
+            <div className="pt-3 border-t">
+              <button
+                onClick={() => onRefreshFromConfig(crop.plantingId!)}
+                className="w-full px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
+                title="Reset timing overrides and use config defaults for seed source"
+              >
+                Refresh from Config
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

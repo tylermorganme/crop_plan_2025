@@ -485,9 +485,11 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk add multiple plantings (single undo step) */
   bulkAddPlantings: (plantings: Planting[]) => Promise<number>;
   /** Bulk update multiple plantings (single undo step) */
-  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>> }[]) => Promise<number>;
+  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>> }[]) => Promise<number>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>>) => Promise<void>;
+  /** Bulk duplicate multiple plantings (single undo step) */
+  bulkDuplicatePlantings: (plantingIds: string[]) => Promise<string[]>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => Promise<void>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
   recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
@@ -1272,7 +1274,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return processedPlantings.length;
     },
 
-    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'actuals'>> }[]) => {
+    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>> }[]) => {
       const state = get();
       if (!state.currentPlan?.plantings) {
         return 0;
@@ -1313,17 +1315,29 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               if (changes.fieldStartDate !== undefined) {
                 planting.fieldStartDate = changes.fieldStartDate;
               }
-              if (changes.overrides !== undefined) {
-                planting.overrides = {
-                  ...planting.overrides,
-                  ...changes.overrides,
-                };
+              if ('overrides' in changes) {
+                if (changes.overrides === undefined) {
+                  // Explicitly clear all overrides
+                  planting.overrides = undefined;
+                } else {
+                  // Merge overrides (shallow merge)
+                  planting.overrides = {
+                    ...planting.overrides,
+                    ...changes.overrides,
+                  };
+                }
               }
               if (changes.notes !== undefined) {
                 planting.notes = changes.notes || undefined;
               }
               if (changes.seedSource !== undefined) {
                 planting.seedSource = changes.seedSource || undefined;
+              }
+              if (changes.useDefaultSeedSource !== undefined) {
+                planting.useDefaultSeedSource = changes.useDefaultSeedSource;
+              }
+              if ('marketSplit' in changes) {
+                planting.marketSplit = changes.marketSplit || undefined;
               }
               if (changes.actuals !== undefined) {
                 // Merge actuals - explicitly handle undefined to clear values
@@ -1375,7 +1389,35 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlanting.id;
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'actuals'>>) => {
+    bulkDuplicatePlantings: async (plantingIds: string[]) => {
+      const state = get();
+      if (!state.currentPlan?.plantings) {
+        throw new Error('No plan loaded');
+      }
+
+      if (plantingIds.length === 0) {
+        return [];
+      }
+
+      // Find all plantings to duplicate
+      const originals = plantingIds
+        .map(id => state.currentPlan!.plantings!.find(p => p.id === id))
+        .filter((p): p is Planting => p !== undefined);
+
+      if (originals.length === 0) {
+        return [];
+      }
+
+      // Clone all plantings (generates new IDs, sets startBed to null)
+      const newPlantings = originals.map(original => clonePlanting(original, { startBed: null }));
+
+      // Use bulk add for single undo step
+      await get().bulkAddPlantings(newPlantings);
+
+      return newPlantings.map(p => p.id);
+    },
+
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => {
       // Pre-validate
       const { currentPlan } = get();
       if (!currentPlan?.plantings) return;
@@ -1400,12 +1442,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             if (updates.bedFeet !== undefined) {
               p.bedFeet = updates.bedFeet;
             }
-            if (updates.overrides !== undefined) {
-              // Merge overrides (shallow merge)
-              p.overrides = {
-                ...p.overrides,
-                ...updates.overrides,
-              };
+            if ('overrides' in updates) {
+              if (updates.overrides === undefined) {
+                // Explicitly clear all overrides
+                p.overrides = undefined;
+              } else {
+                // Merge overrides (shallow merge)
+                p.overrides = {
+                  ...p.overrides,
+                  ...updates.overrides,
+                };
+              }
             }
             if (updates.notes !== undefined) {
               p.notes = updates.notes || undefined; // Clear if empty string
@@ -1428,6 +1475,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               }
               // If all values are cleared, set actuals to undefined
               p.actuals = Object.keys(newActuals).length > 0 ? newActuals : undefined;
+            }
+            if ('marketSplit' in updates) {
+              p.marketSplit = updates.marketSplit || undefined; // Clear if null/empty
             }
 
             p.lastModified = now;

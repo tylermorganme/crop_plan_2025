@@ -33,6 +33,8 @@ export function ConnectedPlantingInspector({
   const updatePlanting = usePlanStore((s) => s.updatePlanting);
   const bulkDeletePlantings = usePlanStore((s) => s.bulkDeletePlantings);
   const duplicatePlanting = usePlanStore((s) => s.duplicatePlanting);
+  const bulkDuplicatePlantings = usePlanStore((s) => s.bulkDuplicatePlantings);
+  const bulkUpdatePlantings = usePlanStore((s) => s.bulkUpdatePlantings);
 
   // Date operations from store
   const updateCropDates = usePlanStore((s) => s.updateCropDates);
@@ -109,6 +111,50 @@ export function ConnectedPlantingInspector({
     [updateCropDates]
   );
 
+  // Refresh planting to use config defaults
+  const handleRefreshFromConfig = useCallback(
+    async (plantingId: string) => {
+      // Reset overrides, use default seed source, and clear market split
+      await updatePlanting(plantingId, {
+        overrides: undefined,
+        useDefaultSeedSource: true,
+        seedSource: undefined,
+        marketSplit: undefined,
+      });
+    },
+    [updatePlanting]
+  );
+
+  // Bulk duplicate plantings
+  const handleBulkDuplicate = useCallback(
+    async (plantingIds: string[]) => {
+      const newIds = await bulkDuplicatePlantings(plantingIds);
+      clearSelection();
+      // Select all the new plantings
+      newIds.forEach((id) => selectPlanting(id));
+      return newIds;
+    },
+    [bulkDuplicatePlantings, clearSelection, selectPlanting]
+  );
+
+  // Bulk refresh plantings from config
+  const handleBulkRefreshFromConfig = useCallback(
+    async (plantingIds: string[]) => {
+      // Use bulk update to reset all plantings in single undo step
+      const updates = plantingIds.map((id) => ({
+        id,
+        changes: {
+          overrides: undefined,
+          useDefaultSeedSource: true,
+          seedSource: undefined,
+          marketSplit: undefined,
+        },
+      }));
+      await bulkUpdatePlantings(updates);
+    },
+    [bulkUpdatePlantings]
+  );
+
   // Editing sequence data
   const editingSequence = editingSequenceId ? getSequence(editingSequenceId) : undefined;
   const editingSequencePlantings = editingSequenceId
@@ -139,12 +185,15 @@ export function ConnectedPlantingInspector({
           selectPlanting(newId);
           return newId;
         }}
+        onBulkDuplicatePlantings={handleBulkDuplicate}
+        onBulkRefreshFromConfig={handleBulkRefreshFromConfig}
         onCropDateChange={(groupId, startDate, endDate) => {
           handleCropDateChange(groupId, startDate, endDate);
         }}
         onCreateSequence={handleCreateSequence}
         onEditSequence={handleEditSequence}
         onUnlinkFromSequence={handleUnlinkFromSequence}
+        onRefreshFromConfig={handleRefreshFromConfig}
         cropCatalog={currentPlan.cropCatalog}
         varieties={currentPlan.varieties}
         seedMixes={currentPlan.seedMixes}
