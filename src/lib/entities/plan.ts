@@ -15,6 +15,7 @@ import type { SeedOrder } from './seed-order';
 import type { Market } from './market';
 import type { PlantingSequence } from './planting-sequence';
 import type { Crop } from './crop';
+import type { ColorDef } from './color-def';
 
 // Re-export migration utilities for backwards compatibility
 export { CURRENT_SCHEMA_VERSION, migratePlan } from '../migrations';
@@ -177,6 +178,9 @@ export interface Plan {
 
   /** Crop definitions with colors (keyed by ID) */
   crops?: Record<string, Crop>;
+
+  /** Named color definitions for reusable color palettes (keyed by ID) */
+  colorDefs?: Record<string, ColorDef>;
 
   /** Seed orders (keyed by ID) - tracks ordering decisions per variety */
   seedOrders?: Record<string, SeedOrder>;

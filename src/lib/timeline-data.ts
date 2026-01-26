@@ -646,9 +646,10 @@ export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
   );
 
   // Add colors from plan.crops (or defaults if not found)
+  // Resolves colorDefId references if present
   for (const crop of timelineCrops) {
     if (crop.crop) {
-      const colors = getCropColors(plan.crops, crop.crop);
+      const colors = getCropColors(plan.crops, crop.crop, plan.colorDefs);
       crop.bgColor = colors.bg;
       crop.textColor = colors.text;
     }

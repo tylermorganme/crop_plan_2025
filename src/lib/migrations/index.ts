@@ -341,6 +341,24 @@ function migrateV6ToV7(rawPlan: unknown): unknown {
   return { ...plan, crops };
 }
 
+/**
+ * v7 → v8: Add colorDefs field for named color palettes
+ * Simply adds an empty colorDefs record if not present.
+ * No data transformation needed (additive change).
+ */
+function migrateV7ToV8(rawPlan: unknown): unknown {
+  const plan = rawPlan as { colorDefs?: Record<string, unknown>; [key: string]: unknown };
+
+  if (plan.colorDefs !== undefined) {
+    return plan; // Already has colorDefs field
+  }
+
+  return {
+    ...plan,
+    colorDefs: {},
+  };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -369,6 +387,7 @@ const migrations: MigrationFn[] = [
   migrateV4ToV5, // Index 3: v4 → v5 (sequenceIndex → sequenceSlot)
   migrateV5ToV6, // Index 4: v5 → v6 (ensure bedFeet exists on all plantings)
   migrateV6ToV7, // Index 5: v6 → v7 (add crops entity with colors)
+  migrateV7ToV8, // Index 6: v7 → v8 (add colorDefs for named color palettes)
 ];
 
 // =============================================================================

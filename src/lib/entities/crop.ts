@@ -19,11 +19,14 @@ export interface Crop {
   /** Crop name (e.g., "Tomato") */
   name: string;
 
-  /** Background color (hex, e.g., "#ff5050") */
+  /** Background color (hex, e.g., "#ff5050"). Used if colorDefId is not set. */
   bgColor: string;
 
-  /** Text color (hex, e.g., "#ffffff") */
+  /** Text color (hex, e.g., "#ffffff"). Used if colorDefId is not set. */
   textColor: string;
+
+  /** Optional reference to a named color definition. Takes precedence over bgColor/textColor. */
+  colorDefId?: string;
 }
 
 /**
@@ -122,14 +125,17 @@ export function findCropByName(
 
 /**
  * Get crop colors by name, with fallback to default.
+ * Resolves colorDefId reference if present.
  *
  * @param crops - Crops record to search
  * @param name - Crop name to find
+ * @param colorDefs - Optional color definitions for resolving colorDefId references
  * @returns Colors object with bg and text
  */
 export function getCropColors(
   crops: Record<string, Crop> | undefined,
-  name: string
+  name: string,
+  colorDefs?: Record<string, import('./color-def').ColorDef>
 ): { bg: string; text: string } {
   if (!crops) {
     return DEFAULT_CROP_COLOR;
@@ -137,6 +143,14 @@ export function getCropColors(
 
   const crop = findCropByName(crops, name);
   if (crop) {
+    // If crop references a color definition, use that
+    if (crop.colorDefId && colorDefs) {
+      const colorDef = colorDefs[crop.colorDefId];
+      if (colorDef) {
+        return { bg: colorDef.bgColor, text: colorDef.textColor };
+      }
+    }
+    // Otherwise use crop's direct colors
     return { bg: crop.bgColor, text: crop.textColor };
   }
 

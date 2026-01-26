@@ -503,8 +503,33 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   toggleConfigFavorite: (identifier: string) => Promise<void>;
   /** Bulk update multiple crop configs (single undo step) */
   bulkUpdateCropConfigs: (updates: { identifier: string; changes: Partial<import('./entities/crop-config').CropConfig> }[]) => Promise<number>;
-  /** Update a crop's colors */
-  updateCrop: (cropId: string, updates: { bgColor?: string; textColor?: string }) => Promise<void>;
+  /** Update a crop entity's colors, name, or color reference */
+  updateCrop: (cropId: string, updates: { bgColor?: string; textColor?: string; name?: string; colorDefId?: string | null }) => Promise<void>;
+  /** Add a new crop entity */
+  addCropEntity: (crop: import('./entities/crop').Crop) => Promise<void>;
+  /** Delete a crop entity (fails if referenced by configs) */
+  deleteCropEntity: (cropId: string) => Promise<void>;
+  /** Bulk add crop entities (single undo step) */
+  bulkAddCropEntities: (crops: import('./entities/crop').Crop[]) => Promise<number>;
+  /** Bulk update crop entities (single undo step) */
+  bulkUpdateCropEntities: (updates: { cropId: string; changes: Partial<import('./entities/crop').Crop> }[]) => Promise<number>;
+  /** Bulk delete crop entities (single undo step) */
+  bulkDeleteCropEntities: (cropIds: string[]) => Promise<number>;
+
+  // ---- Color Definition Management ----
+  /** Add a new color definition */
+  addColorDef: (colorDef: import('./entities/color-def').ColorDef) => Promise<void>;
+  /** Update a color definition */
+  updateColorDef: (colorDefId: string, updates: { name?: string; bgColor?: string; textColor?: string }) => Promise<void>;
+  /** Delete a color definition (fails if referenced by crops) */
+  deleteColorDef: (colorDefId: string) => Promise<void>;
+  /** Bulk add color definitions (single undo step) */
+  bulkAddColorDefs: (colorDefs: import('./entities/color-def').ColorDef[]) => Promise<number>;
+  /** Bulk update color definitions (single undo step) */
+  bulkUpdateColorDefs: (updates: { colorDefId: string; changes: Partial<import('./entities/color-def').ColorDef> }[]) => Promise<number>;
+  /** Bulk delete color definitions (single undo step) */
+  bulkDeleteColorDefs: (colorDefIds: string[]) => Promise<number>;
+
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   clearSaveError: () => void;
@@ -1729,7 +1754,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return validUpdates.length;
     },
 
-    updateCrop: async (cropId: string, updates: { bgColor?: string; textColor?: string }) => {
+    updateCrop: async (cropId: string, updates: { bgColor?: string; textColor?: string; name?: string; colorDefId?: string | null }) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
@@ -1756,13 +1781,416 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               if (updates.textColor !== undefined) {
                 crop.textColor = updates.textColor;
               }
+              if (updates.name !== undefined) {
+                crop.name = updates.name;
+              }
+              // Handle colorDefId - null clears the reference
+              if (updates.colorDefId !== undefined) {
+                if (updates.colorDefId === null) {
+                  delete crop.colorDefId;
+                } else {
+                  crop.colorDefId = updates.colorDefId;
+                }
+              }
             }
             plan.metadata.lastModified = Date.now();
           },
-          `Update crop color: ${cropName}`
+          `Update crop: ${cropName}`
         );
         storeState.isDirty = true;
       });
+    },
+
+    addCropEntity: async (crop) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (state.currentPlan.crops?.[crop.id]) {
+        throw new Error(`Crop already exists: ${crop.id}`);
+      }
+
+      set((storeState) => {
+        if (!storeState.currentPlan) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (!plan.crops) {
+              plan.crops = {};
+            }
+            plan.crops[crop.id] = { ...crop };
+            plan.metadata.lastModified = Date.now();
+          },
+          `Add crop: ${crop.name}`
+        );
+        storeState.isDirty = true;
+      });
+    },
+
+    deleteCropEntity: async (cropId: string) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      const existingCrop = state.currentPlan.crops?.[cropId];
+      if (!existingCrop) {
+        throw new Error(`Crop not found: ${cropId}`);
+      }
+
+      // Check if crop is referenced by any configs
+      const { getCropId } = await import('./entities/crop');
+      const referencingConfigs = Object.values(state.currentPlan.cropCatalog || {})
+        .filter(config => getCropId(config.crop) === cropId);
+
+      if (referencingConfigs.length > 0) {
+        throw new Error(`Cannot delete crop "${existingCrop.name}" - used by ${referencingConfigs.length} config(s)`);
+      }
+
+      const cropName = existingCrop.name;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.crops) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (plan.crops) {
+              delete plan.crops[cropId];
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Delete crop: ${cropName}`
+        );
+        storeState.isDirty = true;
+      });
+    },
+
+    bulkAddCropEntities: async (crops) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (crops.length === 0) return 0;
+
+      // Filter out crops that already exist
+      const newCrops = crops.filter(crop => !state.currentPlan?.crops?.[crop.id]);
+      if (newCrops.length === 0) return 0;
+
+      set((storeState) => {
+        if (!storeState.currentPlan) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (!plan.crops) {
+              plan.crops = {};
+            }
+            for (const crop of newCrops) {
+              plan.crops[crop.id] = { ...crop };
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Add ${newCrops.length} crop(s)`
+        );
+        storeState.isDirty = true;
+      });
+
+      return newCrops.length;
+    },
+
+    bulkUpdateCropEntities: async (updates) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (updates.length === 0) return 0;
+
+      // Filter to valid updates (crops that exist)
+      const validUpdates = updates.filter(u => state.currentPlan?.crops?.[u.cropId]);
+      if (validUpdates.length === 0) return 0;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.crops) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            for (const { cropId, changes } of validUpdates) {
+              const crop = plan.crops?.[cropId];
+              if (crop) {
+                if (changes.bgColor !== undefined) crop.bgColor = changes.bgColor;
+                if (changes.textColor !== undefined) crop.textColor = changes.textColor;
+                if (changes.name !== undefined) crop.name = changes.name;
+              }
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update ${validUpdates.length} crop(s)`
+        );
+        storeState.isDirty = true;
+      });
+
+      return validUpdates.length;
+    },
+
+    bulkDeleteCropEntities: async (cropIds) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (cropIds.length === 0) return 0;
+
+      // Filter to crops that exist and aren't referenced
+      const { getCropId } = await import('./entities/crop');
+      const referencedCropIds = new Set(
+        Object.values(state.currentPlan.cropCatalog || {})
+          .map(config => getCropId(config.crop))
+      );
+
+      const deletableCropIds = cropIds.filter(id =>
+        state.currentPlan?.crops?.[id] && !referencedCropIds.has(id)
+      );
+
+      if (deletableCropIds.length === 0) return 0;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.crops) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            for (const cropId of deletableCropIds) {
+              if (plan.crops) {
+                delete plan.crops[cropId];
+              }
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Delete ${deletableCropIds.length} crop(s)`
+        );
+        storeState.isDirty = true;
+      });
+
+      return deletableCropIds.length;
+    },
+
+    // ---- Color Definition Management ----
+
+    addColorDef: async (colorDef) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (state.currentPlan.colorDefs?.[colorDef.id]) {
+        throw new Error(`Color definition already exists: ${colorDef.id}`);
+      }
+
+      set((storeState) => {
+        if (!storeState.currentPlan) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (!plan.colorDefs) {
+              plan.colorDefs = {};
+            }
+            plan.colorDefs[colorDef.id] = { ...colorDef };
+            plan.metadata.lastModified = Date.now();
+          },
+          `Add color: ${colorDef.name}`
+        );
+        storeState.isDirty = true;
+      });
+    },
+
+    updateColorDef: async (colorDefId, updates) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      const existingColorDef = state.currentPlan.colorDefs?.[colorDefId];
+      if (!existingColorDef) {
+        throw new Error(`Color definition not found: ${colorDefId}`);
+      }
+
+      const colorName = existingColorDef.name;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.colorDefs) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            const colorDef = plan.colorDefs?.[colorDefId];
+            if (colorDef) {
+              if (updates.name !== undefined) colorDef.name = updates.name;
+              if (updates.bgColor !== undefined) colorDef.bgColor = updates.bgColor;
+              if (updates.textColor !== undefined) colorDef.textColor = updates.textColor;
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update color: ${colorName}`
+        );
+        storeState.isDirty = true;
+      });
+    },
+
+    deleteColorDef: async (colorDefId) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      const existingColorDef = state.currentPlan.colorDefs?.[colorDefId];
+      if (!existingColorDef) {
+        throw new Error(`Color definition not found: ${colorDefId}`);
+      }
+
+      // Check if color is referenced by any crops
+      const referencingCrops = Object.values(state.currentPlan.crops || {})
+        .filter(crop => crop.colorDefId === colorDefId);
+
+      if (referencingCrops.length > 0) {
+        throw new Error(`Cannot delete color "${existingColorDef.name}" - used by ${referencingCrops.length} crop(s)`);
+      }
+
+      const colorName = existingColorDef.name;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.colorDefs) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (plan.colorDefs) {
+              delete plan.colorDefs[colorDefId];
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Delete color: ${colorName}`
+        );
+        storeState.isDirty = true;
+      });
+    },
+
+    bulkAddColorDefs: async (colorDefs) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (colorDefs.length === 0) return 0;
+
+      // Filter out colors that already exist
+      const newColorDefs = colorDefs.filter(c => !state.currentPlan?.colorDefs?.[c.id]);
+      if (newColorDefs.length === 0) return 0;
+
+      set((storeState) => {
+        if (!storeState.currentPlan) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            if (!plan.colorDefs) {
+              plan.colorDefs = {};
+            }
+            for (const colorDef of newColorDefs) {
+              plan.colorDefs[colorDef.id] = { ...colorDef };
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Add ${newColorDefs.length} color(s)`
+        );
+        storeState.isDirty = true;
+      });
+
+      return newColorDefs.length;
+    },
+
+    bulkUpdateColorDefs: async (updates) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (updates.length === 0) return 0;
+
+      // Filter to valid updates (colors that exist)
+      const validUpdates = updates.filter(u => state.currentPlan?.colorDefs?.[u.colorDefId]);
+      if (validUpdates.length === 0) return 0;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.colorDefs) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            for (const { colorDefId, changes } of validUpdates) {
+              const colorDef = plan.colorDefs?.[colorDefId];
+              if (colorDef) {
+                if (changes.name !== undefined) colorDef.name = changes.name;
+                if (changes.bgColor !== undefined) colorDef.bgColor = changes.bgColor;
+                if (changes.textColor !== undefined) colorDef.textColor = changes.textColor;
+              }
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update ${validUpdates.length} color(s)`
+        );
+        storeState.isDirty = true;
+      });
+
+      return validUpdates.length;
+    },
+
+    bulkDeleteColorDefs: async (colorDefIds) => {
+      const state = get();
+      if (!state.currentPlan) {
+        throw new Error('No plan loaded');
+      }
+
+      if (colorDefIds.length === 0) return 0;
+
+      // Filter to colors that exist and aren't referenced
+      const referencedColorIds = new Set(
+        Object.values(state.currentPlan.crops || {})
+          .map(crop => crop.colorDefId)
+          .filter((id): id is string => id !== undefined)
+      );
+
+      const deletableColorIds = colorDefIds.filter(id =>
+        state.currentPlan?.colorDefs?.[id] && !referencedColorIds.has(id)
+      );
+
+      if (deletableColorIds.length === 0) return 0;
+
+      set((storeState) => {
+        if (!storeState.currentPlan?.colorDefs) return;
+
+        mutateWithPatches(
+          storeState,
+          (plan) => {
+            for (const colorDefId of deletableColorIds) {
+              if (plan.colorDefs) {
+                delete plan.colorDefs[colorDefId];
+              }
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Delete ${deletableColorIds.length} color(s)`
+        );
+        storeState.isDirty = true;
+      });
+
+      return deletableColorIds.length;
     },
 
     // History - uses SQLite as single source of truth

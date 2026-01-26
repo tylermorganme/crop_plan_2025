@@ -77,13 +77,14 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const isOverviewActive = pathname.startsWith('/overview/');
   const isReportsActive = pathname.startsWith('/reports/');
   const isSettingsActive = pathname.startsWith('/settings/');
+  const isCropsActive = pathname.startsWith('/crops/');
   const isVarietiesActive = pathname === '/varieties';
   const isSeedMixesActive = pathname === '/seed-mixes';
   const isProductsActive = pathname === '/products';
   const isMarketsActive = pathname === '/markets';
 
   // Config dropdown is active if any of its sub-pages are active
-  const isConfigActive = isBedsActive || isVarietiesActive || isSeedMixesActive || isProductsActive || isMarketsActive || isSettingsActive;
+  const isConfigActive = isBedsActive || isCropsActive || isVarietiesActive || isSeedMixesActive || isProductsActive || isMarketsActive || isSettingsActive;
 
   // Links - go to active plan's views
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
@@ -92,6 +93,7 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const overviewHref = activePlanId ? `/overview/${activePlanId}` : '/plans';
   const reportsHref = activePlanId ? `/reports/${activePlanId}` : '/plans';
   const settingsHref = activePlanId ? `/settings/${activePlanId}` : '/plans';
+  const cropsHref = activePlanId ? `/crops/${activePlanId}` : '/plans';
 
   return (
     <>
@@ -252,6 +254,14 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                 {activePlanId && (
                   <>
                     <div className="border-t border-gray-100 my-1" />
+                    <Link
+                      href={cropsHref}
+                      className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
+                        isCropsActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                      }`}
+                    >
+                      Crops
+                    </Link>
                     <Link
                       href={settingsHref}
                       className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
