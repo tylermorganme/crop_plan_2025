@@ -16,8 +16,11 @@ import AppHeader from '@/components/AppHeader';
 import {
   getPrimarySeedToHarvest,
   calculateAggregateHarvestWindow,
+  calculateDaysInCells,
+  calculateFieldOccupationDays,
 } from '@/lib/entities/crop-config';
 import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import type { Planting } from '@/lib/entities/planting';
 import type { TimelineCrop } from '@/lib/plan-types';
@@ -52,7 +55,12 @@ const ALL_COLUMNS = [
   'plants',
   'dtm',
   'harvestWindow',
+  'daysInField',
+  'daysInCells',
+  'revenue',
+  'revenuePerFt',
   'method',
+  'growingStructure',
   'seedSource',
   'sequence',
   'seqNum',
@@ -101,7 +109,12 @@ const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
   plants: 70,
   dtm: 60,
   harvestWindow: 80,
+  daysInField: 80,
+  daysInCells: 80,
+  revenue: 90,
+  revenuePerFt: 80,
   method: 100,
+  growingStructure: 100,
   seedSource: 150,
   sequence: 80,
   seqNum: 60,
@@ -134,7 +147,12 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
   plants: 'Plants',
   dtm: 'DTM',
   harvestWindow: 'Harvest Days',
+  daysInField: 'Field Days',
+  daysInCells: 'Cell Days',
+  revenue: 'Revenue',
+  revenuePerFt: '$/Ft',
   method: 'Method',
+  growingStructure: 'Structure',
   seedSource: 'Seed Source',
   sequence: 'Sequence',
   seqNum: 'Seq #',
@@ -154,7 +172,8 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
 const SORTABLE_COLUMNS: Set<ColumnId> = new Set([
   'crop', 'category', 'identifier', 'fieldStartDate', 'ghDate',
   'harvestStart', 'harvestEnd', 'bed', 'bedFeet', 'dtm',
-  'harvestWindow', 'method', 'id', 'configId', 'lastModified',
+  'harvestWindow', 'daysInField', 'daysInCells', 'revenue', 'revenuePerFt',
+  'method', 'growingStructure', 'id', 'configId', 'lastModified',
 ]);
 
 // Editable columns (have inline editing or interactive controls)
@@ -569,6 +588,11 @@ interface EnrichedPlanting extends Planting {
   ghDate: string | null;
   harvestStart: string | null;
   harvestEnd: string | null;
+  growingStructure: string;  // field, greenhouse, high-tunnel
+  daysInField: number;       // Days the crop occupies the field
+  daysInCells: number;       // Days in greenhouse cells (transplants)
+  revenue: number | null;    // Expected revenue for this planting
+  revenuePerFt: number | null; // Revenue per bed foot
 }
 
 // =============================================================================
@@ -784,6 +808,7 @@ export default function PlantingsPage() {
   const catalogLookup = useMemo(() => currentPlan?.cropCatalog ?? {}, [currentPlan?.cropCatalog]);
   const varietiesLookup = useMemo(() => currentPlan?.varieties ?? {}, [currentPlan?.varieties]);
   const seedMixesLookup = useMemo(() => currentPlan?.seedMixes ?? {}, [currentPlan?.seedMixes]);
+  const productsLookup = useMemo(() => currentPlan?.products ?? {}, [currentPlan?.products]);
 
   // Get column width
   const getColumnWidth = useCallback((col: ColumnId) => {
@@ -865,6 +890,12 @@ export default function PlantingsPage() {
         }
       }
 
+      // Calculate timing and revenue fields
+      const daysInField = config ? calculateFieldOccupationDays(config) : 0;
+      const daysInCells = config ? calculateDaysInCells(config) : 0;
+      const revenue = config ? calculateConfigRevenue(config, p.bedFeet, productsLookup) : null;
+      const revenuePerFt = revenue !== null && p.bedFeet > 0 ? revenue / p.bedFeet : null;
+
       return {
         ...p,
         // From TimelineCrop (pre-computed dates)
@@ -878,6 +909,7 @@ export default function PlantingsPage() {
         identifier: config?.identifier ?? p.configId,
         rows: config?.rows ?? null,
         spacing: config?.spacing ?? null,
+        growingStructure: config?.growingStructure ?? 'field',
 
         // From bed lookup
         bedName: bed?.name ?? '',
@@ -890,14 +922,37 @@ export default function PlantingsPage() {
         seqNum,
         isUnassigned: !p.startBed,
         isFailed: p.actuals?.failed ?? false,
+
+        // Timing and revenue
+        daysInField,
+        daysInCells,
+        revenue,
+        revenuePerFt,
       };
     });
-  }, [currentPlan?.plantings, cropsByPlanting, catalogLookup, bedsLookup, varietiesLookup, seedMixesLookup]);
+  }, [currentPlan?.plantings, cropsByPlanting, catalogLookup, bedsLookup, varietiesLookup, seedMixesLookup, productsLookup]);
 
   // Display columns (visible and ordered)
   const displayColumns = useMemo(() => {
     return columnOrder.filter(col => visibleColumns.has(col));
   }, [columnOrder, visibleColumns]);
+
+  // ==========================================================================
+  // SEARCH DSL: Parse search query (matches CropTimeline behavior)
+  // Supports: field:value, -field:value (negation), -term (plain negation)
+  // Fields: bed, group, category, method, crop, notes, structure
+  // ==========================================================================
+  const parsedFilterTerms = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
+  }, [searchQuery]);
+
+  // Helper to get bed group letter from bed name (e.g., "A1" -> "A")
+  const getBedGroup = useCallback((bedName: string): string => {
+    if (!bedName) return '';
+    const match = bedName.match(/^([A-Za-z]+)/);
+    return match ? match[1] : '';
+  }, []);
 
   // Filter and sort plantings
   const displayPlantings = useMemo(() => {
@@ -910,16 +965,69 @@ export default function PlantingsPage() {
 
     if (!showFailed) result = result.filter((p) => !p.isFailed);
 
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((p) =>
-        p.cropName.toLowerCase().includes(q) ||
-        p.bedName.toLowerCase().includes(q) ||
-        p.id.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        p.identifier.toLowerCase().includes(q) ||
-        (p.notes?.toLowerCase().includes(q) ?? false)
-      );
+    // Apply search DSL filter
+    if (parsedFilterTerms.length > 0) {
+      const fieldPattern = /^(-?)(bed|group|bedGroup|category|method|crop|notes|structure):(.+)$/i;
+
+      result = result.filter((p) => {
+        // Build searchable text from all relevant fields
+        const searchText = [
+          p.cropName,
+          p.category,
+          p.identifier,
+          p.bedName,
+          p.id,
+          p.notes,
+          p.method,
+          p.sequenceDisplay,
+          p.growingStructure,
+        ].filter(Boolean).join(' ').toLowerCase();
+
+        return parsedFilterTerms.every(term => {
+          const fieldMatch = term.match(fieldPattern);
+          if (fieldMatch) {
+            const [, negation, field, value] = fieldMatch;
+            const isNegated = negation === '-';
+            let matches = false;
+
+            switch (field.toLowerCase()) {
+              case 'bed':
+                matches = p.bedName?.toLowerCase().includes(value) ?? false;
+                break;
+              case 'group':
+              case 'bedgroup':
+                matches = getBedGroup(p.bedName).toLowerCase().includes(value);
+                break;
+              case 'category':
+                matches = p.category?.toLowerCase().includes(value) ?? false;
+                break;
+              case 'method':
+                matches = p.method?.toLowerCase().includes(value) ?? false;
+                break;
+              case 'crop':
+                matches = (p.cropName?.toLowerCase().includes(value) || p.identifier?.toLowerCase().includes(value)) ?? false;
+                break;
+              case 'notes':
+                matches = p.notes?.toLowerCase().includes(value) ?? false;
+                break;
+              case 'structure':
+                matches = p.growingStructure?.toLowerCase().includes(value) ?? false;
+                break;
+              default:
+                matches = searchText.includes(term);
+            }
+
+            return isNegated ? !matches : matches;
+          }
+
+          // Plain text search - check for negation prefix
+          if (term.startsWith('-') && term.length > 1) {
+            const searchTerm = term.slice(1);
+            return !searchText.includes(searchTerm);
+          }
+          return searchText.includes(term);
+        });
+      });
     }
 
     result = [...result].sort((a, b) => {
@@ -936,7 +1044,12 @@ export default function PlantingsPage() {
         case 'bedFeet': cmp = a.bedFeet - b.bedFeet; break;
         case 'dtm': cmp = a.dtm - b.dtm; break;
         case 'harvestWindow': cmp = a.harvestWindow - b.harvestWindow; break;
+        case 'daysInField': cmp = a.daysInField - b.daysInField; break;
+        case 'daysInCells': cmp = a.daysInCells - b.daysInCells; break;
+        case 'revenue': cmp = (a.revenue ?? 0) - (b.revenue ?? 0); break;
+        case 'revenuePerFt': cmp = (a.revenuePerFt ?? 0) - (b.revenuePerFt ?? 0); break;
         case 'method': cmp = a.method.localeCompare(b.method); break;
+        case 'growingStructure': cmp = a.growingStructure.localeCompare(b.growingStructure); break;
         case 'id': cmp = a.id.localeCompare(b.id); break;
         case 'configId': cmp = a.configId.localeCompare(b.configId); break;
         case 'lastModified': cmp = a.lastModified - b.lastModified; break;
@@ -945,7 +1058,7 @@ export default function PlantingsPage() {
     });
 
     return result;
-  }, [enrichedPlantings, assignmentFilter, showFailed, searchQuery, sortColumn, sortDirection]);
+  }, [enrichedPlantings, assignmentFilter, showFailed, parsedFilterTerms, sortColumn, sortDirection, getBedGroup]);
 
   // Inspector shows all selected plantings (like Timeline)
   const inspectedCrops: TimelineCrop[] = useMemo(() => {
@@ -1323,6 +1436,20 @@ export default function PlantingsPage() {
         return <span className="text-gray-600">{planting.dtm || '—'}</span>;
       case 'harvestWindow':
         return <span className="text-gray-600">{planting.harvestWindow || '—'}</span>;
+      case 'daysInField':
+        return <span className="text-gray-600">{planting.daysInField || '—'}</span>;
+      case 'daysInCells':
+        return planting.daysInCells > 0
+          ? <span className="text-gray-600">{planting.daysInCells}</span>
+          : <span className="text-gray-300">—</span>;
+      case 'revenue':
+        return planting.revenue !== null
+          ? <span className="text-green-700 font-medium">{formatCurrency(planting.revenue)}</span>
+          : <span className="text-gray-300">—</span>;
+      case 'revenuePerFt':
+        return planting.revenuePerFt !== null
+          ? <span className="text-green-600">${planting.revenuePerFt.toFixed(2)}</span>
+          : <span className="text-gray-300">—</span>;
       case 'rows':
         return <span className="text-gray-600 text-right">{planting.rows ?? '—'}</span>;
       case 'spacing':
@@ -1337,6 +1464,16 @@ export default function PlantingsPage() {
             'bg-purple-100 text-purple-700'
           }`}>
             {planting.method}
+          </span>
+        );
+      case 'growingStructure':
+        return (
+          <span className={`px-1.5 py-0.5 text-xs rounded ${
+            planting.growingStructure === 'greenhouse' ? 'bg-amber-100 text-amber-700' :
+            planting.growingStructure === 'high-tunnel' ? 'bg-cyan-100 text-cyan-700' :
+            'bg-gray-100 text-gray-600'
+          }`}>
+            {planting.growingStructure}
           </span>
         );
       case 'seedSource':
@@ -1452,13 +1589,26 @@ export default function PlantingsPage() {
       header={<AppHeader />}
       toolbar={
         <div className="px-4 py-2 flex items-center gap-4">
-        <input
-          type="text"
-          placeholder="Search plantings..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-64 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search plantings..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-64 px-3 py-1.5 pr-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              title="Clear search"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
 
         <div className="flex items-center gap-1 text-sm">
           <span className="text-gray-500 mr-1">Show:</span>
