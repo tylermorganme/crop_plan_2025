@@ -315,7 +315,7 @@ export default function CropsPage() {
                   >
                     All
                   </button>
-                  {uniqueBgColors.slice(0, 10).map((color) => (
+                  {uniqueBgColors.map((color) => (
                     <button
                       key={color}
                       onClick={() => setBgColorFilter(bgColorFilter === color ? null : color)}
@@ -328,9 +328,6 @@ export default function CropsPage() {
                       title={`Filter by background ${color}`}
                     />
                   ))}
-                  {uniqueBgColors.length > 10 && (
-                    <span className="text-xs text-gray-400">+{uniqueBgColors.length - 10}</span>
-                  )}
                 </div>
               )}
 
@@ -349,7 +346,7 @@ export default function CropsPage() {
                   >
                     All
                   </button>
-                  {uniqueTextColors.slice(0, 10).map((color) => (
+                  {uniqueTextColors.map((color) => (
                     <button
                       key={color}
                       onClick={() => setTextColorFilter(textColorFilter === color ? null : color)}
@@ -362,9 +359,6 @@ export default function CropsPage() {
                       title={`Filter by text ${color}`}
                     />
                   ))}
-                  {uniqueTextColors.length > 10 && (
-                    <span className="text-xs text-gray-400">+{uniqueTextColors.length - 10}</span>
-                  )}
                 </div>
               )}
 
