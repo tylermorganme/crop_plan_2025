@@ -31,7 +31,9 @@ import GroupHeader from '@/components/beds/GroupHeader';
 import DeleteBedModal from '@/components/beds/DeleteBedModal';
 import DeleteGroupModal from '@/components/beds/DeleteGroupModal';
 import ImportBedsModal from '@/components/beds/ImportBedsModal';
+import BedGroupTimelineModal from '@/components/beds/BedGroupTimelineModal';
 import AppHeader from '@/components/AppHeader';
+import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 
 export default function BedsPage() {
   const params = useParams();
@@ -77,6 +79,9 @@ export default function BedsPage() {
 
   // Import modal
   const [showImportModal, setShowImportModal] = useState(false);
+
+  // Timeline modal
+  const [viewingGroup, setViewingGroup] = useState<BedGroup | null>(null);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -137,6 +142,23 @@ export default function BedsPage() {
   // Get all bed IDs for sortable context
   const allBedIds = useMemo(() => Object.keys(beds), [beds]);
   const allGroupIds = useMemo(() => Object.keys(bedGroups), [bedGroups]);
+
+  // Timeline crops for the group modal
+  const timelineCrops = useMemo(
+    () => (currentPlan ? getTimelineCropsFromPlan(currentPlan) : []),
+    [currentPlan]
+  );
+
+  // Filter crops for the viewing group
+  const cropsForViewingGroup = useMemo(() => {
+    if (!viewingGroup) return [];
+    const bedNamesInGroup = new Set(
+      Object.values(beds)
+        .filter(b => b.groupId === viewingGroup.id)
+        .map(b => b.name)
+    );
+    return timelineCrops.filter(c => c.resource && bedNamesInGroup.has(c.resource));
+  }, [viewingGroup, beds, timelineCrops]);
 
   // Custom collision detection: when dragging a group, only detect collisions with other groups
   const customCollisionDetection: CollisionDetection = (args) => {
@@ -522,6 +544,7 @@ export default function BedsPage() {
                         onCancelEdit={handleCancelEdit}
                         onAddBed={() => setAddingBedToGroup(group.id)}
                         onDelete={() => setDeletingGroup(group)}
+                        onHeaderClick={() => setViewingGroup(group)}
                       />
 
                       {/* Inline add bed form */}
@@ -665,6 +688,17 @@ export default function BedsPage() {
         existingGroups={sortedGroups.map(g => g.name)}
         existingBeds={existingBeds}
       />
+
+      {/* Bed group timeline modal */}
+      {viewingGroup && (
+        <BedGroupTimelineModal
+          group={viewingGroup}
+          beds={getBedsForGroup(viewingGroup.id)}
+          crops={cropsForViewingGroup}
+          planYear={currentPlan?.metadata?.year ?? new Date().getFullYear()}
+          onClose={() => setViewingGroup(null)}
+        />
+      )}
     </div>
     </>
   );

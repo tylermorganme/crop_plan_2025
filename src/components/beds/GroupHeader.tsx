@@ -15,6 +15,8 @@ interface GroupHeaderProps {
   onCancelEdit: () => void;
   onAddBed: () => void;
   onDelete: () => void;
+  /** Called when clicking the header (not action buttons) to view group timeline */
+  onHeaderClick?: () => void;
 }
 
 export default function GroupHeader({
@@ -28,6 +30,7 @@ export default function GroupHeader({
   onCancelEdit,
   onAddBed,
   onDelete,
+  onHeaderClick,
 }: GroupHeaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const dragHandle = useDragHandle();
@@ -95,13 +98,17 @@ export default function GroupHeader({
         </svg>
       </div>
 
-      {/* Group name */}
-      <div className="flex-1">
+      {/* Group name - clickable to view timeline */}
+      <button
+        onClick={onHeaderClick}
+        className="flex-1 text-left hover:bg-gray-100 -my-1 py-1 px-2 -mx-2 rounded transition-colors"
+        title="Click to view timeline"
+      >
         <span className="font-semibold text-gray-800">{group.name}</span>
         <span className="text-sm text-gray-500 ml-2">
           ({bedCount} bed{bedCount !== 1 ? 's' : ''})
         </span>
-      </div>
+      </button>
 
       {/* Actions - always visible */}
       <div className="flex items-center gap-2">

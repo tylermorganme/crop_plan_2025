@@ -136,6 +136,8 @@ interface CropTimelineProps {
   cropBoxDisplay?: CropBoxDisplayConfig;
   /** Callback when user updates crop box display settings */
   onUpdateCropBoxDisplay?: (config: CropBoxDisplayConfig) => void;
+  /** Hide the unassigned crops section at the top of the timeline */
+  hideUnassigned?: boolean;
 }
 
 // =============================================================================
@@ -273,6 +275,7 @@ export default function CropTimeline({
   initialNoVarietyFilter,
   cropBoxDisplay,
   onUpdateCropBoxDisplay,
+  hideUnassigned,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -1930,7 +1933,7 @@ export default function CropTimeline({
           </thead>
           <tbody>
             {/* Unassigned row - sticky below header, always visible as drop target */}
-            {(() => {
+            {!hideUnassigned && (() => {
               const unassignedStacking = calculateStacking(unassignedCrops);
               // Use user-set height with a minimum, allowing overflow scroll when content exceeds
               const effectiveHeight = Math.max(unassignedHeight, MIN_UNASSIGNED_HEIGHT);
@@ -2018,6 +2021,7 @@ export default function CropTimeline({
               );
             })()}
             {/* Resize handle row for Unassigned section */}
+            {!hideUnassigned && (
             <tr>
               <td
                 colSpan={monthHeaders.length + 1}
@@ -2037,6 +2041,7 @@ export default function CropTimeline({
                 </div>
               </td>
             </tr>
+            )}
             {resourcesForRendering.map(({ resource, groupName, groupIndex }) => {
               if (resource.startsWith('__collapsed__')) {
                 const collapsedGroupName = resource.replace('__collapsed__', '');

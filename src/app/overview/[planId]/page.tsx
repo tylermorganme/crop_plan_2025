@@ -8,15 +8,18 @@ import {
   usePlanStore,
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
-import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { getTimelineCropsFromPlan, buildBedMappings } from '@/lib/timeline-data';
 import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
 import { parseSearchQuery } from '@/lib/search-dsl';
 import { SearchInput } from '@/components/SearchInput';
 import { ConnectedPlantingInspector } from '@/components/ConnectedPlantingInspector';
 import { useUIStore } from '@/lib/ui-store';
 import type { TimelineCrop, Planting } from '@/lib/plan-types';
-import type { BedGroup, Bed } from '@/lib/entities/bed';
+import type { BedGroup, Bed, ResourceGroup } from '@/lib/entities/bed';
 import AppHeader from '@/components/AppHeader';
+import { calculateStacking as sharedCalculateStacking, type StackableItem } from '@/lib/timeline-stacking';
+import CropTimeline from '@/components/CropTimeline';
+import { useDragPreview } from '@/hooks/useDragPreview';
 
 // =============================================================================
 // FIELD LAYOUT CONFIGURATION (UI-level, stored in localStorage)
@@ -242,44 +245,26 @@ interface StackResult {
 const ROW_HEIGHT = 36;
 
 /**
- * Calculate stacking for crops in a lane using time-based overlap detection.
- * Same algorithm as CropTimeline - assigns crops to rows so non-overlapping
- * crops can share the same row.
+ * Calculate stacking for crops in a lane using the shared stacking utility.
+ * Adapts CropBlock (startPercent/widthPercent) to StackableItem (start/end).
  */
 function calculateStacking(crops: CropBlock[]): StackResult {
   if (crops.length === 0) return { crops: [], maxLevel: 1 };
 
-  // Sort by start position
-  const sorted = [...crops].sort((a, b) => a.startPercent - b.startPercent);
+  // Convert to stackable items
+  const stackable: Array<CropBlock & StackableItem> = crops.map(crop => ({
+    ...crop,
+    start: crop.startPercent,
+    end: crop.startPercent + crop.widthPercent,
+  }));
 
-  const stacked: StackedCrop[] = [];
-  const rowEndPercents: number[] = []; // Track end position for each row
+  // Use shared stacking algorithm
+  const result = sharedCalculateStacking(stackable, { allowTouching: true });
 
-  for (const crop of sorted) {
-    const startPercent = crop.startPercent;
-    const endPercent = crop.startPercent + crop.widthPercent;
-
-    // Find first available row where previous crop has ended
-    let assignedRow = -1;
-    for (let r = 0; r < rowEndPercents.length; r++) {
-      if (startPercent >= rowEndPercents[r]) {
-        assignedRow = r;
-        break;
-      }
-    }
-
-    // If no row available, create a new one
-    if (assignedRow === -1) {
-      assignedRow = rowEndPercents.length;
-      rowEndPercents.push(endPercent);
-    } else {
-      rowEndPercents[assignedRow] = endPercent;
-    }
-
-    stacked.push({ ...crop, stackLevel: assignedRow });
-  }
-
-  return { crops: stacked, maxLevel: Math.max(1, rowEndPercents.length) };
+  return {
+    crops: result.items,
+    maxLevel: result.maxLevel,
+  };
 }
 
 /**
@@ -453,19 +438,25 @@ function BedGroupComponent({
   section,
   onAssignPlanting,
   onCropClick,
+  onGroupClick,
   selectedPlantingIds,
 }: {
   section: BedGroupSection;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
   onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  onGroupClick?: (groupId: string) => void;
   selectedPlantingIds?: Set<string>;
 }) {
   return (
     <div style={{ width: GROUP_WIDTH }}>
-      {/* Group header */}
-      <div className="bg-gray-200 px-2 py-1 font-semibold text-gray-700 text-sm rounded-t text-center">
+      {/* Group header - clickable to view timeline */}
+      <button
+        onClick={() => onGroupClick?.(section.groupId)}
+        className="w-full bg-gray-200 px-2 py-1 font-semibold text-gray-700 text-sm rounded-t text-center hover:bg-gray-300 transition-colors cursor-pointer"
+        title="Click to view timeline"
+      >
         {section.groupName}
-      </div>
+      </button>
 
       {/* Month headers + Beds */}
       <div className="bg-white border border-t-0 border-gray-200 rounded-b">
@@ -963,6 +954,7 @@ function FarmGrid({
   onYearChange,
   onAssignPlanting,
   onCropClick,
+  onGroupClick,
   selectedPlantingIds,
 }: {
   sections: BedGroupSection[];
@@ -971,6 +963,7 @@ function FarmGrid({
   onYearChange: (year: number) => void;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
   onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  onGroupClick?: (groupId: string) => void;
   selectedPlantingIds?: Set<string>;
 }) {
   const [layout, setLayout] = useState<FieldLayoutConfig>(DEFAULT_LAYOUT);
@@ -1076,6 +1069,7 @@ function FarmGrid({
                     section={section}
                     onAssignPlanting={onAssignPlanting}
                     onCropClick={onCropClick}
+                    onGroupClick={onGroupClick}
                     selectedPlantingIds={selectedPlantingIds}
                   />
                 ))}
@@ -1117,13 +1111,14 @@ export default function OverviewPage() {
   const [sidebarWidth, setSidebarWidth] = useState(350);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewingGroupId, setViewingGroupId] = useState<string | null>(null);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const updatePlanting = usePlanStore((state) => state.updatePlanting);
-  const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
-  const duplicatePlanting = usePlanStore((state) => state.duplicatePlanting);
+  const bulkUpdatePlantings = usePlanStore((state) => state.bulkUpdatePlantings);
+  const updateCropBoxDisplay = usePlanStore((state) => state.updateCropBoxDisplay);
 
   // UI store - selection state (shared across views)
   const selectedPlantingIds = useUIStore((state) => state.selectedPlantingIds);
@@ -1359,6 +1354,68 @@ export default function OverviewPage() {
     };
   }, [currentPlan]);
 
+  // Data for viewing group in CropTimeline
+  const viewingGroupData = useMemo(() => {
+    if (!viewingGroupId || !currentPlan) return null;
+
+    const group = currentPlan.bedGroups?.[viewingGroupId];
+    if (!group) return null;
+
+    // Get beds in this group, sorted by displayOrder
+    const bedsInGroup = Object.values(currentPlan.beds ?? {})
+      .filter(bed => bed.groupId === viewingGroupId)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+
+    // Resources: bed names in this group
+    const resources = bedsInGroup.map(b => b.name);
+
+    // Groups for CropTimeline: just this one group
+    const groups: ResourceGroup[] = [{
+      name: group.name,
+      beds: resources,
+    }];
+
+    // Bed lengths for this group
+    const bedLengths: Record<string, number> = {};
+    for (const bed of bedsInGroup) {
+      bedLengths[bed.name] = bed.lengthFt ?? 50;
+    }
+
+    // Filter crops to only those assigned to this group's beds (no unassigned section)
+    const bedNamesSet = new Set(resources);
+    const cropsForGroup = allTimelineCrops.filter(
+      crop => crop.resource && crop.resource !== 'Unassigned' && bedNamesSet.has(crop.resource)
+    );
+
+    return { group, beds: bedsInGroup, resources, groups, bedLengths, crops: cropsForGroup };
+  }, [viewingGroupId, currentPlan, allTimelineCrops]);
+
+  // Handler for clicking on a group header
+  const handleGroupClick = useCallback((groupId: string) => {
+    setViewingGroupId(groupId);
+  }, []);
+
+  // Build bed mappings for CropTimeline (used for drag operations)
+  const bedMappings = useMemo(() => {
+    if (!currentPlan?.beds || !currentPlan?.bedGroups) return { nameGroups: {}, bedLengths: {} };
+    return buildBedMappings(currentPlan.beds, currentPlan.bedGroups);
+  }, [currentPlan]);
+
+  // Use shared drag preview hook for the focused group timeline
+  const {
+    previewCrops,
+    handleBulkCropMove,
+    handleBulkCropDateChange,
+    handleDragEnd,
+  } = useDragPreview({
+    crops: viewingGroupData?.crops ?? [],
+    plantings: currentPlan?.plantings,
+    beds: currentPlan?.beds,
+    nameGroups: bedMappings.nameGroups,
+    bedLengths: bedMappings.bedLengths,
+    bulkUpdatePlantings,
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -1477,30 +1534,71 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* Main map area */}
-        <main className="flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-6" onClick={() => clearSelection()}>
-          {overviewData.length === 0 ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-              <p className="text-gray-500">No beds configured for this plan.</p>
-              <Link
-                href={`/beds/${planId}`}
-                className="text-blue-600 hover:text-blue-800 text-sm"
+        {/* Main content area - either FarmGrid or CropTimeline for focused group */}
+        {viewingGroupData ? (
+          <main className="flex-1 flex flex-col overflow-hidden">
+            {/* Back button header */}
+            <div className="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-3">
+              <button
+                onClick={() => setViewingGroupId(null)}
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900"
               >
-                Configure beds
-              </Link>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Map
+              </button>
+              <span className="text-gray-300">|</span>
+              <h2 className="text-lg font-semibold text-gray-900">{viewingGroupData.group.name}</h2>
+              <span className="text-sm text-gray-500">
+                {viewingGroupData.beds.length} bed{viewingGroupData.beds.length !== 1 ? 's' : ''}
+              </span>
             </div>
-          ) : (
-            <FarmGrid
-              sections={overviewData}
-              year={displayYear}
-              baseYear={baseYear}
-              onYearChange={setSelectedYear}
-              onAssignPlanting={handleAssignPlanting}
-              onCropClick={handleCropClick}
-              selectedPlantingIds={selectedPlantingIds}
-            />
-          )}
-        </main>
+            {/* CropTimeline for this group */}
+            <div className="flex-1 overflow-hidden">
+              <CropTimeline
+                crops={previewCrops}
+                resources={viewingGroupData.resources}
+                groups={viewingGroupData.groups}
+                bedLengths={viewingGroupData.bedLengths}
+                onBulkCropMove={handleBulkCropMove}
+                onBulkCropDateChange={handleBulkCropDateChange}
+                onDragEnd={handleDragEnd}
+                cropCatalog={currentPlan.cropCatalog}
+                planYear={currentPlan.metadata.year}
+                products={currentPlan.products}
+                cropBoxDisplay={currentPlan.cropBoxDisplay}
+                onUpdateCropBoxDisplay={updateCropBoxDisplay}
+                hideUnassigned
+              />
+            </div>
+          </main>
+        ) : (
+          <main className="flex-1 overflow-auto px-4 sm:px-6 lg:px-8 py-6" onClick={() => clearSelection()}>
+            {overviewData.length === 0 ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+                <p className="text-gray-500">No beds configured for this plan.</p>
+                <Link
+                  href={`/beds/${planId}`}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  Configure beds
+                </Link>
+              </div>
+            ) : (
+              <FarmGrid
+                sections={overviewData}
+                year={displayYear}
+                baseYear={baseYear}
+                onYearChange={setSelectedYear}
+                onAssignPlanting={handleAssignPlanting}
+                onCropClick={handleCropClick}
+                onGroupClick={handleGroupClick}
+                selectedPlantingIds={selectedPlantingIds}
+              />
+            )}
+          </main>
+        )}
 
         {/* Right panel - Planting Inspector (shown when crops selected) */}
         {selectedCropsData.length > 0 && (
@@ -1527,6 +1625,7 @@ export default function OverviewPage() {
         )}
       </div>
     </div>
+
     </>
   );
 }

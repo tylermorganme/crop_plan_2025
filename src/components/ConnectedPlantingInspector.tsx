@@ -111,18 +111,33 @@ export function ConnectedPlantingInspector({
     [updateCropDates]
   );
 
-  // Refresh planting to use config defaults
+  // Refresh planting to use config defaults (reset to "fresh from config" state)
   const handleRefreshFromConfig = useCallback(
     async (plantingId: string) => {
-      // Reset overrides, use default seed source, and clear market split
-      await updatePlanting(plantingId, {
+      // Find the planting to get its configId
+      const planting = currentPlan?.plantings?.find(p => p.id === plantingId);
+      if (!planting) return;
+
+      // Look up the config to get targetFieldDate
+      const config = planting.configId ? currentPlan?.cropCatalog?.[planting.configId] : null;
+
+      // Build updates - reset to "fresh from config" state
+      const updates: Parameters<typeof updatePlanting>[1] = {
         overrides: undefined,
         useDefaultSeedSource: true,
         seedSource: undefined,
         marketSplit: undefined,
-      });
+      };
+
+      // If config has a target field date, reset fieldStartDate to it
+      if (config?.targetFieldDate && currentPlan?.metadata?.year) {
+        // targetFieldDate is MM-DD format, combine with plan year
+        updates.fieldStartDate = `${currentPlan.metadata.year}-${config.targetFieldDate}`;
+      }
+
+      await updatePlanting(plantingId, updates);
     },
-    [updatePlanting]
+    [updatePlanting, currentPlan]
   );
 
   // Bulk duplicate plantings
@@ -137,22 +152,39 @@ export function ConnectedPlantingInspector({
     [bulkDuplicatePlantings, clearSelection, selectPlanting]
   );
 
-  // Bulk refresh plantings from config
+  // Bulk refresh plantings from config (reset to "fresh from config" state)
   const handleBulkRefreshFromConfig = useCallback(
     async (plantingIds: string[]) => {
+      if (!currentPlan?.plantings || !currentPlan?.cropCatalog) return;
+
       // Use bulk update to reset all plantings in single undo step
-      const updates = plantingIds.map((id) => ({
-        id,
-        changes: {
+      const updates = plantingIds.map((id) => {
+        const planting = currentPlan.plantings!.find(p => p.id === id);
+        const config = planting?.configId ? currentPlan.cropCatalog![planting.configId] : null;
+
+        const changes: {
+          overrides: undefined;
+          useDefaultSeedSource: true;
+          seedSource: undefined;
+          marketSplit: undefined;
+          fieldStartDate?: string;
+        } = {
           overrides: undefined,
           useDefaultSeedSource: true,
           seedSource: undefined,
           marketSplit: undefined,
-        },
-      }));
+        };
+
+        // If config has a target field date, reset fieldStartDate to it
+        if (config?.targetFieldDate && currentPlan.metadata?.year) {
+          changes.fieldStartDate = `${currentPlan.metadata.year}-${config.targetFieldDate}`;
+        }
+
+        return { id, changes };
+      });
       await bulkUpdatePlantings(updates);
     },
-    [bulkUpdatePlantings]
+    [bulkUpdatePlantings, currentPlan]
   );
 
   // Editing sequence data
