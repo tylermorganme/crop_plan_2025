@@ -77,6 +77,10 @@ export default function CropsPage() {
   const [bulkBgColor, setBulkBgColor] = useState('#4a9d4a');
   const [bulkTextColor, setBulkTextColor] = useState('#ffffff');
 
+  // Copy-from dropdown state
+  const [copyFromDropdownOpen, setCopyFromDropdownOpen] = useState<string | null>(null);
+  const [copyFromSearch, setCopyFromSearch] = useState('');
+
   // Load plan on mount
   useEffect(() => {
     if (planId) {
@@ -503,6 +507,72 @@ export default function CropsPage() {
                           className="w-8 h-8 cursor-pointer rounded border border-gray-300"
                           title="Text color"
                         />
+                        {/* Copy from dropdown */}
+                        <div className="relative">
+                          <button
+                            onClick={() => {
+                              setCopyFromDropdownOpen(copyFromDropdownOpen === crop.id ? null : crop.id);
+                              setCopyFromSearch('');
+                            }}
+                            className="text-xs border border-gray-300 rounded px-2 py-1 text-gray-600 bg-white cursor-pointer hover:border-gray-400 hover:bg-gray-50"
+                            title="Copy colors from another crop"
+                          >
+                            Copy from...
+                          </button>
+                          {copyFromDropdownOpen === crop.id && (
+                            <>
+                              {/* Backdrop to close dropdown */}
+                              <div
+                                className="fixed inset-0 z-10"
+                                onClick={() => setCopyFromDropdownOpen(null)}
+                              />
+                              {/* Dropdown menu */}
+                              <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-56">
+                                {/* Search input */}
+                                <div className="p-2 border-b border-gray-100">
+                                  <input
+                                    type="text"
+                                    value={copyFromSearch}
+                                    onChange={(e) => setCopyFromSearch(e.target.value)}
+                                    placeholder="Search crops..."
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </div>
+                                {/* Crop list */}
+                                <div className="max-h-48 overflow-auto py-1">
+                                  {sortedCrops
+                                    .filter(c => c.id !== crop.id)
+                                    .filter(c => !copyFromSearch || c.name.toLowerCase().includes(copyFromSearch.toLowerCase()))
+                                    .map(c => (
+                                      <button
+                                        key={c.id}
+                                        onClick={() => {
+                                          updateCrop(crop.id, { bgColor: c.bgColor, textColor: c.textColor });
+                                          setCopyFromDropdownOpen(null);
+                                        }}
+                                        className="w-full px-3 py-1.5 text-left hover:bg-gray-100 flex items-center gap-2"
+                                      >
+                                        <span
+                                          className="px-2 py-0.5 rounded text-xs font-medium"
+                                          style={{ backgroundColor: c.bgColor, color: c.textColor }}
+                                        >
+                                          {c.name}
+                                        </span>
+                                      </button>
+                                    ))}
+                                  {sortedCrops
+                                    .filter(c => c.id !== crop.id)
+                                    .filter(c => !copyFromSearch || c.name.toLowerCase().includes(copyFromSearch.toLowerCase()))
+                                    .length === 0 && (
+                                    <div className="px-3 py-2 text-sm text-gray-500">No matches</div>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       {/* Delete button */}
