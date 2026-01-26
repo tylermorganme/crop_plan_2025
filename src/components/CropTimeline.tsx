@@ -6,7 +6,7 @@ import type { CropConfig } from '@/lib/entities/crop-config';
 import { calculateCropFields } from '@/lib/entities/crop-config';
 import { Z_INDEX } from '@/lib/z-index';
 import { useUIStore } from '@/lib/ui-store';
-import { calculateRowSpan } from '@/lib/timeline-data';
+import { expandCropsToBeds } from '@/lib/timeline-data';
 import { getBedGroup } from '@/lib/plan-types';
 import { calculateConfigRevenue } from '@/lib/revenue';
 import { parseSearchQuery, buildCropSearchText } from '@/lib/search-dsl';
@@ -587,37 +587,15 @@ export default function CropTimeline({
   // Each crop is 1:1 with a planting; we expand to per-bed entries here
   // Also sort within each bed when sort is active
   const cropsByResource = useMemo(() => {
+    // Use shared expansion logic
+    const expanded = expandCropsToBeds(effectiveCrops, nameGroups, bedLengths, {
+      includeUnassigned: true,
+    });
+
+    // Convert Map to Record for compatibility with existing code
     const result: Record<string, TimelineCrop[]> = {};
-
-    for (const crop of effectiveCrops) {
-      // Unassigned crops - single entry
-      if (!crop.resource) {
-        if (!result['Unassigned']) result['Unassigned'] = [];
-        result['Unassigned'].push({
-          ...crop,
-          totalBeds: 1,
-          bedIndex: 1,
-        });
-        continue;
-      }
-
-      // Compute bed span at render time
-      const span = calculateRowSpan(crop.feetNeeded, crop.resource, nameGroups, bedLengths);
-
-      // Create entry for each bed in span
-      for (let i = 0; i < span.bedSpanInfo.length; i++) {
-        const info = span.bedSpanInfo[i];
-        if (!result[info.bed]) result[info.bed] = [];
-        result[info.bed].push({
-          ...crop,
-          id: `${crop.groupId}_bed${i}`,
-          resource: info.bed,
-          totalBeds: span.bedSpanInfo.length,
-          bedIndex: i + 1,
-          feetUsed: info.feetUsed,
-          bedCapacityFt: info.bedCapacityFt,
-        });
-      }
+    for (const [bed, crops] of expanded) {
+      result[bed] = crops;
     }
 
     // Sort within each bed when sort is active

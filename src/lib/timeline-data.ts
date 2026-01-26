@@ -136,6 +136,82 @@ function resolveSeedSource(assignment: BedAssignment): SeedSource | undefined {
 }
 
 /**
+ * Minimal shape required for bed expansion.
+ * More permissive than full TimelineCrop to support local types in components.
+ */
+interface ExpandableCrop {
+  id: string;
+  resource: string;
+  feetNeeded: number;
+  groupId: string;
+  totalBeds?: number;
+  bedIndex?: number;
+  feetUsed?: number;
+  bedCapacityFt?: number;
+}
+
+/**
+ * Expand crops to per-bed entries based on feetNeeded and bed spanning.
+ * This is the canonical bed expansion logic used by both CropTimeline and Overview page.
+ *
+ * @param crops - Array of TimelineCrops (1:1 with Plantings)
+ * @param nameGroups - Bed groups mapping (group letter -> bed names)
+ * @param bedLengths - Bed lengths mapping (bed name -> feet)
+ * @param options - Configuration options
+ * @returns Map from bed name to array of expanded entries (preserves input type)
+ */
+export function expandCropsToBeds<T extends ExpandableCrop>(
+  crops: T[],
+  nameGroups: Record<string, string[]>,
+  bedLengths: Record<string, number>,
+  options: {
+    /** Include unassigned crops under 'Unassigned' key (default: true) */
+    includeUnassigned?: boolean;
+  } = {}
+): Map<string, T[]> {
+  const { includeUnassigned = true } = options;
+  const result = new Map<string, T[]>();
+
+  for (const crop of crops) {
+    // Handle unassigned crops
+    if (!crop.resource || crop.resource === 'Unassigned') {
+      if (includeUnassigned) {
+        const list = result.get('Unassigned') ?? [];
+        list.push({
+          ...crop,
+          totalBeds: 1,
+          bedIndex: 1,
+        });
+        result.set('Unassigned', list);
+      }
+      continue;
+    }
+
+    // Calculate bed span
+    const span = calculateRowSpan(crop.feetNeeded, crop.resource, nameGroups, bedLengths);
+
+    // Create entry for each bed in span
+    for (let i = 0; i < span.bedSpanInfo.length; i++) {
+      const info = span.bedSpanInfo[i];
+      const list = result.get(info.bed) ?? [];
+      list.push({
+        ...crop,
+        // Use unique ID for multi-bed spans, preserve original for single-bed
+        id: span.bedSpanInfo.length > 1 ? `${crop.groupId}_bed${i}` : crop.id,
+        resource: info.bed,
+        totalBeds: span.bedSpanInfo.length,
+        bedIndex: i + 1,
+        feetUsed: info.feetUsed,
+        bedCapacityFt: info.bedCapacityFt,
+      });
+      result.set(info.bed, list);
+    }
+  }
+
+  return result;
+}
+
+/**
  * Calculate how many beds a crop spans based on feetNeeded and the starting bed.
  * Returns spanBeds (the actual beds), and bedSpanInfo with feet used per bed.
  *

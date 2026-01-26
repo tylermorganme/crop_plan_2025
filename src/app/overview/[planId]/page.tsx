@@ -8,7 +8,7 @@ import {
   usePlanStore,
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
-import { getTimelineCropsFromPlan, buildBedMappings } from '@/lib/timeline-data';
+import { getTimelineCropsFromPlan, buildBedMappings, expandCropsToBeds } from '@/lib/timeline-data';
 import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
 import { parseSearchQuery, matchesCropFilter } from '@/lib/search-dsl';
 import { SearchInput } from '@/components/SearchInput';
@@ -154,12 +154,15 @@ function dateToYearPercent(dateStr: string, year: number): number {
 
 /**
  * Build bed group sections from plan data.
+ * Expands crops across multiple beds based on feetNeeded.
  */
 function buildOverviewData(
   beds: Record<string, Bed>,
   bedGroups: Record<string, BedGroup>,
   crops: TimelineCrop[],
-  year: number
+  year: number,
+  nameGroups: Record<string, string[]>,
+  bedLengths: Record<string, number>
 ): BedGroupSection[] {
   // Group beds by their group
   const bedsByGroup = new Map<string, Bed[]>();
@@ -174,14 +177,10 @@ function buildOverviewData(
     (a, b) => a.displayOrder - b.displayOrder
   );
 
-  // Group crops by bed name
-  const cropsByBed = new Map<string, TimelineCrop[]>();
-  for (const crop of crops) {
-    if (!crop.resource || crop.resource === 'Unassigned') continue;
-    const list = cropsByBed.get(crop.resource) ?? [];
-    list.push(crop);
-    cropsByBed.set(crop.resource, list);
-  }
+  // Use shared bed expansion logic (excludes unassigned crops)
+  const cropsByBed = expandCropsToBeds(crops, nameGroups, bedLengths, {
+    includeUnassigned: false,
+  });
 
   // Build sections
   const sections: BedGroupSection[] = [];
@@ -1241,12 +1240,15 @@ export default function OverviewPage() {
     }
 
     const crops = getTimelineCropsFromPlan(currentPlan);
+    const { nameGroups, bedLengths } = buildBedMappings(currentPlan.beds, currentPlan.bedGroups);
 
     return buildOverviewData(
       currentPlan.beds,
       currentPlan.bedGroups,
       crops,
-      selectedYear
+      selectedYear,
+      nameGroups,
+      bedLengths
     );
   }, [currentPlan, selectedYear]);
 
