@@ -30,12 +30,23 @@ function getContrastingTextColor(bgColor: string): string {
 }
 
 /**
- * Get unique colors from crops for filtering.
+ * Get unique background colors from crops for filtering.
  */
-function getUniqueColors(crops: Crop[]): string[] {
+function getUniqueBgColors(crops: Crop[]): string[] {
   const colors = new Set<string>();
   for (const crop of crops) {
     colors.add(crop.bgColor);
+  }
+  return Array.from(colors).sort();
+}
+
+/**
+ * Get unique text colors from crops for filtering.
+ */
+function getUniqueTextColors(crops: Crop[]): string[] {
+  const colors = new Set<string>();
+  for (const crop of crops) {
+    colors.add(crop.textColor);
   }
   return Array.from(colors).sort();
 }
@@ -55,7 +66,8 @@ export default function CropsPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [colorFilter, setColorFilter] = useState<string | null>(null);
+  const [bgColorFilter, setBgColorFilter] = useState<string | null>(null);
+  const [textColorFilter, setTextColorFilter] = useState<string | null>(null);
   const [editingCropId, setEditingCropId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [showAddCropForm, setShowAddCropForm] = useState(false);
@@ -81,10 +93,11 @@ export default function CropsPage() {
     );
   }, [currentPlan?.crops]);
 
-  // Get unique colors for filter
-  const uniqueColors = useMemo(() => getUniqueColors(sortedCrops), [sortedCrops]);
+  // Get unique colors for filters
+  const uniqueBgColors = useMemo(() => getUniqueBgColors(sortedCrops), [sortedCrops]);
+  const uniqueTextColors = useMemo(() => getUniqueTextColors(sortedCrops), [sortedCrops]);
 
-  // Filter crops by search and color
+  // Filter crops by search and colors
   const filteredCrops = useMemo(() => {
     let result = sortedCrops;
 
@@ -95,12 +108,16 @@ export default function CropsPage() {
       );
     }
 
-    if (colorFilter) {
-      result = result.filter(crop => crop.bgColor === colorFilter);
+    if (bgColorFilter) {
+      result = result.filter(crop => crop.bgColor === bgColorFilter);
+    }
+
+    if (textColorFilter) {
+      result = result.filter(crop => crop.textColor === textColorFilter);
     }
 
     return result;
-  }, [sortedCrops, searchQuery, colorFilter]);
+  }, [sortedCrops, searchQuery, bgColorFilter, textColorFilter]);
 
   // Count crops by usage in configs
   const cropUsage = useMemo(() => {
@@ -120,7 +137,7 @@ export default function CropsPage() {
   // Clear selection when filter changes
   useEffect(() => {
     setSelectedCropIds(new Set());
-  }, [searchQuery, colorFilter]);
+  }, [searchQuery, bgColorFilter, textColorFilter]);
 
   const handleBgColorChange = (cropId: string, newColor: string) => {
     const textColor = getContrastingTextColor(newColor);
@@ -272,40 +289,6 @@ export default function CropsPage() {
               className="flex-1 min-w-[200px] max-w-sm px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
 
-            {/* Color filter */}
-            {uniqueColors.length > 1 && (
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-500 mr-1">Filter:</span>
-                <button
-                  onClick={() => setColorFilter(null)}
-                  className={`w-6 h-6 rounded border text-xs ${
-                    colorFilter === null
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-gray-400'
-                  }`}
-                  title="Show all"
-                >
-                  All
-                </button>
-                {uniqueColors.slice(0, 8).map(color => (
-                  <button
-                    key={color}
-                    onClick={() => setColorFilter(colorFilter === color ? null : color)}
-                    className={`w-6 h-6 rounded border-2 ${
-                      colorFilter === color
-                        ? 'border-blue-500 ring-2 ring-blue-200'
-                        : 'border-white hover:border-gray-300'
-                    }`}
-                    style={{ backgroundColor: color }}
-                    title={`Filter by this color`}
-                  />
-                ))}
-                {uniqueColors.length > 8 && (
-                  <span className="text-xs text-gray-400">+{uniqueColors.length - 8}</span>
-                )}
-              </div>
-            )}
-
             <button
               onClick={() => setShowAddCropForm(true)}
               className="px-3 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50"
@@ -313,6 +296,92 @@ export default function CropsPage() {
               Add Crop
             </button>
           </div>
+
+          {/* Color Filters */}
+          {(uniqueBgColors.length > 1 || uniqueTextColors.length > 1) && (
+            <div className="flex flex-wrap gap-4 mb-4 text-sm">
+              {/* Background color filter */}
+              {uniqueBgColors.length > 1 && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-500 mr-1">Background:</span>
+                  <button
+                    onClick={() => setBgColorFilter(null)}
+                    className={`px-2 py-0.5 rounded border text-xs ${
+                      bgColorFilter === null
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    title="Show all"
+                  >
+                    All
+                  </button>
+                  {uniqueBgColors.slice(0, 10).map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setBgColorFilter(bgColorFilter === color ? null : color)}
+                      className={`w-6 h-6 rounded border-2 ${
+                        bgColorFilter === color
+                          ? 'border-blue-500 ring-2 ring-blue-200'
+                          : 'border-transparent hover:border-gray-300'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={`Filter by background ${color}`}
+                    />
+                  ))}
+                  {uniqueBgColors.length > 10 && (
+                    <span className="text-xs text-gray-400">+{uniqueBgColors.length - 10}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Text color filter */}
+              {uniqueTextColors.length > 1 && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-500 mr-1">Text:</span>
+                  <button
+                    onClick={() => setTextColorFilter(null)}
+                    className={`px-2 py-0.5 rounded border text-xs ${
+                      textColorFilter === null
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    title="Show all"
+                  >
+                    All
+                  </button>
+                  {uniqueTextColors.slice(0, 10).map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setTextColorFilter(textColorFilter === color ? null : color)}
+                      className={`w-6 h-6 rounded border-2 ${
+                        textColorFilter === color
+                          ? 'border-blue-500 ring-2 ring-blue-200'
+                          : 'border-transparent hover:border-gray-300'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={`Filter by text ${color}`}
+                    />
+                  ))}
+                  {uniqueTextColors.length > 10 && (
+                    <span className="text-xs text-gray-400">+{uniqueTextColors.length - 10}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Clear filters */}
+              {(bgColorFilter || textColorFilter) && (
+                <button
+                  onClick={() => {
+                    setBgColorFilter(null);
+                    setTextColorFilter(null);
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Bulk Action Bar */}
           {hasSelection && (
@@ -425,7 +494,7 @@ export default function CropsPage() {
 
             {filteredCrops.length === 0 ? (
               <div className="text-center text-gray-500 py-12">
-                {searchQuery || colorFilter ? 'No matching crops found' : 'No crops defined yet'}
+                {searchQuery || bgColorFilter || textColorFilter ? 'No matching crops found' : 'No crops defined yet'}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -536,7 +605,7 @@ export default function CropsPage() {
           <div className="mt-4 text-sm text-gray-500">
             {filteredCrops.length} crop{filteredCrops.length !== 1 ? 's' : ''}
             {searchQuery && ` matching "${searchQuery}"`}
-            {colorFilter && ' with selected color'}
+            {(bgColorFilter || textColorFilter) && ' (filtered)'}
           </div>
         </div>
       </div>
