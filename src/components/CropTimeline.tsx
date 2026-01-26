@@ -9,7 +9,7 @@ import { useUIStore } from '@/lib/ui-store';
 import { calculateRowSpan } from '@/lib/timeline-data';
 import { getBedGroup } from '@/lib/plan-types';
 import { calculateConfigRevenue } from '@/lib/revenue';
-import { parseSearchQuery } from '@/lib/search-dsl';
+import { parseSearchQuery, buildCropSearchText } from '@/lib/search-dsl';
 import type { CropBoxDisplayConfig } from '@/lib/entities/plan';
 import AddToBedPanel from './AddToBedPanel';
 import { ConnectedPlantingInspector } from './ConnectedPlantingInspector';
@@ -138,6 +138,8 @@ interface CropTimelineProps {
   onUpdateCropBoxDisplay?: (config: CropBoxDisplayConfig) => void;
   /** Hide the unassigned crops section at the top of the timeline */
   hideUnassigned?: boolean;
+  /** Callback when an external planting is dropped onto a bed (e.g., from unassigned panel) */
+  onExternalPlantingDrop?: (plantingId: string, bedName: string) => void;
 }
 
 // =============================================================================
@@ -276,6 +278,7 @@ export default function CropTimeline({
   cropBoxDisplay,
   onUpdateCropBoxDisplay,
   hideUnassigned,
+  onExternalPlantingDrop,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -500,17 +503,8 @@ export default function CropTimeline({
       const fieldPattern = /^(-?)(bed|group|bedGroup|category|method|crop|notes|structure):(.+)$/i;
 
       result = result.filter(crop => {
-        const searchText = [
-          crop.name,
-          crop.category,
-          crop.cropConfigId,
-          crop.resource,
-          crop.crop,
-          crop.notes,
-          crop.plantingMethod,
-          crop.groupId,
-          crop.growingStructure,
-        ].filter(Boolean).join(' ').toLowerCase();
+        // Use shared search text builder for consistency across views
+        const searchText = buildCropSearchText(crop);
 
         return parsedFilterTerms.every(term => {
           const fieldMatch = term.match(fieldPattern);
@@ -1165,11 +1159,25 @@ export default function CropTimeline({
     setDragOverResource(null);
   };
 
-  const handleDrop = (e: React.DragEvent, _resource: string) => {
+  const handleDrop = (e: React.DragEvent, resource: string) => {
     e.preventDefault();
     setDragOverResource(null);
 
-    // Drop succeeded - notify parent to commit pending changes
+    // Check for external drop (e.g., from unassigned panel)
+    if (!draggedCropId && onExternalPlantingDrop) {
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        if ((data.type === 'unassigned-planting' || data.type === 'assigned-planting') && data.plantingId) {
+          // External planting being assigned to this bed
+          onExternalPlantingDrop(data.plantingId, resource);
+          return;
+        }
+      } catch {
+        // Not a valid external drop, continue with internal handling
+      }
+    }
+
+    // Internal drop - notify parent to commit pending changes
     onDragEnd?.(true);
     dragCache.current.clear();
     setDraggedCropId(null);

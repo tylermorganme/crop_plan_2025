@@ -10,7 +10,7 @@ import {
 } from '@/lib/plan-store';
 import { getTimelineCropsFromPlan, buildBedMappings } from '@/lib/timeline-data';
 import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
-import { parseSearchQuery } from '@/lib/search-dsl';
+import { parseSearchQuery, matchesCropFilter } from '@/lib/search-dsl';
 import { SearchInput } from '@/components/SearchInput';
 import { ConnectedPlantingInspector } from '@/components/ConnectedPlantingInspector';
 import { useUIStore } from '@/lib/ui-store';
@@ -112,6 +112,7 @@ interface CropBlock {
   plantingId: string; // For drag-drop operations
   name: string;
   category?: string;
+  cropConfigId?: string; // For search filtering
   startPercent: number; // 0-100% of year
   widthPercent: number; // 0-100% of year
   bgColor: string;
@@ -203,6 +204,7 @@ function buildOverviewData(
           plantingId: crop.plantingId || crop.id, // For drag-drop
           name: crop.name,
           category: crop.category,
+          cropConfigId: crop.cropConfigId,
           startPercent,
           widthPercent: Math.max(0.5, endPercent - startPercent), // min width
           bgColor: crop.bgColor || DEFAULT_COLOR.bg,
@@ -242,7 +244,7 @@ interface StackResult {
 }
 
 /** Fixed row height for all beds */
-const ROW_HEIGHT = 36;
+const ROW_HEIGHT = 42;
 
 /**
  * Calculate stacking for crops in a lane using the shared stacking utility.
@@ -278,17 +280,31 @@ function BedRowComponent({
   onAssignPlanting,
   onCropClick,
   selectedPlantingIds,
+  filterTerms,
+  filterMode,
 }: {
   row: BedRow;
   isEven: boolean;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
   onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
   selectedPlantingIds?: Set<string>;
+  /** Current filter terms for highlighting */
+  filterTerms?: string[];
+  /** 'highlight' = show all, highlight matches; 'filter' = hide non-matches */
+  filterMode?: 'highlight' | 'filter';
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
+  // Filter crops if in filter mode, otherwise show all
+  const visibleCrops = useMemo(() => {
+    if (!filterTerms || filterTerms.length === 0 || filterMode !== 'filter') {
+      return row.crops;
+    }
+    return row.crops.filter(crop => matchesCropFilter(crop, filterTerms));
+  }, [row.crops, filterTerms, filterMode]);
+
   // Calculate stacking for overlapping crops
-  const stacks: StackResult = useMemo(() => calculateStacking(row.crops), [row.crops]);
+  const stacks: StackResult = useMemo(() => calculateStacking(visibleCrops), [visibleCrops]);
 
   const maxLevels = stacks.maxLevel;
 
@@ -351,15 +367,19 @@ function BedRowComponent({
         {stacks.crops.map((crop) => {
           const topPx = crop.stackLevel * cropHeight + 1;
           const isSelected = selectedPlantingIds?.has(crop.plantingId);
+          // Highlight matching crops when in highlight mode with active filter
+          // De-emphasize non-matching crops when highlight mode is active
+          const shouldFade = filterMode === 'highlight' && filterTerms && filterTerms.length > 0
+            && !matchesCropFilter(crop, filterTerms);
 
           return (
             <div
               key={crop.id}
               className={`absolute overflow-hidden rounded-sm cursor-pointer ${
                 isSelected
-                  ? 'ring-2 ring-blue-500 ring-offset-1 z-10'
+                  ? 'ring-2 ring-inset ring-blue-500 z-10'
                   : 'border border-white/20'
-              }`}
+              } ${shouldFade ? 'opacity-30' : ''}`}
               draggable
               onClick={(e) => {
                 e.stopPropagation();
@@ -440,12 +460,16 @@ function BedGroupComponent({
   onCropClick,
   onGroupClick,
   selectedPlantingIds,
+  filterTerms,
+  filterMode,
 }: {
   section: BedGroupSection;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
   onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
   onGroupClick?: (groupId: string) => void;
   selectedPlantingIds?: Set<string>;
+  filterTerms?: string[];
+  filterMode?: 'highlight' | 'filter';
 }) {
   return (
     <div style={{ width: GROUP_WIDTH }}>
@@ -469,6 +493,8 @@ function BedGroupComponent({
             onAssignPlanting={onAssignPlanting}
             onCropClick={onCropClick}
             selectedPlantingIds={selectedPlantingIds}
+            filterTerms={filterTerms}
+            filterMode={filterMode}
           />
         ))}
         {section.beds.length === 0 && (
@@ -508,6 +534,12 @@ interface EnrichedUnassignedCrop {
   revenue: number | null;
   bgColor?: string;
   textColor?: string;
+  // Fields from TimelineCrop for search consistency
+  cropConfigId: string;
+  crop?: string;
+  notes?: string;
+  plantingMethod?: string;
+  growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
 }
 
 /**
@@ -542,25 +574,10 @@ function UnassignedPlantingsPanel({
     return { filterTerms: parsed.filterTerms, sortOverride };
   }, [searchQuery, validSortColumns]);
 
-  // Filter plantings based on filter terms
+  // Filter plantings using shared filter logic
   const filteredPlantings = useMemo(() => {
     if (filterTerms.length === 0) return plantings;
-
-    return plantings.filter(p => {
-      const searchText = [
-        p.cropName,
-        p.category,
-        p.identifier,
-        p.name,
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      return filterTerms.every(term => {
-        if (term.startsWith('-') && term.length > 1) {
-          return !searchText.includes(term.slice(1));
-        }
-        return searchText.includes(term);
-      });
-    });
+    return plantings.filter(p => matchesCropFilter(p, filterTerms));
   }, [plantings, filterTerms]);
 
   // Sort plantings (default: start date ascending)
@@ -956,6 +973,8 @@ function FarmGrid({
   onCropClick,
   onGroupClick,
   selectedPlantingIds,
+  filterTerms,
+  filterMode,
 }: {
   sections: BedGroupSection[];
   year: number;
@@ -965,6 +984,8 @@ function FarmGrid({
   onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
   onGroupClick?: (groupId: string) => void;
   selectedPlantingIds?: Set<string>;
+  filterTerms?: string[];
+  filterMode?: 'highlight' | 'filter';
 }) {
   const [layout, setLayout] = useState<FieldLayoutConfig>(DEFAULT_LAYOUT);
   const [showEditor, setShowEditor] = useState(false);
@@ -1071,6 +1092,8 @@ function FarmGrid({
                     onCropClick={onCropClick}
                     onGroupClick={onGroupClick}
                     selectedPlantingIds={selectedPlantingIds}
+                    filterTerms={filterTerms}
+                    filterMode={filterMode}
                   />
                 ))}
               </div>
@@ -1112,6 +1135,14 @@ export default function OverviewPage() {
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingGroupId, setViewingGroupId] = useState<string | null>(null);
+  // Filter mode for map view: 'highlight' shows all crops but highlights matches, 'filter' hides non-matches
+  const [mapFilterMode, setMapFilterMode] = useState<'highlight' | 'filter'>('highlight');
+
+  // Parse filter terms from search query for map view
+  const mapFilterTerms = useMemo(() => {
+    const { filterTerms } = parseSearchQuery(searchQuery);
+    return filterTerms;
+  }, [searchQuery]);
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
@@ -1286,6 +1317,16 @@ export default function OverviewPage() {
   const handleAssignPlanting = useCallback((plantingId: string, bedId: string) => {
     updatePlanting(plantingId, { startBed: bedId });
   }, [updatePlanting]);
+
+  // Handler for external drops on CropTimeline (takes bed name, looks up UUID)
+  const handleExternalPlantingDrop = useCallback((plantingId: string, bedName: string) => {
+    if (!currentPlan?.beds) return;
+    // Find bed by name
+    const bed = Object.values(currentPlan.beds).find(b => b.name === bedName);
+    if (bed) {
+      updatePlanting(plantingId, { startBed: bed.id });
+    }
+  }, [updatePlanting, currentPlan?.beds]);
 
   // Handler for unassigning a planting (drop on sidebar)
   const handleUnassignPlanting = useCallback((plantingId: string) => {
@@ -1511,6 +1552,26 @@ export default function OverviewPage() {
               sortFields={['crop', 'category', 'start', 'end', 'config', 'revenue']}
               width="w-full"
             />
+            {/* Map filter mode toggle */}
+            {mapFilterTerms.length > 0 && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-xs text-gray-500">Map:</span>
+                <button
+                  onClick={() => setMapFilterMode(mapFilterMode === 'highlight' ? 'filter' : 'highlight')}
+                  className={`px-2 py-0.5 text-xs rounded border transition-colors ${
+                    mapFilterMode === 'highlight'
+                      ? 'bg-blue-100 border-blue-400 text-blue-800'
+                      : 'bg-yellow-100 border-yellow-400 text-yellow-800'
+                  }`}
+                  title={mapFilterMode === 'highlight'
+                    ? 'Fading non-matches. Click to hide them instead.'
+                    : 'Hiding non-matches. Click to show all (faded).'
+                  }
+                >
+                  {mapFilterMode === 'filter' ? 'Filtering' : 'Highlight on map'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Unassigned plantings table */}
@@ -1570,6 +1631,7 @@ export default function OverviewPage() {
                 cropBoxDisplay={currentPlan.cropBoxDisplay}
                 onUpdateCropBoxDisplay={updateCropBoxDisplay}
                 hideUnassigned
+                onExternalPlantingDrop={handleExternalPlantingDrop}
               />
             </div>
           </main>
@@ -1595,6 +1657,8 @@ export default function OverviewPage() {
                 onCropClick={handleCropClick}
                 onGroupClick={handleGroupClick}
                 selectedPlantingIds={selectedPlantingIds}
+                filterTerms={mapFilterTerms}
+                filterMode={mapFilterMode}
               />
             )}
           </main>

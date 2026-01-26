@@ -60,3 +60,52 @@ export function parseSearchQuery<TSortField extends string = string>(
 
   return { sortField, sortDir, filterTerms };
 }
+
+/**
+ * Build searchable text from a TimelineCrop (or any object with these fields).
+ * This is the canonical definition of what fields are searchable.
+ * All views should use this for consistency.
+ */
+export function buildCropSearchText(crop: {
+  name?: string;
+  category?: string;
+  cropConfigId?: string;
+  resource?: string;
+  crop?: string;
+  notes?: string;
+  plantingMethod?: string;
+  groupId?: string;
+  growingStructure?: string;
+}): string {
+  return [
+    crop.name,
+    crop.category,
+    crop.cropConfigId,
+    crop.resource,
+    crop.crop,
+    crop.notes,
+    crop.plantingMethod,
+    crop.groupId,
+    crop.growingStructure,
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+/**
+ * Filter crops by search terms using the standard searchable fields.
+ * Supports negation with - prefix.
+ */
+export function matchesCropFilter(
+  crop: Parameters<typeof buildCropSearchText>[0],
+  filterTerms: string[]
+): boolean {
+  if (filterTerms.length === 0) return true;
+
+  const searchText = buildCropSearchText(crop);
+
+  return filterTerms.every(term => {
+    if (term.startsWith('-') && term.length > 1) {
+      return !searchText.includes(term.slice(1));
+    }
+    return searchText.includes(term);
+  });
+}
