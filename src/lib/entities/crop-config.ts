@@ -85,6 +85,9 @@ export interface CropConfig {
   /** Crop family (e.g., "Arugula", "Tomato") */
   crop: string;
 
+  /** Reference to Crop entity ID for stable linking (populated by migration) */
+  cropId?: string;
+
   /** Category for color coding (e.g., "Green", "Brassica") */
   category?: string;
 

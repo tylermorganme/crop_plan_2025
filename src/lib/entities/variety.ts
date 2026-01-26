@@ -35,6 +35,9 @@ export interface Variety {
   /** Crop name - matches CropConfig.crop for filtering (e.g., "Tomato", "Arugula") */
   crop: string;
 
+  /** Reference to Crop entity ID for stable linking (populated by migration) */
+  cropId?: string;
+
   /** Variety/cultivar name (e.g., "San Marzano", "Astro") */
   name: string;
 

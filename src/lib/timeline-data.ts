@@ -27,7 +27,7 @@ import {
 import type { Plan, Planting, Bed, BedGroup } from './plan-types';
 import { getBedGroup, getBedNumber } from './plan-types';
 import { buildBedLengthsFromTemplate } from './entities/bed';
-import { getCropColors } from './entities/crop';
+import { getCropColorsById } from './entities/crop';
 
 // Re-export for consumers
 export type { CropCatalogEntry };
@@ -600,8 +600,9 @@ export function expandPlantingsToTimelineCrops(
       crop.notes = planting.notes;
       crop.seedSource = planting.seedSource;
       crop.useDefaultSeedSource = planting.useDefaultSeedSource;
-      // Store crop name for filtering varieties/mixes in picker
+      // Store crop name and ID for filtering and color lookup
       crop.crop = config.crop;
+      crop.cropId = config.cropId;
 
       // Add sequence membership info
       crop.sequenceId = planting.sequenceId;
@@ -645,10 +646,10 @@ export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
     plan.sequences
   );
 
-  // Add colors from plan.crops (or defaults if not found)
+  // Add colors from plan.crops using cropId (stable linking)
   for (const crop of timelineCrops) {
-    if (crop.crop) {
-      const colors = getCropColors(plan.crops, crop.crop);
+    if (crop.cropId) {
+      const colors = getCropColorsById(plan.crops, crop.cropId);
       crop.bgColor = colors.bg;
       crop.textColor = colors.text;
     }

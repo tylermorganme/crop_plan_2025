@@ -131,6 +131,8 @@ export interface TimelineCrop {
   seedsNeeded?: number;
   /** Crop name (for filtering varieties/mixes in picker) */
   crop?: string;
+  /** Crop entity ID for stable color lookup */
+  cropId?: string;
   /** Actuals tracking data (actual dates, failed status) */
   actuals?: import('./planting').PlantingActuals;
   /** Sequence ID if planting is part of a succession sequence */

@@ -144,6 +144,29 @@ export function getCropColors(
 }
 
 /**
+ * Get crop colors by ID (preferred for stable linking).
+ *
+ * @param crops - Crops record to search
+ * @param cropId - Crop ID (e.g., "crop_tomato")
+ * @returns Colors object with bg and text
+ */
+export function getCropColorsById(
+  crops: Record<string, Crop> | undefined,
+  cropId: string | undefined
+): { bg: string; text: string } {
+  if (!crops || !cropId) {
+    return DEFAULT_CROP_COLOR;
+  }
+
+  const crop = crops[cropId];
+  if (crop) {
+    return { bg: crop.bgColor, text: crop.textColor };
+  }
+
+  return DEFAULT_CROP_COLOR;
+}
+
+/**
  * Get all unique crop names from a crops record.
  */
 export function getCropNames(crops: Record<string, Crop>): string[] {

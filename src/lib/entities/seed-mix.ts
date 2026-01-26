@@ -36,6 +36,9 @@ export interface SeedMix {
   /** Crop name - all components should be same crop (e.g., "Amaranth", "Lettuce") */
   crop: string;
 
+  /** Reference to Crop entity ID for stable linking (populated by migration) */
+  cropId?: string;
+
   /** Components with their percentages (should sum to 1.0) */
   components: SeedMixComponent[];
 

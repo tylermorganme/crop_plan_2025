@@ -360,6 +360,92 @@ function migrateV7ToV8(rawPlan: unknown): unknown {
   };
 }
 
+/**
+ * v8 → v9: Add cropId to entities for stable crop linking
+ * Populates cropId on CropConfig, Variety, SeedMix, and Product entities
+ * using the deterministic ID from the crop name. This enables renaming
+ * crops without breaking references.
+ */
+function migrateV8ToV9(rawPlan: unknown): unknown {
+  // Helper to generate crop ID (duplicated to avoid importing from entity)
+  const getCropId = (name: string) =>
+    `crop_${name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')}`;
+
+  const plan = rawPlan as {
+    cropCatalog?: Record<string, { crop: string; cropId?: string }>;
+    varieties?: Record<string, { crop: string; cropId?: string }>;
+    seedMixes?: Record<string, { crop: string; cropId?: string }>;
+    products?: Record<string, { crop: string; cropId?: string }>;
+    [key: string]: unknown;
+  };
+
+  // Deep clone records to avoid mutating frozen immer objects
+  let newCropCatalog = plan.cropCatalog;
+  let newVarieties = plan.varieties;
+  let newSeedMixes = plan.seedMixes;
+  let newProducts = plan.products;
+
+  // Migrate cropCatalog
+  if (plan.cropCatalog) {
+    newCropCatalog = {};
+    for (const [key, config] of Object.entries(plan.cropCatalog)) {
+      if (config.crop && !config.cropId) {
+        newCropCatalog[key] = { ...config, cropId: getCropId(config.crop) };
+      } else {
+        newCropCatalog[key] = { ...config };
+      }
+    }
+  }
+
+  // Migrate varieties
+  if (plan.varieties) {
+    newVarieties = {};
+    for (const [key, variety] of Object.entries(plan.varieties)) {
+      if (variety.crop && !variety.cropId) {
+        newVarieties[key] = { ...variety, cropId: getCropId(variety.crop) };
+      } else {
+        newVarieties[key] = { ...variety };
+      }
+    }
+  }
+
+  // Migrate seedMixes
+  if (plan.seedMixes) {
+    newSeedMixes = {};
+    for (const [key, mix] of Object.entries(plan.seedMixes)) {
+      if (mix.crop && !mix.cropId) {
+        newSeedMixes[key] = { ...mix, cropId: getCropId(mix.crop) };
+      } else {
+        newSeedMixes[key] = { ...mix };
+      }
+    }
+  }
+
+  // Migrate products
+  if (plan.products) {
+    newProducts = {};
+    for (const [key, product] of Object.entries(plan.products)) {
+      if (product.crop && !product.cropId) {
+        newProducts[key] = { ...product, cropId: getCropId(product.crop) };
+      } else {
+        newProducts[key] = { ...product };
+      }
+    }
+  }
+
+  return {
+    ...plan,
+    cropCatalog: newCropCatalog,
+    varieties: newVarieties,
+    seedMixes: newSeedMixes,
+    products: newProducts,
+  };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -389,6 +475,7 @@ const migrations: MigrationFn[] = [
   migrateV5ToV6, // Index 4: v5 → v6 (ensure bedFeet exists on all plantings)
   migrateV6ToV7, // Index 5: v6 → v7 (add crops entity with colors)
   migrateV7ToV8, // Index 6: v7 → v8 (add colorDefs for named color palettes)
+  migrateV8ToV9, // Index 7: v8 → v9 (add cropId for stable crop linking)
 ];
 
 // =============================================================================

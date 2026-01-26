@@ -1760,6 +1760,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       const cropName = existingCrop.name;
+      const newName = updates.name;
 
       set((storeState) => {
         if (!storeState.currentPlan?.crops) return;
@@ -1775,13 +1776,47 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               if (updates.textColor !== undefined) {
                 crop.textColor = updates.textColor;
               }
-              if (updates.name !== undefined) {
-                crop.name = updates.name;
+              if (newName !== undefined) {
+                crop.name = newName;
+
+                // Propagate name change to all linked entities (by cropId)
+                // CropConfig
+                if (plan.cropCatalog) {
+                  for (const config of Object.values(plan.cropCatalog)) {
+                    if (config.cropId === cropId) {
+                      config.crop = newName;
+                    }
+                  }
+                }
+                // Variety
+                if (plan.varieties) {
+                  for (const variety of Object.values(plan.varieties)) {
+                    if (variety.cropId === cropId) {
+                      variety.crop = newName;
+                    }
+                  }
+                }
+                // SeedMix
+                if (plan.seedMixes) {
+                  for (const mix of Object.values(plan.seedMixes)) {
+                    if (mix.cropId === cropId) {
+                      mix.crop = newName;
+                    }
+                  }
+                }
+                // Product
+                if (plan.products) {
+                  for (const product of Object.values(plan.products)) {
+                    if (product.cropId === cropId) {
+                      product.crop = newName;
+                    }
+                  }
+                }
               }
             }
             plan.metadata.lastModified = Date.now();
           },
-          `Update crop: ${cropName}`
+          `Update crop: ${cropName}${newName ? ` → ${newName}` : ''}`
         );
         storeState.isDirty = true;
       });

@@ -77,6 +77,9 @@ export interface PlantingConfigLookup {
   /** Crop name, e.g., "Arugula" */
   crop: string;
 
+  /** Crop entity ID for stable linking */
+  cropId?: string;
+
   /** Product type, e.g., "Baby Leaf" */
   product: string;
 
@@ -135,6 +138,7 @@ export function lookupConfigFromCatalog(
 
   return {
     crop: entry.crop,
+    cropId: entry.cropId,
     product: getPrimaryProductName(entry, products),
     category: entry.category ?? '',
     growingStructure: entry.growingStructure || 'field',

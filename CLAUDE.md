@@ -277,6 +277,8 @@ On cancel:
 
 ### Migrations (Schema Changes)
 
+**See `.claude/skills/migrations/skill.md` for migration writing rules.**
+
 For structural changes to the Plan schema, use the migration system in `src/lib/migrations/index.ts`:
 
 - **Automatic**: Migrations run on plan load (from SQLite)

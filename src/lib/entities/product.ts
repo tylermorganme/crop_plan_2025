@@ -21,6 +21,9 @@ export interface Product {
   /** Crop name this product comes from (e.g., "Tomato") */
   crop: string;
 
+  /** Reference to Crop entity ID for stable linking (populated by migration) */
+  cropId?: string;
+
   /** Product type/name (e.g., "Slicing", "Cherry", "Bunched") */
   product: string;
 
