@@ -1968,7 +1968,7 @@ export default function CropTimeline({
                   {/* Unassigned timeline lane - also sticky */}
                   <td
                     colSpan={monthHeaders.length}
-                    className={`p-0 transition-all duration-150`}
+                    className="p-0"
                     style={{
                       position: 'sticky',
                       top: HEADER_HEIGHT,
