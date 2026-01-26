@@ -9,9 +9,11 @@ import { useUIStore } from '@/lib/ui-store';
 import { calculateRowSpan } from '@/lib/timeline-data';
 import { getBedGroup } from '@/lib/plan-types';
 import { calculateConfigRevenue } from '@/lib/revenue';
+import { parseSearchQuery } from '@/lib/search-dsl';
 import type { CropBoxDisplayConfig } from '@/lib/entities/plan';
 import AddToBedPanel from './AddToBedPanel';
 import { PlantingInspectorPanel } from './PlantingInspectorPanel';
+import { SearchInput } from './SearchInput';
 import CropBoxDisplayEditor, {
   resolveTemplate,
   DEFAULT_HEADER_TEMPLATE,
@@ -51,8 +53,12 @@ interface TimelineCrop {
   category?: string;
   bgColor?: string;
   textColor?: string;
-  /** Total feet needed for this planting */
-  feetNeeded?: number;
+  /**
+   * Total bed-feet needed for this planting.
+   * REQUIRED - derived from Planting.bedFeet. This is the source of truth for
+   * planting size in all timeline calculations (span, revenue, yield, etc.).
+   */
+  feetNeeded: number;
   /** Total number of beds this crop occupies */
   totalBeds: number;
   /** Which bed number this is (1-indexed) in the sequence */
@@ -91,6 +97,8 @@ interface TimelineCrop {
   sequenceSlot?: number;
   /** Whether this planting is locked due to actual dates being set */
   isLocked?: boolean;
+  /** Growing structure: field, greenhouse, or high-tunnel */
+  growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
 }
 
 interface ResourceGroup {
@@ -106,7 +114,7 @@ interface CropTimelineProps {
   groups?: ResourceGroup[] | null;
   /** Bed lengths from plan data (bed name -> length in feet) */
   bedLengths: Record<string, number>;
-  onCropMove?: (cropId: string, newResource: string, groupId?: string, feetNeeded?: number) => void;
+  onCropMove?: (cropId: string, newResource: string, groupId: string | undefined, feetNeeded: number) => void;
   onCropDateChange?: (groupId: string, startDate: string, endDate: string) => void;
   /** Bulk move multiple crops to a new bed (single API call) - preferred over onCropMove for multi-select */
   onBulkCropMove?: (moves: { groupId: string; newResource: string; feetNeeded: number }[]) => void;
@@ -183,6 +191,8 @@ interface UIState {
   unassignedHeight: number;
   scrollLeft: number;
   timingEditEnabled: boolean;
+  showAllBeds: boolean;
+  sortBedRows: boolean;
 }
 
 function loadUIState(): Partial<UIState> {
@@ -356,15 +366,13 @@ export default function CropTimeline({
   // Initialize from URL param if provided
   const [showNoVarietyOnly, setShowNoVarietyOnly] = useState(initialNoVarietyFilter ?? false);
   // When true, show all bed rows even when filtering (for drag-to-assign workflow)
-  const [showAllBeds, setShowAllBeds] = useState(false);
+  const [showAllBeds, setShowAllBeds] = useState(savedState.current.showAllBeds ?? false);
   // When true, sort bed rows by aggregate values; when false only sort crops within beds
-  const [sortBedRows, setSortBedRows] = useState(true);
+  const [sortBedRows, setSortBedRows] = useState(savedState.current.sortBedRows ?? true);
   // State for search help modal
   const [showSearchHelp, setShowSearchHelp] = useState(false);
   // State for crop box display editor
   const [showDisplayEditor, setShowDisplayEditor] = useState(false);
-  // State for search autocomplete
-  const [autocompleteIndex, setAutocompleteIndex] = useState(0);
   // State for hover preview when browsing crops in AddToBedPanel
   const [hoverPreview, setHoverPreview] = useState<{
     config: CropConfig;
@@ -455,88 +463,11 @@ export default function CropTimeline({
     return { left: Math.max(0, left), width: Math.max(30, width) };
   }, [timelineStart, pixelsPerDay]);
 
-  // Autocomplete suggestions for search DSL
-  const SORT_FIELDS = ['revenue', 'date', 'end', 'name', 'bed', 'category', 'feet', 'size'];
-  const SORT_DIRS = ['asc', 'desc'];
-  const FILTER_FIELDS = ['bed', 'group', 'bedGroup', 'category', 'method', 'crop', 'notes'];
-
-  const autocompleteSuggestions = useMemo(() => {
-    if (!searchQuery) return [];
-
-    // Get the last word being typed
-    const words = searchQuery.split(/\s+/);
-    const lastWord = words[words.length - 1].toLowerCase();
-
-    // Check if typing a sort directive (sort: or s: shorthand)
-    const isSortPrefix = lastWord.startsWith('sort:') || lastWord.startsWith('s:');
-    if (isSortPrefix) {
-      const prefixLen = lastWord.startsWith('sort:') ? 5 : 2;
-      const afterSort = lastWord.slice(prefixLen);
-
-      // Check if we have a field and are typing direction
-      const colonIndex = afterSort.indexOf(':');
-      if (colonIndex > 0) {
-        // Typing direction (e.g., "s:revenue:")
-        const dirPrefix = afterSort.slice(colonIndex + 1);
-        return SORT_DIRS
-          .filter(d => d.startsWith(dirPrefix))
-          .map(d => ({ type: 'sortDir', value: d, display: d, full: `s:${afterSort.slice(0, colonIndex)}:${d}` }));
-      } else {
-        // Typing field (e.g., "s:" or "s:r")
-        return SORT_FIELDS
-          .filter(f => f.startsWith(afterSort))
-          .map(f => ({ type: 'sortField', value: f, display: f, full: `s:${f}` }));
-      }
-    }
-
-    // Check if typing a filter field
-    const colonIndex = lastWord.indexOf(':');
-    if (colonIndex === -1 && lastWord.length > 0) {
-      // Might be starting a field filter
-      const fieldMatches = FILTER_FIELDS
-        .filter(f => f.toLowerCase().startsWith(lastWord))
-        .map(f => ({ type: 'filterField', value: f, display: `${f}:`, full: `${f}:` }));
-
-      // Also suggest "sort:" (or "s:") if it matches
-      if ('sort'.startsWith(lastWord) || lastWord === 's') {
-        fieldMatches.unshift({ type: 'sort', value: 's', display: 's:', full: 's:' });
-      }
-
-      return fieldMatches;
-    }
-
-    return [];
-  }, [searchQuery]);
-
-  // Reset autocomplete index when suggestions change
-  useEffect(() => {
-    setAutocompleteIndex(0);
-  }, [autocompleteSuggestions.length]);
-
   // ==========================================================================
   // SEARCH DSL: Parse sort directive from search query
   // ==========================================================================
   const { sortField, sortDir, filterTerms: parsedFilterTerms } = useMemo(() => {
-    let field: string | null = null;
-    let dir: 'asc' | 'desc' = 'asc';
-    const terms: string[] = [];
-
-    if (searchQuery.trim()) {
-      const allTerms = searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
-      const sortPattern = /^(?:sort|s):(\w+)(?::(asc|desc))?$/i;
-
-      for (const term of allTerms) {
-        const sortMatch = term.match(sortPattern);
-        if (sortMatch) {
-          field = sortMatch[1].toLowerCase();
-          dir = (sortMatch[2]?.toLowerCase() as 'asc' | 'desc') || 'asc';
-        } else {
-          terms.push(term);
-        }
-      }
-    }
-
-    return { sortField: field, sortDir: dir, filterTerms: terms };
+    return parseSearchQuery(searchQuery);
   }, [searchQuery]);
 
   // ==========================================================================
@@ -546,7 +477,7 @@ export default function CropTimeline({
     if (!cropCatalog || !products || !crop.cropConfigId) return 0;
     const config = cropCatalog[crop.cropConfigId];
     if (!config) return 0;
-    return calculateConfigRevenue(config, crop.feetNeeded || 50, products) ?? 0;
+    return calculateConfigRevenue(config, crop.feetNeeded, products) ?? 0;
   }, [cropCatalog, products]);
 
   // ==========================================================================
@@ -586,8 +517,8 @@ export default function CropTimeline({
         break;
       case 'feet':
       case 'size':
-        aVal = a.feetNeeded || 0;
-        bVal = b.feetNeeded || 0;
+        aVal = a.feetNeeded;
+        bVal = b.feetNeeded;
         break;
     }
 
@@ -614,7 +545,8 @@ export default function CropTimeline({
 
     // Apply search filter terms
     if (parsedFilterTerms.length > 0) {
-      const fieldPattern = /^(bed|group|bedGroup|category|method|crop|notes):(.+)$/i;
+      // Support negation with - prefix: -structure:field excludes field crops
+      const fieldPattern = /^(-?)(bed|group|bedGroup|category|method|crop|notes|structure):(.+)$/i;
 
       result = result.filter(crop => {
         const searchText = [
@@ -626,29 +558,50 @@ export default function CropTimeline({
           crop.notes,
           crop.plantingMethod,
           crop.groupId,
+          crop.growingStructure,
         ].filter(Boolean).join(' ').toLowerCase();
 
         return parsedFilterTerms.every(term => {
           const fieldMatch = term.match(fieldPattern);
           if (fieldMatch) {
-            const [, field, value] = fieldMatch;
+            const [, negation, field, value] = fieldMatch;
+            const isNegated = negation === '-';
+            let matches = false;
+
             switch (field.toLowerCase()) {
               case 'bed':
-                return crop.resource?.toLowerCase().includes(value);
+                matches = crop.resource?.toLowerCase().includes(value) ?? false;
+                break;
               case 'group':
               case 'bedgroup':
-                return getBedGroup(crop.resource || '').toLowerCase().includes(value);
+                matches = getBedGroup(crop.resource || '').toLowerCase().includes(value);
+                break;
               case 'category':
-                return crop.category?.toLowerCase().includes(value);
+                matches = crop.category?.toLowerCase().includes(value) ?? false;
+                break;
               case 'method':
-                return crop.plantingMethod?.toLowerCase().includes(value);
+                matches = crop.plantingMethod?.toLowerCase().includes(value) ?? false;
+                break;
               case 'crop':
-                return crop.crop?.toLowerCase().includes(value) || crop.name?.toLowerCase().includes(value);
+                matches = (crop.crop?.toLowerCase().includes(value) || crop.name?.toLowerCase().includes(value)) ?? false;
+                break;
               case 'notes':
-                return crop.notes?.toLowerCase().includes(value);
+                matches = crop.notes?.toLowerCase().includes(value) ?? false;
+                break;
+              case 'structure':
+                matches = crop.growingStructure?.toLowerCase().includes(value) ?? false;
+                break;
               default:
-                return searchText.includes(term);
+                matches = searchText.includes(term);
             }
+
+            return isNegated ? !matches : matches;
+          }
+
+          // Plain text search - check for negation prefix
+          if (term.startsWith('-') && term.length > 1) {
+            const searchTerm = term.slice(1);
+            return !searchText.includes(searchTerm);
           }
           return searchText.includes(term);
         });
@@ -704,8 +657,7 @@ export default function CropTimeline({
       }
 
       // Compute bed span at render time
-      const feetNeeded = crop.feetNeeded || 50;
-      const span = calculateRowSpan(feetNeeded, crop.resource, nameGroups, bedLengths);
+      const span = calculateRowSpan(crop.feetNeeded, crop.resource, nameGroups, bedLengths);
 
       // Create entry for each bed in span
       for (let i = 0; i < span.bedSpanInfo.length; i++) {
@@ -1005,6 +957,8 @@ export default function CropTimeline({
         unassignedHeight,
         scrollLeft: plannerScrollRef.current?.scrollLeft ?? 0,
         timingEditEnabled,
+        showAllBeds,
+        sortBedRows,
       });
     };
 
@@ -1032,7 +986,7 @@ export default function CropTimeline({
       scrollEl.removeEventListener('scroll', handleScroll);
       clearTimeout(scrollTimeout);
     };
-  }, [viewMode, zoomIndex, collapsedGroups, unassignedHeight, timingEditEnabled]);
+  }, [viewMode, zoomIndex, collapsedGroups, unassignedHeight, timingEditEnabled, showAllBeds, sortBedRows]);
 
   // Zoom handlers
   const zoomIn = () => {
@@ -1085,7 +1039,7 @@ export default function CropTimeline({
     const dragData = JSON.stringify({
       cropId: effectiveCrop.id,
       groupId: effectiveCrop.groupId,
-      feetNeeded: effectiveCrop.feetNeeded || 50,
+      feetNeeded: effectiveCrop.feetNeeded,
       startDate: effectiveCrop.startDate,
       endDate: effectiveCrop.endDate,
       originalResource: effectiveCrop.resource,
@@ -1190,7 +1144,7 @@ export default function CropTimeline({
         for (const groupId of dragPreview.draggedGroupIds) {
           const groupCrop = crops.find(c => c.groupId === groupId && c.bedIndex === 1);
           if (groupCrop && groupCrop.resource !== targetBed) {
-            moves.push({ groupId, newResource: targetBed, feetNeeded: groupCrop.feetNeeded || 50 });
+            moves.push({ groupId, newResource: targetBed, feetNeeded: groupCrop.feetNeeded });
           }
         }
 
@@ -1327,7 +1281,7 @@ export default function CropTimeline({
         // Only count primary bed entry (bedIndex === 1) for aggregates
         if (crop.bedIndex === 1 || crop.totalBeds === 1) {
           revenue += getRevenue(crop);
-          totalFeet += crop.feetNeeded || 0;
+          totalFeet += crop.feetNeeded;
         }
         countedGroups.add(crop.groupId);
       }
@@ -1806,6 +1760,7 @@ export default function CropTimeline({
       endDate: endDate.toISOString().slice(0, 10),
       resource: addToBedId,
       category: config.category,
+      feetNeeded: 50, // Default preview size
       totalBeds: 1,
       bedIndex: 1,
       groupId: '__preview__',
@@ -1890,101 +1845,14 @@ export default function CropTimeline({
         </span>
 
         {/* Search filter with autocomplete */}
-        <div className="relative">
-          <div className="relative">
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (autocompleteSuggestions.length > 0) {
-                  if (e.key === 'Tab' || e.key === 'Enter') {
-                    e.preventDefault();
-                    // Apply the selected suggestion
-                    const suggestion = autocompleteSuggestions[autocompleteIndex];
-                    if (suggestion) {
-                      const words = searchQuery.split(/\s+/);
-                      words[words.length - 1] = suggestion.full;
-                      setSearchQuery(words.join(' ') + (suggestion.type === 'sortField' ? ':' : ' '));
-                    }
-                  } else if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    setAutocompleteIndex(i => Math.min(i + 1, autocompleteSuggestions.length - 1));
-                  } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    setAutocompleteIndex(i => Math.max(i - 1, 0));
-                  } else if (e.key === 'Escape') {
-                    searchInputRef.current?.blur();
-                  }
-                }
-              }}
-              placeholder="Filter crops..."
-              className={`w-48 px-3 py-1 pr-6 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                searchQuery
-                  ? 'border-blue-400 bg-blue-50 text-gray-900'
-                  : 'border-gray-300 text-gray-900'
-              }`}
-            />
-            {/* Ghost preview of autocomplete */}
-            {autocompleteSuggestions.length > 0 && searchQuery && (
-              <div className="absolute inset-0 pointer-events-none px-3 py-1 text-sm text-gray-400 overflow-hidden">
-                <span className="invisible">{searchQuery}</span>
-                <span>{autocompleteSuggestions[autocompleteIndex]?.full.slice(
-                  searchQuery.split(/\s+/).pop()?.length || 0
-                )}</span>
-              </div>
-            )}
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  searchInputRef.current?.focus();
-                }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
-                title="Clear search"
-              >
-                ×
-              </button>
-            )}
-          </div>
-          {/* Autocomplete dropdown */}
-          {autocompleteSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded shadow-lg z-50 max-h-48 overflow-auto">
-              {autocompleteSuggestions.map((suggestion, i) => (
-                <button
-                  key={suggestion.full}
-                  className={`w-full text-left px-3 py-1.5 text-sm ${
-                    i === autocompleteIndex
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
-                  onMouseEnter={() => setAutocompleteIndex(i)}
-                  onClick={() => {
-                    const words = searchQuery.split(/\s+/);
-                    words[words.length - 1] = suggestion.full;
-                    setSearchQuery(words.join(' ') + (suggestion.type === 'sortField' ? ':' : ' '));
-                    searchInputRef.current?.focus();
-                  }}
-                >
-                  <span className="font-mono">{suggestion.display}</span>
-                  {suggestion.type === 'sortField' && (
-                    <span className="text-gray-400 text-xs ml-2">sort field</span>
-                  )}
-                  {suggestion.type === 'sortDir' && (
-                    <span className="text-gray-400 text-xs ml-2">direction</span>
-                  )}
-                  {suggestion.type === 'filterField' && (
-                    <span className="text-gray-400 text-xs ml-2">filter</span>
-                  )}
-                </button>
-              ))}
-              <div className="px-3 py-1 text-xs text-gray-400 border-t">
-                Tab to complete · ↑↓ to navigate
-              </div>
-            </div>
-          )}
-        </div>
+        <SearchInput
+          ref={searchInputRef}
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Filter crops..."
+          sortFields={['revenue', 'date', 'end', 'name', 'bed', 'category', 'feet', 'size']}
+          filterFields={['bed', 'group', 'bedGroup', 'category', 'method', 'crop', 'notes', 'structure']}
+        />
 
         {/* Search help button */}
         <button
@@ -2316,7 +2184,7 @@ export default function CropTimeline({
                           style={{
                             left: pos.left,
                             width: pos.width,
-                            backgroundColor: 'rgba(251, 191, 36, 0.3)', // amber-400 with opacity
+                            backgroundColor: 'rgba(251, 191, 36, 0.4)', // amber-400 with opacity (more vivid)
                             zIndex: Z_INDEX.BASE,
                             pointerEvents: 'none',
                           }}
@@ -2398,7 +2266,6 @@ export default function CropTimeline({
           seedMixes={seedMixes}
           usedVarietyIds={usedVarietyIds}
           usedMixIds={usedMixIds}
-          bedLengths={bedLengths}
           products={products}
           showTimingEdits={true}
           className="w-80 bg-white border-l flex flex-col shrink-0 h-full overflow-hidden"
@@ -2438,28 +2305,31 @@ export default function CropTimeline({
               <div>
                 <h3 className="font-medium text-gray-900 mb-2">Multi-term Search</h3>
                 <p className="text-sm text-gray-600 mb-2">
-                  Separate words with spaces. All terms must match (AND logic).
+                  Separate words with spaces. All terms must match (AND logic). Prefix with <code className="bg-gray-200 px-1 rounded">-</code> to exclude.
                 </p>
                 <div className="bg-gray-50 rounded p-3 space-y-2 text-sm">
                   <div><code className="bg-gray-200 px-1 rounded">tom cherry</code> → tomatoes with &quot;cherry&quot; in name</div>
                   <div><code className="bg-gray-200 px-1 rounded">lettuce direct</code> → lettuce that is direct-seeded</div>
+                  <div><code className="bg-gray-200 px-1 rounded">ca -cabbage</code> → cauliflower, carrots (not cabbage)</div>
                 </div>
               </div>
 
               <div>
                 <h3 className="font-medium text-gray-900 mb-2">Field-specific Search</h3>
                 <p className="text-sm text-gray-600 mb-2">
-                  Use <code className="bg-gray-200 px-1 rounded">field:value</code> to search specific fields.
+                  Use <code className="bg-gray-200 px-1 rounded">field:value</code> to search specific fields. Prefix with <code className="bg-gray-200 px-1 rounded">-</code> to exclude.
                 </p>
                 <div className="bg-gray-50 rounded p-3 space-y-2 text-sm">
                   <div><code className="bg-gray-200 px-1 rounded">bed:A1</code> → crops in bed A1</div>
                   <div><code className="bg-gray-200 px-1 rounded">group:H</code> → crops in bed group H (H1, H2, etc.)</div>
                   <div><code className="bg-gray-200 px-1 rounded">category:greens</code> → crops in Greens category</div>
                   <div><code className="bg-gray-200 px-1 rounded">method:direct</code> → direct-seeded crops</div>
+                  <div><code className="bg-gray-200 px-1 rounded">structure:gh</code> → greenhouse crops</div>
+                  <div><code className="bg-gray-200 px-1 rounded">-structure:field</code> → exclude field crops (show GH/HT only)</div>
                   <div><code className="bg-gray-200 px-1 rounded">cab group:A</code> → cabbage in bed group A</div>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  Fields: bed, group (or bedGroup), category, method, crop, notes
+                  Fields: bed, group (or bedGroup), category, method, crop, notes, structure. Use - prefix to negate.
                 </p>
               </div>
 

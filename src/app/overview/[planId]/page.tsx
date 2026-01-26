@@ -9,6 +9,9 @@ import {
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
 import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
+import { parseSearchQuery } from '@/lib/search-dsl';
+import { SearchInput } from '@/components/SearchInput';
 import type { TimelineCrop } from '@/lib/plan-types';
 import type { BedGroup, Bed } from '@/lib/entities/bed';
 import AppHeader from '@/components/AppHeader';
@@ -127,6 +130,7 @@ function getColorForCategory(category?: string): { bg: string; text: string } {
 
 interface CropBlock {
   id: string;
+  plantingId: string; // For drag-drop operations
   name: string;
   category?: string;
   startPercent: number; // 0-100% of year
@@ -218,6 +222,7 @@ function buildOverviewData(
 
         return {
           id: crop.id,
+          plantingId: crop.plantingId || crop.id, // For drag-drop
           name: crop.name,
           category: crop.category,
           startPercent,
@@ -346,7 +351,8 @@ function BedRowComponent({
 
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (data.type === 'unassigned-planting' && data.plantingId && onAssignPlanting) {
+      // Accept both unassigned and assigned plantings for (re)assignment
+      if ((data.type === 'unassigned-planting' || data.type === 'assigned-planting') && data.plantingId && onAssignPlanting) {
         onAssignPlanting(data.plantingId, row.bedId);
       }
     } catch {
@@ -368,23 +374,32 @@ function BedRowComponent({
       </div>
 
       {/* Timeline area with month grid lines */}
-      <div className="flex-1 relative overflow-hidden pointer-events-none">
+      <div className="flex-1 relative overflow-hidden">
         {/* Month grid lines */}
         {MONTH_LABELS.map((_, i) => (
           <div
             key={i}
-            className="absolute top-0 bottom-0 border-l border-gray-100"
+            className="absolute top-0 bottom-0 border-l border-gray-100 pointer-events-none"
             style={{ left: `${(i / 12) * 100}%` }}
           />
         ))}
-        {/* Crop blocks */}
+        {/* Crop blocks - draggable for reassignment */}
         {stacks.crops.map((crop) => {
           const topPx = crop.stackLevel * cropHeight + 1;
 
           return (
             <div
               key={crop.id}
-              className="absolute overflow-hidden rounded-sm border border-white/20"
+              className="absolute overflow-hidden rounded-sm border border-white/20 cursor-grab"
+              draggable
+              onDragStart={(e) => {
+                e.stopPropagation();
+                e.dataTransfer.setData('application/json', JSON.stringify({
+                  type: 'assigned-planting',
+                  plantingId: crop.plantingId,
+                }));
+                e.dataTransfer.effectAllowed = 'move';
+              }}
               style={{
                 left: `${crop.startPercent}%`,
                 width: `${crop.widthPercent}%`,
@@ -393,12 +408,12 @@ function BedRowComponent({
                 backgroundColor: crop.bgColor,
                 minWidth: '4px',
               }}
-              title={`${crop.name} (${crop.category || 'Unknown'})`}
+              title={`${crop.name} (${crop.category || 'Unknown'}) - Drag to move`}
             >
               {/* Only show text if there's enough height */}
               {cropHeight >= 12 && (
                 <span
-                  className="text-[9px] px-0.5 truncate block whitespace-nowrap flex items-center h-full"
+                  className="text-[9px] px-0.5 truncate block whitespace-nowrap flex items-center h-full pointer-events-none"
                   style={{ color: crop.textColor }}
                 >
                   {crop.name}
@@ -492,7 +507,7 @@ function getRowLetter(groupName: string): string {
 }
 
 // =============================================================================
-// UNASSIGNED PLANTINGS PANEL (Sidebar Gantt Chart)
+// UNASSIGNED PLANTINGS PANEL (Simple Table)
 // =============================================================================
 
 interface EnrichedUnassignedCrop {
@@ -505,26 +520,44 @@ interface EnrichedUnassignedCrop {
   startDate: string;
   endDate: string;
   feetNeeded: number;
+  revenue: number | null;
 }
 
 /**
- * Gantt chart panel showing unassigned plantings for the selected year.
- * Supports search filtering and displays crops as colored boxes.
+ * Format a date string (YYYY-MM-DD) to a shorter display format (MM/DD)
  */
+function formatShortDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const [, month, day] = dateStr.split('-');
+  return `${parseInt(month, 10)}/${parseInt(day, 10)}`;
+}
+
+/**
+ * Simple table panel showing unassigned plantings.
+ * Supports search filtering and drag-to-assign functionality.
+ */
+type UnassignedSortColumn = 'crop' | 'category' | 'start' | 'end' | 'config' | 'revenue';
+
 function UnassignedPlantingsPanel({
   plantings,
-  year,
   searchQuery,
 }: {
   plantings: EnrichedUnassignedCrop[];
-  year: number;
   searchQuery: string;
 }) {
-  // Filter plantings based on search query
-  const filteredPlantings = useMemo(() => {
-    if (!searchQuery.trim()) return plantings;
+  // Parse search query: extract filter terms and sort override (matches CropTimeline DSL)
+  const validSortColumns = useMemo(() => new Set<UnassignedSortColumn>(['crop', 'category', 'start', 'end', 'config', 'revenue']), []);
+  const { filterTerms, sortOverride } = useMemo(() => {
+    const parsed = parseSearchQuery<UnassignedSortColumn>(searchQuery, validSortColumns);
+    const sortOverride = parsed.sortField
+      ? { column: parsed.sortField, direction: parsed.sortDir }
+      : null;
+    return { filterTerms: parsed.filterTerms, sortOverride };
+  }, [searchQuery, validSortColumns]);
 
-    const terms = searchQuery.toLowerCase().trim().split(/\s+/);
+  // Filter plantings based on filter terms
+  const filteredPlantings = useMemo(() => {
+    if (filterTerms.length === 0) return plantings;
 
     return plantings.filter(p => {
       const searchText = [
@@ -534,21 +567,33 @@ function UnassignedPlantingsPanel({
         p.name,
       ].filter(Boolean).join(' ').toLowerCase();
 
-      return terms.every(term => {
+      return filterTerms.every(term => {
         if (term.startsWith('-') && term.length > 1) {
           return !searchText.includes(term.slice(1));
         }
         return searchText.includes(term);
       });
     });
-  }, [plantings, searchQuery]);
+  }, [plantings, filterTerms]);
 
-  // Sort by start date
+  // Sort plantings (default: start date ascending)
   const sortedPlantings = useMemo(() => {
-    return [...filteredPlantings].sort((a, b) =>
-      a.startDate.localeCompare(b.startDate)
-    );
-  }, [filteredPlantings]);
+    const col = sortOverride?.column ?? 'start';
+    const dir = sortOverride?.direction ?? 'asc';
+
+    return [...filteredPlantings].sort((a, b) => {
+      let cmp = 0;
+      switch (col) {
+        case 'crop': cmp = a.cropName.localeCompare(b.cropName); break;
+        case 'category': cmp = a.category.localeCompare(b.category); break;
+        case 'start': cmp = a.startDate.localeCompare(b.startDate); break;
+        case 'end': cmp = a.endDate.localeCompare(b.endDate); break;
+        case 'config': cmp = a.identifier.localeCompare(b.identifier); break;
+        case 'revenue': cmp = (a.revenue ?? 0) - (b.revenue ?? 0); break;
+      }
+      return dir === 'asc' ? cmp : -cmp;
+    });
+  }, [filteredPlantings, sortOverride]);
 
   if (sortedPlantings.length === 0) {
     return (
@@ -559,88 +604,57 @@ function UnassignedPlantingsPanel({
   }
 
   return (
-    <div className="text-xs">
-      {/* Month headers */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 flex" style={{ height: 20 }}>
-        <div className="w-24 flex-shrink-0 px-1 text-gray-500 font-medium flex items-center">
-          Crop
-        </div>
-        <div className="flex-1 flex">
-          {MONTH_LABELS.map((label, i) => (
-            <div
-              key={i}
-              className="text-[9px] text-gray-400 text-center border-l border-gray-100 first:border-l-0 flex items-center justify-center"
-              style={{ width: `${100 / 12}%` }}
+    <table className="w-full text-xs">
+      <thead className="sticky top-0 bg-gray-100">
+        <tr className="border-b border-gray-200">
+          <th className="px-2 py-1.5 text-left font-medium text-gray-600">Planting</th>
+          <th className="px-2 py-1.5 text-left font-medium text-gray-600">Config</th>
+          <th className="px-2 py-1.5 text-left font-medium text-gray-600">Crop</th>
+          <th className="px-2 py-1.5 text-left font-medium text-gray-600">Start</th>
+          <th className="px-2 py-1.5 text-left font-medium text-gray-600">End</th>
+          <th className="px-2 py-1.5 text-right font-medium text-gray-600">Revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sortedPlantings.map((planting, index) => {
+          const colors = getColorForCategory(planting.category);
+          const isEven = index % 2 === 0;
+          const plantingId = planting.plantingId || planting.id;
+
+          return (
+            <tr
+              key={planting.id}
+              className={`border-b border-gray-100 cursor-grab hover:bg-blue-50 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData('application/json', JSON.stringify({
+                  type: 'unassigned-planting',
+                  plantingId,
+                }));
+                e.dataTransfer.effectAllowed = 'move';
+              }}
             >
-              {label}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Planting rows */}
-      {sortedPlantings.map((planting, index) => {
-        const startPercent = dateToYearPercent(planting.startDate, year);
-        const endPercent = dateToYearPercent(planting.endDate, year);
-        const widthPercent = Math.max(2, endPercent - startPercent);
-        const colors = getColorForCategory(planting.category);
-        const isEven = index % 2 === 0;
-
-        return (
-          <div
-            key={planting.id}
-            className={`flex items-center border-b border-gray-100 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
-            style={{ height: 28 }}
-            draggable
-            onDragStart={(e) => {
-              e.dataTransfer.setData('application/json', JSON.stringify({
-                type: 'unassigned-planting',
-                plantingId: planting.plantingId || planting.id,
-              }));
-              e.dataTransfer.effectAllowed = 'move';
-            }}
-          >
-            {/* Crop label */}
-            <div
-              className="w-24 flex-shrink-0 px-1 truncate text-gray-700 cursor-grab"
-              title={`${planting.cropName} - ${planting.identifier}`}
-            >
-              {planting.cropName}
-            </div>
-
-            {/* Timeline area */}
-            <div className="flex-1 relative">
-              {/* Month grid lines */}
-              {MONTH_LABELS.map((_, i) => (
-                <div
-                  key={i}
-                  className="absolute top-0 bottom-0 border-l border-gray-100"
-                  style={{ left: `${(i / 12) * 100}%` }}
-                />
-              ))}
-              {/* Crop box */}
-              <div
-                className="absolute top-1 bottom-1 rounded-sm overflow-hidden cursor-grab"
-                style={{
-                  left: `${Math.max(0, startPercent)}%`,
-                  width: `${widthPercent}%`,
-                  backgroundColor: colors.bg,
-                  minWidth: 4,
-                }}
-                title={`${planting.identifier}: ${planting.startDate} to ${planting.endDate} (${planting.feetNeeded}ft)`}
-              >
+              <td className="px-2 py-1.5 text-gray-400 font-mono text-[10px]" title={plantingId}>{plantingId.slice(0, 8)}</td>
+              <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px]">{planting.identifier}</td>
+              <td className="px-2 py-1.5">
                 <span
-                  className="text-[9px] px-0.5 truncate block whitespace-nowrap"
-                  style={{ color: colors.text }}
+                  className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium"
+                  style={{ backgroundColor: colors.bg, color: colors.text }}
+                  title={planting.category}
                 >
-                  {planting.identifier}
+                  {planting.cropName}
                 </span>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+              </td>
+              <td className="px-2 py-1.5 text-gray-600">{formatShortDate(planting.startDate)}</td>
+              <td className="px-2 py-1.5 text-gray-600">{formatShortDate(planting.endDate)}</td>
+              <td className="px-2 py-1.5 text-right text-green-700">
+                {planting.revenue !== null ? formatCurrency(planting.revenue) : '—'}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
 
@@ -1202,6 +1216,7 @@ export default function OverviewPage() {
 
     const crops = getTimelineCropsFromPlan(currentPlan);
     const catalog = currentPlan.cropCatalog ?? {};
+    const products = currentPlan.products ?? {};
 
     // Filter to unassigned crops that overlap with the selected year
     return crops
@@ -1219,11 +1234,13 @@ export default function OverviewPage() {
       })
       .map(crop => {
         const config = catalog[crop.cropConfigId];
+        const revenue = config ? calculateConfigRevenue(config, crop.feetNeeded, products) : null;
         return {
           ...crop,
           cropName: config?.crop ?? crop.name,
           category: config?.category ?? crop.category ?? '',
           identifier: config?.identifier ?? crop.cropConfigId,
+          revenue,
         };
       });
   }, [currentPlan, selectedYear]);
@@ -1255,6 +1272,14 @@ export default function OverviewPage() {
   const handleAssignPlanting = useCallback((plantingId: string, bedId: string) => {
     updatePlanting(plantingId, { startBed: bedId });
   }, [updatePlanting]);
+
+  // Handler for unassigning a planting (drop on sidebar)
+  const handleUnassignPlanting = useCallback((plantingId: string) => {
+    updatePlanting(plantingId, { startBed: undefined });
+  }, [updatePlanting]);
+
+  // State for sidebar drop highlight
+  const [isSidebarDragOver, setIsSidebarDragOver] = useState(false);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -1353,10 +1378,30 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* Unassigned plantings sidebar */}
+        {/* Unassigned plantings sidebar - drop zone for unassigning */}
         <aside
-          className="flex-shrink-0 bg-white border-l border-gray-200 overflow-hidden flex flex-col"
+          className={`flex-shrink-0 border-l border-gray-200 overflow-hidden flex flex-col transition-colors ${
+            isSidebarDragOver ? 'bg-red-50 border-red-300' : 'bg-white'
+          }`}
           style={{ width: sidebarWidth }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            setIsSidebarDragOver(true);
+          }}
+          onDragLeave={() => setIsSidebarDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsSidebarDragOver(false);
+            try {
+              const data = JSON.parse(e.dataTransfer.getData('application/json'));
+              if (data.type === 'assigned-planting' && data.plantingId) {
+                handleUnassignPlanting(data.plantingId);
+              }
+            } catch {
+              // Invalid drop data, ignore
+            }
+          }}
         >
           {/* Sidebar header */}
           <div className="p-3 border-b border-gray-200">
@@ -1364,22 +1409,24 @@ export default function OverviewPage() {
               <h2 className="text-sm font-semibold text-gray-700">
                 Unassigned ({unassignedPlantings.length})
               </h2>
+              {isSidebarDragOver && (
+                <span className="text-xs text-red-600">Drop to unassign</span>
+              )}
             </div>
             {/* Search input */}
-            <input
-              type="text"
+            <SearchInput
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={setSearchQuery}
               placeholder="Search crops..."
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              sortFields={['crop', 'category', 'start', 'end', 'config', 'revenue']}
+              width="w-full"
             />
           </div>
 
-          {/* Unassigned plantings gantt */}
+          {/* Unassigned plantings table */}
           <div className="flex-1 overflow-auto">
             <UnassignedPlantingsPanel
               plantings={unassignedPlantings}
-              year={displayYear}
               searchQuery={searchQuery}
             />
           </div>

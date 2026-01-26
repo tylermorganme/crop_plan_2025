@@ -21,6 +21,8 @@ import {
 } from '@/lib/entities/crop-config';
 import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
+import { parseSearchQuery } from '@/lib/search-dsl';
+import { SearchInput } from '@/components/SearchInput';
 import type { CropConfig } from '@/lib/entities/crop-config';
 import type { Planting } from '@/lib/entities/planting';
 import type { TimelineCrop } from '@/lib/plan-types';
@@ -941,10 +943,14 @@ export default function PlantingsPage() {
   // SEARCH DSL: Parse search query (matches CropTimeline behavior)
   // Supports: field:value, -field:value (negation), -term (plain negation)
   // Fields: bed, group, category, method, crop, notes, structure
+  // Sort: s:column or s:column:desc (matches CropTimeline DSL)
   // ==========================================================================
-  const parsedFilterTerms = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    return searchQuery.toLowerCase().trim().split(/\s+/).filter(t => t.length > 0);
+  const { filterTerms: parsedFilterTerms, sortOverride } = useMemo(() => {
+    const parsed = parseSearchQuery<ColumnId>(searchQuery, SORTABLE_COLUMNS);
+    const sortOverride = parsed.sortField
+      ? { column: parsed.sortField, direction: parsed.sortDir }
+      : null;
+    return { filterTerms: parsed.filterTerms, sortOverride };
   }, [searchQuery]);
 
   // Helper to get bed group letter from bed name (e.g., "A1" -> "A")
@@ -1030,9 +1036,13 @@ export default function PlantingsPage() {
       });
     }
 
+    // Use sortOverride from search DSL if present, otherwise use state
+    const effectiveSortColumn = sortOverride?.column ?? sortColumn;
+    const effectiveSortDirection = sortOverride?.direction ?? sortDirection;
+
     result = [...result].sort((a, b) => {
       let cmp = 0;
-      switch (sortColumn) {
+      switch (effectiveSortColumn) {
         case 'crop': cmp = a.cropName.localeCompare(b.cropName); break;
         case 'category': cmp = a.category.localeCompare(b.category); break;
         case 'identifier': cmp = a.identifier.localeCompare(b.identifier); break;
@@ -1054,11 +1064,11 @@ export default function PlantingsPage() {
         case 'configId': cmp = a.configId.localeCompare(b.configId); break;
         case 'lastModified': cmp = a.lastModified - b.lastModified; break;
       }
-      return sortDirection === 'asc' ? cmp : -cmp;
+      return effectiveSortDirection === 'asc' ? cmp : -cmp;
     });
 
     return result;
-  }, [enrichedPlantings, assignmentFilter, showFailed, parsedFilterTerms, sortColumn, sortDirection, getBedGroup]);
+  }, [enrichedPlantings, assignmentFilter, showFailed, parsedFilterTerms, sortOverride, sortColumn, sortDirection, getBedGroup]);
 
   // Inspector shows all selected plantings (like Timeline)
   const inspectedCrops: TimelineCrop[] = useMemo(() => {
@@ -1589,26 +1599,14 @@ export default function PlantingsPage() {
       header={<AppHeader />}
       toolbar={
         <div className="px-4 py-2 flex items-center gap-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search plantings..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64 px-3 py-1.5 pr-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              title="Clear search"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search plantings..."
+          sortFields={['crop', 'category', 'fieldStartDate', 'ghDate', 'bed', 'bedFeet', 'revenue', 'revenuePerFt', 'method', 'growingStructure', 'id', 'configId', 'lastModified']}
+          filterFields={['bed', 'group', 'bedGroup', 'category', 'method', 'crop', 'notes', 'structure']}
+          width="w-64"
+        />
 
         <div className="flex items-center gap-1 text-sm">
           <span className="text-gray-500 mr-1">Show:</span>
