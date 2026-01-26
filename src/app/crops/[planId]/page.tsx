@@ -70,7 +70,6 @@ export default function CropsPage() {
   const [textColorFilter, setTextColorFilter] = useState<string | null>(null);
   const [editingCropId, setEditingCropId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const [showAddCropForm, setShowAddCropForm] = useState(false);
   const [newCropName, setNewCropName] = useState('');
 
   // Multi-select state
@@ -185,7 +184,6 @@ export default function CropsPage() {
     });
 
     setNewCropName('');
-    setShowAddCropForm(false);
   };
 
   const handleDeleteCrop = (crop: Crop) => {
@@ -266,116 +264,95 @@ export default function CropsPage() {
 
   const hasSelection = selectedCropIds.size > 0;
 
+  const hasFilters = searchQuery || bgColorFilter || textColorFilter;
+
   return (
     <>
       <AppHeader />
-      <div className="h-[calc(100vh-51px)] overflow-auto bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          {/* Page Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Crops</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Manage crop colors - select multiple to bulk edit
-            </p>
-          </div>
+      <div className="h-[calc(100vh-49px)] bg-gray-50 flex flex-col overflow-hidden">
+        {/* Toolbar */}
+        <div className="bg-white border-b px-4 py-2 flex items-center gap-3 flex-wrap flex-shrink-0">
+          <h1 className="text-lg font-semibold text-gray-900">Crops</h1>
+          <span className="text-sm text-gray-500">{filteredCrops.length}/{sortedCrops.length}</span>
 
-          {/* Search, Filter, and Add */}
-          <div className="flex items-center gap-4 mb-4 flex-wrap">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search crops..."
-              className="flex-1 min-w-[200px] max-w-sm px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search..."
+            className="px-2 py-1 border rounded text-sm w-40"
+          />
 
-            <button
-              onClick={() => setShowAddCropForm(true)}
-              className="px-3 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50"
-            >
-              Add Crop
-            </button>
-          </div>
-
-          {/* Color Filters */}
-          {(uniqueBgColors.length > 1 || uniqueTextColors.length > 1) && (
-            <div className="flex flex-wrap gap-4 mb-4 text-sm">
-              {/* Background color filter */}
-              {uniqueBgColors.length > 1 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-500 mr-1">Background:</span>
-                  <button
-                    onClick={() => setBgColorFilter(null)}
-                    className={`px-2 py-0.5 rounded border text-xs ${
-                      bgColorFilter === null
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    title="Show all"
-                  >
-                    All
-                  </button>
-                  {uniqueBgColors.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setBgColorFilter(bgColorFilter === color ? null : color)}
-                      className={`w-6 h-6 rounded border ${
-                        bgColorFilter === color
-                          ? 'border-blue-500 ring-2 ring-blue-200'
-                          : 'border-gray-400 hover:border-gray-600'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      title={`Filter by background ${color}`}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Text color filter */}
-              {uniqueTextColors.length > 1 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-500 mr-1">Text:</span>
-                  <button
-                    onClick={() => setTextColorFilter(null)}
-                    className={`px-2 py-0.5 rounded border text-xs ${
-                      textColorFilter === null
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-300 hover:border-gray-400'
-                    }`}
-                    title="Show all"
-                  >
-                    All
-                  </button>
-                  {uniqueTextColors.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setTextColorFilter(textColorFilter === color ? null : color)}
-                      className={`w-6 h-6 rounded border ${
-                        textColorFilter === color
-                          ? 'border-blue-500 ring-2 ring-blue-200'
-                          : 'border-gray-400 hover:border-gray-600'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      title={`Filter by text ${color}`}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Clear filters */}
-              {(bgColorFilter || textColorFilter) && (
+          {/* Background filter */}
+          {uniqueBgColors.length > 1 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">Bg:</span>
+              {uniqueBgColors.map((color) => (
                 <button
-                  onClick={() => {
-                    setBgColorFilter(null);
-                    setTextColorFilter(null);
-                  }}
-                  className="text-xs text-blue-600 hover:text-blue-800"
-                >
-                  Clear filters
-                </button>
-              )}
+                  key={color}
+                  onClick={() => setBgColorFilter(bgColorFilter === color ? null : color)}
+                  className={`w-4 h-4 rounded flex-shrink-0 ${
+                    bgColorFilter === color
+                      ? 'ring-2 ring-blue-500 ring-offset-1'
+                      : 'border border-gray-400 hover:border-gray-600'
+                  }`}
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
             </div>
           )}
+
+          {/* Text filter */}
+          {uniqueTextColors.length > 1 && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500">Text:</span>
+              {uniqueTextColors.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => setTextColorFilter(textColorFilter === color ? null : color)}
+                  className={`w-4 h-4 rounded flex-shrink-0 ${
+                    textColorFilter === color
+                      ? 'ring-2 ring-blue-500 ring-offset-1'
+                      : 'border border-gray-400 hover:border-gray-600'
+                  }`}
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
+            </div>
+          )}
+
+          {hasFilters && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setBgColorFilter(null);
+                setTextColorFilter(null);
+              }}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              Clear
+            </button>
+          )}
+
+          <div className="flex-1" />
+
+          <input
+            type="text"
+            value={newCropName}
+            onChange={(e) => setNewCropName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && newCropName.trim()) handleAddCrop();
+            }}
+            placeholder="Add crop..."
+            className="px-2 py-1 border rounded text-sm w-32"
+          />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-xl mx-auto px-4 py-4">
 
           {/* Bulk Action Bar */}
           {hasSelection && (
@@ -426,42 +403,6 @@ export default function CropsPage() {
             </div>
           )}
 
-          {/* Add Crop Form */}
-          {showAddCropForm && (
-            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Add New Crop</h3>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={newCropName}
-                  onChange={(e) => setNewCropName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleAddCrop();
-                    if (e.key === 'Escape') setShowAddCropForm(false);
-                  }}
-                  placeholder="Crop name..."
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  autoFocus
-                />
-                <button
-                  onClick={handleAddCrop}
-                  disabled={!newCropName.trim()}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Add
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddCropForm(false);
-                    setNewCropName('');
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Crops List */}
           <div className="bg-white rounded-lg border border-gray-200">
@@ -512,48 +453,39 @@ export default function CropsPage() {
                         className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
 
-                      {/* Color preview chip */}
-                      <div
-                        className="w-24 px-3 py-1.5 rounded text-sm font-medium text-center truncate flex-shrink-0"
-                        style={{
-                          backgroundColor: crop.bgColor,
-                          color: crop.textColor,
-                        }}
-                        title={crop.name}
-                      >
-                        {crop.name.length > 10 ? crop.name.slice(0, 10) + '...' : crop.name}
-                      </div>
+                      {/* Crop name as colored badge (editable) */}
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveRename();
+                            if (e.key === 'Escape') handleCancelRename();
+                          }}
+                          onBlur={handleSaveRename}
+                          className="px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none"
+                          autoFocus
+                        />
+                      ) : (
+                        <div
+                          className="px-3 py-1 rounded text-sm font-medium cursor-pointer hover:opacity-80"
+                          style={{ backgroundColor: crop.bgColor, color: crop.textColor }}
+                          onClick={() => handleStartRename(crop)}
+                          title="Click to rename"
+                        >
+                          {crop.name}
+                        </div>
+                      )}
 
-                      {/* Crop name (editable) */}
-                      <div className="flex-1 min-w-0">
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveRename();
-                              if (e.key === 'Escape') handleCancelRename();
-                            }}
-                            onBlur={handleSaveRename}
-                            className="w-full px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none"
-                            autoFocus
-                          />
-                        ) : (
-                          <div
-                            className="text-sm text-gray-900 truncate cursor-pointer hover:text-blue-600"
-                            onClick={() => handleStartRename(crop)}
-                            title="Click to rename"
-                          >
-                            {crop.name}
-                          </div>
-                        )}
-                        {usageCount > 0 && (
-                          <div className="text-xs text-gray-500">
-                            Used in {usageCount} config{usageCount !== 1 ? 's' : ''}
-                          </div>
-                        )}
-                      </div>
+                      {/* Usage count */}
+                      {usageCount > 0 && (
+                        <span className="text-xs text-gray-500">
+                          {usageCount} config{usageCount !== 1 ? 's' : ''}
+                        </span>
+                      )}
+
+                      <div className="flex-1" />
 
                       {/* Color pickers */}
                       <div className="flex items-center gap-2 flex-shrink-0">
@@ -594,15 +526,9 @@ export default function CropsPage() {
               </div>
             )}
           </div>
-
-          {/* Summary */}
-          <div className="mt-4 text-sm text-gray-500">
-            {filteredCrops.length} crop{filteredCrops.length !== 1 ? 's' : ''}
-            {searchQuery && ` matching "${searchQuery}"`}
-            {(bgColorFilter || textColorFilter) && ' (filtered)'}
-          </div>
         </div>
       </div>
+    </div>
     </>
   );
 }

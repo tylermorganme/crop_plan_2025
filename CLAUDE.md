@@ -246,13 +246,15 @@ On cancel:
 
 ## UI Philosophy
 
+**This is NOT greenfield UI.** Established patterns exist for pages, toolbars, forms, and lists. Before writing ANY new UI, search for existing examples. Use `/ui` to get guidance on where to find patterns.
+
 **Data-driven**: UI always reflects the data. Change the data, UI updates. No UI-only state that diverges from stored state.
 
 **Timeline view purpose**: Change `fieldStartDate` (horizontal) and `startBed` (vertical). Everything else (harvest dates, bed spanning, display) is derived.
 
 **Shared UI state**: Use `ui-store.ts` for state that should sync across views/windows (selection, search, toast). Multiple browser tabs viewing the same plan should stay in sync.
 
-**Reuse patterns**: No one-off components unless truly unique. Look for existing patterns before creating new ones. UI is built from simple primitives and simple rules that combine to represent complexity.
+**Reuse patterns**: No one-off components unless truly unique. Copy existing patterns exactly - same class names, same structure. UI is built from simple primitives and simple rules that combine to represent complexity.
 
 ## Data Evolution Strategy
 
