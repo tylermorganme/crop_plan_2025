@@ -43,6 +43,8 @@ interface FieldLayoutConfig {
 }
 
 const LAYOUT_STORAGE_KEY = 'farm-map-layout-v1';
+const COLOR_BY_STORAGE_KEY = 'farm-map-color-by-v1';
+const COLOR_BY_MODE_STORAGE_KEY = 'farm-map-color-by-mode-v1';
 
 /** Default layout matching the hardcoded original */
 const DEFAULT_LAYOUT: FieldLayoutConfig = {
@@ -98,12 +100,87 @@ function saveLayoutToStorage(layout: FieldLayoutConfig): void {
   }
 }
 
+function loadColorByFromStorage(): ColorByField {
+  if (typeof window === 'undefined') return 'none';
+  try {
+    const stored = localStorage.getItem(COLOR_BY_STORAGE_KEY);
+    if (stored && ['none', 'growingStructure', 'plantingMethod', 'category'].includes(stored)) {
+      return stored as ColorByField;
+    }
+  } catch (e) {
+    console.warn('Failed to load colorBy from storage:', e);
+  }
+  return 'none';
+}
+
+function saveColorByToStorage(colorBy: ColorByField): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(COLOR_BY_STORAGE_KEY, colorBy);
+  } catch (e) {
+    console.warn('Failed to save colorBy to storage:', e);
+  }
+}
+
+function loadColorByModeFromStorage(): ColorByMode {
+  if (typeof window === 'undefined') return 'border';
+  try {
+    const stored = localStorage.getItem(COLOR_BY_MODE_STORAGE_KEY);
+    if (stored && ['border', 'background'].includes(stored)) {
+      return stored as ColorByMode;
+    }
+  } catch (e) {
+    console.warn('Failed to load colorByMode from storage:', e);
+  }
+  return 'border';
+}
+
+function saveColorByModeToStorage(mode: ColorByMode): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(COLOR_BY_MODE_STORAGE_KEY, mode);
+  } catch (e) {
+    console.warn('Failed to save colorByMode to storage:', e);
+  }
+}
+
 // =============================================================================
 // CONSTANTS
 // =============================================================================
 
 /** Default color when crop doesn't have colors defined */
 const DEFAULT_COLOR = { bg: '#78909c', text: '#fff' };
+
+/** Border color palettes for "Color by" categorical fields */
+const COLOR_BY_PALETTES: Record<string, Record<string, string>> = {
+  growingStructure: {
+    field: '#3b82f6',        // blue
+    greenhouse: '#22c55e',   // green
+    'high-tunnel': '#f59e0b', // amber
+  },
+  plantingMethod: {
+    'direct-seed': '#8b5cf6', // purple
+    transplant: '#06b6d4',    // cyan
+    perennial: '#84cc16',     // lime
+  },
+  // Category colors will be generated dynamically from unique values
+};
+
+/** Auto-generate colors for category values */
+const CATEGORY_COLORS = [
+  '#ef4444', // red
+  '#f97316', // orange
+  '#eab308', // yellow
+  '#22c55e', // green
+  '#14b8a6', // teal
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#6b7280', // gray
+];
+
+type ColorByField = 'none' | 'growingStructure' | 'plantingMethod' | 'category';
+type ColorByMode = 'border' | 'background';
 
 // =============================================================================
 // TYPES
@@ -119,6 +196,9 @@ interface CropBlock {
   widthPercent: number; // 0-100% of year
   bgColor: string;
   textColor: string;
+  // Categorical fields for "Color by" feature
+  growingStructure?: string;
+  plantingMethod?: string;
 }
 
 interface BedRow {
@@ -210,6 +290,8 @@ function buildOverviewData(
           widthPercent: Math.max(0.5, endPercent - startPercent), // min width
           bgColor: crop.bgColor || DEFAULT_COLOR.bg,
           textColor: crop.textColor || DEFAULT_COLOR.text,
+          growingStructure: crop.growingStructure,
+          plantingMethod: crop.plantingMethod,
         };
       });
 
@@ -283,6 +365,9 @@ function BedRowComponent({
   selectedPlantingIds,
   filterTerms,
   filterMode,
+  colorByField,
+  colorPalettes,
+  colorByMode = 'border',
 }: {
   row: BedRow;
   isEven: boolean;
@@ -293,8 +378,31 @@ function BedRowComponent({
   filterTerms?: string[];
   /** 'highlight' = show all, highlight matches; 'filter' = hide non-matches */
   filterMode?: 'highlight' | 'filter';
+  /** Which categorical field to color by */
+  colorByField?: ColorByField;
+  /** Color palettes for each categorical field */
+  colorPalettes?: Record<string, Record<string, string>>;
+  /** How to apply the color: border or background */
+  colorByMode?: ColorByMode;
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Get color for a crop based on colorByField (used for both border and background modes)
+  const getCategoryColor = useCallback((crop: CropBlock): string | undefined => {
+    if (!colorByField || colorByField === 'none' || !colorPalettes) return undefined;
+
+    let value: string | undefined;
+    if (colorByField === 'category') {
+      value = crop.category;
+    } else if (colorByField === 'growingStructure') {
+      value = crop.growingStructure;
+    } else if (colorByField === 'plantingMethod') {
+      value = crop.plantingMethod;
+    }
+
+    if (!value) return '#9ca3af'; // gray for unknown/missing
+    return colorPalettes[colorByField]?.[value] ?? '#9ca3af';
+  }, [colorByField, colorPalettes]);
 
   // Filter crops if in filter mode, otherwise show all
   const visibleCrops = useMemo(() => {
@@ -383,6 +491,9 @@ function BedRowComponent({
           // De-emphasize non-matching crops when highlight mode is active
           const shouldFade = filterMode === 'highlight' && filterTerms && filterTerms.length > 0
             && !matchesCropFilter(crop, filterTerms);
+          const categoryColor = getCategoryColor(crop);
+          const useBorder = colorByMode === 'border' && categoryColor;
+          const useBackground = colorByMode === 'background' && categoryColor;
 
           return (
             <div
@@ -390,7 +501,7 @@ function BedRowComponent({
               className={`absolute overflow-hidden rounded-sm cursor-pointer ${
                 isSelected
                   ? 'ring-2 ring-inset ring-blue-500 z-10'
-                  : 'border border-white/20'
+                  : useBorder ? '' : 'border border-white/20'
               } ${shouldFade ? 'opacity-30' : ''}`}
               draggable
               onClick={(e) => {
@@ -412,8 +523,13 @@ function BedRowComponent({
                 width: `${crop.widthPercent}%`,
                 top: topPx,
                 height: Math.max(1, cropHeight - 1),
-                backgroundColor: crop.bgColor,
+                backgroundColor: useBackground ? categoryColor : crop.bgColor,
                 minWidth: '4px',
+                ...(useBorder ? {
+                  borderWidth: 2,
+                  borderColor: categoryColor,
+                  borderStyle: 'solid',
+                } : {}),
               }}
               title={`${crop.name} (${crop.category || 'Unknown'}) - Click to select, drag to move`}
             >
@@ -477,6 +593,9 @@ function BedGroupComponent({
   filterTerms,
   filterMode,
   reverseBedOrder,
+  colorByField,
+  colorPalettes,
+  colorByMode,
 }: {
   section: BedGroupSection;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
@@ -486,6 +605,9 @@ function BedGroupComponent({
   filterTerms?: string[];
   filterMode?: 'highlight' | 'filter';
   reverseBedOrder?: boolean;
+  colorByField?: ColorByField;
+  colorPalettes?: Record<string, Record<string, string>>;
+  colorByMode?: ColorByMode;
 }) {
   // Optionally reverse bed order within the group
   const displayBeds = useMemo(() => {
@@ -516,6 +638,9 @@ function BedGroupComponent({
             selectedPlantingIds={selectedPlantingIds}
             filterTerms={filterTerms}
             filterMode={filterMode}
+            colorByField={colorByField}
+            colorPalettes={colorPalettes}
+            colorByMode={colorByMode}
           />
         ))}
         {section.beds.length === 0 && (
@@ -1016,6 +1141,9 @@ function FarmGrid({
   selectedPlantingIds,
   filterTerms,
   filterMode,
+  colorByField,
+  colorPalettes,
+  colorByMode,
 }: {
   sections: BedGroupSection[];
   year: number;
@@ -1027,6 +1155,9 @@ function FarmGrid({
   selectedPlantingIds?: Set<string>;
   filterTerms?: string[];
   filterMode?: 'highlight' | 'filter';
+  colorByField?: ColorByField;
+  colorPalettes?: Record<string, Record<string, string>>;
+  colorByMode?: ColorByMode;
 }) {
   const [layout, setLayout] = useState<FieldLayoutConfig>(DEFAULT_LAYOUT);
   const [showEditor, setShowEditor] = useState(false);
@@ -1136,6 +1267,9 @@ function FarmGrid({
                     filterTerms={filterTerms}
                     filterMode={filterMode}
                     reverseBedOrder={activeField.reverseBedOrder}
+                    colorByField={colorByField}
+                    colorPalettes={colorPalettes}
+                    colorByMode={colorByMode}
                   />
                 ))}
               </div>
@@ -1179,6 +1313,27 @@ export default function OverviewPage() {
   const [viewingGroupId, setViewingGroupId] = useState<string | null>(null);
   // Filter mode for map view: 'highlight' shows all crops but highlights matches, 'filter' hides non-matches
   const [mapFilterMode, setMapFilterMode] = useState<'highlight' | 'filter'>('highlight');
+  // Color by categorical field for map view (persisted to localStorage)
+  const [colorByField, setColorByFieldState] = useState<ColorByField>('none');
+  const [colorByMode, setColorByModeState] = useState<ColorByMode>('border');
+
+  // Load colorByField and colorByMode from localStorage on mount
+  useEffect(() => {
+    setColorByFieldState(loadColorByFromStorage());
+    setColorByModeState(loadColorByModeFromStorage());
+  }, []);
+
+  // Wrapper to persist colorByField changes
+  const setColorByField = useCallback((value: ColorByField) => {
+    setColorByFieldState(value);
+    saveColorByToStorage(value);
+  }, []);
+
+  // Wrapper to persist colorByMode changes
+  const setColorByMode = useCallback((value: ColorByMode) => {
+    setColorByModeState(value);
+    saveColorByModeToStorage(value);
+  }, []);
 
   // Parse filter terms from search query for map view
   const mapFilterTerms = useMemo(() => {
@@ -1407,6 +1562,22 @@ export default function OverviewPage() {
     );
   }, [selectedPlantingIds, allTimelineCrops]);
 
+  // Build color palette for categories (auto-generate from unique values)
+  const categoryColorPalette = useMemo(() => {
+    const uniqueCategories = [...new Set(allTimelineCrops.map(c => c.category).filter(Boolean))].sort();
+    const palette: Record<string, string> = {};
+    uniqueCategories.forEach((cat, i) => {
+      palette[cat as string] = CATEGORY_COLORS[i % CATEGORY_COLORS.length];
+    });
+    return palette;
+  }, [allTimelineCrops]);
+
+  // Combined color palettes including dynamic category colors
+  const colorPalettes = useMemo((): Record<string, Record<string, string>> => ({
+    ...COLOR_BY_PALETTES,
+    category: categoryColorPalette,
+  }), [categoryColorPalette]);
+
   // Right panel resize handler
   const handleRightPanelResizeStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -1617,6 +1788,62 @@ export default function OverviewPage() {
                 </button>
               </div>
             )}
+            {/* Color by categorical field */}
+            <div className="mt-2 flex items-center gap-2">
+              <label className="text-xs text-gray-500">Color by:</label>
+              <select
+                value={colorByField}
+                onChange={(e) => setColorByField(e.target.value as ColorByField)}
+                className="px-2 py-1 text-xs border border-gray-300 rounded bg-white"
+              >
+                <option value="none">None</option>
+                <option value="growingStructure">Growing Structure</option>
+                <option value="plantingMethod">Planting Method</option>
+                <option value="category">Category</option>
+              </select>
+            </div>
+            {/* Style toggle (border vs background) - only show when color by is active */}
+            {colorByField !== 'none' && (
+              <div className="mt-2 flex items-center gap-2">
+                <label className="text-xs text-gray-500">Style:</label>
+                <div className="flex gap-0.5 bg-gray-100 p-0.5 rounded">
+                  <button
+                    onClick={() => setColorByMode('border')}
+                    className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                      colorByMode === 'border'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Border
+                  </button>
+                  <button
+                    onClick={() => setColorByMode('background')}
+                    className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                      colorByMode === 'background'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Background
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* Color legend */}
+            {colorByField !== 'none' && colorPalettes[colorByField] && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Object.entries(colorPalettes[colorByField]).map(([value, color]) => (
+                  <div key={value} className="flex items-center gap-1 text-xs">
+                    <div
+                      className="w-3 h-3 rounded border border-gray-300"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="text-gray-600">{value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Unassigned plantings table */}
@@ -1704,6 +1931,9 @@ export default function OverviewPage() {
                 selectedPlantingIds={selectedPlantingIds}
                 filterTerms={mapFilterTerms}
                 filterMode={mapFilterMode}
+                colorByField={colorByField}
+                colorPalettes={colorPalettes}
+                colorByMode={colorByMode}
               />
             )}
           </main>
