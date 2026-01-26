@@ -51,6 +51,152 @@ function getUniqueTextColors(crops: Crop[]): string[] {
   return Array.from(colors).sort();
 }
 
+/**
+ * Unified color picker with bg/text color inputs and copy-from dropdown.
+ * Use onColorChange for atomic updates (both colors at once), or
+ * onBgColorChange/onTextColorChange for separate callbacks.
+ */
+function CropColorPicker({
+  bgColor,
+  textColor,
+  onColorChange,
+  onBgColorChange,
+  onTextColorChange,
+  crops,
+  excludeId,
+  showPreview = false,
+  previewText = 'Preview',
+}: {
+  bgColor: string;
+  textColor: string;
+  onColorChange?: (bgColor: string, textColor: string) => void;
+  onBgColorChange?: (color: string) => void;
+  onTextColorChange?: (color: string) => void;
+  crops: Crop[];
+  excludeId?: string;
+  showPreview?: boolean;
+  previewText?: string;
+}) {
+  const [copyFromOpen, setCopyFromOpen] = useState(false);
+  const [copyFromSearch, setCopyFromSearch] = useState('');
+
+  const filteredCrops = crops
+    .filter(c => !excludeId || c.id !== excludeId)
+    .filter(c => !copyFromSearch || c.name.toLowerCase().includes(copyFromSearch.toLowerCase()));
+
+  const handleBgChange = (newBg: string) => {
+    const newText = getContrastingTextColor(newBg);
+    if (onColorChange) {
+      onColorChange(newBg, newText);
+    } else {
+      onBgColorChange?.(newBg);
+      onTextColorChange?.(newText);
+    }
+  };
+
+  const handleTextChange = (newText: string) => {
+    if (onColorChange) {
+      onColorChange(bgColor, newText);
+    } else {
+      onTextColorChange?.(newText);
+    }
+  };
+
+  const handleCopyFrom = (crop: Crop) => {
+    if (onColorChange) {
+      onColorChange(crop.bgColor, crop.textColor);
+    } else {
+      onBgColorChange?.(crop.bgColor);
+      onTextColorChange?.(crop.textColor);
+    }
+    setCopyFromOpen(false);
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="color"
+        value={bgColor}
+        onChange={(e) => handleBgChange(e.target.value)}
+        className="w-8 h-8 cursor-pointer rounded border border-gray-300"
+        title="Background color"
+      />
+      <input
+        type="color"
+        value={textColor}
+        onChange={(e) => handleTextChange(e.target.value)}
+        className="w-8 h-8 cursor-pointer rounded border border-gray-300"
+        title="Text color"
+      />
+      {showPreview && (
+        <div
+          className="px-3 py-1 rounded text-sm font-medium"
+          style={{ backgroundColor: bgColor, color: textColor }}
+        >
+          {previewText}
+        </div>
+      )}
+      {/* Copy from dropdown */}
+      <div className="relative">
+        <button
+          onClick={() => {
+            setCopyFromOpen(!copyFromOpen);
+            setCopyFromSearch('');
+          }}
+          className="text-xs border border-gray-300 rounded px-2 py-1 text-gray-600 bg-white cursor-pointer hover:border-gray-400 hover:bg-gray-50"
+          title="Copy colors from another crop"
+        >
+          Copy from...
+        </button>
+        {copyFromOpen && (
+          <>
+            {/* Backdrop to close dropdown */}
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setCopyFromOpen(false)}
+            />
+            {/* Dropdown menu */}
+            <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-56">
+              {/* Search input */}
+              <div className="p-2 border-b border-gray-100">
+                <input
+                  type="text"
+                  value={copyFromSearch}
+                  onChange={(e) => setCopyFromSearch(e.target.value)}
+                  placeholder="Search crops..."
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+              {/* Crop list */}
+              <div className="max-h-48 overflow-auto py-1">
+                {filteredCrops.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => handleCopyFrom(c)}
+                    className="w-full px-3 py-1.5 text-left hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <span
+                      className="px-2 py-0.5 rounded text-xs font-medium"
+                      style={{ backgroundColor: c.bgColor, color: c.textColor }}
+                    >
+                      {c.name}
+                    </span>
+                  </button>
+                ))}
+                {filteredCrops.length === 0 && (
+                  <div className="px-3 py-2 text-sm text-gray-500">No matches</div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function CropsPage() {
   const params = useParams();
   const planId = params.planId as string;
@@ -77,9 +223,6 @@ export default function CropsPage() {
   const [bulkBgColor, setBulkBgColor] = useState('#4a9d4a');
   const [bulkTextColor, setBulkTextColor] = useState('#ffffff');
 
-  // Copy-from dropdown state
-  const [copyFromDropdownOpen, setCopyFromDropdownOpen] = useState<string | null>(null);
-  const [copyFromSearch, setCopyFromSearch] = useState('');
 
   // Load plan on mount
   useEffect(() => {
@@ -142,13 +285,9 @@ export default function CropsPage() {
     setSelectedCropIds(new Set());
   }, [searchQuery, bgColorFilter, textColorFilter]);
 
-  const handleBgColorChange = (cropId: string, newColor: string) => {
-    const textColor = getContrastingTextColor(newColor);
-    updateCrop(cropId, { bgColor: newColor, textColor });
-  };
-
-  const handleTextColorChange = (cropId: string, newColor: string) => {
-    updateCrop(cropId, { textColor: newColor });
+  // Note: CropColorPicker handles auto-contrast internally, so these just pass through
+  const handleColorChange = (cropId: string, bgColor: string, textColor: string) => {
+    updateCrop(cropId, { bgColor, textColor });
   };
 
   const handleStartRename = (crop: Crop) => {
@@ -236,12 +375,6 @@ export default function CropsPage() {
 
     await bulkUpdateCropEntities(updates);
     setSelectedCropIds(new Set());
-  };
-
-  // When bulk bg color changes, auto-calculate text color
-  const handleBulkBgColorChange = (color: string) => {
-    setBulkBgColor(color);
-    setBulkTextColor(getContrastingTextColor(color));
   };
 
   if (isLoading) {
@@ -365,29 +498,15 @@ export default function CropsPage() {
                 {selectedCropIds.size} selected
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-blue-700">Set color:</span>
-                <input
-                  type="color"
-                  value={bulkBgColor}
-                  onChange={(e) => handleBulkBgColorChange(e.target.value)}
-                  className="w-8 h-8 cursor-pointer rounded border border-gray-300"
-                  title="Background color"
-                />
-                <input
-                  type="color"
-                  value={bulkTextColor}
-                  onChange={(e) => setBulkTextColor(e.target.value)}
-                  className="w-8 h-8 cursor-pointer rounded border border-gray-300"
-                  title="Text color"
-                />
-                <div
-                  className="px-3 py-1 rounded text-sm font-medium"
-                  style={{ backgroundColor: bulkBgColor, color: bulkTextColor }}
-                >
-                  Preview
-                </div>
-              </div>
+              <span className="text-sm text-blue-700">Set color:</span>
+              <CropColorPicker
+                bgColor={bulkBgColor}
+                textColor={bulkTextColor}
+                onBgColorChange={setBulkBgColor}
+                onTextColorChange={setBulkTextColor}
+                crops={sortedCrops}
+                showPreview
+              />
 
               <button
                 onClick={handleBulkColorChange}
@@ -491,89 +610,14 @@ export default function CropsPage() {
 
                       <div className="flex-1" />
 
-                      {/* Color pickers */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <input
-                          type="color"
-                          value={crop.bgColor}
-                          onChange={(e) => handleBgColorChange(crop.id, e.target.value)}
-                          className="w-8 h-8 cursor-pointer rounded border border-gray-300"
-                          title="Background color"
-                        />
-                        <input
-                          type="color"
-                          value={crop.textColor}
-                          onChange={(e) => handleTextColorChange(crop.id, e.target.value)}
-                          className="w-8 h-8 cursor-pointer rounded border border-gray-300"
-                          title="Text color"
-                        />
-                        {/* Copy from dropdown */}
-                        <div className="relative">
-                          <button
-                            onClick={() => {
-                              setCopyFromDropdownOpen(copyFromDropdownOpen === crop.id ? null : crop.id);
-                              setCopyFromSearch('');
-                            }}
-                            className="text-xs border border-gray-300 rounded px-2 py-1 text-gray-600 bg-white cursor-pointer hover:border-gray-400 hover:bg-gray-50"
-                            title="Copy colors from another crop"
-                          >
-                            Copy from...
-                          </button>
-                          {copyFromDropdownOpen === crop.id && (
-                            <>
-                              {/* Backdrop to close dropdown */}
-                              <div
-                                className="fixed inset-0 z-10"
-                                onClick={() => setCopyFromDropdownOpen(null)}
-                              />
-                              {/* Dropdown menu */}
-                              <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-56">
-                                {/* Search input */}
-                                <div className="p-2 border-b border-gray-100">
-                                  <input
-                                    type="text"
-                                    value={copyFromSearch}
-                                    onChange={(e) => setCopyFromSearch(e.target.value)}
-                                    placeholder="Search crops..."
-                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500"
-                                    autoFocus
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                </div>
-                                {/* Crop list */}
-                                <div className="max-h-48 overflow-auto py-1">
-                                  {sortedCrops
-                                    .filter(c => c.id !== crop.id)
-                                    .filter(c => !copyFromSearch || c.name.toLowerCase().includes(copyFromSearch.toLowerCase()))
-                                    .map(c => (
-                                      <button
-                                        key={c.id}
-                                        onClick={() => {
-                                          updateCrop(crop.id, { bgColor: c.bgColor, textColor: c.textColor });
-                                          setCopyFromDropdownOpen(null);
-                                        }}
-                                        className="w-full px-3 py-1.5 text-left hover:bg-gray-100 flex items-center gap-2"
-                                      >
-                                        <span
-                                          className="px-2 py-0.5 rounded text-xs font-medium"
-                                          style={{ backgroundColor: c.bgColor, color: c.textColor }}
-                                        >
-                                          {c.name}
-                                        </span>
-                                      </button>
-                                    ))}
-                                  {sortedCrops
-                                    .filter(c => c.id !== crop.id)
-                                    .filter(c => !copyFromSearch || c.name.toLowerCase().includes(copyFromSearch.toLowerCase()))
-                                    .length === 0 && (
-                                    <div className="px-3 py-2 text-sm text-gray-500">No matches</div>
-                                  )}
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
+                      {/* Color picker */}
+                      <CropColorPicker
+                        bgColor={crop.bgColor}
+                        textColor={crop.textColor}
+                        onColorChange={(bg, text) => handleColorChange(crop.id, bg, text)}
+                        crops={sortedCrops}
+                        excludeId={crop.id}
+                      />
 
                       {/* Delete button */}
                       <button
