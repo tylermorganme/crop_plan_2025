@@ -716,9 +716,11 @@ type UnassignedSortColumn = 'crop' | 'category' | 'start' | 'end' | 'config' | '
 function UnassignedPlantingsPanel({
   plantings,
   searchQuery,
+  onDelete,
 }: {
   plantings: EnrichedUnassignedCrop[];
   searchQuery: string;
+  onDelete?: (plantingId: string) => void;
 }) {
   // Parse search query: extract filter terms and sort override (matches CropTimeline DSL)
   const validSortColumns = useMemo(() => new Set<UnassignedSortColumn>(['crop', 'category', 'start', 'end', 'config', 'revenue']), []);
@@ -767,6 +769,7 @@ function UnassignedPlantingsPanel({
     <table className="w-full text-xs">
       <thead className="sticky top-0 bg-gray-100">
         <tr className="border-b border-gray-200">
+          {onDelete && <th className="w-6"></th>}
           <th className="px-2 py-1.5 text-left font-medium text-gray-600">Planting</th>
           <th className="px-2 py-1.5 text-left font-medium text-gray-600">Config</th>
           <th className="px-2 py-1.5 text-left font-medium text-gray-600">Crop</th>
@@ -799,6 +802,20 @@ function UnassignedPlantingsPanel({
                 e.dataTransfer.effectAllowed = 'move';
               }}
             >
+              {onDelete && (
+                <td className="px-1 py-1.5">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(plantingId);
+                    }}
+                    className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Delete planting"
+                  >
+                    ×
+                  </button>
+                </td>
+              )}
               <td className="px-2 py-1.5 text-gray-400 font-mono text-[10px]" title={plantingId}>{plantingId.slice(0, 8)}</td>
               <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px]">{planting.identifier}</td>
               <td className="px-2 py-1.5">
@@ -1386,6 +1403,7 @@ export default function OverviewPage() {
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const updatePlanting = usePlanStore((state) => state.updatePlanting);
   const bulkUpdatePlantings = usePlanStore((state) => state.bulkUpdatePlantings);
+  const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
   const updateCropBoxDisplay = usePlanStore((state) => state.updateCropBoxDisplay);
 
   // UI store - selection state (shared across views)
@@ -1987,6 +2005,7 @@ export default function OverviewPage() {
             <UnassignedPlantingsPanel
               plantings={unassignedPlantings}
               searchQuery={searchQuery}
+              onDelete={(plantingId) => bulkDeletePlantings([plantingId])}
             />
           </div>
         </aside>
