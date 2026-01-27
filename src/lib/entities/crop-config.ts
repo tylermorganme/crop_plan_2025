@@ -115,6 +115,9 @@ export interface CropConfig {
   /** Trellis type if crop needs trellising (e.g., "florida-weave") */
   trellisType?: string;
 
+  /** Row cover timing/requirement (e.g., "None", "AMAP", "Young", "Early", "Late") */
+  rowCover?: string;
+
   /** How DTM is measured: from-seeding, from-transplant, or total-time */
   normalMethod?: 'from-seeding' | 'from-transplant' | 'total-time';
 

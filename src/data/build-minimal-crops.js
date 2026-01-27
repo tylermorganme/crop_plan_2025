@@ -18,8 +18,15 @@
  */
 
 const fs = require('fs');
-const crops = JSON.parse(fs.readFileSync('./crops.json.old', 'utf8')).crops;
-const products = JSON.parse(fs.readFileSync('./products-template.json', 'utf8'));
+const path = require('path');
+
+// Source files - use paths relative to project root
+const projectRoot = path.resolve(__dirname, '../..');
+const cropsSourcePath = path.join(projectRoot, 'tmp/crops_from_excel.json');
+const productsPath = path.join(__dirname, 'products-template.json');
+
+const crops = JSON.parse(fs.readFileSync(cropsSourcePath, 'utf8')).crops;
+const products = JSON.parse(fs.readFileSync(productsPath, 'utf8'));
 
 // Default market split: 100% Direct
 // Matches DEFAULT_MARKET_IDS from src/lib/entities/market.ts
@@ -59,6 +66,21 @@ const PLANTING_METHOD_MAP = {
   'TP': 'transplant',
   'PE': 'perennial',
 };
+
+const IRRIGATION_MAP = {
+  'DR': 'drip',
+  'OH': 'overhead',
+  'OO': 'none',      // OO appears to mean "no irrigation needed" or overhead-optional
+};
+
+/**
+ * Normalize trellis type to kebab-case.
+ * e.g., "Florida Weave 2x" → "florida-weave-2x"
+ */
+function normalizeTrellisType(value) {
+  if (!value || typeof value !== 'string') return undefined;
+  return value.toLowerCase().trim().replace(/\s+/g, '-');
+}
 
 // =============================================================================
 // DATA FIXES - Corrections applied during import with explanations
@@ -132,6 +154,13 @@ const cleanCrops = crops.map((c) => {
     deprecated: c.Deprecated || false,
     // Perennial flag for crops that don't fit DS/TP model
     perennial: isPerennial || undefined,
+
+    // Irrigation type: drip, overhead, or none
+    irrigation: IRRIGATION_MAP[c['Irrigation']] || undefined,
+    // Trellis type if crop needs trellising
+    trellisType: normalizeTrellisType(c['Trellis Type']),
+    // Row cover timing/requirement (e.g., "None", "AMAP", "Young", "Early", "Late")
+    rowCover: c['Row Cover'] || undefined,
 
     // Spacing data - used for plantingsPerBed calculations
     rows: c['Rows'] || undefined,
@@ -233,7 +262,8 @@ const cleanCrops = crops.map((c) => {
   return crop;
 }).filter(c => c !== null); // Remove skipped crops
 
-fs.writeFileSync('./crop-config-template.json', JSON.stringify({ crops: cleanCrops }, null, 2));
+const outputPath = path.join(__dirname, 'crop-config-template.json');
+fs.writeFileSync(outputPath, JSON.stringify({ crops: cleanCrops }, null, 2));
 
 console.log('Created crop-config-template.json with', cleanCrops.length, 'crops');
 

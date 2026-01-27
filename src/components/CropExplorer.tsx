@@ -17,6 +17,7 @@ import CropConfigEditor from './CropConfigEditor';
 import { Z_INDEX } from '@/lib/z-index';
 import {
   DEFAULT_VISIBLE_COLUMNS,
+  DEFAULT_COLUMN_ORDER,
   EDITABLE_COLUMNS,
   getDefaultColumnWidth,
   formatCellValue,
@@ -301,26 +302,8 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     });
   }, [baseCrops, products]);
 
-  // All columns - derive from crop keys if allHeaders not provided
-  // Include revenuePerBed as a computed column
-  const allColumns = useMemo(() => {
-    if (allHeaders && allHeaders.length > 0) {
-      // Add revenuePerBed to the list if not already present
-      const cols = ['id', ...allHeaders];
-      if (!cols.includes('revenuePerBed')) {
-        cols.push('revenuePerBed');
-      }
-      return cols;
-    }
-    // Generate headers from displayCrops fields
-    const fields = new Set<string>();
-    displayCrops.forEach(crop => {
-      Object.keys(crop).forEach(key => fields.add(key));
-    });
-    // Ensure revenuePerBed is included
-    fields.add('revenuePerBed');
-    return Array.from(fields);
-  }, [allHeaders, displayCrops]);
+  // All columns come from the schema - single source of truth
+  const allColumns = allHeaders && allHeaders.length > 0 ? allHeaders : DEFAULT_COLUMN_ORDER;
 
   // Initialize with defaults (hydration-safe), then load from localStorage
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set(DEFAULT_VISIBLE_COLUMNS));
@@ -466,6 +449,14 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     return Array.from(values).sort();
   }, [displayCrops]);
 
+  const uniqueRowCoverValues = useMemo(() => {
+    const values = new Set<string>();
+    displayCrops.forEach(c => {
+      if (c.rowCover) values.add(c.rowCover);
+    });
+    return Array.from(values).sort();
+  }, [displayCrops]);
+
   // Map of dynamic option keys to their values
   const dynamicOptionsMap: Record<DynamicOptionKey, string[]> = useMemo(() => ({
     crop: uniqueCropNames,
@@ -474,7 +465,8 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     trellisType: uniqueTrellisTypes,
     category: uniqueCategories,
     growingStructure: uniqueGrowingStructures,
-  }), [uniqueCropNames, uniqueProductNames, uniqueIrrigationValues, uniqueTrellisTypes, uniqueCategories, uniqueGrowingStructures]);
+    rowCover: uniqueRowCoverValues,
+  }), [uniqueCropNames, uniqueProductNames, uniqueIrrigationValues, uniqueTrellisTypes, uniqueCategories, uniqueGrowingStructures, uniqueRowCoverValues]);
 
   // Columns to display (filtered by sidebar search if active)
   const displayColumns = useMemo(() => {
@@ -1532,7 +1524,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                           zIndex: 2,
                         }),
                       }}
-                      className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
+                      className={`relative px-1.5 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center min-h-[3rem] ${
                         dragOverColumn === col
                           ? 'bg-green-100 border-l-2 border-l-green-500'
                           : activeEditColumn === col
@@ -1543,19 +1535,27 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                       } ${draggedColumn === col ? 'opacity-50' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
                       onClick={() => handleSort(col)}
                     >
-                      <span className="flex-1 truncate">{getColumnDisplayName(col)}</span>
-                      <span className="w-4 text-center flex-shrink-0">
-                        {sortColumn === col ? (sortDirection === 'asc' ? '↑' : '↓') : (
-                          <span className="text-gray-300 opacity-0 group-hover:opacity-100">↕</span>
-                        )}
+                      <span className="leading-tight break-words">
+                        {getColumnDisplayName(col)}
+                        {sortColumn === col && <span className="ml-1 text-green-600">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
                       </span>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); hideColumn(col); }}
-                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 px-1 flex-shrink-0"
-                        title="Hide column"
-                      >
-                        ×
-                      </button>
+                      {/* Hover overlay with sort/hide buttons */}
+                      <div className="absolute inset-y-0 right-0 flex items-center gap-0.5 pr-1 opacity-0 group-hover:opacity-100 bg-gradient-to-l from-white via-white/90 to-transparent pl-4">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleSort(col); }}
+                          className="text-gray-500 hover:text-green-600"
+                          title="Sort"
+                        >
+                          {sortColumn === col ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); hideColumn(col); }}
+                          className="text-gray-500 hover:text-red-500"
+                          title="Hide column"
+                        >
+                          ×
+                        </button>
+                      </div>
                       {/* Resize handle */}
                       <div
                         onMouseDown={(e) => handleResizeStart(e, col)}

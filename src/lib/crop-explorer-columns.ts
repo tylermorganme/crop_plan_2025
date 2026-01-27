@@ -24,7 +24,7 @@ export type ColumnSourceType = 'static' | 'calculated' | 'mixed' | 'empty' | 'un
 export type EditType = 'select' | 'text' | 'number';
 
 /** Dynamic option key - options are derived from existing values in the data */
-export type DynamicOptionKey = 'crop' | 'product' | 'irrigation' | 'trellisType' | 'category' | 'growingStructure';
+export type DynamicOptionKey = 'crop' | 'product' | 'irrigation' | 'trellisType' | 'category' | 'growingStructure' | 'rowCover';
 
 export interface EditConfig {
   type: EditType;
@@ -258,6 +258,14 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     defaultVisible: false,
     edit: { type: 'select', dynamicOptions: 'trellisType' },
     sourceType: getSourceType('trellisType'),
+    sortable: true,
+  },
+  rowCover: {
+    displayName: 'Row Cover',
+    defaultWidth: 100,
+    defaultVisible: false,
+    edit: { type: 'select', dynamicOptions: 'rowCover' },
+    sourceType: getSourceType('rowCover'),
     sortable: true,
   },
 
