@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Crop } from '@/lib/crops';
@@ -169,6 +170,20 @@ const MIN_COL_WIDTH = 50;
 const DEFAULT_COL_WIDTH = 120;
 const DEFAULT_FILTER_PANE_WIDTH = 280;
 
+// Columns that can be edited inline when in edit mode
+// All text/select columns use ComboBox with dynamic options from existing column values
+type DynamicOptionKey = 'crop' | 'product' | 'irrigation' | 'trellisType' | 'category' | 'growingStructure';
+const EDITABLE_COLUMNS: Record<string, { type: 'select' | 'text' | 'number'; options?: string[]; dynamicOptions?: DynamicOptionKey }> = {
+  crop: { type: 'select', dynamicOptions: 'crop' },
+  product: { type: 'select', dynamicOptions: 'product' },
+  irrigation: { type: 'select', dynamicOptions: 'irrigation' },
+  trellisType: { type: 'select', dynamicOptions: 'trellisType' },
+  rows: { type: 'number' },
+  spacing: { type: 'number' },
+  category: { type: 'select', dynamicOptions: 'category' },
+  growingStructure: { type: 'select', dynamicOptions: 'growingStructure' },
+};
+
 function getDefaultColumnWidth(col: string): number {
   if (col === 'id') return 120;
   if (col === 'identifier') return 300;
@@ -260,6 +275,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [configsToDelete, setConfigsToDelete] = useState<Crop[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Edit mode state for inline editing of CropConfig fields
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Use shared store state - automatically syncs across tabs
   // Only subscribe to cropCatalog, not the entire plan (avoids re-renders when plantings change)
@@ -443,6 +461,66 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const favoritesCount = useMemo(() => {
     return displayCrops.filter(c => c.isFavorite).length;
   }, [displayCrops]);
+
+  // Dynamic options for combobox columns
+  const uniqueCropNames = useMemo(() => {
+    const names = new Set<string>();
+    displayCrops.forEach(c => {
+      if (c.crop) names.add(c.crop);
+    });
+    return Array.from(names).sort();
+  }, [displayCrops]);
+
+  const uniqueProductNames = useMemo(() => {
+    const names = new Set<string>();
+    displayCrops.forEach(c => {
+      const product = (c as unknown as Record<string, unknown>).product;
+      if (product && typeof product === 'string') names.add(product);
+    });
+    return Array.from(names).sort();
+  }, [displayCrops]);
+
+  const uniqueIrrigationValues = useMemo(() => {
+    const values = new Set<string>();
+    displayCrops.forEach(c => {
+      if (c.irrigation) values.add(c.irrigation);
+    });
+    return Array.from(values).sort();
+  }, [displayCrops]);
+
+  const uniqueTrellisTypes = useMemo(() => {
+    const values = new Set<string>();
+    displayCrops.forEach(c => {
+      if (c.trellisType) values.add(c.trellisType);
+    });
+    return Array.from(values).sort();
+  }, [displayCrops]);
+
+  const uniqueCategories = useMemo(() => {
+    const values = new Set<string>();
+    displayCrops.forEach(c => {
+      if (c.category) values.add(c.category);
+    });
+    return Array.from(values).sort();
+  }, [displayCrops]);
+
+  const uniqueGrowingStructures = useMemo(() => {
+    const values = new Set<string>();
+    displayCrops.forEach(c => {
+      if (c.growingStructure) values.add(c.growingStructure);
+    });
+    return Array.from(values).sort();
+  }, [displayCrops]);
+
+  // Map of dynamic option keys to their values
+  const dynamicOptionsMap: Record<DynamicOptionKey, string[]> = useMemo(() => ({
+    crop: uniqueCropNames,
+    product: uniqueProductNames,
+    irrigation: uniqueIrrigationValues,
+    trellisType: uniqueTrellisTypes,
+    category: uniqueCategories,
+    growingStructure: uniqueGrowingStructures,
+  }), [uniqueCropNames, uniqueProductNames, uniqueIrrigationValues, uniqueTrellisTypes, uniqueCategories, uniqueGrowingStructures]);
 
   // Columns to display (filtered by sidebar search if active)
   const displayColumns = useMemo(() => {
@@ -1063,6 +1141,26 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     setShowDeleteConfirm(true);
   }, [activePlanId]);
 
+  // =============================================================================
+  // EDIT MODE HANDLERS
+  // =============================================================================
+
+  // Auto-save changes immediately when value changes
+  const handleCellChange = useCallback(async (identifier: string, field: string, value: unknown) => {
+    try {
+      await bulkUpdateCropConfigs([{ identifier, changes: { [field]: value } }]);
+    } catch (err) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to save change',
+      });
+    }
+  }, [bulkUpdateCropConfigs]);
+
+  const handleToggleEditMode = useCallback(() => {
+    setIsEditMode(!isEditMode);
+  }, [isEditMode]);
+
   // Handle initiating bulk delete (from selection bar)
   const handleBulkDelete = useCallback(() => {
     if (!activePlanId) {
@@ -1361,6 +1459,20 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
             )}
           </label>
           <div className="flex-1" />
+          {/* Edit mode toggle */}
+          {activePlanId && (
+            <button
+              onClick={handleToggleEditMode}
+              className={`px-3 py-1.5 text-sm rounded ${
+                isEditMode
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              title={isEditMode ? 'Exit edit mode' : 'Edit config values inline'}
+            >
+              {isEditMode ? 'Exit Edit Mode' : 'Edit Data'}
+            </button>
+          )}
           {/* Freeze columns control */}
           <div className="flex items-center gap-1.5 text-sm text-gray-700">
             <span>Freeze:</span>
@@ -1572,9 +1684,23 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                         const validation = isIdentifierCol ? validateCropConfig(crop as CropConfig) : null;
                         const hasIssues = validation && validation.status !== 'ok';
 
+                        // Check if this column is editable in edit mode
+                        const baseEditableConfig = EDITABLE_COLUMNS[col];
+                        // Resolve dynamic options from column values for comboboxes
+                        const editableConfig = baseEditableConfig ? {
+                          ...baseEditableConfig,
+                          options: baseEditableConfig.dynamicOptions
+                            ? dynamicOptionsMap[baseEditableConfig.dynamicOptions]
+                            : baseEditableConfig.options,
+                        } : undefined;
+                        const isEditable = isEditMode && editableConfig;
+                        const cellValue = crop[col as keyof Crop];
+
                         return (
                           <div
                             key={col}
+                            data-edit-row={isEditable ? virtualRow.index : undefined}
+                            data-edit-col={isEditable ? col : undefined}
                             style={{
                               width: getColumnWidth(col),
                               minWidth: getColumnWidth(col),
@@ -1631,7 +1757,17 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 )}
                               </span>
                             )}
-                            <span className="truncate">{formatValue(crop[col as keyof Crop], col)}</span>
+                            {/* Editable cell or display value */}
+                            {isEditable ? (
+                              <EditableCell
+                                value={cellValue}
+                                config={editableConfig}
+                                onChange={(value) => handleCellChange(crop.identifier, col, value)}
+                                hasChanges={false}
+                              />
+                            ) : (
+                              <span className="truncate">{formatValue(crop[col as keyof Crop], col)}</span>
+                            )}
                           </div>
                         );
                       })}
@@ -2084,6 +2220,275 @@ function FilterInput({
       value={String(value ?? '')}
       onChange={(e) => onChange(e.target.value || null)}
       className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 placeholder:text-gray-600"
+    />
+  );
+}
+
+// Helper to move focus to next/prev row's same column
+function moveFocusVertical(input: HTMLElement, direction: 'down' | 'up') {
+  const cell = input.closest('[data-edit-row]');
+  if (!cell) return;
+  const row = parseInt(cell.getAttribute('data-edit-row') || '0', 10);
+  const col = cell.getAttribute('data-edit-col');
+  const targetRow = direction === 'down' ? row + 1 : row - 1;
+  const nextCell = document.querySelector(`[data-edit-row="${targetRow}"][data-edit-col="${col}"]`);
+  const nextInput = nextCell?.querySelector('input, select') as HTMLElement | null;
+  if (nextInput) {
+    nextInput.focus();
+    if (nextInput instanceof HTMLInputElement) {
+      nextInput.select();
+    }
+  }
+}
+
+// ComboBox component for fast keyboard-driven selection
+function ComboBox({
+  value,
+  options,
+  onChange,
+  hasChanges,
+}: {
+  value: string;
+  options: string[];
+  onChange: (value: string | undefined) => void;
+  hasChanges: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(value);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Filter options based on input (prefix matching for tab-completion UX)
+  const filteredOptions = useMemo(() => {
+    if (!inputValue) return options;
+    const lower = inputValue.toLowerCase();
+    return options.filter(opt => opt.toLowerCase().startsWith(lower));
+  }, [options, inputValue]);
+
+  // Sync input with external value changes
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (isOpen && highlightedIndex >= 0 && listRef.current) {
+      const items = listRef.current.querySelectorAll('[data-option]');
+      items[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [highlightedIndex, isOpen]);
+
+  const commitValue = useCallback(() => {
+    if (inputValue !== value) {
+      // First check for exact match (case-insensitive)
+      const exact = options.find(o => o.toLowerCase() === inputValue.toLowerCase());
+      if (exact) {
+        onChange(exact);
+        setInputValue(exact);
+      } else if (filteredOptions.length === 1) {
+        // Tab completion: single match completes to that value
+        onChange(filteredOptions[0]);
+        setInputValue(filteredOptions[0]);
+      } else if (!inputValue) {
+        onChange(undefined);
+      } else {
+        // Freeform: accept any typed value as a new entry
+        onChange(inputValue);
+      }
+    }
+  }, [inputValue, value, options, filteredOptions, onChange]);
+
+  const selectOption = (opt: string | undefined) => {
+    onChange(opt);
+    setInputValue(opt ?? '');
+    setIsOpen(false);
+    setHighlightedIndex(0);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      if (isOpen) {
+        e.preventDefault();
+        setHighlightedIndex(i => Math.min(i + 1, filteredOptions.length - 1));
+      } else {
+        // Open dropdown on first arrow down, or navigate rows if already closed
+        e.preventDefault();
+        setIsOpen(true);
+        setHighlightedIndex(0);
+      }
+    } else if (e.key === 'ArrowUp') {
+      if (isOpen) {
+        e.preventDefault();
+        setHighlightedIndex(i => Math.max(i - 1, 0));
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      // Select highlighted option, or first filtered option if any exist
+      const indexToSelect = highlightedIndex >= 0 ? highlightedIndex : 0;
+      if (isOpen && filteredOptions.length > 0 && indexToSelect < filteredOptions.length) {
+        selectOption(filteredOptions[indexToSelect]);
+      } else {
+        // No filtered options - accept typed value (exact match or freeform)
+        const exact = options.find(o => o.toLowerCase() === inputValue.toLowerCase());
+        if (exact) {
+          selectOption(exact);
+        } else if (inputValue) {
+          // Freeform: accept new value
+          onChange(inputValue);
+        }
+      }
+      // Move to next row after selection
+      setIsOpen(false);
+      setTimeout(() => {
+        if (inputRef.current) {
+          moveFocusVertical(inputRef.current, 'down');
+        }
+      }, 0);
+    } else if (e.key === 'Escape') {
+      setIsOpen(false);
+      setInputValue(value); // Reset to original
+      setHighlightedIndex(0);
+    } else if (e.key === 'Tab') {
+      // Commit on tab
+      commitValue();
+      setIsOpen(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputValue(val);
+    setIsOpen(true);
+    setHighlightedIndex(0);
+  };
+
+  const handleBlur = () => {
+    // Delay to allow click on option
+    setTimeout(() => {
+      if (!listRef.current?.contains(document.activeElement)) {
+        setIsOpen(false);
+        commitValue();
+      }
+    }, 100);
+  };
+
+  const baseClass = `w-full px-1 py-0.5 text-sm border rounded ${
+    hasChanges ? 'bg-yellow-50 border-yellow-300' : 'border-gray-300 bg-white'
+  }`;
+
+  // Calculate dropdown position based on input location
+  const getDropdownStyle = useCallback((): React.CSSProperties => {
+    if (!inputRef.current) return { display: 'none' };
+    const rect = inputRef.current.getBoundingClientRect();
+    return {
+      position: 'fixed',
+      top: rect.bottom + 2,
+      left: rect.left,
+      width: Math.max(rect.width, 120),
+      zIndex: 9999,
+    };
+  }, []);
+
+  return (
+    <div className="relative w-full" onClick={(e) => e.stopPropagation()}>
+      <input
+        ref={inputRef}
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onFocus={() => { setIsOpen(true); setHighlightedIndex(0); }}
+        onBlur={handleBlur}
+        className={baseClass}
+        autoComplete="off"
+      />
+      {isOpen && filteredOptions.length > 0 && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={listRef}
+          style={getDropdownStyle()}
+          className="max-h-40 overflow-auto bg-white border border-gray-300 rounded shadow-lg"
+        >
+          {filteredOptions.map((opt, idx) => (
+            <div
+              key={opt}
+              data-option
+              className={`px-2 py-1 text-sm cursor-pointer ${
+                idx === highlightedIndex ? 'bg-blue-100' : 'hover:bg-gray-100'
+              }`}
+              onMouseDown={() => selectOption(opt)}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
+
+// EditableCell component for inline editing
+function EditableCell({
+  value,
+  config,
+  onChange,
+  hasChanges,
+}: {
+  value: unknown;
+  config: { type: 'select' | 'text' | 'number'; options?: string[] };
+  onChange: (value: unknown) => void;
+  hasChanges: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const baseClass = `w-full px-1 py-0.5 text-sm border rounded ${
+    hasChanges ? 'bg-yellow-50 border-yellow-300' : 'border-gray-300'
+  }`;
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Move to next row
+      if (inputRef.current) {
+        moveFocusVertical(inputRef.current, 'down');
+      }
+    }
+  };
+
+  if (config.type === 'select' && config.options) {
+    return (
+      <ComboBox
+        value={String(value ?? '')}
+        options={config.options}
+        onChange={(v) => onChange(v)}
+        hasChanges={hasChanges}
+      />
+    );
+  }
+
+  if (config.type === 'number') {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        value={value != null ? String(value) : ''}
+        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)}
+        onKeyDown={handleKeyDown}
+        className={`${baseClass} w-16`}
+        onClick={(e) => e.stopPropagation()}
+      />
+    );
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={String(value ?? '')}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      onKeyDown={handleKeyDown}
+      className={baseClass}
+      onClick={(e) => e.stopPropagation()}
     />
   );
 }

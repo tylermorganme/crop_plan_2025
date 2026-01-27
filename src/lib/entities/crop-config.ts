@@ -106,8 +106,14 @@ export interface CropConfig {
   /** In-row spacing in inches */
   spacing?: number;
 
-  /** Growing structure: "field", "greenhouse", "high-tunnel" */
-  growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
+  /** Growing structure (e.g., "field", "greenhouse", "high-tunnel") */
+  growingStructure?: string;
+
+  /** Irrigation type (e.g., "drip", "overhead", "none") */
+  irrigation?: string;
+
+  /** Trellis type if crop needs trellising (e.g., "florida-weave") */
+  trellisType?: string;
 
   /** How DTM is measured: from-seeding, from-transplant, or total-time */
   normalMethod?: 'from-seeding' | 'from-transplant' | 'total-time';
