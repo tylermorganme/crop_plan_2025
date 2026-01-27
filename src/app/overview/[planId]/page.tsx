@@ -104,7 +104,7 @@ function loadColorByFromStorage(): ColorByField {
   if (typeof window === 'undefined') return 'none';
   try {
     const stored = localStorage.getItem(COLOR_BY_STORAGE_KEY);
-    if (stored && ['none', 'growingStructure', 'plantingMethod', 'category'].includes(stored)) {
+    if (stored && ['none', 'growingStructure', 'plantingMethod', 'category', 'irrigation', 'trellisType'].includes(stored)) {
       return stored as ColorByField;
     }
   } catch (e) {
@@ -163,6 +163,15 @@ const COLOR_BY_PALETTES: Record<string, Record<string, string>> = {
     transplant: '#06b6d4',    // cyan
     perennial: '#84cc16',     // lime
   },
+  irrigation: {
+    drip: '#3b82f6',         // blue (water droplet)
+    overhead: '#22d3ee',     // cyan (sprinkler)
+    none: '#9ca3af',         // gray (no irrigation)
+  },
+  trellisType: {
+    'florida-weave-2x': '#f59e0b', // amber (for trellised crops)
+    // Other trellis types will get auto-generated colors
+  },
   // Category colors will be generated dynamically from unique values
 };
 
@@ -179,7 +188,7 @@ const CATEGORY_COLORS = [
   '#6b7280', // gray
 ];
 
-type ColorByField = 'none' | 'growingStructure' | 'plantingMethod' | 'category';
+type ColorByField = 'none' | 'growingStructure' | 'plantingMethod' | 'category' | 'irrigation' | 'trellisType';
 type ColorByMode = 'border' | 'background';
 
 // =============================================================================
@@ -199,6 +208,8 @@ interface CropBlock {
   // Categorical fields for "Color by" feature
   growingStructure?: string;
   plantingMethod?: string;
+  irrigation?: string;
+  trellisType?: string;
 }
 
 interface BedRow {
@@ -244,7 +255,8 @@ function buildOverviewData(
   crops: TimelineCrop[],
   year: number,
   nameGroups: Record<string, string[]>,
-  bedLengths: Record<string, number>
+  bedLengths: Record<string, number>,
+  cropCatalog?: Record<string, import('@/lib/entities/crop-config').CropConfig>
 ): BedGroupSection[] {
   // Group beds by their group
   const bedsByGroup = new Map<string, Bed[]>();
@@ -279,6 +291,8 @@ function buildOverviewData(
       const cropBlocks: CropBlock[] = bedCrops.map((crop) => {
         const startPercent = dateToYearPercent(crop.startDate, year);
         const endPercent = dateToYearPercent(crop.endDate, year);
+        // Look up config for irrigation/trellisType (these are config-level fields)
+        const config = cropCatalog?.[crop.cropConfigId];
 
         return {
           id: crop.id,
@@ -292,6 +306,8 @@ function buildOverviewData(
           textColor: crop.textColor || DEFAULT_COLOR.text,
           growingStructure: crop.growingStructure,
           plantingMethod: crop.plantingMethod,
+          irrigation: config?.irrigation,
+          trellisType: config?.trellisType,
         };
       });
 
@@ -398,6 +414,10 @@ function BedRowComponent({
       value = crop.growingStructure;
     } else if (colorByField === 'plantingMethod') {
       value = crop.plantingMethod;
+    } else if (colorByField === 'irrigation') {
+      value = crop.irrigation;
+    } else if (colorByField === 'trellisType') {
+      value = crop.trellisType;
     }
 
     if (!value) return '#9ca3af'; // gray for unknown/missing
@@ -653,16 +673,6 @@ function BedGroupComponent({
   );
 }
 
-/**
- * Extract the row letter from a group name like "Row A" or "A Block".
- * Returns the single letter identifier.
- */
-function getRowLetter(groupName: string): string {
-  // Try patterns like "Row A", "A Block", "Block A", or just "A"
-  const match = groupName.match(/\b([A-Z])\b/i);
-  return match ? match[1].toUpperCase() : groupName.charAt(0).toUpperCase();
-}
-
 // =============================================================================
 // UNASSIGNED PLANTINGS PANEL (Simple Table)
 // =============================================================================
@@ -819,14 +829,18 @@ function UnassignedPlantingsPanel({
 function LayoutEditorModal({
   layout,
   availableGroups,
+  groupNames,
   onSave,
   onClose,
 }: {
   layout: FieldLayoutConfig;
-  availableGroups: string[]; // Available bed group letters
+  availableGroups: string[]; // Available bed group IDs
+  groupNames: Record<string, string>; // Map of group ID to display name
   onSave: (layout: FieldLayoutConfig) => void;
   onClose: () => void;
 }) {
+  // Helper to get display name for a group (with fallback)
+  const getGroupName = (groupId: string) => groupNames[groupId] || groupId;
   const [editLayout, setEditLayout] = useState<FieldLayoutConfig>(JSON.parse(JSON.stringify(layout)));
   const [selectedFieldId, setSelectedFieldId] = useState(editLayout.fields[0]?.id || '');
 
@@ -1031,14 +1045,14 @@ function LayoutEditorModal({
                       </div>
                       <span className="text-xs text-gray-500 w-14">Lane {laneIndex + 1}</span>
                       <div className="flex flex-wrap gap-1 flex-1 min-h-[32px]">
-                        {lane.map((letter: string) => (
+                        {lane.map((groupId: string) => (
                           <span
-                            key={letter}
+                            key={groupId}
                             className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm flex items-center gap-1"
                           >
-                            {letter}
+                            {getGroupName(groupId)}
                             <button
-                              onClick={() => removeGroupFromLane(selectedField.id, laneIndex, letter)}
+                              onClick={() => removeGroupFromLane(selectedField.id, laneIndex, groupId)}
                               className="text-blue-400 hover:text-blue-600"
                             >
                               ×
@@ -1058,7 +1072,7 @@ function LayoutEditorModal({
                           >
                             <option value="">+ Add</option>
                             {unassignedGroups.map(g => (
-                              <option key={g} value={g}>{g}</option>
+                              <option key={g} value={g}>{getGroupName(g)}</option>
                             ))}
                           </select>
                         )}
@@ -1086,7 +1100,7 @@ function LayoutEditorModal({
                     <div className="flex flex-wrap gap-1">
                       {unassignedGroups.map(g => (
                         <span key={g} className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-sm">
-                          {g}
+                          {getGroupName(g)}
                         </span>
                       ))}
                     </div>
@@ -1167,20 +1181,44 @@ function FarmGrid({
     setLayout(loadLayoutFromStorage());
   }, []);
 
-  // Create a map for quick lookup by row letter (e.g., "Row A" -> "A")
-  const sectionsByLetter = useMemo(() => {
-    const map = new Map<string, BedGroupSection>();
+  // Create maps for looking up sections by ID and by legacy letter key
+  const { sectionsById, sectionsByLegacyKey } = useMemo(() => {
+    const byId = new Map<string, BedGroupSection>();
+    const byLegacy = new Map<string, BedGroupSection>();
     for (const section of sections) {
-      const letter = getRowLetter(section.groupName);
-      map.set(letter, section);
+      // Primary lookup by group ID
+      byId.set(section.groupId, section);
+      // Legacy lookup for old configs that used extracted letters (e.g., "A" for "Row A")
+      const legacyKey = section.groupName.match(/^Row\s+([A-Z])$/i)?.[1]?.toUpperCase();
+      if (legacyKey) {
+        byLegacy.set(legacyKey, section);
+      }
     }
-    return map;
+    return { sectionsById: byId, sectionsByLegacyKey: byLegacy };
   }, [sections]);
 
-  // Get all available group letters from sections
+  // Lookup section by ID or legacy key (for backward compatibility)
+  const getSection = useCallback((key: string): BedGroupSection | undefined => {
+    return sectionsById.get(key) || sectionsByLegacyKey.get(key);
+  }, [sectionsById, sectionsByLegacyKey]);
+
+  // Get all available group IDs from sections
   const availableGroups = useMemo(() => {
-    return Array.from(sectionsByLetter.keys()).sort();
-  }, [sectionsByLetter]);
+    return Array.from(sectionsById.keys());
+  }, [sectionsById]);
+
+  // Map of group ID to display name (for layout editor)
+  const groupNames = useMemo(() => {
+    const names: Record<string, string> = {};
+    for (const [id, section] of sectionsById) {
+      names[id] = section.groupName;
+    }
+    // Also include legacy key mappings for backward compatibility
+    for (const [legacyKey, section] of sectionsByLegacyKey) {
+      names[legacyKey] = section.groupName;
+    }
+    return names;
+  }, [sectionsById, sectionsByLegacyKey]);
 
   const activeField = layout.fields.find(f => f.id === layout.activeFieldId) || layout.fields[0];
 
@@ -1249,7 +1287,7 @@ function FarmGrid({
         <div className="flex flex-col gap-3">
           {activeField.lanes.map((lane: string[], laneIndex: number) => {
             const laneSections = lane
-              .map((letter: string) => sectionsByLetter.get(letter))
+              .map((key: string) => getSection(key))
               .filter((s): s is BedGroupSection => s !== undefined);
 
             if (laneSections.length === 0) return null;
@@ -1288,6 +1326,7 @@ function FarmGrid({
         <LayoutEditorModal
           layout={layout}
           availableGroups={availableGroups}
+          groupNames={groupNames}
           onSave={handleSaveLayout}
           onClose={() => setShowEditor(false)}
         />
@@ -1446,7 +1485,8 @@ export default function OverviewPage() {
       crops,
       selectedYear,
       nameGroups,
-      bedLengths
+      bedLengths,
+      currentPlan.cropCatalog
     );
   }, [currentPlan, selectedYear]);
 
@@ -1572,11 +1612,45 @@ export default function OverviewPage() {
     return palette;
   }, [allTimelineCrops]);
 
+  // Build dynamic palettes for irrigation and trellisType from cropCatalog
+  // Only show values that actually exist in the data
+  const irrigationColorPalette = useMemo(() => {
+    if (!currentPlan?.cropCatalog) return {};
+    const uniqueValues = [...new Set(
+      Object.values(currentPlan.cropCatalog)
+        .map(c => c.irrigation)
+        .filter(Boolean)
+    )].sort();
+    const palette: Record<string, string> = {};
+    uniqueValues.forEach((val) => {
+      // Use predefined colors or auto-generate
+      palette[val as string] = COLOR_BY_PALETTES.irrigation?.[val as string] ?? CATEGORY_COLORS[Object.keys(palette).length % CATEGORY_COLORS.length];
+    });
+    return palette;
+  }, [currentPlan?.cropCatalog]);
+
+  const trellisTypeColorPalette = useMemo(() => {
+    if (!currentPlan?.cropCatalog) return {};
+    const uniqueValues = [...new Set(
+      Object.values(currentPlan.cropCatalog)
+        .map(c => c.trellisType)
+        .filter(Boolean)
+    )].sort();
+    const palette: Record<string, string> = {};
+    uniqueValues.forEach((val) => {
+      // Use predefined colors or auto-generate
+      palette[val as string] = COLOR_BY_PALETTES.trellisType?.[val as string] ?? CATEGORY_COLORS[Object.keys(palette).length % CATEGORY_COLORS.length];
+    });
+    return palette;
+  }, [currentPlan?.cropCatalog]);
+
   // Combined color palettes including dynamic category colors
   const colorPalettes = useMemo((): Record<string, Record<string, string>> => ({
     ...COLOR_BY_PALETTES,
     category: categoryColorPalette,
-  }), [categoryColorPalette]);
+    irrigation: irrigationColorPalette,
+    trellisType: trellisTypeColorPalette,
+  }), [categoryColorPalette, irrigationColorPalette, trellisTypeColorPalette]);
 
   // Right panel resize handler
   const handleRightPanelResizeStart = useCallback((e: React.MouseEvent) => {
@@ -1698,7 +1772,7 @@ export default function OverviewPage() {
   return (
     <>
       <AppHeader />
-      <div className="h-screen flex flex-col bg-gray-100">
+      <div className="h-[calc(100vh-51px)] flex flex-col bg-gray-100">
         {/* Header */}
       <header className="flex-shrink-0 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1800,6 +1874,8 @@ export default function OverviewPage() {
                 <option value="growingStructure">Growing Structure</option>
                 <option value="plantingMethod">Planting Method</option>
                 <option value="category">Category</option>
+                <option value="irrigation">Irrigation</option>
+                <option value="trellisType">Trellis Type</option>
               </select>
             </div>
             {/* Style toggle (border vs background) - only show when color by is active */}
