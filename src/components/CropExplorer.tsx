@@ -13,8 +13,16 @@ import { calculateConfigRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
 import { getMarketSplitTotal } from '@/lib/entities/market';
 import CropConfigCreator from './CropConfigCreator';
 import CropConfigEditor from './CropConfigEditor';
-import columnAnalysis from '@/data/column-analysis.json';
 import { Z_INDEX } from '@/lib/z-index';
+import {
+  DEFAULT_VISIBLE_COLUMNS,
+  EDITABLE_COLUMNS,
+  getDefaultColumnWidth,
+  formatCellValue,
+  getColumnDisplayName,
+  getColumnBgClass,
+  type DynamicOptionKey,
+} from '@/lib/crop-explorer-columns';
 
 // =============================================================================
 // CONFIG VALIDATION
@@ -83,34 +91,6 @@ function validateCropConfig(crop: CropConfig): ConfigValidation {
   return { status: 'ok', issues: [] };
 }
 
-// Build a map of column header -> source type
-const columnSourceTypes: Record<string, 'static' | 'calculated' | 'mixed' | 'empty'> = {};
-columnAnalysis.columns.forEach((col: { header: string; type: string }) => {
-  columnSourceTypes[col.header] = col.type as 'static' | 'calculated' | 'mixed' | 'empty';
-});
-
-// Get background color class based on column source type
-function getColumnBgClass(col: string, isHeader: boolean = false): string {
-  const type = columnSourceTypes[col];
-  if (isHeader) {
-    switch (type) {
-      case 'static': return 'bg-blue-100';
-      case 'calculated': return 'bg-green-100';
-      case 'mixed': return 'bg-amber-100';
-      case 'empty': return 'bg-gray-200';
-      default: return 'bg-gray-50';
-    }
-  }
-  // Lighter colors for cells
-  switch (type) {
-    case 'static': return 'bg-blue-50/50';
-    case 'calculated': return 'bg-green-50/50';
-    case 'mixed': return 'bg-amber-50/50';
-    case 'empty': return 'bg-gray-100/50';
-    default: return '';
-  }
-}
-
 interface CropExplorerProps {
   filterOptions?: {
     crops: string[];
@@ -120,13 +100,6 @@ interface CropExplorerProps {
   };
   allHeaders?: string[];
 }
-
-// Default visible columns - using new camelCase field names from crop config
-const DEFAULT_VISIBLE = [
-  'identifier', 'crop', 'variant', 'product', 'category', 'growingStructure', 'normalMethod',
-  'dtm', 'daysToGermination', 'daysBetweenHarvest', 'numberOfHarvests',
-  'harvestBufferDays', 'yieldPerHarvest', 'yieldUnit', 'deprecated'
-];
 
 const STORAGE_KEY = 'crop-explorer-state-v5'; // Bumped for frozen columns
 
@@ -167,31 +140,7 @@ function savePersistedState(state: PersistedState) {
 const ROW_HEIGHT = 36;
 const HEADER_HEIGHT = 40;
 const MIN_COL_WIDTH = 50;
-const DEFAULT_COL_WIDTH = 120;
 const DEFAULT_FILTER_PANE_WIDTH = 280;
-
-// Columns that can be edited inline when in edit mode
-// All text/select columns use ComboBox with dynamic options from existing column values
-type DynamicOptionKey = 'crop' | 'product' | 'irrigation' | 'trellisType' | 'category' | 'growingStructure';
-const EDITABLE_COLUMNS: Record<string, { type: 'select' | 'text' | 'number'; options?: string[]; dynamicOptions?: DynamicOptionKey }> = {
-  crop: { type: 'select', dynamicOptions: 'crop' },
-  product: { type: 'select', dynamicOptions: 'product' },
-  irrigation: { type: 'select', dynamicOptions: 'irrigation' },
-  trellisType: { type: 'select', dynamicOptions: 'trellisType' },
-  rows: { type: 'number' },
-  spacing: { type: 'number' },
-  category: { type: 'select', dynamicOptions: 'category' },
-  growingStructure: { type: 'select', dynamicOptions: 'growingStructure' },
-};
-
-function getDefaultColumnWidth(col: string): number {
-  if (col === 'id') return 120;
-  if (col === 'identifier') return 300;
-  if (['deprecated'].includes(col)) return 80;
-  if (col.toLowerCase().includes('date')) return 110;
-  if (col.includes('yield') || col.includes('harvest')) return 140;
-  return DEFAULT_COL_WIDTH;
-}
 
 // Determine the type of a column based on its values
 function getColumnType(crops: Crop[], col: string): 'boolean' | 'number' | 'categorical' | 'text' {
@@ -369,7 +318,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   }, [allHeaders, displayCrops]);
 
   // Initialize with defaults (hydration-safe), then load from localStorage
-  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set(DEFAULT_VISIBLE));
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set(DEFAULT_VISIBLE_COLUMNS));
   const [columnOrder, setColumnOrder] = useState<string[]>(allColumns);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [sortColumn, setSortColumn] = useState<string | null>('identifier');
@@ -385,7 +334,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   useEffect(() => {
     const persisted = loadPersistedState();
     if (persisted) {
-      setVisibleColumns(new Set(persisted.visibleColumns ?? DEFAULT_VISIBLE));
+      setVisibleColumns(new Set(persisted.visibleColumns ?? DEFAULT_VISIBLE_COLUMNS));
       if (persisted.columnOrder) {
         const existing = new Set(allColumns);
         const order = persisted.columnOrder.filter(c => existing.has(c));
@@ -710,7 +659,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   };
 
   const resetColumns = () => {
-    setVisibleColumns(new Set(DEFAULT_VISIBLE));
+    setVisibleColumns(new Set(DEFAULT_VISIBLE_COLUMNS));
     setColumnOrder(allColumns);
     setColumnWidths({});
     setColumnFilters({});
@@ -1572,7 +1521,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                       } ${draggedColumn === col ? 'opacity-50' : ''} ${isFrozen ? 'bg-gray-100' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
                       onClick={() => handleSort(col)}
                     >
-                      <span className="flex-1 truncate">{formatColumnHeader(col)}</span>
+                      <span className="flex-1 truncate">{getColumnDisplayName(col)}</span>
                       <span className="w-4 text-center flex-shrink-0">
                         {sortColumn === col ? (sortDirection === 'asc' ? '↑' : '↓') : (
                           <span className="text-gray-300 opacity-0 group-hover:opacity-100">↕</span>
@@ -1766,7 +1715,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 hasChanges={false}
                               />
                             ) : (
-                              <span className="truncate">{formatValue(crop[col as keyof Crop], col)}</span>
+                              <span className="truncate">{formatCellValue(crop[col as keyof Crop], col)}</span>
                             )}
                           </div>
                         );
@@ -1887,7 +1836,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                 return (
                   <div key={key} className="flex py-1 border-b border-gray-50 last:border-0">
                     <span className="text-xs text-gray-600 w-36 flex-shrink-0 truncate" title={key}>{key}</span>
-                    <span className="text-sm text-gray-900 break-all">{formatValue(value)}</span>
+                    <span className="text-sm text-gray-900 break-all">{formatCellValue(value, key)}</span>
                   </div>
                 );
               })}
@@ -2256,6 +2205,7 @@ function ComboBox({
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
   const [ghostActive, setGhostActive] = useState(true);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({ display: 'none' });
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -2356,18 +2306,21 @@ function ComboBox({
     hasChanges ? 'bg-yellow-50 border-yellow-300' : 'border-gray-300 bg-white'
   }`;
 
-  // Calculate dropdown position based on input location
-  const getDropdownStyle = useCallback((): React.CSSProperties => {
-    if (!inputRef.current) return { display: 'none' };
-    const rect = inputRef.current.getBoundingClientRect();
-    return {
-      position: 'fixed',
-      top: rect.bottom + 2,
-      left: rect.left,
-      width: Math.max(rect.width, 120),
-      zIndex: 9999,
-    };
-  }, []);
+  // Update dropdown position when opened (in effect, not during render)
+  useLayoutEffect(() => {
+    if (isOpen && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 2,
+        left: rect.left,
+        width: Math.max(rect.width, 120),
+        zIndex: 9999,
+      });
+    } else {
+      setDropdownStyle({ display: 'none' });
+    }
+  }, [isOpen]);
 
   return (
     <div className="relative w-full" onClick={(e) => e.stopPropagation()}>
@@ -2394,7 +2347,7 @@ function ComboBox({
       {isOpen && filteredOptions.length > 0 && typeof document !== 'undefined' && createPortal(
         <div
           ref={listRef}
-          style={getDropdownStyle()}
+          style={dropdownStyle}
           className="max-h-40 overflow-auto bg-white border border-gray-300 rounded shadow-lg"
         >
           {filteredOptions.map((opt, idx) => (
@@ -2486,23 +2439,4 @@ function EditableCell({
   );
 }
 
-function formatValue(value: unknown, columnName?: string): string {
-  if (value === null || value === undefined) return '–';
-  if (typeof value === 'boolean') return value ? '✓' : '–';
-  if (typeof value === 'number') {
-    // Format revenue as currency
-    if (columnName === 'revenuePerBed') {
-      return '$' + value.toFixed(2);
-    }
-    if (Number.isInteger(value)) return value.toString();
-    return value.toFixed(2);
-  }
-  return String(value);
-}
-
-/** Format column headers for display (handle special computed columns) */
-function formatColumnHeader(col: string): string {
-  // Special display names for computed columns
-  if (col === 'revenuePerBed') return 'Rev/Bed';
-  return col;
-}
+// formatValue and formatColumnHeader are now imported from crop-explorer-columns.ts
