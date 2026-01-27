@@ -101,10 +101,10 @@ interface CropExplorerProps {
   allHeaders?: string[];
 }
 
-const STORAGE_KEY = 'crop-explorer-state-v5'; // Bumped for frozen columns
+const STORAGE_KEY = 'crop-explorer-state-v6'; // Bumped for multi-select categorical filters
 
 type SortDirection = 'asc' | 'desc' | null;
-type FilterValue = string | { min?: number; max?: number } | boolean | null;
+type FilterValue = string | string[] | { min?: number; max?: number } | boolean | null;
 
 interface PersistedState {
   visibleColumns: string[];
@@ -556,6 +556,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       // Column filters
       for (const [col, filterVal] of Object.entries(columnFilters)) {
         if (filterVal === null || filterVal === undefined || filterVal === '') continue;
+        if (Array.isArray(filterVal) && filterVal.length === 0) continue;
 
         const cropVal = crop[col as keyof Crop];
         const meta = columnMeta[col];
@@ -565,13 +566,19 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         if (meta.type === 'boolean') {
           if (filterVal === 'true' && cropVal !== true) return false;
           if (filterVal === 'false' && cropVal !== false) return false;
-        } else if (meta.type === 'number' && typeof filterVal === 'object') {
+        } else if (meta.type === 'number' && typeof filterVal === 'object' && !Array.isArray(filterVal)) {
           const numVal = typeof cropVal === 'number' ? cropVal : null;
           if (numVal === null) return false;
           if (filterVal.min !== undefined && numVal < filterVal.min) return false;
           if (filterVal.max !== undefined && numVal > filterVal.max) return false;
         } else if (meta.type === 'categorical') {
-          if (String(cropVal) !== String(filterVal)) return false;
+          // Multi-select: filterVal is string[] - crop must match one of the selected values
+          if (Array.isArray(filterVal)) {
+            if (filterVal.length > 0 && !filterVal.includes(String(cropVal))) return false;
+          } else {
+            // Legacy single-select support
+            if (String(cropVal) !== String(filterVal)) return false;
+          }
         } else if (meta.type === 'text') {
           if (!String(cropVal ?? '').toLowerCase().includes(String(filterVal).toLowerCase())) return false;
         }
@@ -760,7 +767,11 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     };
   }, [resizingPane, paneResizeStartX, paneResizeStartWidth]);
 
-  const activeFilterCount = Object.values(columnFilters).filter(v => v !== null && v !== undefined && v !== '').length + (searchQuery ? 1 : 0);
+  const activeFilterCount = Object.values(columnFilters).filter(v => {
+    if (v === null || v === undefined || v === '') return false;
+    if (Array.isArray(v)) return v.length > 0; // Multi-select: count only if has selections
+    return true;
+  }).length + (searchQuery ? 1 : 0);
 
   // Virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -2124,22 +2135,63 @@ function FilterInput({
   }
 
   if (type === 'categorical' && options) {
+    const selectedValues = Array.isArray(value) ? value : [];
+    const toggleOption = (opt: string) => {
+      if (selectedValues.includes(opt)) {
+        const newValues = selectedValues.filter(v => v !== opt);
+        onChange(newValues.length > 0 ? newValues : null);
+      } else {
+        onChange([...selectedValues, opt]);
+      }
+    };
+    const clearAll = () => onChange(null);
+    const selectAll = () => onChange([...options]);
+
     return (
-      <select
-        value={String(value ?? '')}
-        onChange={(e) => onChange(e.target.value || null)}
-        className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500"
-      >
-        <option value="">Any</option>
-        {options.map(opt => (
-          <option key={opt} value={opt}>{opt}</option>
-        ))}
-      </select>
+      <div className="space-y-1">
+        {/* Quick actions */}
+        <div className="flex gap-2 text-xs">
+          <button
+            onClick={selectAll}
+            className="text-blue-600 hover:text-blue-800"
+            type="button"
+          >
+            All
+          </button>
+          <button
+            onClick={clearAll}
+            className="text-gray-500 hover:text-gray-700"
+            type="button"
+          >
+            Clear
+          </button>
+          {selectedValues.length > 0 && (
+            <span className="text-gray-400">({selectedValues.length})</span>
+          )}
+        </div>
+        {/* Checkbox list */}
+        <div className="max-h-32 overflow-y-auto border border-gray-200 rounded bg-white">
+          {options.map(opt => (
+            <label
+              key={opt}
+              className="flex items-center gap-2 px-2 py-1 hover:bg-gray-50 cursor-pointer text-sm"
+            >
+              <input
+                type="checkbox"
+                checked={selectedValues.includes(opt)}
+                onChange={() => toggleOption(opt)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="truncate text-gray-700">{opt}</span>
+            </label>
+          ))}
+        </div>
+      </div>
     );
   }
 
   if (type === 'number' && range) {
-    const rangeVal = typeof value === 'object' && value !== null ? value : {};
+    const rangeVal = typeof value === 'object' && value !== null && !Array.isArray(value) ? value : {};
     return (
       <div className="flex gap-1 items-center">
         <input
