@@ -77,6 +77,52 @@ npx tsx crop-api/scripts/test-catalog-parity.ts
 npx tsx crop-api/scripts/test-crop-calculations.ts
 ```
 
+## Data Backfills
+
+**IMPORTANT**: When backfilling data to existing plans, prefer running through the app's mutation path rather than direct SQLite writes.
+
+### Why App Mutations > Direct SQLite
+
+| Approach | Checkpoints | Undo/Redo | Code Path |
+|----------|-------------|-----------|-----------|
+| App mutations (plan-store) | Automatic ✓ | Yes ✓ | Production ✓ |
+| Direct SQLite | Must update manually | No | Separate |
+
+### Preferred Pattern: API-based Backfill
+
+```typescript
+// Load plan through normal path (handles checkpoints)
+const plan = await loadPlanFromLibrary(planId);
+
+// Make changes through store actions
+for (const config of Object.values(plan.cropCatalog)) {
+  if (shouldUpdate(config)) {
+    await updateCropConfig(config.identifier, { irrigation: 'drip' });
+  }
+}
+// Changes are saved with undo/redo support
+```
+
+### If Direct SQLite is Necessary
+
+If you must write directly to SQLite (e.g., one-time migration):
+1. **Update BOTH main `.db` AND checkpoint files** in `{planId}.checkpoints/`
+2. Plans load from checkpoints when they exist (see `hydratePlan()` in sqlite-storage.ts)
+3. See `scripts/backfill-irrigation-trellis.js` for the pattern
+
+### Why Checkpoints Matter
+
+The app uses checkpoint-based hydration:
+```
+data/plans/{planId}.db              ← Main database
+data/plans/{planId}.checkpoints/    ← Checkpoint snapshots
+├── index.json                      ← Lists checkpoints
+├── {uuid1}.db                      ← Checkpoint snapshot
+└── {uuid2}.db                      ← Another checkpoint
+```
+
+`hydratePlan()` loads from the **latest checkpoint**, not the main db. If you only update the main db, the app won't see your changes.
+
 ## Cleanup Pattern
 
 When finishing investigation work:

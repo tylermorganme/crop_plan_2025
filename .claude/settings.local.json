@@ -63,7 +63,14 @@
       "Skill(vercel-react-best-practices)",
       "Skill(vercel-react-best-practices:*)",
       "Bash(git diff:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Skill(ast-query)",
+      "Skill(ast-query:*)",
+      "Bash(git show:*)",
+      "WebFetch(domain:tanstack.com)",
+      "WebFetch(domain:borstch.com)",
+      "Bash(npx eslint:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
