@@ -1,0 +1,24 @@
+#!/bin/bash
+# Save Windows clipboard image to a temp file and print the path
+
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+OUTFILE="/tmp/clipboard_${TIMESTAMP}.png"
+
+# Use PowerShell to get clipboard image and save it
+powershell.exe -command "
+\$img = Get-Clipboard -Format Image
+if (\$img) {
+    \$img.Save('$(wslpath -w "$OUTFILE")')
+    Write-Output 'saved'
+} else {
+    Write-Output 'no-image'
+}
+" | tr -d '\r' | {
+    read result
+    if [ "$result" = "saved" ]; then
+        echo "$OUTFILE"
+    else
+        echo "No image in clipboard" >&2
+        exit 1
+    fi
+}
