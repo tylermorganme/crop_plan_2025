@@ -2001,12 +2001,23 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
             ★ Favorite
           </button>
           {selectedCropIds.size === 1 && (
-            <button
-              onClick={handleCopySelected}
-              className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-700 rounded transition-colors"
-            >
-              Copy
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  const crop = sortedCrops.find(c => selectedCropIds.has(c.id));
+                  if (crop) handleEditConfig(crop);
+                }}
+                className="px-3 py-1.5 text-sm font-medium bg-purple-600 hover:bg-purple-700 rounded transition-colors"
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleCopySelected}
+                className="px-3 py-1.5 text-sm font-medium bg-green-600 hover:bg-green-700 rounded transition-colors"
+              >
+                Copy
+              </button>
+            </>
           )}
           <button
             onClick={handleBulkDelete}
