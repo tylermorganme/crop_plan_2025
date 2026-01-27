@@ -14,6 +14,7 @@ import { calculateConfigRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
 import { getMarketSplitTotal } from '@/lib/entities/market';
 import CropConfigCreator from './CropConfigCreator';
 import CropConfigEditor from './CropConfigEditor';
+import CompareConfigsModal from './CompareConfigsModal';
 import { Z_INDEX } from '@/lib/z-index';
 import {
   DEFAULT_VISIBLE_COLUMNS,
@@ -226,6 +227,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [configsToDelete, setConfigsToDelete] = useState<Crop[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Compare configs state
+  const [showCompare, setShowCompare] = useState(false);
 
   // Edit mode state for inline editing of CropConfig fields (persisted in UI store)
   const isEditMode = useUIStore((state) => state.isEditMode);
@@ -2000,6 +2004,14 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
           >
             ★ Favorite
           </button>
+          {selectedCropIds.size >= 2 && (
+            <button
+              onClick={() => setShowCompare(true)}
+              className="px-3 py-1.5 text-sm font-medium bg-cyan-600 hover:bg-cyan-700 rounded transition-colors"
+            >
+              Compare
+            </button>
+          )}
           {selectedCropIds.size === 1 && (
             <>
               <button
@@ -2152,6 +2164,16 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Compare configs modal */}
+      {showCompare && (
+        <CompareConfigsModal
+          isOpen={true}
+          configs={sortedCrops.filter(c => selectedCropIds.has(c.id)) as CropConfig[]}
+          onClose={() => setShowCompare(false)}
+          products={products}
+        />
       )}
 
       {/* Resize overlays */}
