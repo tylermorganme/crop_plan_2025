@@ -40,6 +40,10 @@ export default function UIStoreProvider({ children }: UIStoreProviderProps) {
         useUIStore.setState({
           toast: message.toast,
         });
+      } else if (message.type === 'edit-mode-changed') {
+        useUIStore.setState({
+          isEditMode: message.isEditMode,
+        });
       }
     });
 

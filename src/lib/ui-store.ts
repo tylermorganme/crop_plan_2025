@@ -7,6 +7,7 @@ import { create } from 'zustand';
 const SYNC_CHANNEL_NAME = 'ui-store-sync';
 const TAB_ID_KEY = 'ui-store-tab-id';
 const SEARCH_QUERY_KEY = 'ui-store-search-query';
+const EDIT_MODE_KEY = 'ui-store-edit-mode';
 
 /** Load persisted search query from localStorage */
 function loadPersistedSearchQuery(): string {
@@ -26,6 +27,30 @@ function saveSearchQuery(query: string): void {
       localStorage.setItem(SEARCH_QUERY_KEY, query);
     } else {
       localStorage.removeItem(SEARCH_QUERY_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+/** Load persisted edit mode from localStorage */
+function loadPersistedEditMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(EDIT_MODE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/** Save edit mode to localStorage */
+function saveEditMode(isEditMode: boolean): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (isEditMode) {
+      localStorage.setItem(EDIT_MODE_KEY, 'true');
+    } else {
+      localStorage.removeItem(EDIT_MODE_KEY);
     }
   } catch {
     // Ignore storage errors
@@ -55,7 +80,8 @@ export const TAB_ID = (() => {
 export type UIStoreSyncMessage =
   | { type: 'selection-changed'; selectedIds: string[]; tabId: string }
   | { type: 'search-changed'; query: string; tabId: string }
-  | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null; tabId: string };
+  | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null; tabId: string }
+  | { type: 'edit-mode-changed'; isEditMode: boolean; tabId: string };
 
 /** BroadcastChannel for cross-tab sync */
 let syncChannel: BroadcastChannel | null = null;
@@ -77,7 +103,7 @@ function getSyncChannel(): BroadcastChannel | null {
 }
 
 /** Broadcast a sync message to other tabs (includes tab ID) */
-function broadcastUISync(message: { type: 'selection-changed'; selectedIds: string[] } | { type: 'search-changed'; query: string } | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null }): void {
+function broadcastUISync(message: { type: 'selection-changed'; selectedIds: string[] } | { type: 'search-changed'; query: string } | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null } | { type: 'edit-mode-changed'; isEditMode: boolean }): void {
   if (!TAB_ID) return;
   const fullMessage = { ...message, tabId: TAB_ID } as UIStoreSyncMessage;
   getSyncChannel()?.postMessage(fullMessage);
@@ -149,6 +175,11 @@ interface UIState {
   // Search query: Filters visible plantings (shared across Timeline and Plantings)
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+
+  // Edit mode: Whether inline editing is enabled (shared across views)
+  isEditMode: boolean;
+  setIsEditMode: (isEditMode: boolean) => void;
+  toggleEditMode: () => void;
 
   // Toast notifications: Global feedback messages
   toast: { message: string; type: 'error' | 'success' | 'info' } | null;
@@ -279,6 +310,20 @@ export const useUIStore = create<UIState>((set, get) => ({
     set({ searchQuery: query });
     saveSearchQuery(query);
     broadcastUISync({ type: 'search-changed', query });
+  },
+
+  // Edit mode - persisted to localStorage
+  isEditMode: loadPersistedEditMode(),
+  setIsEditMode: (isEditMode: boolean) => {
+    set({ isEditMode });
+    saveEditMode(isEditMode);
+    broadcastUISync({ type: 'edit-mode-changed', isEditMode });
+  },
+  toggleEditMode: () => {
+    const isEditMode = !get().isEditMode;
+    set({ isEditMode });
+    saveEditMode(isEditMode);
+    broadcastUISync({ type: 'edit-mode-changed', isEditMode });
   },
 
   // Toast

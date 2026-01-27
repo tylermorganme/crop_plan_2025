@@ -8,6 +8,7 @@ import type { Crop } from '@/lib/crops';
 import type { Planting } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
+import { useUIStore } from '@/lib/ui-store';
 import { type CropConfig, calculatePlantingMethod } from '@/lib/entities/crop-config';
 import { calculateConfigRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
 import { getMarketSplitTotal } from '@/lib/entities/market';
@@ -225,10 +226,12 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const [configsToDelete, setConfigsToDelete] = useState<Crop[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Edit mode state for inline editing of CropConfig fields
-  const [isEditMode, setIsEditMode] = useState(false);
-  // Track which column is currently being edited (has focus)
+  // Edit mode state for inline editing of CropConfig fields (persisted in UI store)
+  const isEditMode = useUIStore((state) => state.isEditMode);
+  const toggleEditMode = useUIStore((state) => state.toggleEditMode);
+  // Track which column and row is currently being edited (has focus)
   const [activeEditColumn, setActiveEditColumn] = useState<string | null>(null);
+  const [activeEditRow, setActiveEditRow] = useState<number | null>(null);
 
   // Use shared store state - automatically syncs across tabs
   // Only subscribe to cropCatalog, not the entire plan (avoids re-renders when plantings change)
@@ -1120,8 +1123,8 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   }, [bulkUpdateCropConfigs]);
 
   const handleToggleEditMode = useCallback(() => {
-    setIsEditMode(!isEditMode);
-  }, [isEditMode]);
+    toggleEditMode();
+  }, [toggleEditMode]);
 
   // Handle initiating bulk delete (from selection bar)
   const handleBulkDelete = useCallback(() => {
@@ -1574,17 +1577,19 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
             style={{ height: 'calc(100% - 40px)' }}
             onScroll={handleBodyScroll}
             onBlur={(e) => {
-              // Clear active column when focus leaves all editable cells
+              // Clear active column/row when focus leaves all editable cells
               // Use relatedTarget to check where focus is going
               const goingTo = e.relatedTarget as HTMLElement | null;
               if (!goingTo) {
                 // Focus left the window entirely
                 setActiveEditColumn(null);
+                setActiveEditRow(null);
               } else {
                 // Check if focus is going to another editable cell
                 const editCell = goingTo.closest('[data-edit-col]');
                 if (!editCell) {
                   setActiveEditColumn(null);
+                  setActiveEditRow(null);
                 }
               }
             }}
@@ -1620,8 +1625,14 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                       key={rowKey}
                       onClick={() => setSelectedCropId(crop.id === selectedCropId ? null : crop.id)}
                       className={`flex cursor-pointer hover:bg-gray-50 border-b border-gray-100 group ${
-                        selectedCropId === crop.id ? 'bg-green-50' : ''
-                      } ${isSelected ? 'bg-blue-50' : ''} ${crop.deprecated ? 'opacity-50' : ''}`}
+                        activeEditRow === virtualRow.index
+                          ? 'ring-2 ring-inset ring-blue-400 bg-blue-50/50'
+                          : selectedCropId === crop.id
+                            ? 'bg-green-50'
+                            : isSelected
+                              ? 'bg-blue-50'
+                              : ''
+                      } ${crop.deprecated ? 'opacity-50' : ''}`}
                       style={{
                         position: 'absolute',
                         top: 0,
@@ -1753,7 +1764,10 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 config={editableConfig}
                                 onChange={(value) => handleCellChange(crop.identifier, col, value)}
                                 hasChanges={false}
-                                onFocus={() => setActiveEditColumn(col)}
+                                onFocus={() => {
+                                  setActiveEditColumn(col);
+                                  setActiveEditRow(virtualRow.index);
+                                }}
                               />
                             ) : (
                               <span className="truncate">{formatCellValue(crop[col as keyof Crop], col)}</span>
@@ -2255,15 +2269,46 @@ function FilterInput({
   );
 }
 
+// Helper to get visual Y position from a cell's parent row
+function getRowY(cell: HTMLElement): number {
+  const row = cell.parentElement;
+  if (!row) return 0;
+  const match = row.style.transform?.match(/translateY\(([^)]+)px\)/);
+  return match ? parseFloat(match[1]) : 0;
+}
+
 // Helper to move focus to next/prev row's same column
+// Runs synchronously - call BEFORE triggering state changes for immediate response
 function moveFocusVertical(input: HTMLElement, direction: 'down' | 'up') {
-  const cell = input.closest('[data-edit-row]');
+  const cell = input.closest('[data-edit-col]') as HTMLElement | null;
   if (!cell) return;
-  const row = parseInt(cell.getAttribute('data-edit-row') || '0', 10);
   const col = cell.getAttribute('data-edit-col');
-  const targetRow = direction === 'down' ? row + 1 : row - 1;
-  const nextCell = document.querySelector(`[data-edit-row="${targetRow}"][data-edit-col="${col}"]`);
-  const nextInput = nextCell?.querySelector('input, select') as HTMLElement | null;
+  if (!col) return;
+
+  const currentY = getRowY(cell);
+
+  // Find all cells in this column, sorted by visual position
+  const allCells = Array.from(document.querySelectorAll(`[data-edit-col="${col}"]`)) as HTMLElement[];
+  if (allCells.length === 0) return;
+
+  allCells.sort((a, b) => getRowY(a) - getRowY(b));
+
+  // Find target based on direction
+  let targetCell: HTMLElement | null = null;
+  if (direction === 'down') {
+    targetCell = allCells.find(c => getRowY(c) > currentY) || null;
+  } else {
+    const candidates = allCells.filter(c => getRowY(c) < currentY);
+    targetCell = candidates.length > 0 ? candidates[candidates.length - 1] : null;
+  }
+
+  // If no next row, blur current input (e.g., at end of list)
+  if (!targetCell) {
+    input.blur();
+    return;
+  }
+
+  const nextInput = targetCell.querySelector('input, select') as HTMLElement | null;
   if (nextInput) {
     nextInput.focus();
     if (nextInput instanceof HTMLInputElement) {
@@ -2329,13 +2374,14 @@ function ComboBox({
     setGhostActive(true);
   }, [fullValue, value, onChange]);
 
-  // Accept and navigate to adjacent row
+  // Navigate then accept - navigate FIRST while DOM is still in original state
   const acceptAndNavigate = useCallback((direction: 'up' | 'down') => {
-    acceptValue();
-    setIsOpen(false);
+    // Navigate before state changes trigger re-render
     if (inputRef.current) {
       moveFocusVertical(inputRef.current, direction);
     }
+    acceptValue();
+    setIsOpen(false);
   }, [acceptValue]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -2347,13 +2393,12 @@ function ComboBox({
       acceptAndNavigate('up');
     } else if (e.key === 'Enter') {
       e.preventDefault();
+      // Navigate before state changes trigger re-render
+      if (inputRef.current) {
+        moveFocusVertical(inputRef.current, 'down');
+      }
       acceptValue();
       setIsOpen(false);
-      setTimeout(() => {
-        if (inputRef.current) {
-          moveFocusVertical(inputRef.current, 'down');
-        }
-      }, 0);
     } else if (e.key === 'Tab') {
       // Accept value (browser handles focus move to next cell)
       acceptValue();
