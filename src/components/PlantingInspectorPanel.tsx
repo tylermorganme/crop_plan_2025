@@ -215,6 +215,8 @@ export interface PlantingInspectorPanelProps {
 
   // Config actions
   onEditCropConfig?: (identifier: string) => void;
+  /** Clone config and assign to this planting */
+  onCloneConfig?: (plantingId: string, configId: string) => void;
   /** Reset planting to use config defaults (clears overrides, uses default seed source) */
   onRefreshFromConfig?: (plantingId: string) => void;
 
@@ -245,6 +247,7 @@ export function PlantingInspectorPanel({
   onEditSequence,
   onUnlinkFromSequence,
   onEditCropConfig,
+  onCloneConfig,
   onRefreshFromConfig,
   cropCatalog,
   varieties,
@@ -442,6 +445,14 @@ export function PlantingInspectorPanel({
             className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
           >
             Edit Config
+          </button>
+        )}
+        {onCloneConfig && crop.plantingId && crop.cropConfigId && (
+          <button
+            onClick={() => onCloneConfig(crop.plantingId!, crop.cropConfigId!)}
+            className="flex-1 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded hover:bg-green-100 transition-colors"
+          >
+            Clone Config
           </button>
         )}
         {onDuplicateCrop && (

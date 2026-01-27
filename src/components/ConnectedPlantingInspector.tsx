@@ -8,6 +8,7 @@ import { PlantingInspectorPanel } from './PlantingInspectorPanel';
 import CreateSequenceModal, { CreateSequenceOptions } from './CreateSequenceModal';
 import SequenceEditorModal from './SequenceEditorModal';
 import CropConfigEditor from './CropConfigEditor';
+import CropConfigCreator from './CropConfigCreator';
 import type { CropConfig } from '@/lib/entities/crop-config';
 
 interface ConnectedPlantingInspectorProps {
@@ -38,6 +39,7 @@ export function ConnectedPlantingInspector({
   const bulkDuplicatePlantings = usePlanStore((s) => s.bulkDuplicatePlantings);
   const bulkUpdatePlantings = usePlanStore((s) => s.bulkUpdatePlantings);
   const updateCropConfig = usePlanStore((s) => s.updateCropConfig);
+  const addCropConfig = usePlanStore((s) => s.addCropConfig);
 
   // Toast for validation errors
   const setToast = useUIStore((s) => s.setToast);
@@ -70,6 +72,10 @@ export function ConnectedPlantingInspector({
 
   // Modal state for crop config editor
   const [editingConfigId, setEditingConfigId] = useState<string | null>(null);
+
+  // Modal state for clone config
+  const [cloningForPlantingId, setCloningForPlantingId] = useState<string | null>(null);
+  const [cloneSourceConfig, setCloneSourceConfig] = useState<CropConfig | null>(null);
 
   // Convert selected IDs to TimelineCrop[]
   const allTimelineCrops = useMemo(() => {
@@ -124,6 +130,35 @@ export function ConnectedPlantingInspector({
       setEditingConfigId(null);
     },
     [updateCropConfig]
+  );
+
+  // Clone config handler - opens CropConfigCreator
+  const handleCloneConfig = useCallback(
+    (plantingId: string, configId: string) => {
+      const config = currentPlan?.cropCatalog?.[configId];
+      if (!config) return;
+      setCloningForPlantingId(plantingId);
+      setCloneSourceConfig(config);
+    },
+    [currentPlan?.cropCatalog]
+  );
+
+  // Save cloned config - adds to catalog AND updates planting
+  const handleCloneSave = useCallback(
+    async (config: CropConfig) => {
+      if (!cloningForPlantingId) return;
+      // Add the new config to the catalog
+      await addCropConfig(config);
+      // Update the planting to use the new config
+      const result = await updatePlanting(cloningForPlantingId, { configId: config.identifier });
+      if (!result.success) {
+        setToast({ message: result.error, type: 'error' });
+      }
+      // Clear clone state
+      setCloningForPlantingId(null);
+      setCloneSourceConfig(null);
+    },
+    [cloningForPlantingId, addCropConfig, updatePlanting, setToast]
   );
 
   // For date changes in the inspector, use updateCropDates
@@ -259,6 +294,7 @@ export function ConnectedPlantingInspector({
         onEditSequence={handleEditSequence}
         onUnlinkFromSequence={handleUnlinkFromSequence}
         onEditCropConfig={handleEditCropConfig}
+        onCloneConfig={handleCloneConfig}
         onRefreshFromConfig={handleRefreshFromConfig}
         cropCatalog={currentPlan.cropCatalog}
         varieties={currentPlan.varieties}
@@ -310,6 +346,25 @@ export function ConnectedPlantingInspector({
           crop={currentPlan.cropCatalog[editingConfigId]}
           onClose={() => setEditingConfigId(null)}
           onSave={handleSaveConfig}
+          varieties={currentPlan.varieties}
+          seedMixes={currentPlan.seedMixes}
+          products={currentPlan.products}
+          markets={currentPlan.markets}
+        />
+      )}
+
+      {/* Clone Config Modal - creates new config and assigns to planting */}
+      {cloneSourceConfig && currentPlan.cropCatalog && (
+        <CropConfigCreator
+          isOpen={true}
+          onClose={() => {
+            setCloningForPlantingId(null);
+            setCloneSourceConfig(null);
+          }}
+          onSave={handleCloneSave}
+          availableCrops={Object.values(currentPlan.cropCatalog)}
+          existingIdentifiers={Object.keys(currentPlan.cropCatalog)}
+          initialSourceConfig={cloneSourceConfig}
           varieties={currentPlan.varieties}
           seedMixes={currentPlan.seedMixes}
           products={currentPlan.products}

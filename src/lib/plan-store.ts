@@ -493,7 +493,7 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk duplicate multiple plantings (single undo step) */
   bulkDuplicatePlantings: (plantingIds: string[]) => Promise<string[]>;
   /** Update a single planting. Returns error if validation fails (e.g., bedFeet exceeds bed capacity). */
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => Promise<MutationResult>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'configId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => Promise<MutationResult>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
   recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
@@ -1486,7 +1486,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlantings.map(p => p.id);
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => {
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'configId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => {
       // Pre-validate
       const { currentPlan } = get();
       if (!currentPlan?.plantings) {
@@ -1544,6 +1544,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             const now = Date.now();
 
             // Apply updates
+            if (updates.configId !== undefined) {
+              p.configId = updates.configId;
+            }
             if ('startBed' in updates) {
               p.startBed = updates.startBed ?? null;
             }
