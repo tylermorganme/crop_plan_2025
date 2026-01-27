@@ -1116,10 +1116,10 @@ export default function PlantingsPage() {
   const handleFeetChange = useCallback(async (plantingId: string, newFeet: string) => {
     const feet = parseInt(newFeet, 10);
     if (isNaN(feet) || feet < 1) return;
-    try {
-      await updatePlanting(plantingId, { bedFeet: feet });
-    } catch {
-      setToast({ message: 'Failed to update', type: 'error' });
+
+    const result = await updatePlanting(plantingId, { bedFeet: feet });
+    if (!result.success) {
+      setToast({ message: result.error, type: 'error' });
     }
   }, [updatePlanting]);
 
