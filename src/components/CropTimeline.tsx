@@ -996,18 +996,8 @@ export default function CropTimeline({
       selectedPlantingIds.forEach(id => draggedGroupIds.add(id));
     }
 
-    // Add sequence members for all related crops
-    const groupsToExpand = Array.from(draggedGroupIds);
-    for (const groupId of groupsToExpand) {
-      const groupCrop = crops.find(c => c.groupId === groupId);
-      if (groupCrop?.sequenceId) {
-        crops.forEach(c => {
-          if (c.sequenceId === groupCrop.sequenceId) {
-            draggedGroupIds.add(c.groupId);
-          }
-        });
-      }
-    }
+    // Note: Sequence members are NOT auto-expanded. To move sequence members
+    // together, user should multi-select them first (Cmd/Ctrl+click).
 
     // Cache original state for all dragged plantings (for rollback on failure)
     dragCache.current.clear();
