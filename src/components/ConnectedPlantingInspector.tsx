@@ -36,6 +36,9 @@ export function ConnectedPlantingInspector({
   const bulkDuplicatePlantings = usePlanStore((s) => s.bulkDuplicatePlantings);
   const bulkUpdatePlantings = usePlanStore((s) => s.bulkUpdatePlantings);
 
+  // Toast for validation errors
+  const setToast = useUIStore((s) => s.setToast);
+
   // Date operations from store
   const updateCropDates = usePlanStore((s) => s.updateCropDates);
 
@@ -135,9 +138,12 @@ export function ConnectedPlantingInspector({
         updates.fieldStartDate = `${currentPlan.metadata.year}-${config.targetFieldDate}`;
       }
 
-      await updatePlanting(plantingId, updates);
+      const result = await updatePlanting(plantingId, updates);
+      if (!result.success) {
+        setToast({ message: result.error, type: 'error' });
+      }
     },
-    [updatePlanting, currentPlan]
+    [updatePlanting, currentPlan, setToast]
   );
 
   // Bulk duplicate plantings
@@ -182,9 +188,12 @@ export function ConnectedPlantingInspector({
 
         return { id, changes };
       });
-      await bulkUpdatePlantings(updates);
+      const result = await bulkUpdatePlantings(updates);
+      if (!result.success) {
+        setToast({ message: result.error, type: 'error' });
+      }
     },
-    [bulkUpdatePlantings, currentPlan]
+    [bulkUpdatePlantings, currentPlan, setToast]
   );
 
   // Editing sequence data
@@ -205,7 +214,11 @@ export function ConnectedPlantingInspector({
         onDeselect={(id) => togglePlanting(id)}
         onClearSelection={() => clearSelection()}
         onUpdatePlanting={async (id, updates) => {
-          await updatePlanting(id, updates);
+          const result = await updatePlanting(id, updates);
+          if (!result.success) {
+            setToast({ message: result.error, type: 'error' });
+          }
+          return result;
         }}
         onDeleteCrop={async (groupIds) => {
           await bulkDeletePlantings(groupIds);

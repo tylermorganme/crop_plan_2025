@@ -1347,6 +1347,7 @@ export default function OverviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(350);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingGroupId, setViewingGroupId] = useState<string | null>(null);
@@ -1392,6 +1393,7 @@ export default function OverviewPage() {
   const selectPlanting = useUIStore((state) => state.selectPlanting);
   const togglePlanting = useUIStore((state) => state.togglePlanting);
   const clearSelection = useUIStore((state) => state.clearSelection);
+  const setToast = useUIStore((state) => state.setToast);
 
   // Right panel width state
   const [rightPanelWidth, setRightPanelWidth] = useState(320);
@@ -1554,23 +1556,29 @@ export default function OverviewPage() {
   }, [sidebarWidth]);
 
   // Handler for assigning a planting to a bed via drag-drop
-  const handleAssignPlanting = useCallback((plantingId: string, bedId: string) => {
-    updatePlanting(plantingId, { startBed: bedId });
-  }, [updatePlanting]);
+  const handleAssignPlanting = useCallback(async (plantingId: string, bedId: string) => {
+    const result = await updatePlanting(plantingId, { startBed: bedId });
+    if (!result.success) {
+      setToast({ message: result.error, type: 'error' });
+    }
+  }, [updatePlanting, setToast]);
 
   // Handler for external drops on CropTimeline (takes bed name, looks up UUID)
-  const handleExternalPlantingDrop = useCallback((plantingId: string, bedName: string) => {
+  const handleExternalPlantingDrop = useCallback(async (plantingId: string, bedName: string) => {
     if (!currentPlan?.beds) return;
     // Find bed by name
     const bed = Object.values(currentPlan.beds).find(b => b.name === bedName);
     if (bed) {
-      updatePlanting(plantingId, { startBed: bed.id });
+      const result = await updatePlanting(plantingId, { startBed: bed.id });
+      if (!result.success) {
+        setToast({ message: result.error, type: 'error' });
+      }
     }
-  }, [updatePlanting, currentPlan?.beds]);
+  }, [updatePlanting, currentPlan?.beds, setToast]);
 
   // Handler for unassigning a planting (drop on sidebar)
-  const handleUnassignPlanting = useCallback((plantingId: string) => {
-    updatePlanting(plantingId, { startBed: undefined });
+  const handleUnassignPlanting = useCallback(async (plantingId: string) => {
+    await updatePlanting(plantingId, { startBed: undefined });
   }, [updatePlanting]);
 
   // State for sidebar drop highlight
@@ -1800,40 +1808,92 @@ export default function OverviewPage() {
       {/* Content - flex layout with left sidebar, map, and right panel */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left sidebar - Unassigned plantings - drop zone for unassigning */}
-        <aside
-          className={`flex-shrink-0 border-r border-gray-200 overflow-hidden flex flex-col transition-colors ${
-            isSidebarDragOver ? 'bg-red-50 border-red-300' : 'bg-white'
-          }`}
-          style={{ width: sidebarWidth }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            setIsSidebarDragOver(true);
-          }}
-          onDragLeave={() => setIsSidebarDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setIsSidebarDragOver(false);
-            try {
-              const data = JSON.parse(e.dataTransfer.getData('application/json'));
-              if (data.type === 'assigned-planting' && data.plantingId) {
-                handleUnassignPlanting(data.plantingId);
+        {sidebarCollapsed ? (
+          /* Collapsed sidebar - just a narrow strip with expand button */
+          <aside
+            className={`flex-shrink-0 border-r border-gray-200 flex flex-col items-center py-2 transition-colors ${
+              isSidebarDragOver ? 'bg-red-50 border-red-300' : 'bg-white'
+            }`}
+            style={{ width: 40 }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              setIsSidebarDragOver(true);
+            }}
+            onDragLeave={() => setIsSidebarDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsSidebarDragOver(false);
+              try {
+                const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                if (data.type === 'assigned-planting' && data.plantingId) {
+                  handleUnassignPlanting(data.plantingId);
+                }
+              } catch {
+                // Invalid drop data, ignore
               }
-            } catch {
-              // Invalid drop data, ignore
-            }
-          }}
-        >
-          {/* Sidebar header */}
-          <div className="p-3 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-semibold text-gray-700">
-                Unassigned ({unassignedPlantings.length})
-              </h2>
-              {isSidebarDragOver && (
-                <span className="text-xs text-red-600">Drop to unassign</span>
-              )}
-            </div>
+            }}
+          >
+            <button
+              onClick={() => setSidebarCollapsed(false)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
+              title={`Show unassigned (${unassignedPlantings.length})`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            {unassignedPlantings.length > 0 && (
+              <span className="text-xs text-gray-500 mt-1">{unassignedPlantings.length}</span>
+            )}
+          </aside>
+        ) : (
+          /* Expanded sidebar */
+          <aside
+            className={`flex-shrink-0 border-r border-gray-200 overflow-hidden flex flex-col transition-colors ${
+              isSidebarDragOver ? 'bg-red-50 border-red-300' : 'bg-white'
+            }`}
+            style={{ width: sidebarWidth }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              setIsSidebarDragOver(true);
+            }}
+            onDragLeave={() => setIsSidebarDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsSidebarDragOver(false);
+              try {
+                const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                if (data.type === 'assigned-planting' && data.plantingId) {
+                  handleUnassignPlanting(data.plantingId);
+                }
+              } catch {
+                // Invalid drop data, ignore
+              }
+            }}
+          >
+            {/* Sidebar header */}
+            <div className="p-3 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-semibold text-gray-700">
+                  Unassigned ({unassignedPlantings.length})
+                </h2>
+                <div className="flex items-center gap-1">
+                  {isSidebarDragOver && (
+                    <span className="text-xs text-red-600">Drop to unassign</span>
+                  )}
+                  <button
+                    onClick={() => setSidebarCollapsed(true)}
+                    className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                    title="Collapse sidebar"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             {/* Search input */}
             <SearchInput
               value={searchQuery}
@@ -1930,18 +1990,21 @@ export default function OverviewPage() {
             />
           </div>
         </aside>
+        )}
 
-        {/* Left resize handle */}
-        <div
-          className={`w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex-shrink-0 ${
-            isResizingSidebar ? 'bg-gray-400' : ''
-          }`}
-          onMouseDown={handleSidebarResizeStart}
-        >
-          <div className="h-full flex items-center justify-center">
-            <div className="w-0.5 h-8 bg-gray-400 rounded" />
+        {/* Left resize handle - only when sidebar is expanded */}
+        {!sidebarCollapsed && (
+          <div
+            className={`w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex-shrink-0 ${
+              isResizingSidebar ? 'bg-gray-400' : ''
+            }`}
+            onMouseDown={handleSidebarResizeStart}
+          >
+            <div className="h-full flex items-center justify-center">
+              <div className="w-0.5 h-8 bg-gray-400 rounded" />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main content area - either FarmGrid or CropTimeline for focused group */}
         {viewingGroupData ? (

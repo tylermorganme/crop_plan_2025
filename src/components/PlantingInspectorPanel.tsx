@@ -15,6 +15,7 @@ import type { Planting, CropConfig } from '@/lib/plan-types';
 import type { Product } from '@/lib/entities/product';
 import type { TimelineCrop } from '@/lib/entities/plan';
 import type { SeedSource } from '@/lib/entities/planting';
+import type { MutationResult } from '@/lib/plan-store';
 
 // =============================================================================
 // Constants
@@ -197,8 +198,8 @@ export interface PlantingInspectorPanelProps {
   onDeselect?: (groupId: string) => void;
   onClearSelection?: () => void;
 
-  // Edit callbacks
-  onUpdatePlanting?: (plantingId: string, updates: Partial<Planting>) => Promise<void>;
+  // Edit callbacks - returns MutationResult so caller can handle validation failures
+  onUpdatePlanting?: (plantingId: string, updates: Partial<Planting>) => Promise<MutationResult>;
   onCropDateChange?: (groupId: string, startDate: string, endDate: string) => void;
   onDeleteCrop?: (groupIds: string[]) => void;
   onDuplicateCrop?: (groupId: string) => Promise<string | void>;
@@ -492,10 +493,14 @@ export function PlantingInspectorPanel({
                   min={1}
                   step={25}
                   defaultValue={crop.feetNeeded}
-                  onBlur={(e) => {
+                  onBlur={async (e) => {
                     const val = parseInt(e.target.value, 10);
                     if (!isNaN(val) && val > 0 && val !== crop.feetNeeded) {
-                      onUpdatePlanting(crop.groupId, { bedFeet: val });
+                      const result = await onUpdatePlanting(crop.groupId, { bedFeet: val });
+                      // Reset input to original value if validation failed
+                      if (!result.success) {
+                        e.target.value = String(crop.feetNeeded);
+                      }
                     }
                   }}
                   onKeyDown={(e) => {

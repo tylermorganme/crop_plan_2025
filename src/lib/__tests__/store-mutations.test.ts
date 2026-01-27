@@ -311,6 +311,213 @@ describe('planting mutations', () => {
       expect(usePlanStore.getState().currentPlan?.plantings?.[0].fieldStartDate).toBe('2025-03-01');
     });
   });
+
+  describe('planting space validation', () => {
+    // Setup helper: create plan with 4 beds (B1-B4) each 50ft in same group
+    function createPlanWithBedGroup() {
+      const group = createTestBedGroup({ id: 'g1', name: 'Row B', displayOrder: 0 });
+      const beds: Record<string, ReturnType<typeof createTestBed>> = {
+        b1: createTestBed({ id: 'b1', name: 'B1', groupId: 'g1', displayOrder: 0, lengthFt: 50 }),
+        b2: createTestBed({ id: 'b2', name: 'B2', groupId: 'g1', displayOrder: 1, lengthFt: 50 }),
+        b3: createTestBed({ id: 'b3', name: 'B3', groupId: 'g1', displayOrder: 2, lengthFt: 50 }),
+        b4: createTestBed({ id: 'b4', name: 'B4', groupId: 'g1', displayOrder: 3, lengthFt: 50 }),
+      };
+      return createTestPlan({ beds, bedGroups: { g1: group } });
+    }
+
+    describe('resize validation (updatePlanting with bedFeet)', () => {
+      it('allows resize within single bed capacity', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 25 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        const result = await store.updatePlanting('P1', { bedFeet: 50 });
+
+        expect(result.success).toBe(true);
+        expect(usePlanStore.getState().currentPlan?.plantings?.[0].bedFeet).toBe(50);
+      });
+
+      it('allows resize spanning multiple beds when space available', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 50 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // B1+B2 = 100ft available from B1
+        const result = await store.updatePlanting('P1', { bedFeet: 100 });
+
+        expect(result.success).toBe(true);
+        expect(usePlanStore.getState().currentPlan?.plantings?.[0].bedFeet).toBe(100);
+      });
+
+      it('allows resize to use all beds in group', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 50 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // B1+B2+B3+B4 = 200ft total
+        const result = await store.updatePlanting('P1', { bedFeet: 200 });
+
+        expect(result.success).toBe(true);
+        expect(usePlanStore.getState().currentPlan?.plantings?.[0].bedFeet).toBe(200);
+      });
+
+      it('rejects resize exceeding available space in group', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 50 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // Only 200ft available, requesting 250
+        const result = await store.updatePlanting('P1', { bedFeet: 250 });
+
+        expect(result.success).toBe(false);
+        if (!result.success) expect(result.error).toContain('only 200');
+        // State should be unchanged
+        expect(usePlanStore.getState().currentPlan?.plantings?.[0].bedFeet).toBe(50);
+      });
+
+      it('rejects resize when starting from middle bed with insufficient space', async () => {
+        const plan = createPlanWithBedGroup();
+        // Planting starts at B3, only B3+B4 = 100ft available
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b3', bedFeet: 50 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        const result = await store.updatePlanting('P1', { bedFeet: 150 });
+
+        expect(result.success).toBe(false);
+        if (!result.success) expect(result.error).toContain('only 100');
+      });
+
+      it('rejects resize when starting from last bed', async () => {
+        const plan = createPlanWithBedGroup();
+        // Planting starts at B4, only 50ft available
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b4', bedFeet: 50 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        const result = await store.updatePlanting('P1', { bedFeet: 100 });
+
+        expect(result.success).toBe(false);
+        if (!result.success) expect(result.error).toContain('only 50');
+      });
+    });
+
+    describe('move validation (updatePlanting with startBed)', () => {
+      it('allows move when planting fits in new location', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 50 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // 50ft planting can fit anywhere
+        const result = await store.updatePlanting('P1', { startBed: 'b4' });
+
+        expect(result.success).toBe(true);
+        expect(usePlanStore.getState().currentPlan?.plantings?.[0].startBed).toBe('b4');
+      });
+
+      it('allows move of multi-bed planting when space available', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 100 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // 100ft planting to B2 (B2+B3+B4 = 150ft available)
+        const result = await store.updatePlanting('P1', { startBed: 'b2' });
+
+        expect(result.success).toBe(true);
+        expect(usePlanStore.getState().currentPlan?.plantings?.[0].startBed).toBe('b2');
+      });
+
+      it('rejects move when planting too large for new location', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 100 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // 100ft planting to B4 (only 50ft available)
+        const result = await store.updatePlanting('P1', { startBed: 'b4' });
+
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toContain('Cannot move');
+          expect(result.error).toContain('100');
+          expect(result.error).toContain('only 50');
+        }
+        // State should be unchanged
+        expect(usePlanStore.getState().currentPlan?.plantings?.[0].startBed).toBe('b1');
+      });
+
+      it('allows move to unassigned regardless of size', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 200 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // Moving to unassigned (startBed: undefined) should always work
+        const result = await store.updatePlanting('P1', { startBed: undefined });
+
+        expect(result.success).toBe(true);
+      });
+    });
+
+    describe('combined move and resize validation', () => {
+      it('validates against new location when both startBed and bedFeet change', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 50 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // Move to B3 and resize to 100ft (B3+B4 = 100ft available) - should work
+        const result = await store.updatePlanting('P1', { startBed: 'b3', bedFeet: 100 });
+
+        expect(result.success).toBe(true);
+      });
+
+      it('rejects when combined move and resize exceeds space', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: 'b1', bedFeet: 50 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // Move to B3 and resize to 150ft (B3+B4 = 100ft available) - should fail
+        const result = await store.updatePlanting('P1', { startBed: 'b3', bedFeet: 150 });
+
+        expect(result.success).toBe(false);
+      });
+    });
+
+    describe('edge cases', () => {
+      it('allows updates to unassigned plantings without space validation', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: null, bedFeet: 500 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // Unassigned planting can have any bedFeet
+        const result = await store.updatePlanting('P1', { bedFeet: 1000 });
+
+        expect(result.success).toBe(true);
+      });
+
+      it('validates when assigning previously unassigned planting', async () => {
+        const plan = createPlanWithBedGroup();
+        plan.plantings = [createTestPlanting({ id: 'P1', startBed: null, bedFeet: 100 })];
+        resetStoreWithPlan(plan);
+
+        const store = usePlanStore.getState();
+        // Assigning 100ft planting to B4 (only 50ft available) should fail
+        const result = await store.updatePlanting('P1', { startBed: 'b4' });
+
+        expect(result.success).toBe(false);
+        if (!result.success) expect(result.error).toContain('Cannot move');
+      });
+    });
+  });
 });
 
 // =============================================================================

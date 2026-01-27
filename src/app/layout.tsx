@@ -5,6 +5,7 @@ import { DevConsoleLogger } from "@/components/DevConsoleLogger";
 import PlanStoreProvider from "@/components/PlanStoreProvider";
 import UIStoreProvider from "@/components/UIStoreProvider";
 import { ClientLogger } from "@/components/ClientLogger";
+import { GlobalToast } from "@/components/GlobalToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
           <UIStoreProvider>
             <ClientLogger />
             <DevConsoleLogger />
+            <GlobalToast />
             {children}
           </UIStoreProvider>
         </PlanStoreProvider>

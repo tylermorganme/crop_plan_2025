@@ -48,6 +48,9 @@ import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput, ty
 import { createSeedMix, getSeedMixKey, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
 import { createProduct, getProductKey, type Product, type CreateProductInput } from './entities/product';
 import { createSeedOrder, getSeedOrderId, type SeedOrder, type CreateSeedOrderInput } from './entities/seed-order';
+
+/** Result type for mutations that can fail validation */
+export type MutationResult = { success: true } | { success: false; error: string };
 import { useUIStore } from './ui-store';
 import { createMarket, getActiveMarkets as getActiveMarketsFromRecord, type Market } from './entities/market';
 
@@ -484,12 +487,13 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   addPlanting: (planting: Planting) => Promise<void>;
   /** Bulk add multiple plantings (single undo step) */
   bulkAddPlantings: (plantings: Planting[]) => Promise<number>;
-  /** Bulk update multiple plantings (single undo step) */
-  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>> }[]) => Promise<number>;
+  /** Bulk update multiple plantings (single undo step). Returns error if validation fails. */
+  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>> }[]) => Promise<MutationResult & { count?: number }>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
   /** Bulk duplicate multiple plantings (single undo step) */
   bulkDuplicatePlantings: (plantingIds: string[]) => Promise<string[]>;
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => Promise<void>;
+  /** Update a single planting. Returns error if validation fails (e.g., bedFeet exceeds bed capacity). */
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => Promise<MutationResult>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
   recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
@@ -1298,15 +1302,59 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>> }[]) => {
       const state = get();
       if (!state.currentPlan?.plantings) {
-        return 0;
+        return { success: true, count: 0 };
       }
 
       // Filter to only updates for plantings that exist
       const existingIds = new Set(state.currentPlan.plantings.map(p => p.id));
+      const plantingsById = new Map(state.currentPlan.plantings.map(p => [p.id, p]));
       const validUpdates = updates.filter(u => existingIds.has(u.id));
 
       if (validUpdates.length === 0) {
-        return 0;
+        return { success: true, count: 0 };
+      }
+
+      // Validate planting fits in available space when bedFeet or startBed changes
+      const beds = state.currentPlan.beds;
+      if (beds) {
+        for (const update of validUpdates) {
+          const planting = plantingsById.get(update.id);
+          const needsValidation = update.changes.bedFeet !== undefined || update.changes.startBed !== undefined;
+
+          if (needsValidation && planting) {
+            // Determine the bedFeet to validate (new value or existing)
+            const feetToValidate = update.changes.bedFeet ?? planting.bedFeet;
+            // Determine the target bed (new startBed or existing)
+            const bedId = update.changes.startBed !== undefined
+              ? update.changes.startBed
+              : planting.startBed;
+
+            if (bedId && feetToValidate) {
+              const startBed = beds[bedId];
+              if (startBed) {
+                // Get all beds in the same group, sorted by displayOrder
+                const bedsInGroup = Object.values(beds)
+                  .filter(b => b.groupId === startBed.groupId)
+                  .sort((a, b) => a.displayOrder - b.displayOrder);
+
+                // Find beds from startBed onwards (consecutive beds that can be spanned)
+                const startIndex = bedsInGroup.findIndex(b => b.id === bedId);
+                const availableBeds = bedsInGroup.slice(startIndex);
+                const totalAvailable = availableBeds.reduce((sum, b) => sum + b.lengthFt, 0);
+
+                if (feetToValidate > totalAvailable) {
+                  const action = update.changes.startBed !== undefined ? 'move' : 'resize';
+                  return {
+                    success: false,
+                    error: action === 'move'
+                      ? `Cannot move ${feetToValidate}' planting to "${startBed.name}" - only ${totalAvailable}' available`
+                      : `Cannot set to ${feetToValidate}' - only ${totalAvailable}' available from bed "${startBed.name}" onwards`,
+                  };
+                }
+              }
+            }
+          }
+        }
       }
 
       const description = `Update ${validUpdates.length} planting${validUpdates.length !== 1 ? 's' : ''}`;
@@ -1387,7 +1435,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         storeState.isDirty = true;
       });
 
-      return validUpdates.length;
+      return { success: true, count: validUpdates.length };
     },
 
     duplicatePlanting: async (plantingId: string) => {
@@ -1441,10 +1489,49 @@ export const usePlanStore = create<ExtendedPlanStore>()(
     updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => {
       // Pre-validate
       const { currentPlan } = get();
-      if (!currentPlan?.plantings) return;
+      if (!currentPlan?.plantings) {
+        return { success: true };
+      }
 
       const planting = currentPlan.plantings.find(p => p.id === plantingId);
-      if (!planting) return;
+      if (!planting) {
+        return { success: true };
+      }
+
+      // Validate planting fits in available space when bedFeet or startBed changes
+      const beds = currentPlan.beds;
+      const needsValidation = (updates.bedFeet !== undefined || updates.startBed !== undefined) && beds;
+      if (needsValidation && beds) {
+        // Determine the bedFeet to validate (new value or existing)
+        const feetToValidate = updates.bedFeet ?? planting.bedFeet;
+        // Determine the target bed (new startBed or existing)
+        const bedId = updates.startBed !== undefined ? updates.startBed : planting.startBed;
+
+        if (bedId && feetToValidate) {
+          const startBed = beds[bedId];
+          if (startBed) {
+            // Get all beds in the same group, sorted by displayOrder
+            const bedsInGroup = Object.values(beds)
+              .filter(b => b.groupId === startBed.groupId)
+              .sort((a, b) => a.displayOrder - b.displayOrder);
+
+            // Find beds from startBed onwards (consecutive beds that can be spanned)
+            const startIndex = bedsInGroup.findIndex(b => b.id === bedId);
+            const availableBeds = bedsInGroup.slice(startIndex);
+            const totalAvailable = availableBeds.reduce((sum, b) => sum + b.lengthFt, 0);
+
+            if (feetToValidate > totalAvailable) {
+              const action = updates.startBed !== undefined ? 'move' : 'resize';
+              return {
+                success: false,
+                error: action === 'move'
+                  ? `Cannot move ${feetToValidate}' planting to "${startBed.name}" - only ${totalAvailable}' available`
+                  : `Cannot set to ${feetToValidate}' - only ${totalAvailable}' available from bed "${startBed.name}" onwards`,
+              };
+            }
+          }
+        }
+      }
 
       set((state) => {
         // Use patch-based mutation
@@ -1516,6 +1603,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         state.isDirty = true;
       });
+
+      return { success: true };
     },
 
     assignSeedSource: async (plantingId: string, seedSource) => {

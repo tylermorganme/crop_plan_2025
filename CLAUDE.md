@@ -44,6 +44,7 @@ Per-bed entries for display
 - **Zustand store** (`plan-store.ts`) - manages Plan state with immer for immutable updates
 - **SQLite persistence** - one database per plan (`data/plans/*.db`)
 - **Patch-based undo/redo** - lightweight immer patches instead of full plan snapshots
+- **Validation in store** - validate before mutating, return `MutationResult` on failure, UI shows toast
 
 ### Key Types
 
@@ -321,6 +322,16 @@ This keeps the app simple - no special "shim" code paths. Enrichment happens out
 **Import modes:**
 - **Merge**: Update existing configs, add new ones, preserve user edits to unlisted fields
 - **Replace**: Wholesale replacement of catalog (use with caution)
+
+### Backfill Scripts
+
+**Prefer app mutations over direct SQLite writes.** See `.claude/skills/scripts/SKILL.md` for details.
+
+When backfilling data to existing plans:
+- **Best**: Use plan-store actions → automatic checkpoint handling + undo/redo
+- **If direct SQLite necessary**: Must update BOTH main `.db` AND `{planId}.checkpoints/*.db` files
+
+Plans load via `hydratePlan()` which reads from **checkpoints first**, not the main db. Direct SQLite writes that skip checkpoints will appear to work but the app won't see the changes.
 
 ### Template vs Plan Data
 
