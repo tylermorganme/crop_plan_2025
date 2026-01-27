@@ -227,6 +227,8 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
 
   // Edit mode state for inline editing of CropConfig fields
   const [isEditMode, setIsEditMode] = useState(false);
+  // Track which column is currently being edited (has focus)
+  const [activeEditColumn, setActiveEditColumn] = useState<string | null>(null);
 
   // Use shared store state - automatically syncs across tabs
   // Only subscribe to cropCatalog, not the entire plan (avoids re-renders when plantings change)
@@ -1528,7 +1530,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                         }),
                       }}
                       className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
-                        dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : getColumnBgClass(col, true)
+                        dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : activeEditColumn === col ? 'bg-blue-200 border-b-2 border-b-blue-500' : getColumnBgClass(col, true)
                       } ${draggedColumn === col ? 'opacity-50' : ''} ${isFrozen ? 'bg-gray-100' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
                       onClick={() => handleSort(col)}
                     >
@@ -1670,7 +1672,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 zIndex: 1,
                               }),
                             }}
-                            className={`px-3 py-2 text-sm whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center gap-1.5 ${getColumnBgClass(col)} ${isFrozen ? 'bg-white' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]' : ''} ${
+                            className={`px-3 py-2 text-sm whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center gap-1.5 ${activeEditColumn === col ? 'bg-blue-50' : getColumnBgClass(col)} ${isFrozen ? 'bg-white' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]' : ''} ${
                               hasIssues
                                 ? validation.status === 'error'
                                   ? 'text-red-700'
@@ -1724,6 +1726,8 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 config={editableConfig}
                                 onChange={(value) => handleCellChange(crop.identifier, col, value)}
                                 hasChanges={false}
+                                onFocus={() => setActiveEditColumn(col)}
+                                onBlur={() => setActiveEditColumn(null)}
                               />
                             ) : (
                               <span className="truncate">{formatCellValue(crop[col as keyof Crop], col)}</span>
@@ -2248,11 +2252,15 @@ function ComboBox({
   options,
   onChange,
   hasChanges,
+  onFocus: onFocusProp,
+  onBlur: onBlurProp,
 }: {
   value: string;
   options: string[];
   onChange: (value: string | undefined) => void;
   hasChanges: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -2350,8 +2358,15 @@ function ComboBox({
       if (!listRef.current?.contains(document.activeElement)) {
         acceptValue();
         setIsOpen(false);
+        onBlurProp?.();
       }
     }, 100);
+  };
+
+  const handleFocus = () => {
+    setIsOpen(true);
+    setGhostActive(true);
+    onFocusProp?.();
   };
 
   const baseClass = `w-full px-1 py-0.5 text-sm border rounded ${
@@ -2383,7 +2398,7 @@ function ComboBox({
         value={inputValue}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        onFocus={() => { setIsOpen(true); setGhostActive(true); }}
+        onFocus={handleFocus}
         onBlur={handleBlur}
         className={baseClass}
         autoComplete="off"
@@ -2432,11 +2447,15 @@ function EditableCell({
   config,
   onChange,
   hasChanges,
+  onFocus,
+  onBlur,
 }: {
   value: unknown;
   config: { type: 'select' | 'text' | 'number'; options?: string[] };
   onChange: (value: unknown) => void;
   hasChanges: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const baseClass = `w-full px-1 py-0.5 text-sm border rounded ${
@@ -2460,6 +2479,8 @@ function EditableCell({
         options={config.options}
         onChange={(v) => onChange(v)}
         hasChanges={hasChanges}
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
     );
   }
@@ -2472,6 +2493,8 @@ function EditableCell({
         value={value != null ? String(value) : ''}
         onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)}
         onKeyDown={handleKeyDown}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className={`${baseClass} w-16`}
         onClick={(e) => e.stopPropagation()}
       />
@@ -2485,6 +2508,8 @@ function EditableCell({
       value={String(value ?? '')}
       onChange={(e) => onChange(e.target.value || undefined)}
       onKeyDown={handleKeyDown}
+      onFocus={onFocus}
+      onBlur={onBlur}
       className={baseClass}
       onClick={(e) => e.stopPropagation()}
     />
