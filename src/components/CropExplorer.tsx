@@ -1530,8 +1530,14 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                         }),
                       }}
                       className={`relative px-3 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider whitespace-nowrap border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center ${
-                        dragOverColumn === col ? 'bg-green-100 border-l-2 border-l-green-500' : activeEditColumn === col ? 'bg-blue-200 border-b-2 border-b-blue-500' : getColumnBgClass(col, true)
-                      } ${draggedColumn === col ? 'opacity-50' : ''} ${isFrozen ? 'bg-gray-100' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
+                        dragOverColumn === col
+                          ? 'bg-green-100 border-l-2 border-l-green-500'
+                          : activeEditColumn === col
+                            ? 'bg-blue-200 border-b-2 border-b-blue-500'
+                            : isFrozen
+                              ? 'bg-gray-100'
+                              : getColumnBgClass(col, true)
+                      } ${draggedColumn === col ? 'opacity-50' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]' : ''}`}
                       onClick={() => handleSort(col)}
                     >
                       <span className="flex-1 truncate">{getColumnDisplayName(col)}</span>
@@ -1567,6 +1573,21 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
             className="overflow-auto"
             style={{ height: 'calc(100% - 40px)' }}
             onScroll={handleBodyScroll}
+            onBlur={(e) => {
+              // Clear active column when focus leaves all editable cells
+              // Use relatedTarget to check where focus is going
+              const goingTo = e.relatedTarget as HTMLElement | null;
+              if (!goingTo) {
+                // Focus left the window entirely
+                setActiveEditColumn(null);
+              } else {
+                // Check if focus is going to another editable cell
+                const editCell = goingTo.closest('[data-edit-col]');
+                if (!editCell) {
+                  setActiveEditColumn(null);
+                }
+              }
+            }}
           >
             {catalogLoading ? (
               <div className="flex items-center justify-center text-gray-600 h-full">
@@ -1672,7 +1693,13 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 zIndex: 1,
                               }),
                             }}
-                            className={`px-3 py-2 text-sm whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center gap-1.5 ${activeEditColumn === col ? 'bg-blue-50' : getColumnBgClass(col)} ${isFrozen ? 'bg-white' : ''} ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]' : ''} ${
+                            className={`px-3 py-2 text-sm whitespace-nowrap border-r border-gray-50 last:border-r-0 truncate flex items-center gap-1.5 ${
+                              activeEditColumn === col
+                                ? 'bg-blue-100'
+                                : isFrozen
+                                  ? 'bg-white'
+                                  : getColumnBgClass(col)
+                            } ${isLastFrozen ? 'shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]' : ''} ${
                               hasIssues
                                 ? validation.status === 'error'
                                   ? 'text-red-700'
@@ -1727,7 +1754,6 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 onChange={(value) => handleCellChange(crop.identifier, col, value)}
                                 hasChanges={false}
                                 onFocus={() => setActiveEditColumn(col)}
-                                onBlur={() => setActiveEditColumn(null)}
                               />
                             ) : (
                               <span className="truncate">{formatCellValue(crop[col as keyof Crop], col)}</span>
