@@ -2241,7 +2241,7 @@ function moveFocusVertical(input: HTMLElement, direction: 'down' | 'up') {
   }
 }
 
-// ComboBox component for fast keyboard-driven selection
+// ComboBox component with Excel-like ghost text autocomplete
 function ComboBox({
   value,
   options,
@@ -2255,120 +2255,99 @@ function ComboBox({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [ghostActive, setGhostActive] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Filter options based on input (prefix matching for tab-completion UX)
+  // Filter options based on input (prefix matching)
   const filteredOptions = useMemo(() => {
     if (!inputValue) return options;
     const lower = inputValue.toLowerCase();
     return options.filter(opt => opt.toLowerCase().startsWith(lower));
   }, [options, inputValue]);
 
+  // Calculate ghost text (completion portion only)
+  const ghostText = useMemo(() => {
+    if (!ghostActive || !inputValue || filteredOptions.length === 0) return '';
+    const match = filteredOptions[0];
+    if (!match.toLowerCase().startsWith(inputValue.toLowerCase())) return '';
+    return match.slice(inputValue.length);
+  }, [ghostActive, inputValue, filteredOptions]);
+
+  // Full value = typed + ghost
+  const fullValue = inputValue + ghostText;
+
   // Sync input with external value changes
   useEffect(() => {
     setInputValue(value);
+    setGhostActive(true);
   }, [value]);
 
-  // Scroll highlighted item into view
-  useEffect(() => {
-    if (isOpen && highlightedIndex >= 0 && listRef.current) {
-      const items = listRef.current.querySelectorAll('[data-option]');
-      items[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+  // Accept the current value (typed + ghost) and save
+  const acceptValue = useCallback(() => {
+    const valueToSave = fullValue || undefined;
+    if (valueToSave !== value) {
+      onChange(valueToSave);
     }
-  }, [highlightedIndex, isOpen]);
+    setInputValue(fullValue);
+    setGhostActive(true);
+  }, [fullValue, value, onChange]);
 
-  const commitValue = useCallback(() => {
-    if (inputValue !== value) {
-      // First check for exact match (case-insensitive)
-      const exact = options.find(o => o.toLowerCase() === inputValue.toLowerCase());
-      if (exact) {
-        onChange(exact);
-        setInputValue(exact);
-      } else if (filteredOptions.length === 1) {
-        // Tab completion: single match completes to that value
-        onChange(filteredOptions[0]);
-        setInputValue(filteredOptions[0]);
-      } else if (!inputValue) {
-        onChange(undefined);
-      } else {
-        // Freeform: accept any typed value as a new entry
-        onChange(inputValue);
-      }
-    }
-  }, [inputValue, value, options, filteredOptions, onChange]);
-
-  const selectOption = (opt: string | undefined) => {
-    onChange(opt);
-    setInputValue(opt ?? '');
+  // Accept and navigate to adjacent row
+  const acceptAndNavigate = useCallback((direction: 'up' | 'down') => {
+    acceptValue();
     setIsOpen(false);
-    setHighlightedIndex(0);
-  };
+    if (inputRef.current) {
+      moveFocusVertical(inputRef.current, direction);
+    }
+  }, [acceptValue]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
-      if (isOpen) {
-        e.preventDefault();
-        setHighlightedIndex(i => Math.min(i + 1, filteredOptions.length - 1));
-      } else {
-        // Open dropdown on first arrow down, or navigate rows if already closed
-        e.preventDefault();
-        setIsOpen(true);
-        setHighlightedIndex(0);
-      }
+      e.preventDefault();
+      acceptAndNavigate('down');
     } else if (e.key === 'ArrowUp') {
-      if (isOpen) {
-        e.preventDefault();
-        setHighlightedIndex(i => Math.max(i - 1, 0));
-      }
+      e.preventDefault();
+      acceptAndNavigate('up');
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      // Select highlighted option, or first filtered option if any exist
-      const indexToSelect = highlightedIndex >= 0 ? highlightedIndex : 0;
-      if (isOpen && filteredOptions.length > 0 && indexToSelect < filteredOptions.length) {
-        selectOption(filteredOptions[indexToSelect]);
-      } else {
-        // No filtered options - accept typed value (exact match or freeform)
-        const exact = options.find(o => o.toLowerCase() === inputValue.toLowerCase());
-        if (exact) {
-          selectOption(exact);
-        } else if (inputValue) {
-          // Freeform: accept new value
-          onChange(inputValue);
-        }
-      }
-      // Move to next row after selection
+      acceptValue();
       setIsOpen(false);
       setTimeout(() => {
         if (inputRef.current) {
           moveFocusVertical(inputRef.current, 'down');
         }
       }, 0);
+    } else if (e.key === 'Tab') {
+      // Accept value (browser handles focus move to next cell)
+      acceptValue();
+      setIsOpen(false);
+    } else if (e.key === 'Backspace') {
+      if (ghostText) {
+        // Clear ghost only, don't delete typed chars
+        e.preventDefault();
+        setGhostActive(false);
+      }
+      // else: normal backspace behavior
     } else if (e.key === 'Escape') {
       setIsOpen(false);
       setInputValue(value); // Reset to original
-      setHighlightedIndex(0);
-    } else if (e.key === 'Tab') {
-      // Commit on tab
-      commitValue();
-      setIsOpen(false);
+      setGhostActive(true);
     }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInputValue(val);
+    setGhostActive(true); // Re-enable ghost when typing
     setIsOpen(true);
-    setHighlightedIndex(0);
   };
 
   const handleBlur = () => {
-    // Delay to allow click on option
     setTimeout(() => {
       if (!listRef.current?.contains(document.activeElement)) {
+        acceptValue();
         setIsOpen(false);
-        commitValue();
       }
     }, 100);
   };
@@ -2392,17 +2371,26 @@ function ComboBox({
 
   return (
     <div className="relative w-full" onClick={(e) => e.stopPropagation()}>
+      {/* Actual input */}
       <input
         ref={inputRef}
         type="text"
         value={inputValue}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
-        onFocus={() => { setIsOpen(true); setHighlightedIndex(0); }}
+        onFocus={() => { setIsOpen(true); setGhostActive(true); }}
         onBlur={handleBlur}
         className={baseClass}
         autoComplete="off"
       />
+      {/* Ghost text overlay */}
+      {ghostText && (
+        <div className="absolute inset-0 pointer-events-none px-1 py-0.5 text-sm overflow-hidden flex items-center">
+          <span className="invisible">{inputValue}</span>
+          <span className="text-gray-400">{ghostText}</span>
+        </div>
+      )}
+      {/* Dropdown for visual feedback */}
       {isOpen && filteredOptions.length > 0 && typeof document !== 'undefined' && createPortal(
         <div
           ref={listRef}
@@ -2414,9 +2402,14 @@ function ComboBox({
               key={opt}
               data-option
               className={`px-2 py-1 text-sm cursor-pointer ${
-                idx === highlightedIndex ? 'bg-blue-100' : 'hover:bg-gray-100'
+                idx === 0 ? 'bg-blue-100' : 'hover:bg-gray-100'
               }`}
-              onMouseDown={() => selectOption(opt)}
+              onMouseDown={() => {
+                onChange(opt);
+                setInputValue(opt);
+                setIsOpen(false);
+                setGhostActive(true);
+              }}
             >
               {opt}
             </div>
