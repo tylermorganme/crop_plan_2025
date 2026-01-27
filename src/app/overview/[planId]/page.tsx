@@ -2061,6 +2061,7 @@ export default function OverviewPage() {
                 cropBoxDisplay={currentPlan.cropBoxDisplay}
                 onUpdateCropBoxDisplay={updateCropBoxDisplay}
                 hideUnassigned
+                hideInspector
                 onExternalPlantingDrop={handleExternalPlantingDrop}
               />
             </div>

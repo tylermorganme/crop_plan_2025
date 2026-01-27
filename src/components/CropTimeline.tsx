@@ -140,6 +140,8 @@ interface CropTimelineProps {
   hideUnassigned?: boolean;
   /** Callback when an external planting is dropped onto a bed (e.g., from unassigned panel) */
   onExternalPlantingDrop?: (plantingId: string, bedName: string) => void;
+  /** Hide the built-in inspector panel (use when parent provides its own) */
+  hideInspector?: boolean;
 }
 
 // =============================================================================
@@ -279,6 +281,7 @@ export default function CropTimeline({
   onUpdateCropBoxDisplay,
   hideUnassigned,
   onExternalPlantingDrop,
+  hideInspector,
 }: CropTimelineProps) {
   // Load saved UI state on initial render
   const savedState = useRef<Partial<UIState> | null>(null);
@@ -2162,34 +2165,36 @@ export default function CropTimeline({
           </tbody>
         </table>
       </div>
-      {/* Right Panel - AddToBed or Inspector */}
-      {addToBedId && cropCatalog && onAddPlanting ? (
-        <div ref={addToBedPanelRef}>
-          <AddToBedPanel
-            bedId={addToBedId}
-            cropCatalog={cropCatalog}
-            planYear={planYear || new Date().getFullYear()}
-            onAddPlanting={async (configId, fieldStartDate, bedId) => {
-              const result = await onAddPlanting(configId, fieldStartDate, bedId);
-              setAddToBedId(null);
-              setHoverPreview(null);
-              // If the callback returns a groupId (plantingId), select it to show inspector
-              if (result) {
-                clearSelection();
-                selectPlanting(result);
-              }
-            }}
-            onClose={() => {
-              setAddToBedId(null);
-              setHoverPreview(null);
-            }}
-            onHoverChange={handleHoverChange}
+      {/* Right Panel - AddToBed or Inspector (hidden when hideInspector is true) */}
+      {!hideInspector && (
+        addToBedId && cropCatalog && onAddPlanting ? (
+          <div ref={addToBedPanelRef}>
+            <AddToBedPanel
+              bedId={addToBedId}
+              cropCatalog={cropCatalog}
+              planYear={planYear || new Date().getFullYear()}
+              onAddPlanting={async (configId, fieldStartDate, bedId) => {
+                const result = await onAddPlanting(configId, fieldStartDate, bedId);
+                setAddToBedId(null);
+                setHoverPreview(null);
+                // If the callback returns a groupId (plantingId), select it to show inspector
+                if (result) {
+                  clearSelection();
+                  selectPlanting(result);
+                }
+              }}
+              onClose={() => {
+                setAddToBedId(null);
+                setHoverPreview(null);
+              }}
+              onHoverChange={handleHoverChange}
+            />
+          </div>
+        ) : (
+          <ConnectedPlantingInspector
+            className="w-80 bg-white border-l flex flex-col shrink-0 h-full overflow-hidden"
           />
-        </div>
-      ) : (
-        <ConnectedPlantingInspector
-          className="w-80 bg-white border-l flex flex-col shrink-0 h-full overflow-hidden"
-        />
+        )
       )}
       </div>
 
