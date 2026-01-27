@@ -7,6 +7,8 @@ import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { PlantingInspectorPanel } from './PlantingInspectorPanel';
 import CreateSequenceModal, { CreateSequenceOptions } from './CreateSequenceModal';
 import SequenceEditorModal from './SequenceEditorModal';
+import CropConfigEditor from './CropConfigEditor';
+import type { CropConfig } from '@/lib/entities/crop-config';
 
 interface ConnectedPlantingInspectorProps {
   /** Show timing edit controls (default: true) */
@@ -35,6 +37,7 @@ export function ConnectedPlantingInspector({
   const duplicatePlanting = usePlanStore((s) => s.duplicatePlanting);
   const bulkDuplicatePlantings = usePlanStore((s) => s.bulkDuplicatePlantings);
   const bulkUpdatePlantings = usePlanStore((s) => s.bulkUpdatePlantings);
+  const updateCropConfig = usePlanStore((s) => s.updateCropConfig);
 
   // Toast for validation errors
   const setToast = useUIStore((s) => s.setToast);
@@ -64,6 +67,9 @@ export function ConnectedPlantingInspector({
     fieldStartDate: string;
   } | null>(null);
   const [editingSequenceId, setEditingSequenceId] = useState<string | null>(null);
+
+  // Modal state for crop config editor
+  const [editingConfigId, setEditingConfigId] = useState<string | null>(null);
 
   // Convert selected IDs to TimelineCrop[]
   const allTimelineCrops = useMemo(() => {
@@ -104,6 +110,20 @@ export function ConnectedPlantingInspector({
       await unlinkFromSequence(plantingId);
     },
     [unlinkFromSequence]
+  );
+
+  // Edit crop config handler
+  const handleEditCropConfig = useCallback((configId: string) => {
+    setEditingConfigId(configId);
+  }, []);
+
+  // Save edited crop config
+  const handleSaveConfig = useCallback(
+    async (config: CropConfig) => {
+      await updateCropConfig(config);
+      setEditingConfigId(null);
+    },
+    [updateCropConfig]
   );
 
   // For date changes in the inspector, use updateCropDates
@@ -238,6 +258,7 @@ export function ConnectedPlantingInspector({
         onCreateSequence={handleCreateSequence}
         onEditSequence={handleEditSequence}
         onUnlinkFromSequence={handleUnlinkFromSequence}
+        onEditCropConfig={handleEditCropConfig}
         onRefreshFromConfig={handleRefreshFromConfig}
         cropCatalog={currentPlan.cropCatalog}
         varieties={currentPlan.varieties}
@@ -279,6 +300,20 @@ export function ConnectedPlantingInspector({
           onReorderSlots={async (newSlotAssignments) => {
             await reorderSequenceSlots(editingSequenceId!, newSlotAssignments);
           }}
+        />
+      )}
+
+      {/* Crop Config Editor Modal */}
+      {editingConfigId && currentPlan.cropCatalog?.[editingConfigId] && (
+        <CropConfigEditor
+          isOpen={true}
+          crop={currentPlan.cropCatalog[editingConfigId]}
+          onClose={() => setEditingConfigId(null)}
+          onSave={handleSaveConfig}
+          varieties={currentPlan.varieties}
+          seedMixes={currentPlan.seedMixes}
+          products={currentPlan.products}
+          markets={currentPlan.markets}
         />
       )}
     </>

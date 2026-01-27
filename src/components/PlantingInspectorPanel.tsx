@@ -436,9 +436,9 @@ export function PlantingInspectorPanel({
 
       {/* Sticky Actions Bar */}
       <div className="p-3 border-b bg-white sticky top-[49px] z-10 flex flex-wrap gap-2">
-        {onEditCropConfig && crop.plantingId && (
+        {onEditCropConfig && crop.cropConfigId && (
           <button
-            onClick={() => onEditCropConfig(crop.plantingId!)}
+            onClick={() => onEditCropConfig(crop.cropConfigId!)}
             className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
           >
             Edit Config
