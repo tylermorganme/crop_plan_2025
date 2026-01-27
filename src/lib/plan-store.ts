@@ -1670,7 +1670,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           storeState,
           (plan) => {
             // Update catalog using CRUD function - display will recompute automatically
-            plan.cropCatalog![config.identifier] = cloneCropConfig(config);
+            const cloned = cloneCropConfig(config);
+            cloned.updatedAt = new Date().toISOString();
+            plan.cropCatalog![config.identifier] = cloned;
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
               createChangeEntry('batch', `Updated config "${config.identifier}"`, affectedPlantingIds)
@@ -1700,6 +1702,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`A config with identifier "${config.identifier}" already exists`);
       }
 
+      const now = new Date().toISOString();
+
       set((storeState) => {
         if (!storeState.currentPlan) return;
 
@@ -1711,7 +1715,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               plan.cropCatalog = {};
             }
             // Add new config to catalog using CRUD function
-            plan.cropCatalog[config.identifier] = cloneCropConfig(config);
+            const cloned = cloneCropConfig(config);
+            cloned.createdAt = now;
+            cloned.updatedAt = now;
+            plan.cropCatalog[config.identifier] = cloned;
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
               createChangeEntry('batch', `Added new config "${config.identifier}"`, [])
@@ -1824,6 +1831,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       const description = `Update ${validUpdates.length} crop config${validUpdates.length !== 1 ? 's' : ''}`;
 
+      const now = new Date().toISOString();
+
       set((storeState) => {
         if (!storeState.currentPlan?.cropCatalog) return;
 
@@ -1831,7 +1840,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           storeState,
           (plan) => {
             for (const { identifier, changes } of validUpdates) {
-              Object.assign(plan.cropCatalog![identifier], changes);
+              Object.assign(plan.cropCatalog![identifier], changes, { updatedAt: now });
             }
             plan.metadata.lastModified = Date.now();
           },

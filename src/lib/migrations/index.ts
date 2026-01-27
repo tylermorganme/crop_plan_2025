@@ -446,6 +446,44 @@ function migrateV8ToV9(rawPlan: unknown): unknown {
   };
 }
 
+/**
+ * v9 → v10: Add timestamps to CropConfig
+ * Adds createdAt and updatedAt fields to all crop configs.
+ * Since we don't have historical data, both are set to current time.
+ */
+function migrateV9ToV10(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    cropCatalog?: Record<string, { createdAt?: string; updatedAt?: string }>;
+    [key: string]: unknown;
+  };
+
+  if (!plan.cropCatalog) {
+    return plan;
+  }
+
+  // Check if already migrated (first config has timestamps)
+  const firstConfig = Object.values(plan.cropCatalog)[0];
+  if (firstConfig && firstConfig.createdAt) {
+    return plan;
+  }
+
+  const now = new Date().toISOString();
+  const newCropCatalog: Record<string, unknown> = {};
+
+  for (const [key, config] of Object.entries(plan.cropCatalog)) {
+    newCropCatalog[key] = {
+      ...config,
+      createdAt: now,
+      updatedAt: now,
+    };
+  }
+
+  return {
+    ...plan,
+    cropCatalog: newCropCatalog,
+  };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -476,6 +514,7 @@ const migrations: MigrationFn[] = [
   migrateV6ToV7, // Index 5: v6 → v7 (add crops entity with colors)
   migrateV7ToV8, // Index 6: v7 → v8 (add colorDefs for named color palettes)
   migrateV8ToV9, // Index 7: v8 → v9 (add cropId for stable crop linking)
+  migrateV9ToV10, // Index 8: v9 → v10 (add createdAt/updatedAt to CropConfig)
 ];
 
 // =============================================================================

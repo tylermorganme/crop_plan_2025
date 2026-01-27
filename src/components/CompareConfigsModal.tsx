@@ -132,6 +132,16 @@ const FIELD_GROUPS: FieldGroup[] = [
       { key: 'perennial', label: 'Perennial', format: (v) => v ? 'Yes' : 'No' },
       { key: 'isFavorite', label: 'Favorite', format: (v) => v ? 'Yes' : 'No' },
       { key: 'targetFieldDate', label: 'Target Field Date' },
+      {
+        key: 'createdAt',
+        label: 'Created At',
+        format: (v) => v ? new Date(v as string).toLocaleString() : '—',
+      },
+      {
+        key: 'updatedAt',
+        label: 'Updated At',
+        format: (v) => v ? new Date(v as string).toLocaleString() : '—',
+      },
     ],
   },
 ];

@@ -254,6 +254,20 @@ export interface CropConfig {
    */
   isFavorite?: boolean;
 
+  // ---- Timestamps ----
+
+  /**
+   * ISO timestamp when this config was created.
+   * Set automatically on creation; existing configs get current time on migration.
+   */
+  createdAt?: string;
+
+  /**
+   * ISO timestamp when this config was last updated.
+   * Updated automatically on any modification.
+   */
+  updatedAt?: string;
+
   // ---- Products & Timing ----
 
   /**
