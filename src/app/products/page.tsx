@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { usePlanStore, initializePlanStore } from '@/lib/plan-store';
 import { createProduct, type Product, type CreateProductInput } from '@/lib/entities/product';
@@ -34,6 +34,91 @@ function Toast({ message, type, onClose }: { message: string; type: 'error' | 's
     >
       <span>{message}</span>
       <button onClick={onClose} className="text-white/80 hover:text-white">&times;</button>
+    </div>
+  );
+}
+
+// =============================================================================
+// Inline Editable Cell
+// =============================================================================
+
+interface InlineCellProps {
+  value: string;
+  displayValue?: string;
+  onSave: (newValue: string) => void;
+  type?: 'text' | 'number';
+  className?: string;
+  min?: number;
+  step?: number;
+  placeholder?: string;
+  align?: 'left' | 'right';
+}
+
+function InlineCell({
+  value,
+  displayValue,
+  onSave,
+  type = 'text',
+  className = '',
+  min,
+  step,
+  placeholder,
+  align = 'left',
+}: InlineCellProps) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
+
+  const handleBlur = () => {
+    setEditing(false);
+    if (editValue !== value) {
+      onSave(editValue);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+    } else if (e.key === 'Escape') {
+      setEditValue(value);
+      setEditing(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type={type}
+        value={editValue}
+        onChange={(e) => setEditValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        min={min}
+        step={step}
+        placeholder={placeholder}
+        className={`w-full px-1 py-0.5 text-sm border border-blue-500 rounded focus:outline-none ${align === 'right' ? 'text-right' : ''}`}
+      />
+    );
+  }
+
+  return (
+    <div
+      onClick={() => setEditing(true)}
+      className={`cursor-text hover:bg-blue-50 rounded px-1 truncate ${align === 'right' ? 'text-right' : ''} ${className}`}
+    >
+      {displayValue || value || <span className="text-gray-400">{placeholder || '—'}</span>}
     </div>
   );
 }
@@ -301,6 +386,28 @@ export default function ProductsPage() {
     [deleteProduct]
   );
 
+  // Inline field update handler
+  const handleInlineUpdate = useCallback(
+    async (product: Product, field: 'holdingWindow' | 'price', value: string, marketId?: string) => {
+      const updatedProduct = { ...product, prices: { ...product.prices } };
+
+      if (field === 'holdingWindow') {
+        const parsed = parseInt(value, 10);
+        updatedProduct.holdingWindow = !isNaN(parsed) && parsed > 0 ? parsed : undefined;
+      } else if (field === 'price' && marketId) {
+        const parsed = parseFloat(value);
+        if (!isNaN(parsed) && parsed > 0) {
+          updatedProduct.prices[marketId] = parsed;
+        } else {
+          delete updatedProduct.prices[marketId];
+        }
+      }
+
+      await updateProduct(updatedProduct);
+    },
+    [updateProduct]
+  );
+
   const handleLoadStock = useCallback(async () => {
     try {
       const response = await import('@/data/products-template.json');
@@ -450,12 +557,29 @@ export default function ProductsPage() {
                       <div className="w-40 px-2 text-sm truncate" title={p.crop}>{p.crop}</div>
                       <div className="w-48 px-2 text-sm font-medium truncate" title={p.product}>{p.product}</div>
                       <div className="w-24 px-2 text-sm text-gray-600 truncate" title={p.unit}>{p.unit}</div>
-                      <div className="w-20 px-2 text-sm text-gray-600 text-right">
-                        {p.holdingWindow ? `${p.holdingWindow}d` : '-'}
+                      <div className="w-20 px-1 text-sm text-gray-600">
+                        <InlineCell
+                          value={p.holdingWindow?.toString() ?? ''}
+                          displayValue={p.holdingWindow ? `${p.holdingWindow}d` : undefined}
+                          onSave={(v) => handleInlineUpdate(p, 'holdingWindow', v)}
+                          type="number"
+                          min={0}
+                          placeholder="—"
+                          align="right"
+                        />
                       </div>
                       {activeMarkets.map((market) => (
-                        <div key={market.id} className="w-24 px-2 text-sm text-gray-700 text-right font-mono">
-                          {formatPrice(p.prices?.[market.id])}
+                        <div key={market.id} className="w-24 px-1 text-sm text-gray-700 font-mono">
+                          <InlineCell
+                            value={p.prices?.[market.id]?.toString() ?? ''}
+                            displayValue={formatPrice(p.prices?.[market.id])}
+                            onSave={(v) => handleInlineUpdate(p, 'price', v, market.id)}
+                            type="number"
+                            min={0}
+                            step={0.01}
+                            placeholder="—"
+                            align="right"
+                          />
                         </div>
                       ))}
                       <div className="flex-1 px-2"></div>
