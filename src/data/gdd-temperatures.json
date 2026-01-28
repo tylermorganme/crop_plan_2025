@@ -1,0 +1,1078 @@
+{
+  "_metadata": {
+    "description": "GDD (Growing Degree Day) base temperature assumptions for crops",
+    "generated": "2026-01-27",
+    "units": "Celsius",
+    "confidence_levels": {
+      "high": "Direct citation from university extension or peer-reviewed research",
+      "medium": "Inferred from crop family or similar crops with documented values",
+      "low": "General cool/warm season classification, limited specific research"
+    }
+  },
+  "crops": {
+    "crop_alexanders": {
+      "name": "Alexanders",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "medium",
+      "notes": "Apiaceae family (same as celery, parsley). Cool-season biennial herb. Inferred from Apiaceae family (parsley research - Elnesr 2013).",
+      "source": "Inferred from Apiaceae family - cool-season base temp"
+    },
+    "crop_amaranth": {
+      "name": "Amaranth",
+      "base": 7,
+      "upper": 35,
+      "confidence": "high",
+      "notes": "Pseudocereal. Research: Tbase 7°C, Tupper 30-40°C (using 35°C). Amaranthaceae family.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Bello and Walker (2017)"
+    },
+    "crop_anise-hysopp": {
+      "name": "Anise Hyssop",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Lamiaceae family perennial herb. Cold-hardy. Inferred from cool Lamiaceae (oregano research - Thanos 1995).",
+      "source": "Inferred from perennial herb classification"
+    },
+    "crop_artichoke": {
+      "name": "Artichoke",
+      "base": 7.2,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Cool-season perennial. Requires vernalization. Prefers 15-24°C growing temps. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "UC Davis Extension, general cool-season classification"
+    },
+    "crop_arugula": {
+      "name": "Arugula",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season leafy green. Thrives 7-16°C. Bolts in heat. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Research on leafy greens uses 4°C base; OSU Extension"
+    },
+    "crop_asian-greens": {
+      "name": "Asian Greens",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassicas. Research uses 4°C base for Asian greens GDD calculations. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "ResearchGate study on Asian greens, lettuce, spinach in high tunnels"
+    },
+    "crop_atriplex": {
+      "name": "Atriplex (Orache)",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Amaranthaceae family. Cool-season spinach-like green. Inferred from cool Amaranthaceae (beet/spinach research).",
+      "source": "Inferred from cool-season leafy green classification"
+    },
+    "crop_bachellors-button": {
+      "name": "Bachelor's Button (Cornflower)",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season annual flower. Self-sows. Frost tolerant. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cool-season flower classification"
+    },
+    "crop_basil": {
+      "name": "Basil",
+      "base": 10,
+      "upper": 40,
+      "confidence": "high",
+      "notes": "Warm-season herb. Research: Tbase 10°C, Tupper 40°C. Optimal germination 25-30°C.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Teles et al. (2023)"
+    },
+    "crop_bean": {
+      "name": "Bean (Snap)",
+      "base": 10,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "Warm-season legume. Research: Tbase 9-10°C, Tupper 30-35°C for Phaseolus vulgaris. Note: OSU Croptime uses 4.4°C but peer-reviewed research suggests 10°C.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Espadafor et al. (2017); OSU Croptime differs"
+    },
+    "crop_beet": {
+      "name": "Beet",
+      "base": 1.1,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Cool-season root crop. NDSU sugarbeet research: base 1.1°C (34°F), upper 30°C (86°F).",
+      "source": "NDSU - Holen 1998, Holen & Dexter 1997 sugarbeet research"
+    },
+    "crop_bok-choy": {
+      "name": "Bok Choy",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassica. Same as Asian greens - 4°C base. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Research on Asian greens GDD; brassica family classification"
+    },
+    "crop_borage": {
+      "name": "Borage",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season annual herb. Frost tolerant once established. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cool-season herb classification"
+    },
+    "crop_broccoli": {
+      "name": "Broccoli",
+      "base": 0,
+      "upper": 21,
+      "confidence": "high",
+      "notes": "OSU Croptime: 0°C lower, 21°C upper. Research confirms Tbase 0°C, Topt 20°C.",
+      "source": "OSU Extension Croptime; ResearchGate peer-reviewed research"
+    },
+    "crop_brussel-sprouts": {
+      "name": "Brussels Sprouts",
+      "base": 4.4,
+      "upper": 21,
+      "confidence": "high",
+      "notes": "Cool-season brassica. Very cold-hardy. Similar to other cole crops.",
+      "source": "WISC Extension - cole crops use 4.4°C base"
+    },
+    "crop_buckwheat": {
+      "name": "Buckwheat",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season pseudocereal. Fast-growing cover crop. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "General cool-season grain classification"
+    },
+    "crop_bupleurum": {
+      "name": "Bupleurum",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "medium",
+      "notes": "Apiaceae family cut flower. Cool-season. Inferred from Apiaceae family (parsley research - Elnesr 2013).",
+      "source": "Inferred from Apiaceae family classification"
+    },
+    "crop_butterfly-flowers": {
+      "name": "Butterfly Flowers",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Likely refers to Asclepias or similar. Warm-season perennial. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season flower classification"
+    },
+    "crop_cabbage": {
+      "name": "Cabbage",
+      "base": 4.4,
+      "upper": 24,
+      "confidence": "high",
+      "notes": "Cool-season brassica. Cole crops use 4.4°C base. Tolerates frost.",
+      "source": "WISC Extension; MSU Extension"
+    },
+    "crop_carrot": {
+      "name": "Carrot",
+      "base": 4.5,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Cool-season Apiaceae. Research: similar to parsley (Apiaceae family) with Tupper around 27°C.",
+      "source": "WIKI (Gilmore & Rogers 1958); Apiaceae family - parsley upper from Elnesr et al. (2013)"
+    },
+    "crop_catnip": {
+      "name": "Catnip",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Lamiaceae family perennial. Cold-hardy to zone 3. Inferred from cool Lamiaceae (oregano research - Thanos 1995).",
+      "source": "Inferred from cold-hardy perennial herb classification"
+    },
+    "crop_cauliflower": {
+      "name": "Cauliflower",
+      "base": 4.4,
+      "upper": 24,
+      "confidence": "high",
+      "notes": "Cool-season brassica. Temperature-sensitive for curd development. Ideal 20-26°C.",
+      "source": "WISC Extension; MSU Extension - cole crop classification"
+    },
+    "crop_celery": {
+      "name": "Celery",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Cool-season Apiaceae. Research: similar to parsley (Apiaceae family) with Tupper around 27°C.",
+      "source": "Apiaceae family classification; parsley upper from Elnesr et al. (2013)"
+    },
+    "crop_celery-root": {
+      "name": "Celery Root (Celeriac)",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Cool-season Apiaceae. Same as celery family, Tupper ~27°C.",
+      "source": "Apiaceae family classification; parsley upper from Elnesr et al. (2013)"
+    },
+    "crop_celosia": {
+      "name": "Celosia",
+      "base": 10,
+      "upper": 35,
+      "confidence": "medium",
+      "notes": "Warm-season annual flower. Frost-sensitive. Amaranthaceae family. Inferred from warm Amaranthaceae (amaranth research).",
+      "source": "Inferred from warm-season tropical origin"
+    },
+    "crop_chervil": {
+      "name": "Chervil",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "medium",
+      "notes": "Cool-season Apiaceae herb. Bolts quickly in heat. Prefers shade. Inferred from Apiaceae family (parsley research - Elnesr 2013).",
+      "source": "Inferred from Apiaceae cool-season herb classification"
+    },
+    "crop_chicory": {
+      "name": "Chicory",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cool-season Asteraceae. Related to lettuce. Cold-tolerant. Inferred from Asteraceae family (lettuce research).",
+      "source": "Inferred from lettuce family, cool-season classification"
+    },
+    "crop_chijimisai": {
+      "name": "Chijimisai",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Japanese mustard green (Brassica rapa). Cool-season Asian brassica. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Asian greens research; brassica family classification"
+    },
+    "crop_choi-sum": {
+      "name": "Choi Sum",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Brassica rapa. Cool-season Asian green. Same as bok choy family. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Asian greens research uses 4°C base"
+    },
+    "crop_chrysanthemum": {
+      "name": "Chrysanthemum",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cool-season Asteraceae. Short-day flowering. Cold tolerant. Inferred from Asteraceae family (lettuce research).",
+      "source": "Inferred from cool-season flower classification"
+    },
+    "crop_chrysanthemum-greens": {
+      "name": "Chrysanthemum Greens (Shungiku)",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cool-season Asteraceae edible green. Bolts in heat. Inferred from Asteraceae family (lettuce research).",
+      "source": "Inferred from cool-season Asian green classification"
+    },
+    "crop_cilantro": {
+      "name": "Cilantro",
+      "base": 4,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Cool-season Apiaceae. Research: Tbase 4-4.8°C, Tupper 30°C for Coriandrum sativum. Bolts readily in heat.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Diederichsen (1996)"
+    },
+    "crop_clematis": {
+      "name": "Clematis",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Perennial vine. Deciduous. Cold-hardy. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from temperate perennial classification"
+    },
+    "crop_collard-greens": {
+      "name": "Collard Greens",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassica. Most cold-hardy of cole crops. Heat tolerant too. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "WISC Extension - cole crop classification"
+    },
+    "crop_corn": {
+      "name": "Corn (Sweet)",
+      "base": 10,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Standard is 10°C base, 30°C upper (Modified GDD).",
+      "source": "OSU Extension Croptime; MSU Extension; NDSU; multiple sources"
+    },
+    "crop_corn-salad": {
+      "name": "Corn Salad (Mâche)",
+      "base": 0,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Very cold-hardy leafy green. Grows at near-freezing temps. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from extreme cold tolerance"
+    },
+    "crop_cosmos": {
+      "name": "Cosmos",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season annual flower. Frost-sensitive. Mexican origin. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season origin; no specific GDD research found"
+    },
+    "crop_cress": {
+      "name": "Cress",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season Brassicaceae. Fast-growing. Bolts in heat. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Inferred from brassica family cool-season classification"
+    },
+    "crop_cucumber": {
+      "name": "Cucumber",
+      "base": 10,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "OSU Croptime: 10°C lower, 32°C upper threshold.",
+      "source": "OSU Extension Croptime vegetable degree-day models"
+    },
+    "crop_dahlia": {
+      "name": "Dahlia",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season tuber. Plant when soil above 15°C. No frost tolerance. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Multiple extension sources cite 15°C soil minimum"
+    },
+    "crop_dianthus": {
+      "name": "Dianthus",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season flower. Many species very cold-hardy. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cool-season flower classification"
+    },
+    "crop_dill": {
+      "name": "Dill",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Cool-season Apiaceae. Same family as parsley/cilantro. Tupper ~27°C.",
+      "source": "Apiaceae family classification; parsley upper from Elnesr et al. (2013)"
+    },
+    "crop_dropmore": {
+      "name": "Dropmore",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Likely honeysuckle vine. Cold-hardy perennial. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cold-hardy perennial classification"
+    },
+    "crop_eggplant": {
+      "name": "Eggplant",
+      "base": 15.6,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "Warm-season Solanaceae. Research: Tbase 15.6°C (Maynard & Hochmuth 2007). Growth inhibited above 32°C.",
+      "source": "Colombian eggplant GDD research; BMC Plant Biology temperature stress studies"
+    },
+    "crop_epazote": {
+      "name": "Epazote",
+      "base": 10,
+      "upper": 35,
+      "confidence": "medium",
+      "notes": "Warm-season Amaranthaceae herb. Mexican origin. Inferred from warm Amaranthaceae (amaranth research).",
+      "source": "Inferred from warm-season tropical herb classification"
+    },
+    "crop_everlasting": {
+      "name": "Everlasting (Strawflower family)",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season annual flowers. Australian origin species. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season origin"
+    },
+    "crop_fava-bean": {
+      "name": "Fava Bean",
+      "base": 4,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Cool-season legume. Research: base 4°C, ~1600 GDD to maturity. Upper ~30°C.",
+      "source": "ResearchGate faba bean GDD research; Field Crop News"
+    },
+    "crop_fennel": {
+      "name": "Fennel",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Cool-season Apiaceae. Same family as parsley. Tupper ~27°C from family research.",
+      "source": "Apiaceae family classification; parsley upper from Elnesr et al. (2013)"
+    },
+    "crop_flax": {
+      "name": "Flax",
+      "base": 3,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season fiber crop. Research: Tbase 0-5°C (using 3°C midpoint). No upper documented. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Fresco et al. (2021)"
+    },
+    "crop_frise": {
+      "name": "Frisée",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cool-season chicory/endive. Related to lettuce. Same as chicory family. Inferred from Asteraceae family (lettuce research).",
+      "source": "Asteraceae/chicory family; same as lettuce"
+    },
+    "crop_garlic": {
+      "name": "Garlic",
+      "base": 0,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Cool-season allium. Requires vernalization. Growth near 0°C. Heat stress above 27°C reduces yield.",
+      "source": "Biology Open garlic temperature research; allium thermal studies"
+    },
+    "crop_ginger": {
+      "name": "Ginger",
+      "base": 13,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Tropical crop. Needs soil 13°C+. Optimal 20-25°C. No frost tolerance. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Extension sources consistent on 10-13°C minimum; tropical origin"
+    },
+    "crop_gooseberry": {
+      "name": "Gooseberry",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cold-hardy perennial fruit. Northern climate origin. Inferred from temperate berry (strawberry/raspberry research).",
+      "source": "Inferred from cold-hardy fruit classification"
+    },
+    "crop_grass": {
+      "name": "Grass (Ornamental)",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Varies by species. Cool-season grasses use ~4°C base. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "General cool-season grass classification"
+    },
+    "crop_ground-cherry": {
+      "name": "Ground Cherry",
+      "base": 10,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "Warm-season Solanaceae. Same family as tomatillo. Flowers abort below 13°C or above 32°C.",
+      "source": "UMN Extension"
+    },
+    "crop_hibiscus": {
+      "name": "Hibiscus",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season Malvaceae. Tropical/subtropical origin. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season tropical classification"
+    },
+    "crop_hops-vine-with-flowers": {
+      "name": "Hops",
+      "base": 5,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season perennial. Research: Tbase 5°C for Humulus lupulus. No upper documented. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Srečec et al. (2008)"
+    },
+    "crop_huauzontle": {
+      "name": "Huauzontle",
+      "base": 10,
+      "upper": 35,
+      "confidence": "medium",
+      "notes": "Chenopodium - related to quinoa/lambsquarters. Warm-season. Inferred from warm Amaranthaceae (amaranth research).",
+      "source": "Inferred from Amaranthaceae warm-season classification"
+    },
+    "crop_hyacinth-bean-vine": {
+      "name": "Hyacinth Bean",
+      "base": 10,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Warm-season tropical legume vine. No frost tolerance. Inferred from warm legume family (bean research).",
+      "source": "Inferred from tropical legume classification"
+    },
+    "crop_hydrangea": {
+      "name": "Hydrangea",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cold-hardy deciduous shrub. Temperate origin. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from temperate shrub classification"
+    },
+    "crop_jelly-melon": {
+      "name": "Jelly Melon (Kiwano)",
+      "base": 10,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Warm-season cucurbit (Cucumis metuliferus). African origin. Inferred from cucurbit family (squash research).",
+      "source": "Inferred from cucurbit family classification"
+    },
+    "crop_kaibroc": {
+      "name": "Kaibroc",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Brassica hybrid (broccoli x kale). Cool-season. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Brassica family classification"
+    },
+    "crop_kale": {
+      "name": "Kale",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "Cool-season brassica. Research: B. oleracea growth seriously compromised above 32°C.",
+      "source": "WISC Extension; BMC Plant Biology B. oleracea temperature stress research"
+    },
+    "crop_kohlrabi": {
+      "name": "Kohlrabi",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassica. Best at 16-18°C. Cole crop family. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "WISC Extension - cole crop classification"
+    },
+    "crop_komatsuna": {
+      "name": "Komatsuna",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Japanese mustard spinach (Brassica rapa). Cool-season Asian green. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Asian greens research; brassica family"
+    },
+    "crop_leek": {
+      "name": "Leek",
+      "base": 0,
+      "upper": 35,
+      "confidence": "medium",
+      "notes": "Cool-season allium. Very cold-hardy. Matures best below 24°C. Inferred from allium family (onion research).",
+      "source": "Allium research; same as onion/garlic family"
+    },
+    "crop_lemon-balm": {
+      "name": "Lemon Balm",
+      "base": 7.2,
+      "upper": 40,
+      "confidence": "high",
+      "notes": "Warm-season crop. Research: Tbase 7.2°C, Tupper 40°C for Melissa officinalis (germination focused).",
+      "source": "Paredes et al. 2025 (ScienceDirect); Atashi et al. (2014)"
+    },
+    "crop_lemongrass": {
+      "name": "Lemongrass",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Tropical grass. No frost tolerance. Needs warm soil. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from tropical grass classification"
+    },
+    "crop_lettuce": {
+      "name": "Lettuce",
+      "base": 4.5,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Cool-season. Base 4.5°C (Gilmore & Rogers 1958). Research: upper ~30-35°C, bolts in heat.",
+      "source": "WIKI (Gilmore & Rogers 1958); ScienceDirect thermal threshold review"
+    },
+    "crop_lilies": {
+      "name": "Lilies",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cold-hardy bulb. Most species require vernalization. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from temperate bulb classification"
+    },
+    "crop_lovage": {
+      "name": "Lovage",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "medium",
+      "notes": "Cold-hardy Apiaceae perennial. Same family as celery. Inferred from Apiaceae family (parsley research - Elnesr 2013).",
+      "source": "Apiaceae family classification"
+    },
+    "crop_magenta-spreen": {
+      "name": "Magenta Spreen",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Chenopodium (lambsquarters family). Cool-season edible weed. Inferred from cool Amaranthaceae (beet/spinach research).",
+      "source": "Inferred from Amaranthaceae cool-season classification"
+    },
+    "crop_malabar-spinach": {
+      "name": "Malabar Spinach",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Tropical vine. Needs warm temps. Not true spinach. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from tropical origin classification"
+    },
+    "crop_marigolds": {
+      "name": "Marigolds",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season annual. Mexican origin. Frost-sensitive. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season annual classification"
+    },
+    "crop_marjoram": {
+      "name": "Marjoram",
+      "base": 10,
+      "upper": 40,
+      "confidence": "medium",
+      "notes": "Warm-season Lamiaceae herb. Less cold-hardy than oregano. Inferred from warm Lamiaceae (basil research - Teles 2023).",
+      "source": "Inferred from warm-season herb classification"
+    },
+    "crop_melon": {
+      "name": "Melon",
+      "base": 9.4,
+      "upper": 41,
+      "confidence": "high",
+      "notes": "Warm-season cucurbit. Research: base 9.4°C, optimum 27.3°C, ceiling 41.4°C. ~1850 GDD to maturity.",
+      "source": "ScienceDirect melon thermal-time germination research"
+    },
+    "crop_microgreens": {
+      "name": "Microgreens",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Varies by species. Most are cool-season brassica/leafy greens. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Inferred from typical microgreen species"
+    },
+    "crop_milkweed": {
+      "name": "Milkweed",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Native perennial. Warm-season growth. Some species cold-hardy. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season native plant classification"
+    },
+    "crop_mint": {
+      "name": "Mint",
+      "base": 0,
+      "upper": 35,
+      "confidence": "high",
+      "notes": "Cool-season crop. Research: Tbase 0°C, Tupper 35°C for Mentha spicata.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Allen et al. (2020)"
+    },
+    "crop_mock-orange": {
+      "name": "Mock Orange",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cold-hardy deciduous shrub. Temperate origin. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from temperate shrub classification"
+    },
+    "crop_mustard-greens": {
+      "name": "Mustard Greens",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassica. Cold-tolerant. Bolts in heat. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Brassica family classification; Asian greens research"
+    },
+    "crop_nausturtium": {
+      "name": "Nasturtium",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season annual. Frost-sensitive. Andean origin. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season origin"
+    },
+    "crop_nigella": {
+      "name": "Nigella",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season annual flower. Self-sows. Cold-tolerant. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cool-season flower classification"
+    },
+    "crop_onion": {
+      "name": "Onion",
+      "base": 0,
+      "upper": 35,
+      "confidence": "high",
+      "notes": "Cool-season allium. Research: Tbase 0.2-0.3°C, ceiling 35-42°C (varies by cultivar). Day-length sensitive.",
+      "source": "ResearchGate thermal-time analysis; New Phytologist hydrothermal threshold models"
+    },
+    "crop_oregano": {
+      "name": "Oregano",
+      "base": 5,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Cool-season crop. Research: Tbase ~5°C, Tupper 30°C for Origanum vulgare.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Thanos et al. (1995)"
+    },
+    "crop_pansy-and-violas": {
+      "name": "Pansy and Violas",
+      "base": 0,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Very cold-hardy cool-season flowers. Grow near freezing. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from extreme cold tolerance"
+    },
+    "crop_parsley": {
+      "name": "Parsley",
+      "base": 4,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Cool-season Apiaceae. Research: Tbase 4°C, Tupper 27°C for Petroselinum crispum.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Elnesr et al. (2013)"
+    },
+    "crop_parsnip": {
+      "name": "Parsnip",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "medium",
+      "notes": "Cool-season Apiaceae. Very cold-hardy. Sweetens after frost. Inferred from Apiaceae family (parsley research - Elnesr 2013).",
+      "source": "Apiaceae family classification; same as carrot"
+    },
+    "crop_pea-tendril": {
+      "name": "Pea Tendril",
+      "base": 4.5,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Same as peas. Research: Tbase 4.5-5°C, Tupper 27°C for Pisum sativum.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Bourgeois et al. (2000)"
+    },
+    "crop_peas": {
+      "name": "Peas",
+      "base": 4.5,
+      "upper": 27,
+      "confidence": "high",
+      "notes": "Cool-season legume. Research: Tbase 4.5-5°C, Tupper 27°C for Pisum sativum.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Bourgeois et al. (2000); MSU Extension"
+    },
+    "crop_peonies": {
+      "name": "Peonies",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cold-hardy perennial. Requires winter chill for flowering. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cold-hardy perennial classification"
+    },
+    "crop_pepper": {
+      "name": "Pepper",
+      "base": 11,
+      "upper": 38,
+      "confidence": "high",
+      "notes": "OSU Croptime: 11°C lower, 38°C upper threshold for sweet pepper.",
+      "source": "OSU Extension Croptime vegetable degree-day models"
+    },
+    "crop_petunia": {
+      "name": "Petunia",
+      "base": 10,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Warm-season Solanaceae annual. South American origin. Inferred from Solanaceae family (tomatillo/eggplant research).",
+      "source": "Inferred from warm-season Solanaceae classification"
+    },
+    "crop_potato": {
+      "name": "Potato",
+      "base": 4.5,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Cool-season Solanaceae. Research shows Tbase 4.5°C.",
+      "source": "RESEARCH - Narayan et al. 2014; AgriMet"
+    },
+    "crop_queen-annes-lace": {
+      "name": "Queen Anne's Lace",
+      "base": 4.4,
+      "upper": 27,
+      "confidence": "medium",
+      "notes": "Wild carrot (Daucus carota). Same as carrot - Apiaceae. Inferred from Apiaceae family (parsley research - Elnesr 2013).",
+      "source": "Apiaceae family classification"
+    },
+    "crop_radicchio": {
+      "name": "Radicchio",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cool-season chicory. Same as lettuce family. Cold-hardy. Inferred from Asteraceae family (lettuce research).",
+      "source": "Asteraceae/chicory family classification"
+    },
+    "crop_radish": {
+      "name": "Radish",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassica. Fast-growing. Cold-tolerant. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Brassica family classification; extension sources"
+    },
+    "crop_ranunculus": {
+      "name": "Ranunculus",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season corm. Mediterranean origin. Does not need chilling. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cool-season bulb classification"
+    },
+    "crop_raspberry": {
+      "name": "Raspberry",
+      "base": 5,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Temperate perennial. Research: similar to temperate berries. Tbase ~5°C, Tupper ~30°C.",
+      "source": "Paredes et al. 2025 framework; temperate fruit research"
+    },
+    "crop_rat-tail-radish": {
+      "name": "Rat Tail Radish",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Brassica for pods not roots. More heat-tolerant than root radish. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Brassica family classification"
+    },
+    "crop_rose": {
+      "name": "Rose",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Perennial shrub. Varies by species. Many cold-hardy. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from temperate shrub classification"
+    },
+    "crop_roselle": {
+      "name": "Roselle (Hibiscus sabdariffa)",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Tropical Malvaceae. Same family as hibiscus. No frost tolerance. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from tropical hibiscus family"
+    },
+    "crop_rosemary": {
+      "name": "Rosemary",
+      "base": 10,
+      "upper": 40,
+      "confidence": "medium",
+      "notes": "Mediterranean Lamiaceae. More cold-sensitive than other herbs. Inferred from warm Lamiaceae (basil research - Teles 2023).",
+      "source": "Extension sources; varies by cultivar"
+    },
+    "crop_rubeckia": {
+      "name": "Rudbeckia (Black-eyed Susan)",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Native perennial. Warm-season bloomer. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season native flower classification"
+    },
+    "crop_rutabaga": {
+      "name": "Rutabaga",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassica root crop. Very cold-hardy. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Brassica family classification"
+    },
+    "crop_sage": {
+      "name": "Sage",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cold-hardy Lamiaceae perennial. Tolerates to -12°C. Inferred from cool Lamiaceae (oregano research - Thanos 1995).",
+      "source": "Extension sources cite cold-hardiness"
+    },
+    "crop_salsola": {
+      "name": "Salsola (Agretti)",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Mediterranean cool-season succulent. Amaranthaceae family. Inferred from cool Amaranthaceae (beet/spinach research).",
+      "source": "Inferred from cool-season classification"
+    },
+    "crop_scabiosa": {
+      "name": "Scabiosa",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season cut flower. Cold-tolerant. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cool-season flower classification"
+    },
+    "crop_scallion": {
+      "name": "Scallion",
+      "base": 0,
+      "upper": 35,
+      "confidence": "medium",
+      "notes": "Cool-season allium. Same as onion family. Inferred from allium family (onion research).",
+      "source": "Allium research; same as onion"
+    },
+    "crop_shallots": {
+      "name": "Shallots",
+      "base": 0,
+      "upper": 35,
+      "confidence": "medium",
+      "notes": "Cool-season allium. Same family as onion and garlic. Inferred from allium family (onion research).",
+      "source": "Allium research; same as onion"
+    },
+    "crop_shiso": {
+      "name": "Shiso",
+      "base": 10,
+      "upper": 40,
+      "confidence": "medium",
+      "notes": "Warm-season Lamiaceae. Related to basil. Frost-sensitive. Inferred from warm Lamiaceae (basil research - Teles 2023).",
+      "source": "Inferred from warm-season Lamiaceae classification"
+    },
+    "crop_snapdragons": {
+      "name": "Snapdragons",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season annual. Cold-tolerant. Mediterranean origin. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cool-season flower classification"
+    },
+    "crop_sorrel": {
+      "name": "Sorrel",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cool-season perennial. Polygonaceae family. Cold-hardy. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from cool-season perennial classification"
+    },
+    "crop_spinach": {
+      "name": "Spinach",
+      "base": -3,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Cool-season. Research: germinates -2.5 to 3°C, Tbase calc -3°C. Germination inhibited above 25-30°C.",
+      "source": "HortScience spinach germination research; thermoinhibition studies"
+    },
+    "crop_squash": {
+      "name": "Squash (Winter)",
+      "base": 8,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "Warm-season cucurbit. Research: base 8°C, ceiling 32°C for Cucurbita pepo.",
+      "source": "ScienceDirect cucurbit thermal time studies"
+    },
+    "crop_stock": {
+      "name": "Stock (Matthiola)",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassica flower. Mediterranean origin. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Brassica family classification"
+    },
+    "crop_strawberry": {
+      "name": "Strawberry",
+      "base": 5,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Temperate perennial. Research: similar to temperate berries. Tbase ~5°C, Tupper ~30°C.",
+      "source": "Paredes et al. 2025 framework; temperate fruit research"
+    },
+    "crop_strawberry-spinach": {
+      "name": "Strawberry Spinach",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Chenopodium capitatum. Cool-season Amaranthaceae. Inferred from cool Amaranthaceae (beet/spinach research).",
+      "source": "Inferred from Amaranthaceae cool-season classification"
+    },
+    "crop_strawflower": {
+      "name": "Strawflower",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season annual. Australian origin. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season origin"
+    },
+    "crop_sudangrass": {
+      "name": "Sudangrass",
+      "base": 9,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "Warm-season grass. Related to sorghum. Research: Tbase 8-10°C, Tupper 30-34°C.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Neild and Seeley (1977) - sorghum family"
+    },
+    "crop_summer-squash": {
+      "name": "Summer Squash",
+      "base": 8,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "Research uses 8°C base, 32°C ceiling for Cucurbita pepo leaf development.",
+      "source": "RESEARCH - ScienceDirect thermal time study on summer squash"
+    },
+    "crop_sunchoke": {
+      "name": "Sunchoke (Jerusalem Artichoke)",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cold-hardy Asteraceae perennial. Native North American. Inferred from Asteraceae family (lettuce research).",
+      "source": "Inferred from cold-hardy native plant classification"
+    },
+    "crop_sunflower": {
+      "name": "Sunflower",
+      "base": 7,
+      "upper": 35,
+      "confidence": "high",
+      "notes": "Warm-season crop. Research: Tbase 6-10°C (using 7°C), Tupper 30-45°C (using 35°C).",
+      "source": "Paredes et al. 2025 (ScienceDirect); Todorovic et al. (2009); NDSU Extension"
+    },
+    "crop_swiss-chard": {
+      "name": "Swiss Chard",
+      "base": 4,
+      "upper": 30,
+      "confidence": "high",
+      "notes": "Cool-season. Same species as beet (Beta vulgaris). Research: sugar beet Tbase 2.6-5°C, Tupper 30°C.",
+      "source": "Paredes et al. 2025 (ScienceDirect); Jalilian et al. (2005) - sugar beet"
+    },
+    "crop_talinum": {
+      "name": "Talinum",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season succulent. Tropical/subtropical origin. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from tropical origin"
+    },
+    "crop_tarp": {
+      "name": "Tarp",
+      "base": null,
+      "upper": null,
+      "confidence": "n/a",
+      "notes": "Not a crop - this is a soil covering/occultation tool.",
+      "source": "N/A"
+    },
+    "crop_thyme": {
+      "name": "Thyme",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cold-hardy Lamiaceae perennial. Tolerates to -7°C or colder. Inferred from cool Lamiaceae (oregano research - Thanos 1995).",
+      "source": "Extension sources cite cold-hardiness"
+    },
+    "crop_tomatillo": {
+      "name": "Tomatillo",
+      "base": 10,
+      "upper": 32,
+      "confidence": "high",
+      "notes": "Warm-season Solanaceae. Flowers abort below 13°C or above 32°C.",
+      "source": "UMN Extension"
+    },
+    "crop_tomato": {
+      "name": "Tomato",
+      "base": 7.2,
+      "upper": 33,
+      "confidence": "high",
+      "notes": "OSU Croptime: 7.2°C lower, 33°C upper. Some sources use 10°C.",
+      "source": "OSU Extension Croptime; WIKI cites 10°C for tomato"
+    },
+    "crop_turnip": {
+      "name": "Turnip",
+      "base": 4.4,
+      "upper": 32,
+      "confidence": "medium",
+      "notes": "Cool-season brassica root. Cold-tolerant. Fast-growing. Inferred from brassica family (kale/B. oleracea research).",
+      "source": "Brassica family classification"
+    },
+    "crop_wisteria": {
+      "name": "Wisteria",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "low",
+      "notes": "Cold-hardy deciduous vine. Asian/N.American species. ROUGH ESTIMATE: 30°C upper based on cool-season classification.",
+      "source": "Inferred from temperate vine classification"
+    },
+    "crop_yarrow": {
+      "name": "Yarrow",
+      "base": 4.4,
+      "upper": 30,
+      "confidence": "medium",
+      "notes": "Cold-hardy Asteraceae perennial. Native herb. Inferred from Asteraceae family (lettuce research).",
+      "source": "Inferred from cold-hardy native perennial classification"
+    },
+    "crop_zinnia": {
+      "name": "Zinnia",
+      "base": 10,
+      "upper": 35,
+      "confidence": "low",
+      "notes": "Warm-season annual. Mexican origin. Needs 21°C soil for germination. ROUGH ESTIMATE: 35°C upper based on warm-season classification.",
+      "source": "Inferred from warm-season origin; no specific GDD research"
+    }
+  }
+}

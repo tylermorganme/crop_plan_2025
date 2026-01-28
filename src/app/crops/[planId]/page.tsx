@@ -608,6 +608,35 @@ export default function CropsPage() {
                         </span>
                       )}
 
+                      {/* GDD Temps (Base / Upper) */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-500">GDD:</span>
+                        <input
+                          type="number"
+                          value={crop.gddBaseTemp ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
+                            updateCrop(crop.id, { gddBaseTemp: val });
+                          }}
+                          placeholder="—"
+                          className="w-10 px-1 py-0.5 text-xs border border-gray-300 rounded text-center focus:outline-none focus:border-blue-500"
+                          title="GDD base temperature (°F). Min temp for growth."
+                        />
+                        <span className="text-xs text-gray-400">/</span>
+                        <input
+                          type="number"
+                          value={crop.gddUpperTemp ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
+                            updateCrop(crop.id, { gddUpperTemp: val });
+                          }}
+                          placeholder="—"
+                          className="w-10 px-1 py-0.5 text-xs border border-gray-300 rounded text-center focus:outline-none focus:border-blue-500"
+                          title="GDD upper temperature (°F). Max temp for growth."
+                        />
+                        <span className="text-xs text-gray-400">°F</span>
+                      </div>
+
                       <div className="flex-1" />
 
                       {/* Color picker */}

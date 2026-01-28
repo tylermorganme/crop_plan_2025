@@ -508,7 +508,7 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk update multiple crop configs (single undo step) */
   bulkUpdateCropConfigs: (updates: { identifier: string; changes: Partial<import('./entities/crop-config').CropConfig> }[]) => Promise<number>;
   /** Update a crop entity's colors or name */
-  updateCrop: (cropId: string, updates: { bgColor?: string; textColor?: string; name?: string }) => Promise<void>;
+  updateCrop: (cropId: string, updates: { bgColor?: string; textColor?: string; name?: string; gddBaseTemp?: number; gddUpperTemp?: number }) => Promise<void>;
   /** Add a new crop entity */
   addCropEntity: (crop: import('./entities/crop').Crop) => Promise<void>;
   /** Delete a crop entity (fails if referenced by configs) */
@@ -1852,7 +1852,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return validUpdates.length;
     },
 
-    updateCrop: async (cropId: string, updates: { bgColor?: string; textColor?: string; name?: string }) => {
+    updateCrop: async (cropId: string, updates: { bgColor?: string; textColor?: string; name?: string; gddBaseTemp?: number; gddUpperTemp?: number }) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
@@ -1879,6 +1879,18 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               }
               if (updates.textColor !== undefined) {
                 crop.textColor = updates.textColor;
+              }
+              if (updates.gddBaseTemp !== undefined) {
+                crop.gddBaseTemp = updates.gddBaseTemp;
+              } else if (updates.gddBaseTemp === undefined && 'gddBaseTemp' in updates) {
+                // Explicitly clearing the value
+                delete crop.gddBaseTemp;
+              }
+              if (updates.gddUpperTemp !== undefined) {
+                crop.gddUpperTemp = updates.gddUpperTemp;
+              } else if (updates.gddUpperTemp === undefined && 'gddUpperTemp' in updates) {
+                // Explicitly clearing the value
+                delete crop.gddUpperTemp;
               }
               if (newName !== undefined) {
                 crop.name = newName;

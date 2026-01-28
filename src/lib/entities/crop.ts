@@ -10,7 +10,7 @@
 // =============================================================================
 
 /**
- * A crop with configurable colors for timeline display.
+ * A crop with configurable colors and GDD settings for timeline display.
  */
 export interface Crop {
   /** Unique identifier (deterministic: derived from name) */
@@ -24,6 +24,22 @@ export interface Crop {
 
   /** Text color (hex, e.g., "#ffffff") */
   textColor: string;
+
+  /**
+   * GDD base temperature (°F).
+   * The minimum temperature below which the plant doesn't accumulate heat units.
+   * If not set, uses category defaults: 40°F for cool season (Brassica, Lettuce, etc.)
+   * and 50°F for warm season (Tomato, Pepper, etc.).
+   */
+  gddBaseTemp?: number;
+
+  /**
+   * GDD upper/ceiling temperature (°F).
+   * The maximum temperature above which additional heat doesn't contribute to growth.
+   * Temps above this are capped to prevent over-crediting hot days.
+   * If not set, uses category defaults: ~85°F for cool season, ~90°F for warm season.
+   */
+  gddUpperTemp?: number;
 }
 
 /**
