@@ -29,6 +29,8 @@ export interface ColumnDef<T> {
   getValue: (row: T) => string | number | undefined | null;
   /** Format value for display (optional, defaults to getValue result) */
   format?: (row: T) => string;
+  /** Fully custom cell renderer (bypasses editable/format) */
+  render?: (row: T) => React.ReactNode;
 }
 
 export interface FastEditTableProps<T> {
@@ -56,6 +58,59 @@ export interface FastEditTableProps<T> {
   actionsWidth?: number;
   /** Empty state message */
   emptyMessage?: string;
+  /** Enable row selection with checkboxes */
+  selectable?: boolean;
+  /** Currently selected row keys */
+  selectedKeys?: Set<string>;
+  /** Called when selection changes */
+  onSelectionChange?: (keys: Set<string>) => void;
+}
+
+// =============================================================================
+// Keyboard Navigation Helpers
+// =============================================================================
+
+// Helper to get visual Y position from a cell's parent row
+function getRowY(cell: HTMLElement): number {
+  const row = cell.parentElement;
+  if (!row) return 0;
+  const match = row.style.transform?.match(/translateY\(([^)]+)px\)/);
+  return match ? parseFloat(match[1]) : 0;
+}
+
+// Helper to move focus to next/prev row's same column
+// Runs synchronously - call BEFORE triggering state changes for immediate response
+function moveFocusVertical(input: HTMLElement, direction: 'down' | 'up') {
+  const cell = input.closest('[data-edit-col]') as HTMLElement | null;
+  if (!cell) return;
+  const col = cell.getAttribute('data-edit-col');
+  if (!col) return;
+
+  const currentY = getRowY(cell);
+
+  // Find all cells in this column, sorted by visual position
+  const allCells = Array.from(document.querySelectorAll(`[data-edit-col="${col}"]`)) as HTMLElement[];
+  if (allCells.length === 0) return;
+
+  allCells.sort((a, b) => getRowY(a) - getRowY(b));
+
+  // Find target based on direction
+  let targetCell: HTMLElement | null = null;
+  if (direction === 'down') {
+    targetCell = allCells.find(c => getRowY(c) > currentY) || null;
+  } else {
+    const candidates = allCells.filter(c => getRowY(c) < currentY);
+    targetCell = candidates.length > 0 ? candidates[candidates.length - 1] : null;
+  }
+
+  if (targetCell) {
+    // Click to activate editing, then focus the input
+    const clickable = targetCell.querySelector('[data-inline-cell]') as HTMLElement | null;
+    if (clickable) {
+      clickable.click();
+      // Focus will happen via useEffect in InlineCell after it enters edit mode
+    }
+  }
 }
 
 // =============================================================================
@@ -98,16 +153,39 @@ function InlineCell({
     setEditValue(value);
   }, [value]);
 
-  const handleBlur = () => {
+  const saveAndClose = useCallback(() => {
     setEditing(false);
     if (editValue !== value) {
       onSave(editValue);
     }
+  }, [editValue, value, onSave]);
+
+  const handleBlur = () => {
+    saveAndClose();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      (e.target as HTMLInputElement).blur();
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (inputRef.current) {
+        moveFocusVertical(inputRef.current, 'down');
+      }
+      saveAndClose();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (inputRef.current) {
+        moveFocusVertical(inputRef.current, 'up');
+      }
+      saveAndClose();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (inputRef.current) {
+        moveFocusVertical(inputRef.current, 'down');
+      }
+      saveAndClose();
+    } else if (e.key === 'Tab') {
+      // Let browser handle Tab navigation, just save the value
+      saveAndClose();
     } else if (e.key === 'Escape') {
       setEditValue(value);
       setEditing(false);
@@ -136,6 +214,7 @@ function InlineCell({
 
   return (
     <div
+      data-inline-cell
       onClick={() => setEditing(true)}
       className={`cursor-text hover:bg-blue-50 rounded px-2 h-full flex items-center truncate ${
         align === 'right' ? 'justify-end' : ''
@@ -179,6 +258,8 @@ function SortHeader({ label, sortKey, currentSortKey, sortDir, onSort, align }: 
 // FastEditTable Component
 // =============================================================================
 
+const CHECKBOX_WIDTH = 40;
+
 export function FastEditTable<T>({
   data,
   rowKey,
@@ -192,8 +273,32 @@ export function FastEditTable<T>({
   renderActions,
   actionsWidth = 80,
   emptyMessage = 'No data',
+  selectable = false,
+  selectedKeys,
+  onSelectionChange,
 }: FastEditTableProps<T>) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Selection handlers
+  const toggleRow = useCallback((key: string) => {
+    if (!selectedKeys || !onSelectionChange) return;
+    const next = new Set(selectedKeys);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    onSelectionChange(next);
+  }, [selectedKeys, onSelectionChange]);
+
+  const toggleAll = useCallback(() => {
+    if (!onSelectionChange) return;
+    if (selectedKeys?.size === data.length) {
+      onSelectionChange(new Set());
+    } else {
+      onSelectionChange(new Set(data.map(row => rowKey(row))));
+    }
+  }, [data, rowKey, selectedKeys, onSelectionChange]);
 
   // Virtualization
   const rowVirtualizer = useVirtualizer({
@@ -205,12 +310,22 @@ export function FastEditTable<T>({
 
   // Calculate total content width
   const totalWidth = useMemo(() => {
-    return columns.reduce((sum, col) => sum + col.width, 0) + (renderActions ? actionsWidth : 0);
-  }, [columns, renderActions, actionsWidth]);
+    const checkboxW = selectable ? CHECKBOX_WIDTH : 0;
+    return checkboxW + columns.reduce((sum, col) => sum + col.width, 0) + (renderActions ? actionsWidth : 0);
+  }, [columns, renderActions, actionsWidth, selectable]);
 
   // Render a cell based on column config
   const renderCell = useCallback(
     (row: T, col: ColumnDef<T>) => {
+      // Custom render function takes precedence
+      if (col.render) {
+        return (
+          <div className="h-full flex items-center">
+            {col.render(row)}
+          </div>
+        );
+      }
+
       const rawValue = col.getValue(row);
       const stringValue = rawValue?.toString() ?? '';
       const displayValue = col.format ? col.format(row) : stringValue;
@@ -264,6 +379,16 @@ export function FastEditTable<T>({
         style={{ height: headerHeight }}
       >
         <div className="flex items-center h-full" style={{ minWidth: totalWidth }}>
+          {selectable && (
+            <div className="flex-shrink-0 flex items-center justify-center" style={{ width: CHECKBOX_WIDTH }}>
+              <input
+                type="checkbox"
+                checked={data.length > 0 && selectedKeys?.size === data.length}
+                onChange={toggleAll}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+            </div>
+          )}
           {columns.map((col) => (
             <div
               key={col.key}
@@ -308,11 +433,14 @@ export function FastEditTable<T>({
           {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const row = data[virtualRow.index];
             const key = rowKey(row);
+            const isSelected = selectedKeys?.has(key) ?? false;
 
             return (
               <div
                 key={key}
-                className="flex items-center border-b border-gray-100 hover:bg-gray-50 group"
+                className={`flex items-center border-b border-gray-100 hover:bg-gray-50 group ${
+                  isSelected ? 'bg-blue-50' : ''
+                }`}
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -322,11 +450,22 @@ export function FastEditTable<T>({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
+                {selectable && (
+                  <div className="flex-shrink-0 flex items-center justify-center" style={{ width: CHECKBOX_WIDTH }}>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleRow(key)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
                 {columns.map((col) => (
                   <div
                     key={col.key}
                     className="flex-shrink-0 h-full"
                     style={{ width: col.width }}
+                    data-edit-col={col.editable ? col.key : undefined}
                   >
                     {renderCell(row, col)}
                   </div>
