@@ -2,11 +2,8 @@
 /**
  * Backfill GDD temperatures to all crops in all plans.
  *
- * Reads researched GDD data from src/data/gdd-temperatures.json and updates
- * the crops in each plan with gddBaseTemp and gddUpperTemp values.
- *
- * IMPORTANT: Updates BOTH main .db AND all checkpoint .db files.
- * The app loads from checkpoints first, so both must be updated.
+ * Uses server-side storage functions to load/save, then creates a checkpoint
+ * so the app properly picks up the changes.
  *
  * Data is in Celsius, converts to Fahrenheit for storage.
  *
@@ -15,16 +12,19 @@
 
 import fs from 'fs';
 import path from 'path';
-import Database from 'better-sqlite3';
+import {
+  loadPlan,
+  savePlan,
+  createCheckpointWithMetadata,
+} from '../src/lib/sqlite-storage';
 
 // Paths
-const DATA_DIR = path.join(process.cwd(), 'data', 'plans');
 const GDD_DATA_PATH = path.join(process.cwd(), 'src', 'data', 'gdd-temperatures.json');
-const INDEX_PATH = path.join(DATA_DIR, 'index.json');
+const INDEX_PATH = path.join(process.cwd(), 'data', 'plans', 'index.json');
 
 // Celsius to Fahrenheit
 function celsiusToFahrenheit(celsius: number): number {
-  return Math.round((celsius * 9/5) + 32);
+  return Math.round((celsius * 9 / 5) + 32);
 }
 
 interface GddCropData {
@@ -50,97 +50,8 @@ interface PlanIndex {
   name: string;
 }
 
-interface Crop {
-  id: string;
-  name: string;
-  bgColor: string;
-  textColor: string;
-  gddBaseTemp?: number;
-  gddUpperTemp?: number;
-}
-
-interface Plan {
-  crops?: Record<string, Crop>;
-}
-
-/**
- * Update crops in a plan with GDD temps.
- * Returns the number of crops updated.
- */
-function updatePlanCrops(
-  plan: Plan,
-  gddLookup: Map<string, { base: number | null; upper: number | null }>
-): { updated: number; updates: string[] } {
-  if (!plan.crops) {
-    return { updated: 0, updates: [] };
-  }
-
-  let updated = 0;
-  const updates: string[] = [];
-
-  for (const [cropId, crop] of Object.entries(plan.crops)) {
-    const gddTemps = gddLookup.get(cropId);
-
-    if (!gddTemps) {
-      continue; // No GDD data for this crop
-    }
-
-    let changed = false;
-
-    // Update if we have data (overwrite to ensure consistency)
-    if (gddTemps.base !== null) {
-      if (crop.gddBaseTemp !== gddTemps.base) {
-        crop.gddBaseTemp = gddTemps.base;
-        changed = true;
-      }
-    }
-
-    if (gddTemps.upper !== null) {
-      if (crop.gddUpperTemp !== gddTemps.upper) {
-        crop.gddUpperTemp = gddTemps.upper;
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      updated++;
-      updates.push(`  ${crop.name}: base=${gddTemps.base}°F, upper=${gddTemps.upper}°F`);
-    }
-  }
-
-  return { updated, updates };
-}
-
-/**
- * Update a single database file with GDD temps.
- */
-function updateDatabase(
-  dbPath: string,
-  gddLookup: Map<string, { base: number | null; upper: number | null }>,
-  dryRun: boolean
-): { updated: number; updates: string[] } {
-  const db = new Database(dbPath);
-
-  try {
-    const row = db.prepare('SELECT data FROM plan WHERE id = ?').get('main') as { data: string } | undefined;
-
-    if (!row) {
-      return { updated: 0, updates: [] };
-    }
-
-    const plan: Plan = JSON.parse(row.data);
-    const result = updatePlanCrops(plan, gddLookup);
-
-    if (result.updated > 0 && !dryRun) {
-      db.prepare('UPDATE plan SET data = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-        .run(JSON.stringify(plan), 'main');
-    }
-
-    return result;
-  } finally {
-    db.close();
-  }
-}
+// Use real Plan type from entities
+import type { Plan } from '../src/lib/entities/plan';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
@@ -178,62 +89,94 @@ async function main() {
 
   let totalUpdated = 0;
   let totalPlans = 0;
-  let totalCheckpoints = 0;
 
   for (const planInfo of planIndex) {
-    const mainDbPath = path.join(DATA_DIR, `${planInfo.id}.db`);
-    const checkpointsDir = path.join(DATA_DIR, `${planInfo.id}.checkpoints`);
-
-    if (!fs.existsSync(mainDbPath)) {
-      console.log(`⚠️  Skipping ${planInfo.name} - database not found`);
+    // Load plan using server-side hydration (handles checkpoints properly)
+    let loadedPlan: Plan | null;
+    try {
+      loadedPlan = loadPlan(planInfo.id) as Plan | null;
+    } catch (err) {
+      console.error(`❌ Error loading ${planInfo.name}:`, (err as Error).message);
       continue;
     }
 
-    // Update main database
-    const mainResult = updateDatabase(mainDbPath, gddLookup, dryRun);
-    let planCheckpointsUpdated = 0;
+    if (!loadedPlan) {
+      console.log(`⚠️  Skipping ${planInfo.name} - could not load`);
+      continue;
+    }
 
-    // Always check and update checkpoint databases (they may be out of sync)
-    if (fs.existsSync(checkpointsDir)) {
-      const checkpointFiles = fs.readdirSync(checkpointsDir)
-        .filter(f => f.endsWith('.db'));
+    // Make a mutable copy (loadPlan returns frozen immer object)
+    const plan: Plan = JSON.parse(JSON.stringify(loadedPlan));
 
-      for (const checkpointFile of checkpointFiles) {
-        const checkpointDbPath = path.join(checkpointsDir, checkpointFile);
-        const checkpointResult = updateDatabase(checkpointDbPath, gddLookup, dryRun);
-        if (checkpointResult.updated > 0) {
-          planCheckpointsUpdated++;
-          totalCheckpoints++;
+    if (!plan.crops) {
+      console.log(`⚠️  Skipping ${planInfo.name} - no crops`);
+      continue;
+    }
+
+    // Find crops that need updating
+    const updates: Array<{ cropId: string; name: string; base: number; upper: number }> = [];
+
+    for (const [cropId, crop] of Object.entries(plan.crops)) {
+      const gddTemps = gddLookup.get(cropId);
+
+      if (!gddTemps) {
+        continue;
+      }
+
+      const needsBase = gddTemps.base !== null && crop.gddBaseTemp !== gddTemps.base;
+      const needsUpper = gddTemps.upper !== null && crop.gddUpperTemp !== gddTemps.upper;
+
+      if (needsBase || needsUpper) {
+        // Update in place
+        if (gddTemps.base !== null) {
+          crop.gddBaseTemp = gddTemps.base;
         }
+        if (gddTemps.upper !== null) {
+          crop.gddUpperTemp = gddTemps.upper;
+        }
+
+        updates.push({
+          cropId,
+          name: crop.name,
+          base: gddTemps.base!,
+          upper: gddTemps.upper!,
+        });
       }
     }
 
-    if (mainResult.updated > 0 || planCheckpointsUpdated > 0) {
-      totalUpdated += Math.max(mainResult.updated, 0);
-      totalPlans++;
-
-      console.log(`\n✅ ${planInfo.name}:`);
-      if (mainResult.updated > 0) {
-        console.log(`  📄 Main db: ${mainResult.updated} crops`);
-        if (mainResult.updates.length <= 3) {
-          mainResult.updates.forEach(u => console.log(`    ${u.trim()}`));
-        } else {
-          console.log(`    ... ${mainResult.updates.length} crops updated`);
-        }
-      } else {
-        console.log(`  📄 Main db: already up to date`);
-      }
-      if (planCheckpointsUpdated > 0) {
-        console.log(`  📦 Checkpoints: ${planCheckpointsUpdated} updated`);
-      }
-    } else {
+    if (updates.length === 0) {
       console.log(`⏭️  ${planInfo.name}: no updates needed`);
+      continue;
     }
+
+    console.log(`\n✅ ${planInfo.name}: updating ${updates.length} crops`);
+
+    if (!dryRun) {
+      // Save updated plan
+      savePlan(planInfo.id, plan as Parameters<typeof savePlan>[1]);
+
+      // Create checkpoint so app picks up changes
+      createCheckpointWithMetadata(
+        planInfo.id,
+        'backfill-gdd-temps',
+        plan as Parameters<typeof createCheckpointWithMetadata>[2]
+      );
+    }
+
+    // Show sample updates
+    if (updates.length <= 5) {
+      updates.forEach(u => console.log(`  ${u.name}: base=${u.base}°F, upper=${u.upper}°F`));
+    } else {
+      updates.slice(0, 3).forEach(u => console.log(`  ${u.name}: base=${u.base}°F, upper=${u.upper}°F`));
+      console.log(`  ... and ${updates.length - 3} more`);
+    }
+
+    totalUpdated += updates.length;
+    totalPlans++;
   }
 
   console.log(`\n${'='.repeat(50)}`);
   console.log(`📊 Summary: Updated ${totalUpdated} crops across ${totalPlans} plans`);
-  console.log(`📦 Updated ${totalCheckpoints} checkpoint databases`);
 
   if (dryRun) {
     console.log('\n🔍 This was a dry run. Run without --dry-run to apply changes.');
