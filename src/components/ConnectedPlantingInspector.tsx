@@ -302,6 +302,8 @@ export function ConnectedPlantingInspector({
         products={currentPlan.products}
         showTimingEdits={showTimingEdits}
         className={className}
+        location={currentPlan.metadata.location}
+        planYear={currentPlan.metadata.year}
       />
 
       {/* Create Sequence Modal */}

@@ -45,6 +45,7 @@ next-env.d.ts
 /data/plans/
 /data/logs/
 /data/backups/
+/data/temperature-cache/
 
 # python virtual environments
 .venv/

@@ -47,6 +47,12 @@ export interface PlanMetadata {
   timezone?: string;
   /** Last frost date for the growing season (MM-DD format, e.g., "04-01"). Used for scheduling calculations. */
   lastFrostDate?: string;
+  /** Location for GDD (Growing Degree Days) calculations */
+  location?: {
+    lat: number;
+    lon: number;
+    name?: string;
+  };
 }
 
 /** A single change entry for history/undo */

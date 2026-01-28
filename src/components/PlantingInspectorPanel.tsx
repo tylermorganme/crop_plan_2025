@@ -16,6 +16,8 @@ import type { Product } from '@/lib/entities/product';
 import type { TimelineCrop } from '@/lib/entities/plan';
 import type { SeedSource } from '@/lib/entities/planting';
 import type { MutationResult } from '@/lib/plan-store';
+import { GddPreview } from './GddPreview';
+import { getPrimarySeedToHarvest } from '@/lib/entities/crop-config';
 
 // =============================================================================
 // Constants
@@ -231,6 +233,12 @@ export interface PlantingInspectorPanelProps {
   // UI options
   showTimingEdits?: boolean;
   className?: string;
+
+  // GDD calculation data
+  /** Location for GDD calculations */
+  location?: { lat: number; lon: number };
+  /** Plan year for GDD calculations */
+  planYear?: number;
 }
 
 export function PlantingInspectorPanel({
@@ -257,6 +265,8 @@ export function PlantingInspectorPanel({
   products,
   showTimingEdits = false,
   className = '',
+  location,
+  planYear,
 }: PlantingInspectorPanelProps) {
   const [showSequenceInfo, setShowSequenceInfo] = useState(false);
 
@@ -858,6 +868,23 @@ export function PlantingInspectorPanel({
                   {effectiveValues ? effectiveValues.harvestWindow : '-'}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* GDD Preview */}
+          {baseConfig && planYear && (
+            <div className="pt-3 border-t">
+              <div className="text-xs font-semibold text-gray-600 mb-2">
+                GDD Timing Preview
+              </div>
+              <GddPreview
+                dtm={getPrimarySeedToHarvest(baseConfig)}
+                targetFieldDate={baseConfig.targetFieldDate}
+                actualFieldDate={crop.startDate.split('T')[0]}
+                category={baseConfig.category || 'default'}
+                location={location}
+                year={planYear}
+              />
             </div>
           )}
 
