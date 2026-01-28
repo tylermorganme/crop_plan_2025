@@ -7,7 +7,6 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Planting } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
-import { useUIStore } from '@/lib/ui-store';
 import { type PlantingSpec, calculatePlantingMethod } from '@/lib/entities/planting-specs';
 import { calculateSpecRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
 import { getMarketSplitTotal } from '@/lib/entities/market';
@@ -231,9 +230,6 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   // Compare specs state
   const [showCompare, setShowCompare] = useState(false);
 
-  // Edit mode state for inline editing of PlantingSpec fields (persisted in UI store)
-  const isEditMode = useUIStore((state) => state.isEditMode);
-  const toggleEditMode = useUIStore((state) => state.toggleEditMode);
   // Track which column and row is currently being edited (has focus)
   const [activeEditColumn, setActiveEditColumn] = useState<string | null>(null);
   const [activeEditRow, setActiveEditRow] = useState<number | null>(null);
@@ -1118,10 +1114,6 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     }
   }, [bulkUpdatePlantingSpecs]);
 
-  const handleToggleEditMode = useCallback(() => {
-    toggleEditMode();
-  }, [toggleEditMode]);
-
   // Handle initiating bulk delete (from selection bar)
   const handleBulkDelete = useCallback(() => {
     if (!activePlanId) {
@@ -1420,20 +1412,6 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
             )}
           </label>
           <div className="flex-1" />
-          {/* Edit mode toggle */}
-          {activePlanId && (
-            <button
-              onClick={handleToggleEditMode}
-              className={`px-3 py-1.5 text-sm rounded ${
-                isEditMode
-                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              title={isEditMode ? 'Exit edit mode' : 'Edit spec values inline'}
-            >
-              {isEditMode ? 'Exit Edit Mode' : 'Edit Data'}
-            </button>
-          )}
           {/* Freeze columns control */}
           <div className="flex items-center gap-1.5 text-sm text-gray-700">
             <span>Freeze:</span>
@@ -1682,7 +1660,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                         const validation = isIdentifierCol ? validatePlantingSpec(crop as PlantingSpec) : null;
                         const hasIssues = validation && validation.status !== 'ok';
 
-                        // Check if this column is editable in edit mode
+                        // Check if this column is editable (always editable, no edit mode toggle needed)
                         const baseEditableConfig = EDITABLE_COLUMNS[col];
                         // Resolve dynamic options from column values for comboboxes
                         const editableConfig = baseEditableConfig ? {
@@ -1691,7 +1669,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                             ? dynamicOptionsMap[baseEditableConfig.dynamicOptions]
                             : baseEditableConfig.options,
                         } : undefined;
-                        const isEditable = isEditMode && editableConfig;
+                        const isEditable = !!editableConfig;
                         const cellValue = crop[col as keyof PlantingSpec];
 
                         return (
