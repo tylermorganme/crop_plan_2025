@@ -22,6 +22,7 @@ import {
   formatCellValue,
   getColumnDisplayName,
   getColumnBgClass,
+  getHeaderTextClass,
   type DynamicOptionKey,
 } from '@/lib/spec-explorer-columns';
 import { moveFocusVerticalDirect } from '@/lib/table-navigation';
@@ -1506,7 +1507,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                           zIndex: 2,
                         }),
                       }}
-                      className={`relative px-1.5 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center min-h-[3rem] ${
+                      className={`relative px-1.5 py-3 text-left text-xs font-medium ${getHeaderTextClass(col)} uppercase tracking-wider border-r border-gray-100 last:border-r-0 group cursor-grab select-none flex items-center min-h-[3rem] ${
                         dragOverColumn === col
                           ? 'bg-green-100 border-l-2 border-l-green-500'
                           : activeEditColumn === col

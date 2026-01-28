@@ -165,17 +165,19 @@ interface SortHeaderProps {
   sortDir?: 'asc' | 'desc';
   onSort?: (key: string) => void;
   align?: 'left' | 'right';
+  editable?: boolean;
 }
 
-function SortHeader({ label, sortKey, currentSortKey, sortDir, onSort, align }: SortHeaderProps) {
+function SortHeader({ label, sortKey, currentSortKey, sortDir, onSort, align, editable }: SortHeaderProps) {
   const isActive = currentSortKey === sortKey;
+  const baseColor = editable ? 'text-blue-700' : 'text-gray-600';
 
   return (
     <button
       onClick={() => onSort?.(sortKey)}
       className={`text-xs font-medium uppercase tracking-wide flex items-center gap-1 hover:text-gray-900 w-full ${
         align === 'right' ? 'justify-end' : ''
-      } ${isActive ? 'text-blue-600' : 'text-gray-600'}`}
+      } ${isActive ? 'text-blue-600' : baseColor}`}
     >
       {label}
       {isActive && <span>{sortDir === 'asc' ? '↑' : '↓'}</span>}
@@ -320,7 +322,7 @@ export function FastEditTable<T>({
           {columns.map((col) => (
             <div
               key={col.key}
-              className="px-2 flex-shrink-0"
+              className={`px-2 flex-shrink-0 ${col.editable ? 'bg-blue-50/50' : ''}`}
               style={{ width: col.width }}
             >
               {col.sortable && onSort ? (
@@ -331,12 +333,13 @@ export function FastEditTable<T>({
                   sortDir={sortDir}
                   onSort={onSort}
                   align={col.align}
+                  editable={!!col.editable}
                 />
               ) : (
                 <div
-                  className={`text-xs font-medium uppercase tracking-wide text-gray-600 ${
-                    col.align === 'right' ? 'text-right' : ''
-                  }`}
+                  className={`text-xs font-medium uppercase tracking-wide ${
+                    col.editable ? 'text-blue-700' : 'text-gray-600'
+                  } ${col.align === 'right' ? 'text-right' : ''}`}
                 >
                   {col.header}
                 </div>

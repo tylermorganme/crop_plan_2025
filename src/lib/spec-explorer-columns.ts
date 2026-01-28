@@ -405,6 +405,13 @@ export function isColumnEditable(columnId: string): boolean {
 }
 
 /**
+ * Get header text color class - blue for editable columns, gray for read-only
+ */
+export function getHeaderTextClass(columnId: string): string {
+  return isColumnEditable(columnId) ? 'text-blue-700' : 'text-gray-700';
+}
+
+/**
  * Get edit config for a column
  */
 export function getColumnEditConfig(columnId: string): EditConfig | undefined {
