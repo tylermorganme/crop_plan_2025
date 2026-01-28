@@ -3909,11 +3909,15 @@ export async function initializePlanStore(): Promise<void> {
   // Load plan list from storage
   await store.refreshPlanList();
 
-  // Load active plan ID from localStorage
+  // Load active plan ID from localStorage and load the plan
   try {
     const storedId = localStorage.getItem(ACTIVE_PLAN_KEY);
     if (storedId) {
       store.setActivePlanId(storedId);
+      // Also load the plan if not already loaded
+      if (!store.currentPlan || store.currentPlan.id !== storedId) {
+        await store.loadPlanById(storedId);
+      }
     }
   } catch { /* ignore */ }
 
