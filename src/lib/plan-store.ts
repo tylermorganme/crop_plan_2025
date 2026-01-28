@@ -3196,6 +3196,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
     importProducts: async (inputs: CreateProductInput[]) => {
       const existingProducts = get().currentPlan?.products ?? {};
+      // Map from compound key to existing product ID for deduplication
       const existingByKey = new Map<string, string>();
       for (const p of Object.values(existingProducts)) {
         existingByKey.set(getProductKey(p.crop, p.product, p.unit), p.id);
@@ -3219,12 +3220,19 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               const existingId = existingByKey.get(key);
 
               if (existingId) {
-                // Update existing product
-                const product = createProduct(input);
-                plan.products[product.id] = product;
+                // Update existing product - preserve the UUID, update data
+                const existing = plan.products[existingId];
+                plan.products[existingId] = {
+                  ...existing,
+                  crop: input.crop.trim(),
+                  product: input.product.trim(),
+                  unit: input.unit.trim(),
+                  prices: input.prices ?? existing.prices,
+                  holdingWindow: input.holdingWindow ?? existing.holdingWindow,
+                };
                 updated++;
               } else {
-                // Add new product
+                // Add new product with a fresh UUID
                 const product = createProduct(input);
                 plan.products[product.id] = product;
                 added++;

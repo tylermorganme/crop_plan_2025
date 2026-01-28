@@ -584,6 +584,60 @@ function migrateV12ToV13(rawPlan: unknown): unknown {
   return plan;
 }
 
+/**
+ * v13 → v14: Convert product IDs from compound keys to UUIDs
+ * Previously, product IDs were derived from crop|product|unit which meant
+ * changing any of those fields would change the ID. Now we use proper UUIDs
+ * for durable identity and keep the compound key for uniqueness checks only.
+ */
+function migrateV13ToV14(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    products?: Record<string, {
+      id: string;
+      crop: string;
+      product: string;
+      unit: string;
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+  };
+
+  if (!plan.products || Object.keys(plan.products).length === 0) {
+    return plan;
+  }
+
+  // Check if already migrated (products have UUID-style IDs)
+  const firstProduct = Object.values(plan.products)[0];
+  if (firstProduct && firstProduct.id.startsWith('prod_')) {
+    return plan;
+  }
+
+  // Generate UUID helper (duplicated to avoid imports in migration)
+  const generateId = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 12; i++) {
+      result += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return `prod_${result}`;
+  };
+
+  // Migrate products to new UUIDs
+  const newProducts: Record<string, unknown> = {};
+  for (const product of Object.values(plan.products)) {
+    const newId = generateId();
+    newProducts[newId] = {
+      ...product,
+      id: newId,
+    };
+  }
+
+  return {
+    ...plan,
+    products: newProducts,
+  };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -618,6 +672,7 @@ const migrations: MigrationFn[] = [
   migrateV10ToV11, // Index 9: v10 → v11 (add cropName field to PlantingSpec)
   migrateV11ToV12, // Index 10: v11 → v12 (configId → specId, cropBoxDisplay → plantingBoxDisplay)
   migrateV12ToV13, // Index 11: v12 → v13 (cropCatalog → specs)
+  migrateV13ToV14, // Index 12: v13 → v14 (product IDs: compound key → UUID)
 ];
 
 // =============================================================================

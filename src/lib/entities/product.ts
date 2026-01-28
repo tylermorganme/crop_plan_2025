@@ -2,7 +2,8 @@
  * Product Entity
  *
  * Represents a sellable product (e.g., "Tomato - Slicing - lb").
- * Products are unique by crop + product name + unit.
+ * Products have a unique UUID ID (durable identity) and are also unique by
+ * the combination of crop + product name + unit (for deduplication).
  * Used for revenue calculations and seed order planning.
  */
 
@@ -15,7 +16,7 @@
  * Prices are stored per market ID in the prices record.
  */
 export interface Product {
-  /** Unique identifier (deterministic: derived from crop|product|unit) */
+  /** Unique identifier (UUID for durable identity) */
   id: string;
 
   /** Crop name this product comes from (e.g., "Tomato") */
@@ -49,12 +50,25 @@ export interface CreateProductInput {
 }
 
 // =============================================================================
-// KEY GENERATION
+// ID AND KEY GENERATION
 // =============================================================================
 
 /**
+ * Generate a unique product ID (UUID-style).
+ */
+export function generateProductId(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 12; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return `prod_${result}`;
+}
+
+/**
  * Generate a deterministic product key from crop, product, and unit.
- * Used for deduplication and lookups.
+ * Used for uniqueness checks and deduplication during import.
+ * NOT used as the product ID (products use UUIDs for durable identity).
  *
  * @param crop - Crop name
  * @param product - Product type/name
@@ -70,13 +84,11 @@ export function getProductKey(crop: string, product: string, unit: string): stri
 // =============================================================================
 
 /**
- * Create a new product with a deterministic ID.
+ * Create a new product with a UUID.
  */
 export function createProduct(input: CreateProductInput): Product {
-  const id = getProductKey(input.crop, input.product, input.unit);
-
   return {
-    id,
+    id: generateProductId(),
     crop: input.crop.trim(),
     product: input.product.trim(),
     unit: input.unit.trim(),

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePlanStore, initializePlanStore } from '@/lib/plan-store';
-import { createProduct, type Product, type CreateProductInput } from '@/lib/entities/product';
+import { createProduct, getProductKey, type Product, type CreateProductInput } from '@/lib/entities/product';
 import { getActiveMarkets, type Market } from '@/lib/entities/market';
 import { Z_INDEX } from '@/lib/z-index';
 import AppHeader from '@/components/AppHeader';
@@ -187,6 +187,7 @@ export default function ProductsPage() {
   const [filterUnit, setFilterUnit] = useState<string>('');
   const [sortKey, setSortKey] = useState<SortKey>('crop');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Store hooks - using plan store
   const products = usePlanStore((state) => state.currentPlan?.products ?? EMPTY_PRODUCTS);
@@ -263,6 +264,7 @@ export default function ProductsPage() {
         header: 'Crop',
         width: 160,
         sortable: true,
+        editable: { type: 'text' },
         getValue: (p) => p.crop,
       },
       {
@@ -270,6 +272,7 @@ export default function ProductsPage() {
         header: 'Product',
         width: 200,
         sortable: true,
+        editable: { type: 'text' },
         getValue: (p) => p.product,
       },
       {
@@ -277,6 +280,7 @@ export default function ProductsPage() {
         header: 'Unit',
         width: 100,
         sortable: true,
+        editable: { type: 'text' },
         getValue: (p) => p.unit,
       },
       {
@@ -350,8 +354,35 @@ export default function ProductsPage() {
   const handleCellChange = useCallback(
     async (_rowKey: string, columnKey: string, newValue: string, product: Product) => {
       const updatedProduct = { ...product, prices: { ...product.prices } };
+      const trimmedValue = newValue.trim();
 
-      if (columnKey === 'holdingWindow') {
+      // Handle identity fields (crop, product, unit) - check for duplicates
+      if (columnKey === 'crop' || columnKey === 'product' || columnKey === 'unit') {
+        if (!trimmedValue) {
+          setToast({ message: `${columnKey} cannot be empty`, type: 'error' });
+          return;
+        }
+
+        // Build the new key to check for duplicates
+        const newCrop = columnKey === 'crop' ? trimmedValue : product.crop;
+        const newProduct = columnKey === 'product' ? trimmedValue : product.product;
+        const newUnit = columnKey === 'unit' ? trimmedValue : product.unit;
+        const newKey = getProductKey(newCrop, newProduct, newUnit);
+        const oldKey = getProductKey(product.crop, product.product, product.unit);
+
+        // Check if another product already has this key
+        if (newKey !== oldKey) {
+          const duplicate = Object.values(products).find(
+            p => p.id !== product.id && getProductKey(p.crop, p.product, p.unit) === newKey
+          );
+          if (duplicate) {
+            setToast({ message: `Product "${newCrop} - ${newProduct} (${newUnit})" already exists`, type: 'error' });
+            return;
+          }
+        }
+
+        updatedProduct[columnKey] = trimmedValue;
+      } else if (columnKey === 'holdingWindow') {
         const parsed = parseInt(newValue, 10);
         updatedProduct.holdingWindow = !isNaN(parsed) && parsed > 0 ? parsed : undefined;
       } else if (columnKey.startsWith('price_')) {
@@ -366,7 +397,7 @@ export default function ProductsPage() {
 
       await updateProduct(updatedProduct);
     },
-    [updateProduct]
+    [updateProduct, products]
   );
 
   const handleLoadStock = useCallback(async () => {
@@ -385,6 +416,23 @@ export default function ProductsPage() {
     setFilterCrop('');
     setFilterUnit('');
   }, []);
+
+  // Clear selection when filters change
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [searchQuery, filterCrop, filterUnit]);
+
+  // Bulk delete selected products
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} product(s)?`)) return;
+
+    for (const id of selectedIds) {
+      await deleteProduct(id);
+    }
+    setSelectedIds(new Set());
+    setToast({ message: `Deleted ${selectedIds.size} products`, type: 'info' });
+  }, [selectedIds, deleteProduct]);
 
   if (!isLoaded) {
     return (
@@ -458,6 +506,28 @@ export default function ProductsPage() {
           </button>
         </div>
 
+        {/* Selection Bar */}
+        {selectedIds.size > 0 && (
+          <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 flex items-center gap-4 flex-shrink-0">
+            <span className="text-sm font-medium text-blue-900">
+              {selectedIds.size} selected
+            </span>
+            <button
+              onClick={handleBulkDelete}
+              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+            >
+              Delete
+            </button>
+            <div className="flex-1" />
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Clear selection
+            </button>
+          </div>
+        )}
+
         {/* Table */}
         <div className="flex-1 bg-white overflow-hidden">
           <FastEditTable
@@ -468,6 +538,9 @@ export default function ProductsPage() {
             sortDir={sortDir}
             onSort={handleSort}
             onCellChange={handleCellChange}
+            selectable
+            selectedKeys={selectedIds}
+            onSelectionChange={setSelectedIds}
             emptyMessage={productCount === 0 ? 'No products loaded.' : 'No matches'}
             renderActions={(p) => (
               <>
