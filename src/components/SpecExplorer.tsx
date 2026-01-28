@@ -25,6 +25,7 @@ import {
   getColumnBgClass,
   type DynamicOptionKey,
 } from '@/lib/spec-explorer-columns';
+import { moveFocusVerticalDirect } from '@/lib/table-navigation';
 
 // =============================================================================
 // SPEC VALIDATION
@@ -2301,54 +2302,6 @@ function FilterInput({
   );
 }
 
-// Helper to get visual Y position from a cell's parent row
-function getRowY(cell: HTMLElement): number {
-  const row = cell.parentElement;
-  if (!row) return 0;
-  const match = row.style.transform?.match(/translateY\(([^)]+)px\)/);
-  return match ? parseFloat(match[1]) : 0;
-}
-
-// Helper to move focus to next/prev row's same column
-// Runs synchronously - call BEFORE triggering state changes for immediate response
-function moveFocusVertical(input: HTMLElement, direction: 'down' | 'up') {
-  const cell = input.closest('[data-edit-col]') as HTMLElement | null;
-  if (!cell) return;
-  const col = cell.getAttribute('data-edit-col');
-  if (!col) return;
-
-  const currentY = getRowY(cell);
-
-  // Find all cells in this column, sorted by visual position
-  const allCells = Array.from(document.querySelectorAll(`[data-edit-col="${col}"]`)) as HTMLElement[];
-  if (allCells.length === 0) return;
-
-  allCells.sort((a, b) => getRowY(a) - getRowY(b));
-
-  // Find target based on direction
-  let targetCell: HTMLElement | null = null;
-  if (direction === 'down') {
-    targetCell = allCells.find(c => getRowY(c) > currentY) || null;
-  } else {
-    const candidates = allCells.filter(c => getRowY(c) < currentY);
-    targetCell = candidates.length > 0 ? candidates[candidates.length - 1] : null;
-  }
-
-  // If no next row, blur current input (e.g., at end of list)
-  if (!targetCell) {
-    input.blur();
-    return;
-  }
-
-  const nextInput = targetCell.querySelector('input, select') as HTMLElement | null;
-  if (nextInput) {
-    nextInput.focus();
-    if (nextInput instanceof HTMLInputElement) {
-      nextInput.select();
-    }
-  }
-}
-
 // ComboBox component with Excel-like ghost text autocomplete
 function ComboBox({
   value,
@@ -2410,7 +2363,7 @@ function ComboBox({
   const acceptAndNavigate = useCallback((direction: 'up' | 'down') => {
     // Navigate before state changes trigger re-render
     if (inputRef.current) {
-      moveFocusVertical(inputRef.current, direction);
+      moveFocusVerticalDirect(inputRef.current, direction);
     }
     acceptValue();
     setIsOpen(false);
@@ -2427,7 +2380,7 @@ function ComboBox({
       e.preventDefault();
       // Navigate before state changes trigger re-render
       if (inputRef.current) {
-        moveFocusVertical(inputRef.current, 'down');
+        moveFocusVerticalDirect(inputRef.current, 'down');
       }
       acceptValue();
       setIsOpen(false);
@@ -2570,7 +2523,7 @@ function EditableCell({
       e.preventDefault();
       // Move to next row
       if (inputRef.current) {
-        moveFocusVertical(inputRef.current, 'down');
+        moveFocusVerticalDirect(inputRef.current, 'down');
       }
     }
   };

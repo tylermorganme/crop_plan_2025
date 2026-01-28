@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { moveFocusVerticalDirect } from '@/lib/table-navigation';
 
 // =============================================================================
 // Types
@@ -67,59 +68,11 @@ export interface FastEditTableProps<T> {
 }
 
 // =============================================================================
-// Keyboard Navigation Helpers
-// =============================================================================
-
-// Helper to get visual Y position from a cell's parent row
-function getRowY(cell: HTMLElement): number {
-  const row = cell.parentElement;
-  if (!row) return 0;
-  const match = row.style.transform?.match(/translateY\(([^)]+)px\)/);
-  return match ? parseFloat(match[1]) : 0;
-}
-
-// Helper to move focus to next/prev row's same column
-// Runs synchronously - call BEFORE triggering state changes for immediate response
-function moveFocusVertical(input: HTMLElement, direction: 'down' | 'up') {
-  const cell = input.closest('[data-edit-col]') as HTMLElement | null;
-  if (!cell) return;
-  const col = cell.getAttribute('data-edit-col');
-  if (!col) return;
-
-  const currentY = getRowY(cell);
-
-  // Find all cells in this column, sorted by visual position
-  const allCells = Array.from(document.querySelectorAll(`[data-edit-col="${col}"]`)) as HTMLElement[];
-  if (allCells.length === 0) return;
-
-  allCells.sort((a, b) => getRowY(a) - getRowY(b));
-
-  // Find target based on direction
-  let targetCell: HTMLElement | null = null;
-  if (direction === 'down') {
-    targetCell = allCells.find(c => getRowY(c) > currentY) || null;
-  } else {
-    const candidates = allCells.filter(c => getRowY(c) < currentY);
-    targetCell = candidates.length > 0 ? candidates[candidates.length - 1] : null;
-  }
-
-  if (targetCell) {
-    // Click to activate editing, then focus the input
-    const clickable = targetCell.querySelector('[data-inline-cell]') as HTMLElement | null;
-    if (clickable) {
-      clickable.click();
-      // Focus will happen via useEffect in InlineCell after it enters edit mode
-    }
-  }
-}
-
-// =============================================================================
-// InlineCell - Click to edit, blur/enter to save
+// InlineCell - Always-visible input with direct focus navigation
 // =============================================================================
 
 interface InlineCellProps {
   value: string;
-  displayValue?: string;
   onSave: (newValue: string) => void;
   type?: 'text' | 'number';
   min?: number;
@@ -130,7 +83,6 @@ interface InlineCellProps {
 
 function InlineCell({
   value,
-  displayValue,
   onSave,
   type = 'text',
   min,
@@ -138,90 +90,67 @@ function InlineCell({
   placeholder = '—',
   align = 'left',
 }: InlineCellProps) {
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
+  const [localValue, setLocalValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Sync with external value changes
   useEffect(() => {
-    if (editing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [editing]);
-
-  useEffect(() => {
-    setEditValue(value);
+    setLocalValue(value);
   }, [value]);
 
-  const saveAndClose = useCallback(() => {
-    setEditing(false);
-    if (editValue !== value) {
-      onSave(editValue);
+  const saveValue = useCallback(() => {
+    if (localValue !== value) {
+      onSave(localValue);
     }
-  }, [editValue, value, onSave]);
+  }, [localValue, value, onSave]);
 
   const handleBlur = () => {
-    saveAndClose();
+    saveValue();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
+      saveValue();
       if (inputRef.current) {
-        moveFocusVertical(inputRef.current, 'down');
+        moveFocusVerticalDirect(inputRef.current, 'down');
       }
-      saveAndClose();
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
+      saveValue();
       if (inputRef.current) {
-        moveFocusVertical(inputRef.current, 'up');
+        moveFocusVerticalDirect(inputRef.current, 'up');
       }
-      saveAndClose();
     } else if (e.key === 'Enter') {
       e.preventDefault();
+      saveValue();
       if (inputRef.current) {
-        moveFocusVertical(inputRef.current, 'down');
+        moveFocusVerticalDirect(inputRef.current, 'down');
       }
-      saveAndClose();
     } else if (e.key === 'Tab') {
       // Let browser handle Tab navigation, just save the value
-      saveAndClose();
+      saveValue();
     } else if (e.key === 'Escape') {
-      setEditValue(value);
-      setEditing(false);
+      setLocalValue(value);
+      inputRef.current?.blur();
     }
   };
 
-  if (editing) {
-    return (
-      <input
-        ref={inputRef}
-        type={type}
-        value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        min={min}
-        step={step}
-        className={`w-full h-full px-2 text-sm border border-blue-500 rounded focus:outline-none bg-white ${
-          align === 'right' ? 'text-right' : ''
-        }`}
-      />
-    );
-  }
-
-  const display = displayValue ?? value;
-
   return (
-    <div
-      data-inline-cell
-      onClick={() => setEditing(true)}
-      className={`cursor-text hover:bg-blue-50 rounded px-2 h-full flex items-center truncate ${
-        align === 'right' ? 'justify-end' : ''
+    <input
+      ref={inputRef}
+      type={type}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      min={min}
+      step={step}
+      placeholder={placeholder}
+      className={`w-full h-full px-2 text-sm border-0 bg-transparent focus:outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 rounded ${
+        align === 'right' ? 'text-right' : ''
       }`}
-    >
-      {display || <span className="text-gray-400">{placeholder}</span>}
-    </div>
+    />
   );
 }
 
@@ -350,7 +279,6 @@ export function FastEditTable<T>({
       return (
         <InlineCell
           value={stringValue}
-          displayValue={displayValue || undefined}
           onSave={(newValue) => onCellChange?.(rowKey(row), col.key, newValue, row)}
           type={editConfig?.type ?? 'text'}
           min={editConfig?.min}
