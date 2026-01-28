@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { usePlanStore } from '@/lib/plan-store';
 import { DEFAULT_CROP_COLOR, getCropId } from '@/lib/entities/crop';
 import type { Crop } from '@/lib/entities/crop';
 import AppHeader from '@/components/AppHeader';
+import { FastEditTable, ColumnDef } from '@/components/FastEditTable';
 
 /**
  * Calculate relative luminance for a color (0-1 scale).
@@ -286,27 +287,119 @@ export default function CropsPage() {
   }, [searchQuery, bgColorFilter, textColorFilter]);
 
   // Note: CropColorPicker handles auto-contrast internally, so these just pass through
-  const handleColorChange = (cropId: string, bgColor: string, textColor: string) => {
+  const handleColorChange = useCallback((cropId: string, bgColor: string, textColor: string) => {
     updateCrop(cropId, { bgColor, textColor });
-  };
+  }, [updateCrop]);
 
   const handleStartRename = (crop: Crop) => {
     setEditingCropId(crop.id);
     setEditingName(crop.name);
   };
 
-  const handleSaveRename = () => {
+  const handleSaveRename = useCallback(() => {
     if (editingCropId && editingName.trim()) {
       updateCrop(editingCropId, { name: editingName.trim() });
     }
     setEditingCropId(null);
     setEditingName('');
-  };
+  }, [editingCropId, editingName, updateCrop]);
 
-  const handleCancelRename = () => {
+  const handleCancelRename = useCallback(() => {
     setEditingCropId(null);
     setEditingName('');
-  };
+  }, []);
+
+  // Handle cell changes from FastEditTable
+  const handleCellChange = useCallback((rowKey: string, columnKey: string, newValue: string) => {
+    if (columnKey === 'gddBase') {
+      const val = newValue ? parseInt(newValue, 10) : undefined;
+      updateCrop(rowKey, { gddBaseTemp: val });
+    } else if (columnKey === 'gddUpper') {
+      const val = newValue ? parseInt(newValue, 10) : undefined;
+      updateCrop(rowKey, { gddUpperTemp: val });
+    }
+  }, [updateCrop]);
+
+  // Column definitions for FastEditTable
+  const columns: ColumnDef<Crop>[] = useMemo(() => [
+    {
+      key: 'name',
+      header: 'Name',
+      width: 160,
+      getValue: (crop) => crop.name,
+      render: (crop) => {
+        const isEditing = editingCropId === crop.id;
+        if (isEditing) {
+          return (
+            <input
+              type="text"
+              value={editingName}
+              onChange={(e) => setEditingName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveRename();
+                if (e.key === 'Escape') handleCancelRename();
+              }}
+              onBlur={handleSaveRename}
+              className="px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none w-full"
+              autoFocus
+            />
+          );
+        }
+        return (
+          <div
+            className="px-3 py-1 rounded text-sm font-medium cursor-pointer hover:opacity-80 truncate"
+            style={{ backgroundColor: crop.bgColor, color: crop.textColor }}
+            onClick={() => handleStartRename(crop)}
+            title="Click to rename"
+          >
+            {crop.name}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'configs',
+      header: 'Configs',
+      width: 70,
+      align: 'right',
+      getValue: (crop) => cropUsage.get(crop.id) || 0,
+      format: (crop) => {
+        const count = cropUsage.get(crop.id) || 0;
+        return count > 0 ? `${count}` : '';
+      },
+    },
+    {
+      key: 'gddBase',
+      header: 'GDD Base',
+      width: 80,
+      align: 'right',
+      editable: { type: 'number', placeholder: '—' },
+      getValue: (crop) => crop.gddBaseTemp,
+    },
+    {
+      key: 'gddUpper',
+      header: 'GDD Upper',
+      width: 80,
+      align: 'right',
+      editable: { type: 'number', placeholder: '—' },
+      getValue: (crop) => crop.gddUpperTemp,
+    },
+    {
+      key: 'colors',
+      header: 'Colors',
+      width: 260,
+      getValue: () => '',
+      render: (crop) => (
+        <CropColorPicker
+          bgColor={crop.bgColor}
+          textColor={crop.textColor}
+          onColorChange={(bg, text) => handleColorChange(crop.id, bg, text)}
+          crops={sortedCrops}
+          excludeId={crop.id}
+        />
+      ),
+    },
+  ], [editingCropId, editingName, cropUsage, sortedCrops, handleColorChange, handleSaveRename, handleCancelRename]);
 
   const handleAddCrop = () => {
     if (!newCropName.trim()) return;
@@ -339,27 +432,6 @@ export default function CropsPage() {
     if (confirm(`Delete crop "${crop.name}"?`)) {
       deleteCropEntity(crop.id);
     }
-  };
-
-  // Multi-select handlers
-  const toggleSelect = (cropId: string) => {
-    setSelectedCropIds(prev => {
-      const next = new Set(prev);
-      if (next.has(cropId)) {
-        next.delete(cropId);
-      } else {
-        next.add(cropId);
-      }
-      return next;
-    });
-  };
-
-  const selectAll = () => {
-    setSelectedCropIds(new Set(filteredCrops.map(c => c.id)));
-  };
-
-  const selectNone = () => {
-    setSelectedCropIds(new Set());
   };
 
   const handleBulkColorChange = async () => {
@@ -488,8 +560,8 @@ export default function CropsPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto">
-          <div className="max-w-xl mx-auto px-4 py-4">
+        <div className="flex-1 overflow-hidden px-4 py-4">
+          <div className="max-w-4xl mx-auto h-full flex flex-col">
 
           {/* Bulk Action Bar */}
           {hasSelection && (
@@ -518,7 +590,7 @@ export default function CropsPage() {
               <div className="flex-1" />
 
               <button
-                onClick={selectNone}
+                onClick={() => setSelectedCropIds(new Set())}
                 className="text-sm text-blue-600 hover:text-blue-800"
               >
                 Clear selection
@@ -527,147 +599,40 @@ export default function CropsPage() {
           )}
 
 
-          {/* Crops List */}
-          <div className="bg-white rounded-lg border border-gray-200">
-            {/* Select all header */}
-            {filteredCrops.length > 0 && (
-              <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-100 bg-gray-50">
-                <input
-                  type="checkbox"
-                  checked={selectedCropIds.size === filteredCrops.length && filteredCrops.length > 0}
-                  onChange={() => {
-                    if (selectedCropIds.size === filteredCrops.length) {
-                      selectNone();
-                    } else {
-                      selectAll();
-                    }
-                  }}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-xs text-gray-500">
-                  {selectedCropIds.size === filteredCrops.length ? 'Deselect all' : 'Select all'}
-                </span>
-              </div>
-            )}
-
-            {filteredCrops.length === 0 ? (
-              <div className="text-center text-gray-500 py-12">
-                {searchQuery || bgColorFilter || textColorFilter ? 'No matching crops found' : 'No crops defined yet'}
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {filteredCrops.map((crop) => {
-                  const usageCount = cropUsage.get(crop.id) || 0;
-                  const isEditing = editingCropId === crop.id;
-                  const isSelected = selectedCropIds.has(crop.id);
-
-                  return (
-                    <div
-                      key={crop.id}
-                      className={`flex items-center gap-4 px-4 py-3 hover:bg-gray-50 ${
-                        isSelected ? 'bg-blue-50' : ''
-                      }`}
-                    >
-                      {/* Checkbox */}
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelect(crop.id)}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-
-                      {/* Crop name as colored badge (editable) */}
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSaveRename();
-                            if (e.key === 'Escape') handleCancelRename();
-                          }}
-                          onBlur={handleSaveRename}
-                          className="px-2 py-1 text-sm border border-blue-500 rounded focus:outline-none"
-                          autoFocus
-                        />
-                      ) : (
-                        <div
-                          className="px-3 py-1 rounded text-sm font-medium cursor-pointer hover:opacity-80"
-                          style={{ backgroundColor: crop.bgColor, color: crop.textColor }}
-                          onClick={() => handleStartRename(crop)}
-                          title="Click to rename"
-                        >
-                          {crop.name}
-                        </div>
-                      )}
-
-                      {/* Usage count */}
-                      {usageCount > 0 && (
-                        <span className="text-xs text-gray-500">
-                          {usageCount} config{usageCount !== 1 ? 's' : ''}
-                        </span>
-                      )}
-
-                      {/* GDD Temps (Base / Upper) */}
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-500">GDD:</span>
-                        <input
-                          type="number"
-                          value={crop.gddBaseTemp ?? ''}
-                          onChange={(e) => {
-                            const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                            updateCrop(crop.id, { gddBaseTemp: val });
-                          }}
-                          placeholder="—"
-                          className="w-10 px-1 py-0.5 text-xs border border-gray-300 rounded text-center focus:outline-none focus:border-blue-500"
-                          title="GDD base temperature (°F). Min temp for growth."
-                        />
-                        <span className="text-xs text-gray-400">/</span>
-                        <input
-                          type="number"
-                          value={crop.gddUpperTemp ?? ''}
-                          onChange={(e) => {
-                            const val = e.target.value ? parseInt(e.target.value, 10) : undefined;
-                            updateCrop(crop.id, { gddUpperTemp: val });
-                          }}
-                          placeholder="—"
-                          className="w-10 px-1 py-0.5 text-xs border border-gray-300 rounded text-center focus:outline-none focus:border-blue-500"
-                          title="GDD upper temperature (°F). Max temp for growth."
-                        />
-                        <span className="text-xs text-gray-400">°F</span>
-                      </div>
-
-                      <div className="flex-1" />
-
-                      {/* Color picker */}
-                      <CropColorPicker
-                        bgColor={crop.bgColor}
-                        textColor={crop.textColor}
-                        onColorChange={(bg, text) => handleColorChange(crop.id, bg, text)}
-                        crops={sortedCrops}
-                        excludeId={crop.id}
-                      />
-
-                      {/* Delete button */}
-                      <button
-                        onClick={() => handleDeleteCrop(crop)}
-                        disabled={usageCount > 0}
-                        className={`p-1.5 rounded flex-shrink-0 ${
-                          usageCount > 0
-                            ? 'text-gray-300 cursor-not-allowed'
-                            : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
-                        }`}
-                        title={usageCount > 0 ? `Cannot delete - used in ${usageCount} config(s)` : 'Delete crop'}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          {/* Crops Table */}
+          <div className="bg-white rounded-lg border border-gray-200 h-[calc(100vh-280px)] min-h-[300px]">
+            <FastEditTable
+              data={filteredCrops}
+              rowKey={(crop) => crop.id}
+              columns={columns}
+              rowHeight={40}
+              headerHeight={36}
+              onCellChange={handleCellChange}
+              selectable
+              selectedKeys={selectedCropIds}
+              onSelectionChange={setSelectedCropIds}
+              emptyMessage={searchQuery || bgColorFilter || textColorFilter ? 'No matching crops found' : 'No crops defined yet'}
+              renderActions={(crop) => {
+                const usageCount = cropUsage.get(crop.id) || 0;
+                return (
+                  <button
+                    onClick={() => handleDeleteCrop(crop)}
+                    disabled={usageCount > 0}
+                    className={`p-1.5 rounded flex-shrink-0 ${
+                      usageCount > 0
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                    }`}
+                    title={usageCount > 0 ? `Cannot delete - used in ${usageCount} config(s)` : 'Delete crop'}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                );
+              }}
+              actionsWidth={50}
+            />
           </div>
         </div>
       </div>
