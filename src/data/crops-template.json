@@ -3,223 +3,297 @@
     "id": "crop_alexanders",
     "name": "Alexanders",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_amaranth",
     "name": "Amaranth",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 45,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_anise-hysopp",
     "name": "Anise Hysopp",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_artichoke",
     "name": "Artichoke",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 45,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_arugula",
     "name": "Arugula",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_asian-greens",
     "name": "Asian Greens",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_atriplex",
     "name": "Atriplex",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_bachellors-button",
     "name": "Bachellor's Button",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_basil",
     "name": "Basil",
     "bgColor": "#ffc000",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 104
   },
   {
     "id": "crop_bean",
     "name": "Bean",
     "bgColor": "#00b0f0",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_beet",
     "name": "Beet",
     "bgColor": "#ff0000",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 34,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_bok-choy",
     "name": "Bok Choy",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_borage",
     "name": "Borage",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_broccoli",
     "name": "Broccoli",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 70
   },
   {
     "id": "crop_brussel-sprouts",
     "name": "Brussel Sprouts",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 70
   },
   {
     "id": "crop_buckwheat",
     "name": "Buckwheat",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_bupleurum",
     "name": "Bupleurum",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_butterfly-flowers",
     "name": "Butterfly Flowers",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_cabbage",
     "name": "Cabbage",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 75
   },
   {
     "id": "crop_carrot",
     "name": "Carrot",
     "bgColor": "#ffc000",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_catnip",
     "name": "Catnip",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_cauliflower",
     "name": "Cauliflower",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 75
   },
   {
     "id": "crop_celery",
     "name": "Celery",
     "bgColor": "#5b9bd5",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_celery-root",
     "name": "Celery Root",
     "bgColor": "#5b9bd5",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_celosia",
     "name": "Celosia",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_chervil",
     "name": "Chervil",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_chicory",
     "name": "Chicory",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_chijimisai",
     "name": "Chijimisai",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_choi-sum",
     "name": "Choi Sum",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_chrysanthemum",
     "name": "Chrysanthemum",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_chrysanthemum-greens",
     "name": "Chrysanthemum Greens",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_cilantro",
     "name": "Cilantro",
     "bgColor": "#ffc000",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 39,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_clematis",
     "name": "Clematis",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_collard-greens",
     "name": "Collard Greens",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_corn",
     "name": "Corn",
     "bgColor": "#ffff00",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_corn-salad",
     "name": "Corn Salad",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_cosmos",
     "name": "Cosmos",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_cover-mix",
@@ -231,529 +305,705 @@
     "id": "crop_cress",
     "name": "Cress",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_cucumber",
     "name": "Cucumber",
     "bgColor": "#70ad47",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_dahlia",
     "name": "Dahlia",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_dianthus",
     "name": "Dianthus",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_dill",
     "name": "Dill",
     "bgColor": "#ffc000",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_dropmore",
     "name": "Dropmore",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_eggplant",
     "name": "Eggplant",
     "bgColor": "#ff5050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 60,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_epazote",
     "name": "Epazote",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_everlasting",
     "name": "Everlasting",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_fava-bean",
     "name": "Fava Bean",
     "bgColor": "#00b0f0",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 39,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_fennel",
     "name": "Fennel",
     "bgColor": "#ffc000",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_flax",
     "name": "Flax",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 37,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_frise",
     "name": "Frisée",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_garlic",
     "name": "Garlic",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_ginger",
     "name": "Ginger",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 55,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_gooseberry",
     "name": "Gooseberry",
     "bgColor": "#ff5050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_grass",
     "name": "Grass",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_ground-cherry",
     "name": "Ground Cherry",
     "bgColor": "#ff5050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_hibiscus",
     "name": "Hibiscus",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_hops-vine-with-flowers",
     "name": "Hops Vine with Flowers",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 41,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_huauzontle",
     "name": "Huauzontle",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_hyacinth-bean-vine",
     "name": "Hyacinth Bean Vine",
     "bgColor": "#00b0f0",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_hydrangea",
     "name": "Hydrangea",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_jelly-melon",
     "name": "Jelly Melon",
     "bgColor": "#70ad47",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_kaibroc",
     "name": "Kaibroc",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_kale",
     "name": "Kale",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_kohlrabi",
     "name": "Kohlrabi",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_komatsuna",
     "name": "Komatsuna",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_leek",
     "name": "Leek",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_lemon-balm",
     "name": "Lemon Balm",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 45,
+    "gddUpperTemp": 104
   },
   {
     "id": "crop_lemongrass",
     "name": "Lemongrass",
     "bgColor": "#ffc000",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_lettuce",
     "name": "Lettuce",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_lilies",
     "name": "Lilies",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_lovage",
     "name": "Lovage",
     "bgColor": "#5b9bd5",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_magenta-spreen",
     "name": "Magenta Spreen",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_malabar-spinach",
     "name": "Malabar Spinach",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_marigolds",
     "name": "Marigolds",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_marjoram",
     "name": "Marjoram",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 104
   },
   {
     "id": "crop_melon",
     "name": "Melon",
     "bgColor": "#70ad47",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 49,
+    "gddUpperTemp": 106
   },
   {
     "id": "crop_microgreens",
     "name": "Microgreens",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_milkweed",
     "name": "Milkweed",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_mint",
     "name": "Mint",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_mock-orange",
     "name": "Mock Orange",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_mustard-greens",
     "name": "Mustard Greens",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_nausturtium",
     "name": "Nausturtium",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_nigella",
     "name": "Nigella",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_onion",
     "name": "Onion",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_oregano",
     "name": "Oregano",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 41,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_pansy-and-violas",
     "name": "Pansy and Violas",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_parsley",
     "name": "Parsley",
     "bgColor": "#5b9bd5",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 39,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_parsnip",
     "name": "Parsnip",
     "bgColor": "#ffc000",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_pea-tendril",
     "name": "Pea Tendril",
     "bgColor": "#00b0f0",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_peas",
     "name": "Peas",
     "bgColor": "#00b0f0",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_peonies",
     "name": "Peonies",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_pepper",
     "name": "Pepper",
     "bgColor": "#ff5050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 52,
+    "gddUpperTemp": 100
   },
   {
     "id": "crop_petunia",
     "name": "Petunia",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_potato",
     "name": "Potato",
     "bgColor": "#ff5050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_queen-annes-lace",
     "name": "Queen Anne's Lace",
     "bgColor": "#ffc000",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 81
   },
   {
     "id": "crop_radicchio",
     "name": "Radicchio",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_radish",
     "name": "Radish",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_ranunculus",
     "name": "Ranunculus",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_raspberry",
     "name": "Raspberry",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 41,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_rat-tail-radish",
     "name": "Rat Tail Radish",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_rose",
     "name": "Rose",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_roselle",
     "name": "Roselle",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_rosemary",
     "name": "Rosemary",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 104
   },
   {
     "id": "crop_rubeckia",
     "name": "Rubeckia",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_rutabaga",
     "name": "Rutabaga",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_sage",
     "name": "Sage",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_salsola",
     "name": "Salsola",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_scabiosa",
     "name": "Scabiosa",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_scallion",
     "name": "Scallion",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_shallots",
     "name": "Shallots",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 32,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_shiso",
     "name": "Shiso",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 104
   },
   {
     "id": "crop_snapdragons",
     "name": "Snapdragons",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_sorrel",
     "name": "Sorrel",
     "bgColor": "#ed7d31",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_spinach",
     "name": "Spinach",
     "bgColor": "#92d050",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 27,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_squash",
     "name": "Squash",
     "bgColor": "#ed7d31",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 46,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_stock",
     "name": "Stock",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_strawberry",
     "name": "Strawberry",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 41,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_strawberry-spinach",
     "name": "Strawberry Spinach",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_strawflower",
     "name": "Strawflower",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_sudangrass",
     "name": "Sudangrass",
     "bgColor": "#ed7d31",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 48,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_summer-squash",
     "name": "Summer Squash",
     "bgColor": "#ed7d31",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 46,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_sunchoke",
     "name": "Sunchoke",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_sunflower",
     "name": "Sunflower",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 45,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_swiss-chard",
     "name": "Swiss Chard",
     "bgColor": "#ff0000",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 39,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_talinum",
     "name": "Talinum",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   },
   {
     "id": "crop_tarp",
@@ -765,42 +1015,56 @@
     "id": "crop_thyme",
     "name": "Thyme",
     "bgColor": "#ffffff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_tomatillo",
     "name": "Tomatillo",
     "bgColor": "#ff5050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_tomato",
     "name": "Tomato",
     "bgColor": "#ff5050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 45,
+    "gddUpperTemp": 91
   },
   {
     "id": "crop_turnip",
     "name": "Turnip",
     "bgColor": "#00b050",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 90
   },
   {
     "id": "crop_wisteria",
     "name": "Wisteria",
     "bgColor": "#78909c",
-    "textColor": "#ffffff"
+    "textColor": "#ffffff",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_yarrow",
     "name": "Yarrow",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 40,
+    "gddUpperTemp": 86
   },
   {
     "id": "crop_zinnia",
     "name": "Zinnia",
     "bgColor": "#ff99ff",
-    "textColor": "#000000"
+    "textColor": "#000000",
+    "gddBaseTemp": 50,
+    "gddUpperTemp": 95
   }
 ]
