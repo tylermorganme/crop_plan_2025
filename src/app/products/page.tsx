@@ -15,7 +15,7 @@ const EMPTY_MARKETS: Record<string, Market> = {};
 const ROW_HEIGHT = 32;
 const HEADER_HEIGHT = 36;
 
-type SortKey = 'crop' | 'product' | 'unit' | string; // string for dynamic market IDs
+type SortKey = 'crop' | 'product' | 'unit' | 'holdingWindow' | string; // string for dynamic market IDs
 type SortDir = 'asc' | 'desc';
 
 // Toast notification component
@@ -54,6 +54,7 @@ function ProductEditor({
     crop: product?.crop ?? '',
     product: product?.product ?? '',
     unit: product?.unit ?? '',
+    holdingWindow: product?.holdingWindow?.toString() ?? '',
     prices: product?.prices ?? {} as Record<string, string>,
   });
 
@@ -79,11 +80,14 @@ function ProductEditor({
       }
     }
 
+    const holdingWindow = form.holdingWindow ? parseInt(form.holdingWindow, 10) : undefined;
+
     const newProduct = createProduct({
       crop: form.crop.trim(),
       product: form.product.trim(),
       unit: form.unit.trim(),
       prices,
+      holdingWindow: holdingWindow && !isNaN(holdingWindow) ? holdingWindow : undefined,
     });
 
     onSave(newProduct);
@@ -129,6 +133,16 @@ function ProductEditor({
               placeholder="Unit *"
               required
             />
+            <div>
+              <input
+                type="number"
+                min="0"
+                value={form.holdingWindow}
+                onChange={(e) => setForm({ ...form, holdingWindow: e.target.value })}
+                className="px-2 py-1.5 border rounded text-sm w-full"
+                placeholder="Holding (days)"
+              />
+            </div>
           </div>
           <div className="border-t pt-3">
             <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Prices by Market</h3>
@@ -234,6 +248,7 @@ export default function ProductsPage() {
         case 'crop': cmp = a.crop.localeCompare(b.crop); break;
         case 'product': cmp = a.product.localeCompare(b.product); break;
         case 'unit': cmp = a.unit.localeCompare(b.unit); break;
+        case 'holdingWindow': cmp = (a.holdingWindow || 0) - (b.holdingWindow || 0); break;
         default:
           // Sort by market price (sortKey is market ID)
           cmp = (a.prices?.[sortKey] || 0) - (b.prices?.[sortKey] || 0);
@@ -403,6 +418,7 @@ export default function ProductsPage() {
                 <div className="w-40 px-2"><SortHeader label="Crop" sortKeyName="crop" /></div>
                 <div className="w-48 px-2"><SortHeader label="Product" sortKeyName="product" /></div>
                 <div className="w-24 px-2"><SortHeader label="Unit" sortKeyName="unit" /></div>
+                <div className="w-20 px-2 text-right"><SortHeader label="Hold" sortKeyName="holdingWindow" /></div>
                 {activeMarkets.map((market) => (
                   <div key={market.id} className="w-24 px-2 text-right">
                     <SortHeader label={market.name} sortKeyName={market.id} />
@@ -434,6 +450,9 @@ export default function ProductsPage() {
                       <div className="w-40 px-2 text-sm truncate" title={p.crop}>{p.crop}</div>
                       <div className="w-48 px-2 text-sm font-medium truncate" title={p.product}>{p.product}</div>
                       <div className="w-24 px-2 text-sm text-gray-600 truncate" title={p.unit}>{p.unit}</div>
+                      <div className="w-20 px-2 text-sm text-gray-600 text-right">
+                        {p.holdingWindow ? `${p.holdingWindow}d` : '-'}
+                      </div>
                       {activeMarkets.map((market) => (
                         <div key={market.id} className="w-24 px-2 text-sm text-gray-700 text-right font-mono">
                           {formatPrice(p.prices?.[market.id])}
