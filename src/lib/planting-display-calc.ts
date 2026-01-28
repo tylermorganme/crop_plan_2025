@@ -21,8 +21,8 @@ import {
   getPrimarySeedToHarvest,
   calculateAggregateHarvestWindow,
   getPrimaryProductName,
-  type CropConfig,
-} from './entities/crop-config';
+  type PlantingSpec,
+} from './entities/planting-specs';
 import { createPlanting } from './entities/planting';
 import { parseLocalDate, parseLocalDateOrNull } from './date-utils';
 
@@ -44,7 +44,7 @@ export interface PlantingWithDates {
   id: string;
 
   /** Reference to planting config in catalog */
-  cropConfigId: string;
+  specId: string;
 
   /** Assigned bed, or null if unassigned */
   bed: string | null;
@@ -107,9 +107,9 @@ export interface PlantingConfigLookup {
 
 /**
  * Raw crop entry from crop catalog (template or plan-specific).
- * This matches the CropConfig type from entities/crop-config.ts
+ * This matches the PlantingSpec type from entities/crop-config.ts
  */
-export type CropCatalogEntry = CropConfig;
+export type CropCatalogEntry = PlantingSpec;
 
 /**
  * Look up planting config from the crops catalog by identifier.
@@ -129,7 +129,7 @@ export function lookupConfigFromCatalog(
   const entry = catalog.find(c => c.identifier.trim() === trimmedId);
   if (!entry) return null;
 
-  // Calculate derived fields from the minimal crop config
+  // Calculate derived fields from the minimal planting spec
   // Uses product-aware calculations if productYields exists
   const daysInCells = calculateDaysInCells(entry);
   const seedToHarvest = getPrimarySeedToHarvest(entry);
@@ -272,7 +272,7 @@ export function expandToTimelineCrops(
     structure: config.growingStructure,
     growingStructure: config.growingStructure as 'field' | 'greenhouse' | 'high-tunnel' | undefined,
     plantingId: planting.id,
-    cropConfigId: planting.cropConfigId,
+    specId: planting.specId,
     totalBeds: 1,   // Default - computed at render time
     bedIndex: 1,    // Default - computed at render time
     groupId: planting.id,
@@ -287,10 +287,10 @@ export function expandToTimelineCrops(
 
 /**
  * Recalculate timeline crops that use a specific config.
- * Used after saving a crop config to update existing timeline entries.
+ * Used after saving a planting spec to update existing timeline entries.
  *
  * @param crops - Current timeline crops
- * @param configIdentifier - The crop config identifier that was updated
+ * @param specIdentifier - The planting spec identifier that was updated
  * @param catalog - Fresh crop catalog with updated config
  * @param bedGroups - Bed groupings for span calculation
  * @param bedLengths - Bed lengths mapping (bed name -> feet)
@@ -298,14 +298,14 @@ export function expandToTimelineCrops(
  */
 export function recalculateCropsForConfig(
   crops: TimelineCrop[],
-  configIdentifier: string,
+  specIdentifier: string,
   catalog: CropCatalogEntry[],
   bedGroups: Record<string, string[]>,
   bedLengths: Record<string, number>
 ): TimelineCrop[] {
-  const config = lookupConfigFromCatalog(configIdentifier, catalog);
-  if (!config) {
-    // Config not found, return crops unchanged
+  const spec = lookupConfigFromCatalog(specIdentifier, catalog);
+  if (!spec) {
+    // Spec not found, return crops unchanged
     return crops;
   }
 
@@ -324,7 +324,7 @@ export function recalculateCropsForConfig(
     const firstCrop = groupCrops[0];
 
     // Only recalculate if this planting uses the updated config
-    if (firstCrop.cropConfigId !== configIdentifier) {
+    if (firstCrop.specId !== specIdentifier) {
       result.push(...groupCrops);
       continue;
     }
@@ -332,14 +332,14 @@ export function recalculateCropsForConfig(
     // Extract slim planting from existing timeline crop
     const slim: PlantingWithDates = {
       id: firstCrop.plantingId || groupId,
-      cropConfigId: configIdentifier,
+      specId: specIdentifier,
       bed: firstCrop.resource || null,
       bedFeet: firstCrop.feetNeeded,
       fixedFieldStartDate: firstCrop.startDate, // Use current start as fixed date
     };
 
-    // Recalculate with fresh config
-    const recalculated = expandToTimelineCrops(slim, config, bedGroups, bedLengths);
+    // Recalculate with fresh spec
+    const recalculated = expandToTimelineCrops(slim, spec, bedGroups, bedLengths);
 
     // Preserve any non-calculated fields from original crops
     for (let i = 0; i < recalculated.length; i++) {
@@ -405,7 +405,7 @@ export function extractPlantingFromImport(assignment: {
 }): PlantingWithDates {
   return {
     id: assignment.identifier,
-    cropConfigId: assignment.crop, // For now, use the full crop identifier as the config ID
+    specId: assignment.crop, // For now, use the full crop identifier as the config ID
     bed: assignment.bed || null,
     bedFeet: assignment.bedFeet ?? 50,
     fixedFieldStartDate: assignment.fixedFieldStartDate ?? undefined,
@@ -516,7 +516,7 @@ export function collapseToPlantings(crops: TimelineCrop[]): Planting[] {
     // Pass existing ID to preserve it during import
     return createPlanting({
       id: first.plantingId || first.groupId,
-      configId: first.cropConfigId,
+      specId: first.specId,
       fieldStartDate: first.startDate,
       startBed: startBedEntry?.resource || null,
       bedFeet: totalFeet,

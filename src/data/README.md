@@ -4,19 +4,19 @@
 
 | File | Purpose | Updated By |
 |------|---------|------------|
-| `crop-config-template.json` | Stock crop catalog (339 configs) | `build-minimal-crops.js` |
+| `planting-spec-template.json` | Stock spec catalog (339 planting specs) | `build-minimal-crops.js` |
 | `bed-template.json` | Default bed layout (92 beds) | Manual or import |
 | `products-template.json` | Product catalog with pricing | `build-products.js` |
 | `varieties-template.json` | Variety catalog | `build-varieties.js` |
 | `seed-mixes-template.json` | Seed mix definitions | `build-seed-mixes.js` |
 | `seed-orders.json` | Seed order data | Manual |
-| `column-analysis.json` | Display column metadata (used by CropExplorer) | One-time analysis |
+| `column-analysis.json` | Display column metadata (used by SpecExplorer) | One-time analysis |
 
 ## Build Script
 
 | File | Purpose |
 |------|---------|
-| `build-minimal-crops.js` | Transforms `crops_from_excel.json` → `crop-config-template.json` |
+| `build-minimal-crops.js` | Transforms `crops_from_excel.json` → `planting-spec-template.json` |
 
 ## Data Flow
 
@@ -27,21 +27,21 @@ Excel Workbook (Crop Plan 2025 V20.xlsm)
 tmp/crops_from_excel.json (raw dump, not used by app)
     │
     ▼ build-minimal-crops.js
-crop-config-template.json (PRODUCTION - used by app)
+planting-spec-template.json (PRODUCTION - used by app)
     │
-    ▼ Plan creation (cloneCropCatalog)
-plan.cropCatalog (per-plan snapshot, stored in IndexedDB + data/plans/)
+    ▼ Plan creation (clonePlantingCatalog)
+plan.specs (per-plan snapshot, stored in SQLite + data/plans/)
 ```
 
 ## Key Distinction: Stock vs Plan Data
 
-**Stock data** (`crop-config-template.json`):
+**Stock data** (`planting-spec-template.json`):
 - Template for new plans
 - Shared across all new plans
 - Changes here affect NEW plans only
 
-**Plan data** (`data/plans/*.json` + IndexedDB):
-- Each plan has its own `cropCatalog` snapshot
+**Plan data** (`data/plans/*.db` SQLite):
+- Each plan has its own `specs` snapshot
 - Independent of stock data after creation
 - Editable per-plan via the UI
 
@@ -49,7 +49,7 @@ plan.cropCatalog (per-plan snapshot, stored in IndexedDB + data/plans/)
 
 ```
 src/data/                         # Production data (imported by app)
-├── crop-config-template.json     # Stock crop catalog
+├── planting-spec-template.json   # Stock spec catalog
 ├── bed-template.json             # Default bed layout
 ├── products-template.json        # Product catalog
 ├── varieties-template.json       # Variety catalog

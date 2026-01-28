@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import type { CropBoxDisplayConfig } from '@/lib/entities/plan';
+import type { PlantingBoxDisplayConfig } from '@/lib/entities/plan';
 import type { Product } from '@/lib/entities/product';
-import type { CropConfig, ProductYield } from '@/lib/entities/crop-config';
-import { calculateConfigRevenue } from '@/lib/revenue';
-import { buildYieldContext, evaluateYieldFormula } from '@/lib/entities/crop-config';
+import type { PlantingSpec, ProductYield } from '@/lib/entities/planting-specs';
+import { calculateSpecRevenue } from '@/lib/revenue';
+import { buildYieldContext, evaluateYieldFormula } from '@/lib/entities/planting-specs';
 import { Z_INDEX } from '@/lib/z-index';
 
 // dnd-kit imports
@@ -42,7 +42,7 @@ export interface CropForDisplay {
   category?: string;
   /** Total bed-feet needed - derived from Planting.bedFeet */
   feetNeeded: number;
-  cropConfigId?: string;
+  specId?: string;
   totalBeds: number;
   bedIndex: number;
   groupId: string;
@@ -71,7 +71,7 @@ interface TokenDef {
 }
 
 interface ResolverContext {
-  cropCatalog?: Record<string, CropConfig>;
+  specs?: Record<string, PlantingSpec>;
   products?: Record<string, Product>;
 }
 
@@ -207,11 +207,11 @@ const TOKENS: TokenDef[] = [
     resolve: (crop) => crop.name || null,
   },
   {
-    key: 'configId',
-    label: 'Config ID',
-    description: 'Configuration identifier',
+    key: 'specId',
+    label: 'Spec ID',
+    description: 'Planting spec identifier',
     dataType: 'string',
-    resolve: (crop) => crop.cropConfigId || null,
+    resolve: (crop) => crop.specId || null,
   },
   {
     key: 'category',
@@ -254,10 +254,10 @@ const TOKENS: TokenDef[] = [
     description: 'Calculated revenue ($)',
     dataType: 'number',
     resolve: (crop, ctx) => {
-      if (!ctx.cropCatalog || !ctx.products || !crop.cropConfigId) return null;
-      const config = ctx.cropCatalog[crop.cropConfigId];
-      if (!config) return null;
-      const rev = calculateConfigRevenue(config, crop.feetNeeded, ctx.products);
+      if (!ctx.specs || !ctx.products || !crop.specId) return null;
+      const spec = ctx.specs[crop.specId];
+      if (!spec) return null;
+      const rev = calculateSpecRevenue(spec, crop.feetNeeded, ctx.products);
       return rev ?? null;
     },
   },
@@ -318,15 +318,15 @@ const TOKENS: TokenDef[] = [
     description: 'Total yield (from formula)',
     dataType: 'number',
     resolve: (crop, ctx) => {
-      if (!ctx.cropCatalog || !crop.cropConfigId) return null;
-      const config = ctx.cropCatalog[crop.cropConfigId];
-      if (!config?.productYields?.length) return null;
+      if (!ctx.specs || !crop.specId) return null;
+      const spec = ctx.specs[crop.specId];
+      if (!spec?.productYields?.length) return null;
 
       // Sum yields from all products
       let totalYield = 0;
-      for (const py of config.productYields) {
+      for (const py of spec.productYields) {
         if (!py.yieldFormula) continue;
-        const context = buildYieldContext(config, crop.feetNeeded);
+        const context = buildYieldContext(spec, crop.feetNeeded);
         context.harvests = py.numberOfHarvests ?? 1;
         const result = evaluateYieldFormula(py.yieldFormula, context);
         if (result.value !== null) {
@@ -675,13 +675,13 @@ function TokenLine({ lineId, segments, onSegmentsChange, placeholder }: TokenLin
 // Component Props
 // =============================================================================
 
-interface CropBoxDisplayEditorProps {
+interface PlantingBoxDisplayEditorProps {
   isOpen: boolean;
   onClose: () => void;
-  config: CropBoxDisplayConfig | undefined;
-  onSave: (config: CropBoxDisplayConfig) => void;
+  config: PlantingBoxDisplayConfig | undefined;
+  onSave: (config: PlantingBoxDisplayConfig) => void;
   sampleCrops: CropForDisplay[];
-  cropCatalog?: Record<string, CropConfig>;
+  specs?: Record<string, PlantingSpec>;
   products?: Record<string, Product>;
 }
 
@@ -689,15 +689,15 @@ interface CropBoxDisplayEditorProps {
 // Main Component
 // =============================================================================
 
-export default function CropBoxDisplayEditor({
+export default function PlantingBoxDisplayEditor({
   isOpen,
   onClose,
   config,
   onSave,
   sampleCrops,
-  cropCatalog,
+  specs,
   products,
-}: CropBoxDisplayEditorProps) {
+}: PlantingBoxDisplayEditorProps) {
   // Store segments directly as source of truth (preserves IDs across edits)
   const [headerSegments, setHeaderSegments] = useState<TemplateSegment[]>(() =>
     parseTemplate(config?.headerTemplate ?? DEFAULT_HEADER_TEMPLATE)
@@ -737,7 +737,7 @@ export default function CropBoxDisplayEditor({
     }
   }, [isOpen, config]);
 
-  const resolverContext: ResolverContext = { cropCatalog, products };
+  const resolverContext: ResolverContext = { specs, products };
   const previewCrop = sampleCrops[selectedCropIndex] || sampleCrops[0];
 
   const previewHeader = useMemo(() => {

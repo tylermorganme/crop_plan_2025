@@ -7,7 +7,7 @@
 
 import type { Bed, BedGroup, ResourceGroup } from './bed';
 import type { Planting } from './planting';
-import type { CropConfig } from './crop-config';
+import type { PlantingSpec } from './planting-specs';
 import type { Variety } from './variety';
 import type { SeedMix } from './seed-mix';
 import type { Product } from './product';
@@ -71,7 +71,7 @@ export interface PlanChange {
  *
  * Available tokens:
  * - {name} - Crop name
- * - {configId} - Config identifier
+ * - {specId} - Planting spec identifier
  * - {category} - Category
  * - {startDate} - Field start date (formatted)
  * - {endDate} - End date (formatted)
@@ -83,7 +83,7 @@ export interface PlanChange {
  * - {beds} - Bed span (e.g., "1/3")
  * - {seq} - Sequence slot (e.g., "S2")
  */
-export interface CropBoxDisplayConfig {
+export interface PlantingBoxDisplayConfig {
   /** Template for the header line. Default: "{name}" */
   headerTemplate: string;
   /** Template for the description line. Default: "{startDate} - {endDate}" */
@@ -116,7 +116,7 @@ export interface TimelineCrop {
   /** Growing structure with proper typing for display */
   growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
   plantingId?: string;
-  cropConfigId: string;
+  specId: string;
   totalBeds: number;
   bedIndex: number;
   groupId: string;
@@ -131,9 +131,9 @@ export interface TimelineCrop {
   notes?: string;
   /** Reference to the seed variety or mix used */
   seedSource?: import('./planting').SeedSource;
-  /** Whether planting uses config's default seed source */
+  /** Whether planting uses spec's default seed source */
   useDefaultSeedSource?: boolean;
-  /** Calculated seeds needed for this planting (based on CropConfig.seedsPerBed) */
+  /** Calculated seeds needed for this planting (based on PlantingSpec.seedsPerBed) */
   seedsNeeded?: number;
   /** Crop name (for filtering varieties/mixes in picker) */
   crop?: string;
@@ -171,8 +171,8 @@ export interface Plan {
   /** Planting instances (one per planting decision) */
   plantings?: Planting[];
 
-  /** Crop configurations (keyed by identifier) */
-  cropCatalog?: Record<string, CropConfig>;
+  /** Planting specs (keyed by identifier) */
+  specs?: Record<string, PlantingSpec>;
 
   /** Seed varieties (keyed by ID) */
   varieties?: Record<string, Variety>;
@@ -195,8 +195,8 @@ export interface Plan {
   /** Planting sequences for succession planting (keyed by ID) */
   sequences?: Record<string, PlantingSequence>;
 
-  /** Crop box display configuration for timeline */
-  cropBoxDisplay?: CropBoxDisplayConfig;
+  /** Planting box display configuration for timeline */
+  plantingBoxDisplay?: PlantingBoxDisplayConfig;
 
   /** Change history for undo/redo */
   changeLog: PlanChange[];
@@ -217,7 +217,7 @@ export class PlanValidationError extends Error {
     message: string,
     public readonly details: {
       plantingId?: string;
-      configId?: string;
+      specId?: string;
       bedId?: string;
     }
   ) {
@@ -237,7 +237,7 @@ export function isValidPlan(plan: Plan): boolean {
  * Validate a plan's internal references.
  *
  * Throws PlanValidationError if:
- * - A planting references a missing config
+ * - A planting references a missing spec
  * - A planting references a missing bed
  *
  * Call this on plan load and before save to catch bugs early.
@@ -248,11 +248,11 @@ export function validatePlan(plan: Plan): void {
   }
 
   for (const planting of plan.plantings) {
-    // Check config reference
-    if (plan.cropCatalog && !plan.cropCatalog[planting.configId]) {
+    // Check spec reference
+    if (plan.specs && !plan.specs[planting.specId]) {
       throw new PlanValidationError(
-        `Planting ${planting.id} references missing config ${planting.configId}`,
-        { plantingId: planting.id, configId: planting.configId }
+        `Planting ${planting.id} references missing spec ${planting.specId}`,
+        { plantingId: planting.id, specId: planting.specId }
       );
     }
 

@@ -48,14 +48,14 @@ export {
   computeSequenceDate,
 } from './planting-sequence';
 
-// Crop config entity
+// Planting spec entity
 export type {
+  PlantingSpec,
   TrayStage,
   PlantingMethod,
-  CropConfig,
   CropCalculated,
   ProductYield,
-} from './crop-config';
+} from './planting-specs';
 export {
   calculateDaysInCells,
   calculateSeedToHarvest,
@@ -66,8 +66,8 @@ export {
   generateConfigId,
   createBlankConfig,
   copyConfig,
-  cloneCropConfig,
-  cloneCropCatalog,
+  clonePlantingSpec,
+  clonePlantingCatalog,
   // Product-aware calculations
   getPrimarySeedToHarvest,
   calculateAggregateHarvestWindow,
@@ -76,7 +76,7 @@ export {
   calculateProductEndDay,
   calculateCropEndDay,
   calculateFieldOccupationDays,
-} from './crop-config';
+} from './planting-specs';
 
 // Plan entity
 export type {

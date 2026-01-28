@@ -9,15 +9,15 @@ import {
   calculateDaysInCells,
   buildYieldContext,
   evaluateYieldFormula,
-} from '@/lib/entities/crop-config';
-import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
-import type { Planting, CropConfig } from '@/lib/plan-types';
+} from '@/lib/entities/planting-specs';
+import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
+import type { Planting, PlantingSpec } from '@/lib/plan-types';
 import type { Product } from '@/lib/entities/product';
 import type { TimelineCrop } from '@/lib/entities/plan';
 import type { SeedSource } from '@/lib/entities/planting';
 import type { MutationResult } from '@/lib/plan-store';
 import { GddPreview } from './GddPreview';
-import { getPrimarySeedToHarvest } from '@/lib/entities/crop-config';
+import { getPrimarySeedToHarvest } from '@/lib/entities/planting-specs';
 
 // =============================================================================
 // Constants
@@ -208,22 +208,22 @@ export interface PlantingInspectorPanelProps {
 
   // Bulk actions (for multi-select)
   onBulkDuplicatePlantings?: (plantingIds: string[]) => Promise<string[]>;
-  onBulkRefreshFromConfig?: (plantingIds: string[]) => Promise<void>;
+  onBulkRefreshFromSpec?: (plantingIds: string[]) => Promise<void>;
 
   // Sequence actions
   onCreateSequence?: (plantingId: string, cropName: string, fieldStartDate: string) => void;
   onEditSequence?: (sequenceId: string) => void;
   onUnlinkFromSequence?: (plantingId: string) => void;
 
-  // Config actions
-  onEditCropConfig?: (identifier: string) => void;
-  /** Clone config and assign to this planting */
-  onCloneConfig?: (plantingId: string, configId: string) => void;
-  /** Reset planting to use config defaults (clears overrides, uses default seed source) */
-  onRefreshFromConfig?: (plantingId: string) => void;
+  // Spec actions
+  onEditPlantingSpec?: (identifier: string) => void;
+  /** Clone spec and assign to this planting */
+  onCloneSpec?: (plantingId: string, specId: string) => void;
+  /** Reset planting to use spec defaults (clears overrides, uses default seed source) */
+  onRefreshFromSpec?: (plantingId: string) => void;
 
   // Lookup data
-  cropCatalog?: Record<string, CropConfig>;
+  specs?: Record<string, PlantingSpec>;
   /** Crop entities for color and GDD base temp lookup */
   crops?: Record<string, { id: string; name: string; gddBaseTemp?: number }>;
   varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
@@ -252,14 +252,14 @@ export function PlantingInspectorPanel({
   onDeleteCrop,
   onDuplicateCrop,
   onBulkDuplicatePlantings,
-  onBulkRefreshFromConfig,
+  onBulkRefreshFromSpec,
   onCreateSequence,
   onEditSequence,
   onUnlinkFromSequence,
-  onEditCropConfig,
-  onCloneConfig,
-  onRefreshFromConfig,
-  cropCatalog,
+  onEditPlantingSpec,
+  onCloneSpec,
+  onRefreshFromSpec,
+  specs,
   crops,
   varieties,
   seedMixes,
@@ -364,17 +364,17 @@ export function PlantingInspectorPanel({
                   Duplicate {plantings.length} Planting{plantings.length > 1 ? 's' : ''}
                 </button>
               )}
-              {onBulkRefreshFromConfig && (
+              {onBulkRefreshFromSpec && (
                 <button
                   onClick={async () => {
                     const plantingIds = plantings
                       .map((p) => p.plantingId)
                       .filter((id): id is string => id !== undefined);
-                    await onBulkRefreshFromConfig(plantingIds);
+                    await onBulkRefreshFromSpec(plantingIds);
                   }}
                   className="w-full px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  Refresh {plantings.length} from Config
+                  Refresh {plantings.length} from Spec
                 </button>
               )}
               {onDeleteCrop && (
@@ -401,14 +401,14 @@ export function PlantingInspectorPanel({
   // Get all bed entries for this single group
   const groupCrops = selectedCrops.filter((c) => c.groupId === crop.groupId);
 
-  // Get base config for calculating effective values
-  const configId = crop.cropConfigId;
-  const baseConfig = configId && cropCatalog ? cropCatalog[configId] : undefined;
-  const baseValues = baseConfig
+  // Get base spec for calculating effective values
+  const specId = crop.specId;
+  const baseSpec = specId && specs ? specs[specId] : undefined;
+  const baseValues = baseSpec
     ? {
-        dtm: calculateSeedToHarvest(baseConfig, calculateDaysInCells(baseConfig)),
-        harvestWindow: calculateHarvestWindow(baseConfig),
-        daysInCells: calculateDaysInCells(baseConfig),
+        dtm: calculateSeedToHarvest(baseSpec, calculateDaysInCells(baseSpec)),
+        harvestWindow: calculateHarvestWindow(baseSpec),
+        daysInCells: calculateDaysInCells(baseSpec),
       }
     : null;
 
@@ -452,20 +452,20 @@ export function PlantingInspectorPanel({
 
       {/* Sticky Actions Bar */}
       <div className="p-3 border-b bg-white sticky top-[49px] z-10 flex flex-wrap gap-2">
-        {onEditCropConfig && crop.cropConfigId && (
+        {onEditPlantingSpec && crop.specId && (
           <button
-            onClick={() => onEditCropConfig(crop.cropConfigId!)}
+            onClick={() => onEditPlantingSpec(crop.specId!)}
             className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
           >
-            Edit Config
+            Edit Spec
           </button>
         )}
-        {onCloneConfig && crop.plantingId && crop.cropConfigId && (
+        {onCloneSpec && crop.plantingId && crop.specId && (
           <button
-            onClick={() => onCloneConfig(crop.plantingId!, crop.cropConfigId!)}
+            onClick={() => onCloneSpec(crop.plantingId!, crop.specId!)}
             className="flex-1 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded hover:bg-green-100 transition-colors"
           >
-            Clone Config
+            Clone Spec
           </button>
         )}
         {onDuplicateCrop && (
@@ -541,41 +541,41 @@ export function PlantingInspectorPanel({
           </div>
 
           {/* Config Info - show what config this planting was created from */}
-          {baseConfig && (
+          {baseSpec && (
             <div className="bg-gray-50 rounded p-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-gray-500">Config</div>
-                  <div className="text-sm font-medium text-gray-900">{baseConfig.identifier}</div>
+                  <div className="text-xs text-gray-500">Spec</div>
+                  <div className="text-sm font-medium text-gray-900">{baseSpec.identifier}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs text-gray-500">Category</div>
-                  <div className="text-sm text-gray-700">{baseConfig.category || '—'}</div>
+                  <div className="text-sm text-gray-700">{baseSpec.category || '—'}</div>
                 </div>
               </div>
             </div>
           )}
 
           {/* Structure, Yield, Revenue - compact row */}
-          {baseConfig && (
+          {baseSpec && (
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <div className="text-xs text-gray-600 mb-1">Structure</div>
                 <div className="text-sm text-gray-900 py-1">
-                  {baseConfig.growingStructure === 'greenhouse' ? 'Greenhouse' :
-                   baseConfig.growingStructure === 'high-tunnel' ? 'High Tunnel' : 'Field'}
+                  {baseSpec.growingStructure === 'greenhouse' ? 'Greenhouse' :
+                   baseSpec.growingStructure === 'high-tunnel' ? 'High Tunnel' : 'Field'}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-gray-600 mb-1">Yield</div>
                 <div className="text-sm text-gray-900 py-1">
                   {(() => {
-                    if (!baseConfig.productYields?.length) return '—';
+                    if (!baseSpec.productYields?.length) return '—';
                     let totalYield = 0;
                     let unit = '';
-                    for (const py of baseConfig.productYields) {
+                    for (const py of baseSpec.productYields) {
                       if (!py.yieldFormula) continue;
-                      const ctx = buildYieldContext(baseConfig, crop.feetNeeded);
+                      const ctx = buildYieldContext(baseSpec, crop.feetNeeded);
                       ctx.harvests = py.numberOfHarvests ?? 1;
                       const result = evaluateYieldFormula(py.yieldFormula, ctx);
                       if (result.value !== null) {
@@ -597,7 +597,7 @@ export function PlantingInspectorPanel({
                 <div className="text-sm text-gray-900 py-1">
                   {(() => {
                     if (!products) return '—';
-                    const revenue = calculateConfigRevenue(baseConfig, crop.feetNeeded, products);
+                    const revenue = calculateSpecRevenue(baseSpec, crop.feetNeeded, products);
                     return revenue ? formatCurrency(revenue) : '—';
                   })()}
                 </div>
@@ -875,16 +875,16 @@ export function PlantingInspectorPanel({
           )}
 
           {/* GDD Preview */}
-          {baseConfig && planYear && (
+          {baseSpec && planYear && (
             <div className="pt-3 border-t">
               <div className="text-xs font-semibold text-gray-600 mb-2">
                 GDD Timing Preview
               </div>
               <GddPreview
-                dtm={getPrimarySeedToHarvest(baseConfig)}
-                targetFieldDate={baseConfig.targetFieldDate}
+                dtm={getPrimarySeedToHarvest(baseSpec)}
+                targetFieldDate={baseSpec.targetFieldDate}
                 actualFieldDate={crop.startDate.split('T')[0]}
-                category={baseConfig.category || 'default'}
+                category={baseSpec.category || 'default'}
                 baseTemp={crop.cropId ? crops?.[crop.cropId]?.gddBaseTemp : undefined}
                 location={location}
                 year={planYear}
@@ -903,7 +903,7 @@ export function PlantingInspectorPanel({
                 crop={crop.crop}
                 currentSource={crop.seedSource}
                 useDefault={crop.useDefaultSeedSource}
-                defaultSource={baseConfig?.defaultSeedSource}
+                defaultSource={baseSpec?.defaultSeedSource}
                 varieties={varieties}
                 seedMixes={seedMixes}
                 usedVarietyIds={usedVarietyIds}
@@ -981,15 +981,15 @@ export function PlantingInspectorPanel({
             </div>
           </div>
 
-          {/* Refresh from Config - at bottom */}
-          {onRefreshFromConfig && crop.plantingId && (
+          {/* Refresh from Spec - at bottom */}
+          {onRefreshFromSpec && crop.plantingId && (
             <div className="pt-3 border-t">
               <button
-                onClick={() => onRefreshFromConfig(crop.plantingId!)}
+                onClick={() => onRefreshFromSpec(crop.plantingId!)}
                 className="w-full px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
-                title="Reset timing overrides and use config defaults for seed source"
+                title="Reset timing overrides and use spec defaults for seed source"
               >
-                Refresh from Config
+                Refresh from Spec
               </button>
             </div>
           )}

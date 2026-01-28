@@ -6,14 +6,14 @@ import { Z_INDEX } from '@/lib/z-index';
 import { computeSequenceDate } from '@/lib/entities/planting-sequence';
 import type { Planting } from '@/lib/entities/planting';
 import type { PlantingSequence } from '@/lib/entities/planting-sequence';
-import type { CropConfig } from '@/lib/entities/crop-config';
+import type { PlantingSpec } from '@/lib/entities/planting-specs';
 import type { Bed } from '@/lib/entities/bed';
 
 interface SequenceEditorModalProps {
   isOpen: boolean;
   sequence: PlantingSequence;
   plantings: Planting[];
-  cropCatalog: Record<string, CropConfig>;
+  specs: Record<string, PlantingSpec>;
   beds: Record<string, Bed>;
   onClose: () => void;
   onUpdateOffset: (newOffsetDays: number) => void;
@@ -34,7 +34,7 @@ export default function SequenceEditorModal({
   isOpen,
   sequence,
   plantings,
-  cropCatalog,
+  specs,
   beds,
   onClose,
   onUpdateOffset,
@@ -80,8 +80,8 @@ export default function SequenceEditorModal({
 
       let cropName = '';
       if (planting) {
-        const config = cropCatalog[planting.configId];
-        cropName = config?.identifier ?? config?.crop ?? planting.configId;
+        const spec = specs[planting.specId];
+        cropName = spec?.identifier ?? spec?.crop ?? planting.specId;
       }
 
       let bedName: string | null = null;
@@ -99,7 +99,7 @@ export default function SequenceEditorModal({
     }
 
     return slotList;
-  }, [plantings, anchor, offsetDays, cropCatalog, beds]);
+  }, [plantings, anchor, offsetDays, specs, beds]);
 
   // Check if offset has changed
   const offsetChanged = offsetDays !== sequence.offsetDays;

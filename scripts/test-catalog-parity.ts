@@ -7,7 +7,7 @@
  * Run with: npx tsx scripts/test-catalog-parity.ts
  */
 
-import cropsData from '../src/data/crop-config-template.json';
+import cropsData from '../src/data/planting-spec-template.json';
 import bedPlanData from '../src/data/bed-template.json';
 import {
   lookupConfigFromCatalog,

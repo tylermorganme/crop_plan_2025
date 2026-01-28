@@ -1,4 +1,4 @@
-import CropExplorer from '@/components/CropExplorer';
+import SpecExplorer from '@/components/SpecExplorer';
 import AppHeader from '@/components/AppHeader';
 
 export default function Home() {
@@ -6,7 +6,7 @@ export default function Home() {
     <>
       <AppHeader />
       <main className="h-[calc(100vh-51px)] bg-gray-50">
-        <CropExplorer />
+        <SpecExplorer />
       </main>
     </>
   );

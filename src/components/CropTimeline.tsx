@@ -2,24 +2,24 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { addMonths, subMonths, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from 'date-fns';
-import type { CropConfig } from '@/lib/entities/crop-config';
-import { calculateCropFields } from '@/lib/entities/crop-config';
+import type { PlantingSpec } from '@/lib/entities/planting-specs';
+import { calculateCropFields } from '@/lib/entities/planting-specs';
 import { Z_INDEX } from '@/lib/z-index';
 import { useUIStore } from '@/lib/ui-store';
 import { expandCropsToBeds } from '@/lib/timeline-data';
 import { getBedGroup } from '@/lib/plan-types';
-import { calculateConfigRevenue } from '@/lib/revenue';
+import { calculateSpecRevenue } from '@/lib/revenue';
 import { parseSearchQuery, buildCropSearchText } from '@/lib/search-dsl';
-import type { CropBoxDisplayConfig } from '@/lib/entities/plan';
+import type { PlantingBoxDisplayConfig } from '@/lib/entities/plan';
 import AddToBedPanel from './AddToBedPanel';
 import { ConnectedPlantingInspector } from './ConnectedPlantingInspector';
 import { SearchInput } from './SearchInput';
-import CropBoxDisplayEditor, {
+import PlantingBoxDisplayEditor, {
   resolveTemplate,
   DEFAULT_HEADER_TEMPLATE,
   DEFAULT_DESCRIPTION_TEMPLATE,
   type CropForDisplay,
-} from './CropBoxDisplayEditor';
+} from './PlantingBoxDisplayEditor';
 
 // =============================================================================
 // Types
@@ -71,8 +71,8 @@ interface TimelineCrop {
   bedCapacityFt?: number;
   /** Short planting ID from bed plan (e.g., "PEP004") */
   plantingId?: string;
-  /** Crop config identifier matching the plan's crop catalog */
-  cropConfigId?: string;
+  /** Planting spec identifier matching the plan's crop catalog */
+  specId?: string;
   /** Harvest start date (ISO date) - when harvest window begins */
   harvestStartDate?: string;
   /** Planting method: direct-seed, transplant, or perennial */
@@ -123,19 +123,19 @@ interface CropTimelineProps {
   /** Called when drag operation ends - committed=true on drop, false on cancel */
   onDragEnd?: (committed: boolean) => void;
   /** Crop catalog for adding new plantings */
-  cropCatalog?: Record<string, CropConfig>;
+  specs?: Record<string, PlantingSpec>;
   /** Plan year for computing target dates */
   planYear?: number;
   /** Callback when user adds a planting from timeline */
-  onAddPlanting?: (configId: string, fieldStartDate: string, bedId: string) => Promise<string | void>;
+  onAddPlanting?: (specId: string, fieldStartDate: string, bedId: string) => Promise<string | void>;
   /** Products available in the plan (for revenue calculation) */
   products?: Record<string, import('@/lib/entities/product').Product>;
   /** Initial state for no-variety filter (set via URL param) */
   initialNoVarietyFilter?: boolean;
   /** Crop box display configuration */
-  cropBoxDisplay?: CropBoxDisplayConfig;
-  /** Callback when user updates crop box display settings */
-  onUpdateCropBoxDisplay?: (config: CropBoxDisplayConfig) => void;
+  plantingBoxDisplay?: PlantingBoxDisplayConfig;
+  /** Callback when user updates planting box display settings */
+  onUpdatePlantingBoxDisplay?: (config: PlantingBoxDisplayConfig) => void;
   /** Hide the unassigned crops section at the top of the timeline */
   hideUnassigned?: boolean;
   /** Callback when an external planting is dropped onto a bed (e.g., from unassigned panel) */
@@ -272,13 +272,13 @@ export default function CropTimeline({
   onBulkCropMove,
   onBulkCropDateChange,
   onDragEnd,
-  cropCatalog,
+  specs,
   planYear,
   onAddPlanting,
   products,
   initialNoVarietyFilter,
-  cropBoxDisplay,
-  onUpdateCropBoxDisplay,
+  plantingBoxDisplay,
+  onUpdatePlantingBoxDisplay,
   hideUnassigned,
   onExternalPlantingDrop,
   hideInspector,
@@ -330,9 +330,9 @@ export default function CropTimeline({
   const [showSearchHelp, setShowSearchHelp] = useState(false);
   // State for crop box display editor
   const [showDisplayEditor, setShowDisplayEditor] = useState(false);
-  // State for hover preview when browsing crops in AddToBedPanel
+  // State for hover preview when browsing specs in AddToBedPanel
   const [hoverPreview, setHoverPreview] = useState<{
-    config: CropConfig;
+    spec: PlantingSpec;
     fieldStartDate: string;
   } | null>(null);
   const [unassignedHeight, setUnassignedHeight] = useState(
@@ -431,11 +431,11 @@ export default function CropTimeline({
   // SEARCH DSL: Revenue calculator for sorting
   // ==========================================================================
   const getRevenue = useCallback((crop: TimelineCrop): number => {
-    if (!cropCatalog || !products || !crop.cropConfigId) return 0;
-    const config = cropCatalog[crop.cropConfigId];
-    if (!config) return 0;
-    return calculateConfigRevenue(config, crop.feetNeeded, products) ?? 0;
-  }, [cropCatalog, products]);
+    if (!specs || !products || !crop.specId) return 0;
+    const spec = specs[crop.specId];
+    if (!spec) return 0;
+    return calculateSpecRevenue(spec, crop.feetNeeded, products) ?? 0;
+  }, [specs, products]);
 
   // ==========================================================================
   // SEARCH DSL: Crop comparator for sorting
@@ -1595,16 +1595,16 @@ export default function CropTimeline({
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-xs truncate">
                       {resolveTemplate(
-                        cropBoxDisplay?.headerTemplate ?? DEFAULT_HEADER_TEMPLATE,
+                        plantingBoxDisplay?.headerTemplate ?? DEFAULT_HEADER_TEMPLATE,
                         crop as CropForDisplay,
-                        { cropCatalog, products }
+                        { specs, products }
                       )}
                     </div>
                     <div className="text-[9px] opacity-90 truncate">
                       {resolveTemplate(
-                        cropBoxDisplay?.descriptionTemplate ?? DEFAULT_DESCRIPTION_TEMPLATE,
+                        plantingBoxDisplay?.descriptionTemplate ?? DEFAULT_DESCRIPTION_TEMPLATE,
                         crop as CropForDisplay,
-                        { cropCatalog, products }
+                        { specs, products }
                       )}
                     </div>
                   </div>
@@ -1661,9 +1661,9 @@ export default function CropTimeline({
   };
 
   // Handle hover changes from AddToBedPanel for preview
-  const handleHoverChange = useCallback((config: CropConfig | null, fieldStartDate: string | null) => {
-    if (config && fieldStartDate) {
-      setHoverPreview({ config, fieldStartDate });
+  const handleHoverChange = useCallback((spec: PlantingSpec | null, fieldStartDate: string | null) => {
+    if (spec && fieldStartDate) {
+      setHoverPreview({ spec, fieldStartDate });
     } else {
       setHoverPreview(null);
     }
@@ -1673,8 +1673,8 @@ export default function CropTimeline({
   const previewCrop: TimelineCrop | null = useMemo(() => {
     if (!hoverPreview || !addToBedId) return null;
 
-    const { config, fieldStartDate } = hoverPreview;
-    const calculated = calculateCropFields(config);
+    const { spec, fieldStartDate } = hoverPreview;
+    const calculated = calculateCropFields(spec);
 
     // Calculate dates
     const fieldStart = parseDate(fieldStartDate);
@@ -1683,7 +1683,7 @@ export default function CropTimeline({
 
     // Build display name for preview - use crop name only since we don't have products in scope
     // The actual timeline display will show product from ProductYields lookup
-    const name = config.crop;
+    const name = spec.crop;
 
     return {
       id: '__preview__',
@@ -1691,7 +1691,7 @@ export default function CropTimeline({
       startDate: fieldStartDate,
       endDate: endDate.toISOString().slice(0, 10),
       resource: addToBedId,
-      category: config.category,
+      category: spec.category,
       feetNeeded: 50, // Default preview size
       totalBeds: 1,
       bedIndex: 1,
@@ -2093,7 +2093,7 @@ export default function CropTimeline({
                       <span className="truncate text-gray-900">{resource}</span>
                       <span className="text-xs text-gray-600 ml-1">({bedLengths[resource] ?? 50}&apos;)</span>
                       {/* Add planting button */}
-                      {onAddPlanting && cropCatalog && (
+                      {onAddPlanting && specs && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -2167,14 +2167,14 @@ export default function CropTimeline({
       </div>
       {/* Right Panel - AddToBed or Inspector (hidden when hideInspector is true) */}
       {!hideInspector && (
-        addToBedId && cropCatalog && onAddPlanting ? (
+        addToBedId && specs && onAddPlanting ? (
           <div ref={addToBedPanelRef}>
             <AddToBedPanel
               bedId={addToBedId}
-              cropCatalog={cropCatalog}
+              specs={specs}
               planYear={planYear || new Date().getFullYear()}
-              onAddPlanting={async (configId, fieldStartDate, bedId) => {
-                const result = await onAddPlanting(configId, fieldStartDate, bedId);
+              onAddPlanting={async (specId, fieldStartDate, bedId) => {
+                const result = await onAddPlanting(specId, fieldStartDate, bedId);
                 setAddToBedId(null);
                 setHoverPreview(null);
                 // If the callback returns a groupId (plantingId), select it to show inspector
@@ -2297,13 +2297,13 @@ export default function CropTimeline({
       )}
 
       {/* Crop Box Display Editor */}
-      <CropBoxDisplayEditor
+      <PlantingBoxDisplayEditor
         isOpen={showDisplayEditor}
         onClose={() => setShowDisplayEditor(false)}
-        config={cropBoxDisplay}
-        onSave={(config) => onUpdateCropBoxDisplay?.(config)}
+        config={plantingBoxDisplay}
+        onSave={(config) => onUpdatePlantingBoxDisplay?.(config)}
         sampleCrops={crops.slice(0, 20)}
-        cropCatalog={cropCatalog}
+        specs={specs}
         products={products}
       />
     </div>

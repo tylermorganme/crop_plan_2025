@@ -3,8 +3,8 @@
 import { useMemo } from 'react';
 import { parseISO } from 'date-fns';
 import type { BedGroup, Bed } from '@/lib/entities';
-import type { TimelineCrop, CropBoxDisplayConfig } from '@/lib/entities/plan';
-import type { CropConfig } from '@/lib/entities/crop-config';
+import type { TimelineCrop, PlantingBoxDisplayConfig } from '@/lib/entities/plan';
+import type { PlantingSpec } from '@/lib/entities/planting-specs';
 import type { Product } from '@/lib/entities/product';
 import { DEFAULT_CROP_COLOR } from '@/lib/entities/crop';
 import { Z_INDEX } from '@/lib/z-index';
@@ -14,7 +14,7 @@ import {
   DEFAULT_HEADER_TEMPLATE,
   DEFAULT_DESCRIPTION_TEMPLATE,
   type CropForDisplay,
-} from '@/components/CropBoxDisplayEditor';
+} from '@/components/PlantingBoxDisplayEditor';
 
 // =============================================================================
 // TYPES
@@ -27,9 +27,9 @@ interface BedGroupTimelineModalProps {
   planYear: number;
   onClose: () => void;
   /** Crop box display configuration for text formatting */
-  cropBoxDisplay?: CropBoxDisplayConfig;
+  plantingBoxDisplay?: PlantingBoxDisplayConfig;
   /** Crop catalog for template resolution */
-  cropCatalog?: Record<string, CropConfig>;
+  specs?: Record<string, PlantingSpec>;
   /** Products for template resolution */
   products?: Record<string, Product>;
 }
@@ -70,8 +70,8 @@ export default function BedGroupTimelineModal({
   crops,
   planYear,
   onClose,
-  cropBoxDisplay,
-  cropCatalog,
+  plantingBoxDisplay,
+  specs,
   products,
 }: BedGroupTimelineModalProps) {
   // Sort beds by displayOrder
@@ -206,14 +206,14 @@ export default function BedGroupTimelineModal({
                       const width = block.end - block.start;
                       const top = CROP_PADDING + block.stackLevel * cropHeight;
                       const headerText = resolveTemplate(
-                        cropBoxDisplay?.headerTemplate ?? DEFAULT_HEADER_TEMPLATE,
+                        plantingBoxDisplay?.headerTemplate ?? DEFAULT_HEADER_TEMPLATE,
                         block.crop as CropForDisplay,
-                        { cropCatalog, products }
+                        { specs, products }
                       );
                       const descText = resolveTemplate(
-                        cropBoxDisplay?.descriptionTemplate ?? DEFAULT_DESCRIPTION_TEMPLATE,
+                        plantingBoxDisplay?.descriptionTemplate ?? DEFAULT_DESCRIPTION_TEMPLATE,
                         block.crop as CropForDisplay,
-                        { cropCatalog, products }
+                        { specs, products }
                       );
 
                       return (

@@ -36,14 +36,14 @@ function getCropId(name) {
 }
 
 /**
- * Extract unique crop names from a plan's cropCatalog and products.
+ * Extract unique crop names from a plan's specs and products.
  */
 function extractCropNames(plan) {
   const cropNames = new Set();
 
-  // From cropCatalog
-  if (plan.cropCatalog) {
-    for (const config of Object.values(plan.cropCatalog)) {
+  // From specs
+  if (plan.specs) {
+    for (const config of Object.values(plan.specs)) {
       if (config.crop) {
         cropNames.add(config.crop);
       }

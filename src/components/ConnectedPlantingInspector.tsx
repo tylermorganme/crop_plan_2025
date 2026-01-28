@@ -7,9 +7,9 @@ import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { PlantingInspectorPanel } from './PlantingInspectorPanel';
 import CreateSequenceModal, { CreateSequenceOptions } from './CreateSequenceModal';
 import SequenceEditorModal from './SequenceEditorModal';
-import CropConfigEditor from './CropConfigEditor';
-import CropConfigCreator from './CropConfigCreator';
-import type { CropConfig } from '@/lib/entities/crop-config';
+import PlantingSpecEditor from './PlantingSpecEditor';
+import PlantingSpecCreator from './PlantingSpecCreator';
+import type { PlantingSpec } from '@/lib/entities/planting-specs';
 
 interface ConnectedPlantingInspectorProps {
   /** Show timing edit controls (default: true) */
@@ -38,8 +38,8 @@ export function ConnectedPlantingInspector({
   const duplicatePlanting = usePlanStore((s) => s.duplicatePlanting);
   const bulkDuplicatePlantings = usePlanStore((s) => s.bulkDuplicatePlantings);
   const bulkUpdatePlantings = usePlanStore((s) => s.bulkUpdatePlantings);
-  const updateCropConfig = usePlanStore((s) => s.updateCropConfig);
-  const addCropConfig = usePlanStore((s) => s.addCropConfig);
+  const updatePlantingSpec = usePlanStore((s) => s.updatePlantingSpec);
+  const addPlantingSpec = usePlanStore((s) => s.addPlantingSpec);
 
   // Toast for validation errors
   const setToast = useUIStore((s) => s.setToast);
@@ -70,12 +70,12 @@ export function ConnectedPlantingInspector({
   } | null>(null);
   const [editingSequenceId, setEditingSequenceId] = useState<string | null>(null);
 
-  // Modal state for crop config editor
-  const [editingConfigId, setEditingConfigId] = useState<string | null>(null);
+  // Modal state for planting spec editor
+  const [editingSpecId, setEditingSpecId] = useState<string | null>(null);
 
-  // Modal state for clone config
+  // Modal state for clone spec
   const [cloningForPlantingId, setCloningForPlantingId] = useState<string | null>(null);
-  const [cloneSourceConfig, setCloneSourceConfig] = useState<CropConfig | null>(null);
+  const [cloneSourceSpec, setCloneSourceSpec] = useState<PlantingSpec | null>(null);
 
   // Convert selected IDs to TimelineCrop[]
   const allTimelineCrops = useMemo(() => {
@@ -118,47 +118,47 @@ export function ConnectedPlantingInspector({
     [unlinkFromSequence]
   );
 
-  // Edit crop config handler
-  const handleEditCropConfig = useCallback((configId: string) => {
-    setEditingConfigId(configId);
+  // Edit planting spec handler
+  const handleEditPlantingSpec = useCallback((specId: string) => {
+    setEditingSpecId(specId);
   }, []);
 
-  // Save edited crop config
-  const handleSaveConfig = useCallback(
-    async (config: CropConfig) => {
-      await updateCropConfig(config);
-      setEditingConfigId(null);
+  // Save edited planting spec
+  const handleSaveSpec = useCallback(
+    async (spec: PlantingSpec) => {
+      await updatePlantingSpec(spec);
+      setEditingSpecId(null);
     },
-    [updateCropConfig]
+    [updatePlantingSpec]
   );
 
-  // Clone config handler - opens CropConfigCreator
-  const handleCloneConfig = useCallback(
-    (plantingId: string, configId: string) => {
-      const config = currentPlan?.cropCatalog?.[configId];
-      if (!config) return;
+  // Clone spec handler - opens PlantingSpecCreator
+  const handleCloneSpec = useCallback(
+    (plantingId: string, specId: string) => {
+      const spec = currentPlan?.specs?.[specId];
+      if (!spec) return;
       setCloningForPlantingId(plantingId);
-      setCloneSourceConfig(config);
+      setCloneSourceSpec(spec);
     },
-    [currentPlan?.cropCatalog]
+    [currentPlan?.specs]
   );
 
-  // Save cloned config - adds to catalog AND updates planting
+  // Save cloned spec - adds to catalog AND updates planting
   const handleCloneSave = useCallback(
-    async (config: CropConfig) => {
+    async (spec: PlantingSpec) => {
       if (!cloningForPlantingId) return;
-      // Add the new config to the catalog
-      await addCropConfig(config);
-      // Update the planting to use the new config
-      const result = await updatePlanting(cloningForPlantingId, { configId: config.identifier });
+      // Add the new spec to the catalog
+      await addPlantingSpec(spec);
+      // Update the planting to use the new spec
+      const result = await updatePlanting(cloningForPlantingId, { specId: spec.identifier });
       if (!result.success) {
         setToast({ message: result.error, type: 'error' });
       }
       // Clear clone state
       setCloningForPlantingId(null);
-      setCloneSourceConfig(null);
+      setCloneSourceSpec(null);
     },
-    [cloningForPlantingId, addCropConfig, updatePlanting, setToast]
+    [cloningForPlantingId, addPlantingSpec, updatePlanting, setToast]
   );
 
   // For date changes in the inspector, use updateCropDates
@@ -169,17 +169,17 @@ export function ConnectedPlantingInspector({
     [updateCropDates]
   );
 
-  // Refresh planting to use config defaults (reset to "fresh from config" state)
-  const handleRefreshFromConfig = useCallback(
+  // Refresh planting to use spec defaults (reset to "fresh from spec" state)
+  const handleRefreshFromSpec = useCallback(
     async (plantingId: string) => {
-      // Find the planting to get its configId
+      // Find the planting to get its specId
       const planting = currentPlan?.plantings?.find(p => p.id === plantingId);
       if (!planting) return;
 
-      // Look up the config to get targetFieldDate
-      const config = planting.configId ? currentPlan?.cropCatalog?.[planting.configId] : null;
+      // Look up the spec to get targetFieldDate
+      const spec = planting.specId ? currentPlan?.specs?.[planting.specId] : null;
 
-      // Build updates - reset to "fresh from config" state
+      // Build updates - reset to "fresh from spec" state
       const updates: Parameters<typeof updatePlanting>[1] = {
         overrides: undefined,
         useDefaultSeedSource: true,
@@ -187,10 +187,10 @@ export function ConnectedPlantingInspector({
         marketSplit: undefined,
       };
 
-      // If config has a target field date, reset fieldStartDate to it
-      if (config?.targetFieldDate && currentPlan?.metadata?.year) {
+      // If spec has a target field date, reset fieldStartDate to it
+      if (spec?.targetFieldDate && currentPlan?.metadata?.year) {
         // targetFieldDate is MM-DD format, combine with plan year
-        updates.fieldStartDate = `${currentPlan.metadata.year}-${config.targetFieldDate}`;
+        updates.fieldStartDate = `${currentPlan.metadata.year}-${spec.targetFieldDate}`;
       }
 
       const result = await updatePlanting(plantingId, updates);
@@ -213,15 +213,15 @@ export function ConnectedPlantingInspector({
     [bulkDuplicatePlantings, clearSelection, selectPlanting]
   );
 
-  // Bulk refresh plantings from config (reset to "fresh from config" state)
-  const handleBulkRefreshFromConfig = useCallback(
+  // Bulk refresh plantings from spec (reset to "fresh from spec" state)
+  const handleBulkRefreshFromSpec = useCallback(
     async (plantingIds: string[]) => {
-      if (!currentPlan?.plantings || !currentPlan?.cropCatalog) return;
+      if (!currentPlan?.plantings || !currentPlan?.specs) return;
 
       // Use bulk update to reset all plantings in single undo step
       const updates = plantingIds.map((id) => {
         const planting = currentPlan.plantings!.find(p => p.id === id);
-        const config = planting?.configId ? currentPlan.cropCatalog![planting.configId] : null;
+        const spec = planting?.specId ? currentPlan.specs![planting.specId] : null;
 
         const changes: {
           overrides: undefined;
@@ -236,9 +236,9 @@ export function ConnectedPlantingInspector({
           marketSplit: undefined,
         };
 
-        // If config has a target field date, reset fieldStartDate to it
-        if (config?.targetFieldDate && currentPlan.metadata?.year) {
-          changes.fieldStartDate = `${currentPlan.metadata.year}-${config.targetFieldDate}`;
+        // If spec has a target field date, reset fieldStartDate to it
+        if (spec?.targetFieldDate && currentPlan.metadata?.year) {
+          changes.fieldStartDate = `${currentPlan.metadata.year}-${spec.targetFieldDate}`;
         }
 
         return { id, changes };
@@ -286,17 +286,17 @@ export function ConnectedPlantingInspector({
           return newId;
         }}
         onBulkDuplicatePlantings={handleBulkDuplicate}
-        onBulkRefreshFromConfig={handleBulkRefreshFromConfig}
+        onBulkRefreshFromSpec={handleBulkRefreshFromSpec}
         onCropDateChange={(groupId, startDate, endDate) => {
           handleCropDateChange(groupId, startDate, endDate);
         }}
         onCreateSequence={handleCreateSequence}
         onEditSequence={handleEditSequence}
         onUnlinkFromSequence={handleUnlinkFromSequence}
-        onEditCropConfig={handleEditCropConfig}
-        onCloneConfig={handleCloneConfig}
-        onRefreshFromConfig={handleRefreshFromConfig}
-        cropCatalog={currentPlan.cropCatalog}
+        onEditPlantingSpec={handleEditPlantingSpec}
+        onCloneSpec={handleCloneSpec}
+        onRefreshFromSpec={handleRefreshFromSpec}
+        specs={currentPlan.specs}
         crops={currentPlan.crops}
         varieties={currentPlan.varieties}
         seedMixes={currentPlan.seedMixes}
@@ -319,12 +319,12 @@ export function ConnectedPlantingInspector({
       )}
 
       {/* Sequence Editor Modal */}
-      {editingSequence && currentPlan.cropCatalog && currentPlan.beds && (
+      {editingSequence && currentPlan.specs && currentPlan.beds && (
         <SequenceEditorModal
           isOpen={true}
           sequence={editingSequence}
           plantings={editingSequencePlantings}
-          cropCatalog={currentPlan.cropCatalog}
+          specs={currentPlan.specs}
           beds={currentPlan.beds}
           onClose={() => setEditingSequenceId(null)}
           onUpdateOffset={async (newOffsetDays) => {
@@ -342,13 +342,13 @@ export function ConnectedPlantingInspector({
         />
       )}
 
-      {/* Crop Config Editor Modal */}
-      {editingConfigId && currentPlan.cropCatalog?.[editingConfigId] && (
-        <CropConfigEditor
+      {/* Planting Spec Editor Modal */}
+      {editingSpecId && currentPlan.specs?.[editingSpecId] && (
+        <PlantingSpecEditor
           isOpen={true}
-          crop={currentPlan.cropCatalog[editingConfigId]}
-          onClose={() => setEditingConfigId(null)}
-          onSave={handleSaveConfig}
+          spec={currentPlan.specs[editingSpecId]}
+          onClose={() => setEditingSpecId(null)}
+          onSave={handleSaveSpec}
           varieties={currentPlan.varieties}
           seedMixes={currentPlan.seedMixes}
           products={currentPlan.products}
@@ -356,18 +356,18 @@ export function ConnectedPlantingInspector({
         />
       )}
 
-      {/* Clone Config Modal - creates new config and assigns to planting */}
-      {cloneSourceConfig && currentPlan.cropCatalog && (
-        <CropConfigCreator
+      {/* Clone Spec Modal - creates new spec and assigns to planting */}
+      {cloneSourceSpec && currentPlan.specs && (
+        <PlantingSpecCreator
           isOpen={true}
           onClose={() => {
             setCloningForPlantingId(null);
-            setCloneSourceConfig(null);
+            setCloneSourceSpec(null);
           }}
           onSave={handleCloneSave}
-          availableCrops={Object.values(currentPlan.cropCatalog)}
-          existingIdentifiers={Object.keys(currentPlan.cropCatalog)}
-          initialSourceConfig={cloneSourceConfig}
+          availableSpecs={Object.values(currentPlan.specs)}
+          existingIdentifiers={Object.keys(currentPlan.specs)}
+          initialSourceSpec={cloneSourceSpec}
           varieties={currentPlan.varieties}
           seedMixes={currentPlan.seedMixes}
           products={currentPlan.products}

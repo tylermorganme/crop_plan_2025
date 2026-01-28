@@ -3,7 +3,7 @@
  *
  * Represents a specific seed variety from a supplier.
  * Varieties are stored globally (not per-plan) and linked to plantings via seedSource.
- * Connection to CropConfig is by crop name (Variety.crop === CropConfig.crop).
+ * Connection to PlantingSpec is by crop name (Variety.crop === PlantingSpec.crop).
  */
 
 import convert from 'convert-units';
@@ -25,14 +25,14 @@ export type DensityUnit = 'g' | 'oz' | 'lb' | 'ct';
  * A seed variety from a specific supplier.
  *
  * Design: Varieties are the actual seeds you can buy/plant.
- * CropConfig defines HOW to grow (timing, spacing).
+ * PlantingSpec defines HOW to grow (timing, spacing).
  * Variety defines WHAT seed to use (supplier, organic status, etc.).
  */
 export interface Variety {
   /** Unique variety identifier (UUID) */
   id: string;
 
-  /** Crop name - matches CropConfig.crop for filtering (e.g., "Tomato", "Arugula") */
+  /** Crop name - matches PlantingSpec.crop for filtering (e.g., "Tomato", "Arugula") */
   crop: string;
 
   /** Reference to Crop entity ID for stable linking (populated by migration) */

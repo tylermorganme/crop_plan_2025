@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import CropTimeline from '@/components/CropTimeline';
-import CropConfigEditor from '@/components/CropConfigEditor';
+import PlantingSpecEditor from '@/components/PlantingSpecEditor';
 import { PageLayout } from '@/components/PageLayout';
 import AppHeader from '@/components/AppHeader';
-import { type CropConfig } from '@/lib/entities/crop-config';
+import { type PlantingSpec } from '@/lib/entities/planting-specs';
 // useSnapshotScheduler removed - SQLite storage handles persistence directly
 import { calculateRowSpan, getTimelineCropsFromPlan, buildBedMappings } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';
@@ -55,7 +55,7 @@ export default function TimelinePlanPage() {
   // Toast notifications - shared across views via UI store
   const toast = useUIStore((state) => state.toast);
   const setToast = useUIStore((state) => state.setToast);
-  const [editingCrop, setEditingCrop] = useState<CropConfig | null>(null);
+  const [editingSpec, setEditingSpec] = useState<PlantingSpec | null>(null);
 
   // Pending drag changes - queued during drag, committed on drop
   // Key is groupId (plantingId), value contains pending changes
@@ -73,16 +73,16 @@ export default function TimelinePlanPage() {
 
   // Note: Cross-tab sync is handled centrally by PlanStoreProvider
 
-  // Update crop config action from store
-  const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
+  // Update planting spec action from store
+  const updatePlantingSpec = usePlanStore((state) => state.updatePlantingSpec);
   const addPlanting = usePlanStore((state) => state.addPlanting);
-  const updateCropBoxDisplay = usePlanStore((state) => state.updateCropBoxDisplay);
+  const updatePlantingBoxDisplay = usePlanStore((state) => state.updatePlantingBoxDisplay);
 
-  // Helper to get crop config from plan's catalog (falls back to master)
+  // Helper to get planting spec from plan's catalog (falls back to master)
   const getCropByIdentifier = useCallback((identifier: string) => {
     // First try plan's catalog
-    if (currentPlan?.cropCatalog?.[identifier]) {
-      return currentPlan.cropCatalog[identifier];
+    if (currentPlan?.specs?.[identifier]) {
+      return currentPlan.specs[identifier];
     }
     // Fall back to master catalog (shouldn't happen for new plans)
     return null;
@@ -111,8 +111,8 @@ export default function TimelinePlanPage() {
         const planData = await loadPlanFromLibrary(planId);
         if (planData) {
           await loadPlanById(planId);
-          // Set this as the active plan for Crop Explorer
-          localStorage.setItem('crop-explorer-active-plan', planId);
+          // Set this as the active plan for Spec Explorer
+          localStorage.setItem('spec-explorer-active-plan', planId);
           setLoading(false);
         } else {
           setError(`Plan not found: ${planId}`);
@@ -265,9 +265,9 @@ export default function TimelinePlanPage() {
     setPendingDragChanges(new Map());
   }, [pendingDragChanges, bulkUpdatePlantings, bedMappings, currentPlan?.beds, currentPlan?.plantings]);
 
-  const handleAddPlanting = useCallback(async (configId: string, fieldStartDate: string, bedId: string): Promise<string> => {
+  const handleAddPlanting = useCallback(async (specId: string, fieldStartDate: string, bedId: string): Promise<string> => {
     const newPlanting = createPlanting({
-      configId,
+      specId,
       fieldStartDate,
       startBed: bedId,
       bedFeet: 50, // Default to standard bed length
@@ -275,7 +275,7 @@ export default function TimelinePlanPage() {
 
     try {
       await addPlanting(newPlanting);
-      setToast({ message: `Added ${configId} to ${bedId}`, type: 'success' });
+      setToast({ message: `Added ${specId} to ${bedId}`, type: 'success' });
       return newPlanting.id; // Return the ID so timeline can select it
     } catch (e) {
       setToast({ message: `Failed to add: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
@@ -283,8 +283,8 @@ export default function TimelinePlanPage() {
     }
   }, [addPlanting]);
 
-  const handleEditCropConfig = useCallback((plantingId: string) => {
-    // Find the planting to get the configId
+  const handleEditPlantingSpec = useCallback((plantingId: string) => {
+    // Find the planting to get the specId
     const planting = currentPlan?.plantings?.find(p => p.id === plantingId);
 
     if (!planting) {
@@ -292,23 +292,23 @@ export default function TimelinePlanPage() {
       return;
     }
 
-    const crop = getCropByIdentifier(planting.configId);
-    if (!crop) {
-      setToast({ message: `Config not found: ${planting.configId}`, type: 'error' });
+    const spec = getCropByIdentifier(planting.specId);
+    if (!spec) {
+      setToast({ message: `Spec not found: ${planting.specId}`, type: 'error' });
       return;
     }
 
-    setEditingCrop(crop);
+    setEditingSpec(spec);
     setConfigEditorOpen(true);
-  }, [currentPlan?.plantings, getCropByIdentifier]);
+  }, [currentPlan?.plantings, getCropByIdentifier, setToast]);
 
-  const handleSaveCropConfig = useCallback(async (updated: CropConfig) => {
+  const handleSavePlantingSpec = useCallback(async (updated: PlantingSpec) => {
     try {
-      // Update the config in the plan's catalog (not the template)
-      const affectedCount = await updateCropConfig(updated);
+      // Update the spec in the plan's catalog (not the template)
+      const affectedCount = await updatePlantingSpec(updated);
 
       setConfigEditorOpen(false);
-      setEditingCrop(null);
+      setEditingSpec(null);
 
       if (affectedCount > 0) {
         setToast({ message: `Saved "${updated.identifier}" - updated ${affectedCount} planting(s)`, type: 'success' });
@@ -321,7 +321,7 @@ export default function TimelinePlanPage() {
         type: 'error',
       });
     }
-  }, [updateCropConfig]);
+  }, [updatePlantingSpec, setToast]);
 
   // Compute preview crops: just update resource/dates on 1:1 crop entries
   // Bed spanning is computed at render time in CropTimeline's cropsByResource
@@ -415,13 +415,13 @@ export default function TimelinePlanPage() {
         onBulkCropMove={handleBulkCropMove}
         onBulkCropDateChange={handleBulkCropDateChange}
         onDragEnd={handleDragEnd}
-        cropCatalog={currentPlan.cropCatalog}
+        specs={currentPlan.specs}
         planYear={currentPlan.metadata.year}
         onAddPlanting={handleAddPlanting}
         products={currentPlan.products}
         initialNoVarietyFilter={initialNoVarietyFilter}
-        cropBoxDisplay={currentPlan.cropBoxDisplay}
-        onUpdateCropBoxDisplay={updateCropBoxDisplay}
+        plantingBoxDisplay={currentPlan.plantingBoxDisplay}
+        onUpdatePlantingBoxDisplay={updatePlantingBoxDisplay}
       />
 
       {/* Toast notification */}
@@ -433,15 +433,15 @@ export default function TimelinePlanPage() {
         />
       )}
 
-      {/* Crop config editor modal */}
-      <CropConfigEditor
+      {/* Planting spec editor modal */}
+      <PlantingSpecEditor
         isOpen={configEditorOpen}
-        crop={editingCrop}
+        spec={editingSpec}
         onClose={() => {
           setConfigEditorOpen(false);
-          setEditingCrop(null);
+          setEditingSpec(null);
         }}
-        onSave={handleSaveCropConfig}
+        onSave={handleSavePlantingSpec}
         varieties={currentPlan?.varieties}
         seedMixes={currentPlan?.seedMixes}
         products={currentPlan?.products}

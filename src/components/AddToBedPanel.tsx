@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import type { CropConfig } from '@/lib/entities/crop-config';
-import { calculatePlantingMethod, calculateCropFields } from '@/lib/entities/crop-config';
+import type { PlantingSpec } from '@/lib/entities/planting-specs';
+import { calculatePlantingMethod, calculateCropFields } from '@/lib/entities/planting-specs';
 
 /** Format a number to at most 2 decimal places, removing trailing zeros */
 function formatNum(val: number | undefined | null): string {
@@ -13,17 +13,17 @@ function formatNum(val: number | undefined | null): string {
 
 interface AddToBedPanelProps {
   bedId: string;
-  cropCatalog: Record<string, CropConfig>;
+  specs: Record<string, PlantingSpec>;
   planYear: number;
-  onAddPlanting: (configId: string, fieldStartDate: string, bedId: string) => void;
+  onAddPlanting: (specId: string, fieldStartDate: string, bedId: string) => void;
   onClose: () => void;
-  /** Called when hovered config changes, for timeline preview */
-  onHoverChange?: (config: CropConfig | null, fieldStartDate: string | null) => void;
+  /** Called when hovered spec changes, for timeline preview */
+  onHoverChange?: (spec: PlantingSpec | null, fieldStartDate: string | null) => void;
 }
 
 export default function AddToBedPanel({
   bedId,
-  cropCatalog,
+  specs,
   planYear,
   onAddPlanting,
   onClose,
@@ -31,56 +31,56 @@ export default function AddToBedPanel({
 }: AddToBedPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDeprecated, setShowDeprecated] = useState(false);
-  const [hoveredConfig, setHoveredConfig] = useState<CropConfig | null>(null);
+  const [hoveredSpec, setHoveredSpec] = useState<PlantingSpec | null>(null);
 
-  // Get all configs from catalog, filter out deprecated unless showing all
-  const configs = useMemo(() => {
-    const all = Object.values(cropCatalog);
+  // Get all specs from catalog, filter out deprecated unless showing all
+  const visibleSpecs = useMemo(() => {
+    const all = Object.values(specs);
     return showDeprecated ? all : all.filter(c => !c.deprecated);
-  }, [cropCatalog, showDeprecated]);
+  }, [specs, showDeprecated]);
 
   // Filter by search query
-  const filteredConfigs = useMemo(() => {
-    if (!searchQuery.trim()) return configs;
+  const filteredSpecs = useMemo(() => {
+    if (!searchQuery.trim()) return visibleSpecs;
     const q = searchQuery.toLowerCase();
-    return configs.filter(c =>
+    return visibleSpecs.filter(c =>
       // Use searchText if available (materialized), otherwise fall back to fields
       c.searchText?.toLowerCase().includes(q) ||
       c.identifier?.toLowerCase().includes(q) ||
       c.crop?.toLowerCase().includes(q) ||
       c.category?.toLowerCase().includes(q)
     );
-  }, [configs, searchQuery]);
+  }, [visibleSpecs, searchQuery]);
 
-  // Group configs by category for easier browsing
-  const groupedConfigs = useMemo(() => {
-    const groups: Record<string, CropConfig[]> = {};
-    for (const config of filteredConfigs) {
-      const category = config.category || 'Other';
+  // Group specs by category for easier browsing
+  const groupedSpecs = useMemo(() => {
+    const groups: Record<string, PlantingSpec[]> = {};
+    for (const spec of filteredSpecs) {
+      const category = spec.category || 'Other';
       if (!groups[category]) groups[category] = [];
-      groups[category].push(config);
+      groups[category].push(spec);
     }
-    // Sort configs within each group by crop name
+    // Sort specs within each group by crop name
     for (const category of Object.keys(groups)) {
       groups[category].sort((a, b) => (a.crop || '').localeCompare(b.crop || ''));
     }
     return groups;
-  }, [filteredConfigs]);
+  }, [filteredSpecs]);
 
   // Sort categories alphabetically
   const sortedCategories = useMemo(() => {
-    return Object.keys(groupedConfigs).sort((a, b) => {
+    return Object.keys(groupedSpecs).sort((a, b) => {
       if (a === 'Other') return 1;
       if (b === 'Other') return -1;
       return a.localeCompare(b);
     });
-  }, [groupedConfigs]);
+  }, [groupedSpecs]);
 
   // Compute fieldStartDate from targetFieldDate + planYear
-  const getFieldStartDate = useCallback((config: CropConfig): string => {
-    if (config.targetFieldDate) {
+  const getFieldStartDate = useCallback((spec: PlantingSpec): string => {
+    if (spec.targetFieldDate) {
       // targetFieldDate is "MM-DD", combine with planYear
-      return `${planYear}-${config.targetFieldDate}`;
+      return `${planYear}-${spec.targetFieldDate}`;
     }
     // Fallback to today
     const today = new Date();
@@ -90,29 +90,29 @@ export default function AddToBedPanel({
   // Notify parent of hover changes for timeline preview
   useEffect(() => {
     if (onHoverChange) {
-      if (hoveredConfig) {
-        onHoverChange(hoveredConfig, getFieldStartDate(hoveredConfig));
+      if (hoveredSpec) {
+        onHoverChange(hoveredSpec, getFieldStartDate(hoveredSpec));
       } else {
         onHoverChange(null, null);
       }
     }
-  }, [hoveredConfig, onHoverChange, getFieldStartDate]);
+  }, [hoveredSpec, onHoverChange, getFieldStartDate]);
 
-  const handleSelectConfig = useCallback((config: CropConfig) => {
-    const fieldStartDate = getFieldStartDate(config);
-    onAddPlanting(config.identifier, fieldStartDate, bedId);
+  const handleSelectSpec = useCallback((spec: PlantingSpec) => {
+    const fieldStartDate = getFieldStartDate(spec);
+    onAddPlanting(spec.identifier, fieldStartDate, bedId);
   }, [bedId, getFieldStartDate, onAddPlanting]);
 
-  // Calculate timing details for hovered config
+  // Calculate timing details for hovered spec
   const hoveredDetails = useMemo(() => {
-    if (!hoveredConfig) return null;
-    const calculated = calculateCropFields(hoveredConfig);
-    const fieldStartDate = getFieldStartDate(hoveredConfig);
+    if (!hoveredSpec) return null;
+    const calculated = calculateCropFields(hoveredSpec);
+    const fieldStartDate = getFieldStartDate(hoveredSpec);
     return {
       ...calculated,
       fieldStartDate,
     };
-  }, [hoveredConfig, getFieldStartDate]);
+  }, [hoveredSpec, getFieldStartDate]);
 
   return (
     <div className="w-[560px] bg-white border-l flex shrink-0 h-full">
@@ -152,7 +152,7 @@ export default function AddToBedPanel({
 
         {/* Results list */}
         <div className="flex-1 overflow-auto min-h-0">
-          {filteredConfigs.length === 0 ? (
+          {filteredSpecs.length === 0 ? (
             <div className="p-4 text-sm text-gray-500 text-center">
               No crops found
             </div>
@@ -161,25 +161,25 @@ export default function AddToBedPanel({
               {sortedCategories.map((category) => (
                 <div key={category}>
                   <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 bg-gray-100 sticky top-0">
-                    {category} ({groupedConfigs[category].length})
+                    {category} ({groupedSpecs[category].length})
                   </div>
-                  {groupedConfigs[category].map((config) => (
+                  {groupedSpecs[category].map((spec) => (
                     <div
-                      key={config.identifier}
+                      key={spec.identifier}
                       className={`px-3 py-2 cursor-pointer transition-colors border-b border-gray-100 ${
-                        hoveredConfig?.identifier === config.identifier
+                        hoveredSpec?.identifier === spec.identifier
                           ? 'bg-blue-50'
                           : 'hover:bg-gray-50'
-                      } ${config.deprecated ? 'opacity-60' : ''}`}
-                      onClick={() => handleSelectConfig(config)}
-                      onMouseEnter={() => setHoveredConfig(config)}
-                      onMouseLeave={() => setHoveredConfig(null)}
+                      } ${spec.deprecated ? 'opacity-60' : ''}`}
+                      onClick={() => handleSelectSpec(spec)}
+                      onMouseEnter={() => setHoveredSpec(spec)}
+                      onMouseLeave={() => setHoveredSpec(null)}
                     >
                       <div className="text-sm font-medium text-gray-900 truncate">
-                        {config.identifier}
+                        {spec.identifier}
                       </div>
                       <div className="text-xs text-gray-500 truncate">
-                        {config.category} · {config.growingStructure} · {calculatePlantingMethod(config)}
+                        {spec.category} · {spec.growingStructure} · {calculatePlantingMethod(spec)}
                       </div>
                     </div>
                   ))}
@@ -192,15 +192,15 @@ export default function AddToBedPanel({
 
       {/* Right side: Inspector */}
       <div className="flex-1 flex flex-col bg-gray-50">
-        {hoveredConfig && hoveredDetails ? (
+        {hoveredSpec && hoveredDetails ? (
           <>
-            {/* Config header */}
+            {/* Spec header */}
             <div className="p-4 border-b bg-white">
               <div className="font-semibold text-gray-900">
-                {hoveredConfig.identifier}
+                {hoveredSpec.identifier}
               </div>
               <div className="text-sm text-gray-600 mt-1">
-                {hoveredConfig.category}
+                {hoveredSpec.category}
               </div>
             </div>
 
@@ -219,7 +219,7 @@ export default function AddToBedPanel({
                     </div>
                     <div className="flex justify-between gap-2">
                       <span className="text-gray-600 shrink-0">Days to Maturity</span>
-                      <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredConfig.dtm)}</span>
+                      <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredSpec.dtm)}</span>
                     </div>
                     <div className="flex justify-between gap-2">
                       <span className="text-gray-600 shrink-0">Seed to Harvest</span>
@@ -246,17 +246,17 @@ export default function AddToBedPanel({
                   <div className="bg-white rounded-lg border p-3 space-y-2 text-sm">
                     <div className="flex justify-between gap-2">
                       <span className="text-gray-600 shrink-0">Category</span>
-                      <span className="font-medium truncate max-w-[120px]" title={hoveredConfig.category || '–'}>{hoveredConfig.category || '–'}</span>
+                      <span className="font-medium truncate max-w-[120px]" title={hoveredSpec.category || '–'}>{hoveredSpec.category || '–'}</span>
                     </div>
                     <div className="flex justify-between gap-2">
                       <span className="text-gray-600 shrink-0">Structure</span>
-                      <span className="font-medium truncate max-w-[120px]">{hoveredConfig.growingStructure || 'Field'}</span>
+                      <span className="font-medium truncate max-w-[120px]">{hoveredSpec.growingStructure || 'Field'}</span>
                     </div>
                     <div className="flex justify-between gap-2">
                       <span className="text-gray-600 shrink-0">Method</span>
                       <span className="font-medium truncate max-w-[120px]">{hoveredDetails.plantingMethod}</span>
                     </div>
-                    {hoveredConfig.perennial && (
+                    {hoveredSpec.perennial && (
                       <div className="flex justify-between gap-2">
                         <span className="text-gray-600 shrink-0">Perennial</span>
                         <span className="font-medium text-green-600 truncate max-w-[120px]">Yes</span>
@@ -266,29 +266,29 @@ export default function AddToBedPanel({
                 </div>
 
                 {/* Harvest section */}
-                {(hoveredConfig.numberOfHarvests || hoveredConfig.yieldPerHarvest) && (
+                {(hoveredSpec.numberOfHarvests || hoveredSpec.yieldPerHarvest) && (
                   <div>
                     <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                       Harvest
                     </div>
                     <div className="bg-white rounded-lg border p-3 space-y-2 text-sm">
-                      {hoveredConfig.numberOfHarvests && (
+                      {hoveredSpec.numberOfHarvests && (
                         <div className="flex justify-between gap-2">
                           <span className="text-gray-600 shrink-0"># of Harvests</span>
-                          <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredConfig.numberOfHarvests)}</span>
+                          <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredSpec.numberOfHarvests)}</span>
                         </div>
                       )}
-                      {hoveredConfig.daysBetweenHarvest && (
+                      {hoveredSpec.daysBetweenHarvest && (
                         <div className="flex justify-between gap-2">
                           <span className="text-gray-600 shrink-0">Days Between</span>
-                          <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredConfig.daysBetweenHarvest)}</span>
+                          <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredSpec.daysBetweenHarvest)}</span>
                         </div>
                       )}
-                      {hoveredConfig.yieldPerHarvest && (
+                      {hoveredSpec.yieldPerHarvest && (
                         <div className="flex justify-between gap-2">
                           <span className="text-gray-600 shrink-0">Yield/Harvest</span>
-                          <span className="font-medium truncate max-w-[120px]" title={`${hoveredConfig.yieldPerHarvest} ${hoveredConfig.yieldUnit || ''}`}>
-                            {formatNum(hoveredConfig.yieldPerHarvest)} {hoveredConfig.yieldUnit || ''}
+                          <span className="font-medium truncate max-w-[120px]" title={`${hoveredSpec.yieldPerHarvest} ${hoveredSpec.yieldUnit || ''}`}>
+                            {formatNum(hoveredSpec.yieldPerHarvest)} {hoveredSpec.yieldUnit || ''}
                           </span>
                         </div>
                       )}

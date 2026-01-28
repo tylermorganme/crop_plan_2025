@@ -4,17 +4,16 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } fr
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { Crop } from '@/lib/crops';
 import type { Planting } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
 import { useUIStore } from '@/lib/ui-store';
-import { type CropConfig, calculatePlantingMethod } from '@/lib/entities/crop-config';
-import { calculateConfigRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
+import { type PlantingSpec, calculatePlantingMethod } from '@/lib/entities/planting-specs';
+import { calculateSpecRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
 import { getMarketSplitTotal } from '@/lib/entities/market';
-import CropConfigCreator from './CropConfigCreator';
-import CropConfigEditor from './CropConfigEditor';
-import CompareConfigsModal from './CompareConfigsModal';
+import PlantingSpecCreator from './PlantingSpecCreator';
+import PlantingSpecEditor from './PlantingSpecEditor';
+import CompareSpecsModal from './CompareSpecsModal';
 import { Z_INDEX } from '@/lib/z-index';
 import {
   DEFAULT_VISIBLE_COLUMNS,
@@ -25,13 +24,13 @@ import {
   getColumnDisplayName,
   getColumnBgClass,
   type DynamicOptionKey,
-} from '@/lib/crop-explorer-columns';
+} from '@/lib/spec-explorer-columns';
 
 // =============================================================================
-// CONFIG VALIDATION
+// SPEC VALIDATION
 // =============================================================================
 
-interface ConfigValidation {
+interface SpecValidation {
   /** 'error' = missing required data, 'warning' = potentially misconfigured, 'ok' = all good */
   status: 'error' | 'warning' | 'ok';
   /** Human-readable issues */
@@ -39,10 +38,10 @@ interface ConfigValidation {
 }
 
 /**
- * Validate a crop config and return status + issues.
+ * Validate a planting spec and return status + issues.
  * Used to show visual indicators in the explorer.
  */
-function validateCropConfig(crop: CropConfig): ConfigValidation {
+function validatePlantingSpec(crop: PlantingSpec): SpecValidation {
   const issues: string[] = [];
 
   // Errors - missing required data
@@ -94,7 +93,7 @@ function validateCropConfig(crop: CropConfig): ConfigValidation {
   return { status: 'ok', issues: [] };
 }
 
-interface CropExplorerProps {
+interface SpecExplorerProps {
   filterOptions?: {
     crops: string[];
     categories: string[];
@@ -104,7 +103,7 @@ interface CropExplorerProps {
   allHeaders?: string[];
 }
 
-const STORAGE_KEY = 'crop-explorer-state-v6'; // Bumped for multi-select categorical filters
+const STORAGE_KEY = 'spec-explorer-state-v1'; // Reset for CropExplorer → SpecExplorer rename
 
 type SortDirection = 'asc' | 'desc' | null;
 type FilterValue = string | string[] | { min?: number; max?: number } | boolean | null;
@@ -146,8 +145,8 @@ const MIN_COL_WIDTH = 50;
 const DEFAULT_FILTER_PANE_WIDTH = 280;
 
 // Determine the type of a column based on its values
-function getColumnType(crops: Crop[], col: string): 'boolean' | 'number' | 'categorical' | 'text' {
-  const values = crops.map(c => c[col as keyof Crop]).filter(v => v !== null && v !== undefined);
+function getColumnType(crops: PlantingSpec[], col: string): 'boolean' | 'number' | 'categorical' | 'text' {
+  const values = crops.map(c => c[col as keyof PlantingSpec]).filter(v => v !== null && v !== undefined);
   if (values.length === 0) return 'text';
 
   const sample = values[0];
@@ -162,10 +161,10 @@ function getColumnType(crops: Crop[], col: string): 'boolean' | 'number' | 'cate
 }
 
 // Get unique values for categorical columns
-function getUniqueValuesForColumn(crops: Crop[], col: string): string[] {
+function getUniqueValuesForColumn(crops: PlantingSpec[], col: string): string[] {
   const values = new Set<string>();
   crops.forEach(c => {
-    const v = c[col as keyof Crop];
+    const v = c[col as keyof PlantingSpec];
     if (v !== null && v !== undefined && v !== '') {
       values.add(String(v));
     }
@@ -174,10 +173,10 @@ function getUniqueValuesForColumn(crops: Crop[], col: string): string[] {
 }
 
 // Get min/max for numeric columns
-function getNumericRange(crops: Crop[], col: string): { min: number; max: number } {
+function getNumericRange(crops: PlantingSpec[], col: string): { min: number; max: number } {
   let min = Infinity, max = -Infinity;
   crops.forEach(c => {
-    const v = c[col as keyof Crop];
+    const v = c[col as keyof PlantingSpec];
     if (typeof v === 'number' && !isNaN(v)) {
       min = Math.min(min, v);
       max = Math.max(max, v);
@@ -186,22 +185,22 @@ function getNumericRange(crops: Crop[], col: string): { min: number; max: number
   return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 100 : max };
 }
 
-// Helper to create a Planting from a Crop config using CRUD function
-function createPlantingFromConfig(crop: Crop, planYear: number): Planting {
+// Helper to create a Planting from a planting spec using CRUD function
+function createPlantingFromSpec(crop: PlantingSpec, planYear: number): Planting {
   // Use targetFieldDate if available, otherwise fall back to June 1st
   const fieldStartDate = crop.targetFieldDate
     ? `${planYear}-${crop.targetFieldDate}`
     : `${planYear}-06-01`;
 
   return createPlanting({
-    configId: crop.identifier,
+    specId: crop.identifier,
     fieldStartDate,
     startBed: null, // Unassigned
     bedFeet: 50, // Default 1 bed
   });
 }
 
-export default function CropExplorer({ allHeaders }: CropExplorerProps) {
+export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCropId, setSelectedCropId] = useState<string | null>(null);
@@ -211,27 +210,27 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
 
   // Add to Plan state
   const [showAddToPlan, setShowAddToPlan] = useState(false);
-  const [cropsToAdd, setCropsToAdd] = useState<Crop[]>([]); // Crops to add (single or multiple)
+  const [cropsToAdd, setCropsToAdd] = useState<PlantingSpec[]>([]); // Crops to add (single or multiple)
   const [addingToPlan, setAddingToPlan] = useState(false);
   const [addToPlanMessage, setAddToPlanMessage] = useState<{ type: 'success' | 'error'; text: string; planId?: string } | null>(null);
 
-  // Create custom config state
-  const [showCreateConfig, setShowCreateConfig] = useState(false);
-  const [copySourceConfig, setCopySourceConfig] = useState<Crop | null>(null);
+  // Create custom spec state
+  const [showCreateSpec, setShowCreateSpec] = useState(false);
+  const [copySourceSpec, setCopySourceSpec] = useState<PlantingSpec | null>(null);
 
-  // Edit config state
-  const [showEditConfig, setShowEditConfig] = useState(false);
-  const [configToEdit, setConfigToEdit] = useState<CropConfig | null>(null);
+  // Edit spec state
+  const [showEditSpec, setShowEditSpec] = useState(false);
+  const [specToEdit, setSpecToEdit] = useState<PlantingSpec | null>(null);
 
-  // Delete config state
+  // Delete spec state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [configsToDelete, setConfigsToDelete] = useState<Crop[]>([]);
+  const [specsToDelete, setSpecsToDelete] = useState<PlantingSpec[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Compare configs state
+  // Compare specs state
   const [showCompare, setShowCompare] = useState(false);
 
-  // Edit mode state for inline editing of CropConfig fields (persisted in UI store)
+  // Edit mode state for inline editing of PlantingSpec fields (persisted in UI store)
   const isEditMode = useUIStore((state) => state.isEditMode);
   const toggleEditMode = useUIStore((state) => state.toggleEditMode);
   // Track which column and row is currently being edited (has focus)
@@ -239,8 +238,8 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const [activeEditRow, setActiveEditRow] = useState<number | null>(null);
 
   // Use shared store state - automatically syncs across tabs
-  // Only subscribe to cropCatalog, not the entire plan (avoids re-renders when plantings change)
-  const cropCatalog = usePlanStore((state) => state.currentPlan?.cropCatalog);
+  // Only subscribe to specs, not the entire plan (avoids re-renders when plantings change)
+  const specs = usePlanStore((state) => state.currentPlan?.specs);
   const currentPlanId = usePlanStore((state) => state.currentPlan?.id);
   const planYear = usePlanStore((state) => state.currentPlan?.metadata?.year) ?? new Date().getFullYear();
   const lastFrostDate = usePlanStore((state) => state.currentPlan?.metadata?.lastFrostDate);
@@ -251,11 +250,11 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   const catalogLoading = usePlanStore((state) => state.isLoading);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const bulkAddPlantings = usePlanStore((state) => state.bulkAddPlantings);
-  const updateCropConfig = usePlanStore((state) => state.updateCropConfig);
-  const addCropConfig = usePlanStore((state) => state.addCropConfig);
-  const deleteCropConfigs = usePlanStore((state) => state.deleteCropConfigs);
-  const toggleConfigFavorite = usePlanStore((state) => state.toggleConfigFavorite);
-  const bulkUpdateCropConfigs = usePlanStore((state) => state.bulkUpdateCropConfigs);
+  const updatePlantingSpec = usePlanStore((state) => state.updatePlantingSpec);
+  const addPlantingSpec = usePlanStore((state) => state.addPlantingSpec);
+  const deletePlantingSpecs = usePlanStore((state) => state.deletePlantingSpecs);
+  const toggleSpecFavorite = usePlanStore((state) => state.toggleSpecFavorite);
+  const bulkUpdatePlantingSpecs = usePlanStore((state) => state.bulkUpdatePlantingSpecs);
   const activePlanId = usePlanStore((state) => state.activePlanId);
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
   const planList = usePlanStore((state) => state.planList);
@@ -268,9 +267,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
 
   // Convert catalog object to array for display
   const planCatalog = useMemo(() => {
-    if (!cropCatalog) return [];
-    return Object.values(cropCatalog) as CropConfig[];
-  }, [cropCatalog]);
+    if (!specs) return [];
+    return Object.values(specs) as PlantingSpec[];
+  }, [specs]);
 
   // Dynamic filters keyed by column name
   const [columnFilters, setColumnFilters] = useState<Record<string, FilterValue>>({});
@@ -281,14 +280,14 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   // Only use plan's catalog - never fall back to template data
   const baseCrops = useMemo(() => {
     if (isPlanLoaded) {
-      return planCatalog as Crop[];
+      return planCatalog as PlantingSpec[];
     }
     // No plan loaded - return empty array
     return [];
   }, [isPlanLoaded, planCatalog]);
 
   // Extend type to include computed revenue field
-  type CropWithRevenue = Crop & { revenuePerBed?: number | null };
+  type CropWithRevenue = PlantingSpec & { revenuePerBed?: number | null };
 
   // Enrich crops with computed revenuePerBed (revenue for a standard bed)
   const displayCrops: CropWithRevenue[] = useMemo(() => {
@@ -298,7 +297,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     }
 
     return baseCrops.map(crop => {
-      const revenue = calculateConfigRevenue(crop as CropConfig, STANDARD_BED_LENGTH, products);
+      const revenue = calculateSpecRevenue(crop as PlantingSpec, STANDARD_BED_LENGTH, products);
       return {
         ...crop,
         revenuePerBed: revenue,
@@ -559,7 +558,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         if (filterVal === null || filterVal === undefined || filterVal === '') continue;
         if (Array.isArray(filterVal) && filterVal.length === 0) continue;
 
-        const cropVal = crop[col as keyof Crop];
+        const cropVal = crop[col as keyof PlantingSpec];
         const meta = columnMeta[col];
 
         if (!meta) continue;
@@ -594,8 +593,8 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     if (!sortColumn || !sortDirection) return filteredCrops;
 
     return [...filteredCrops].sort((a, b) => {
-      const aVal = a[sortColumn as keyof Crop];
-      const bVal = b[sortColumn as keyof Crop];
+      const aVal = a[sortColumn as keyof PlantingSpec];
+      const bVal = b[sortColumn as keyof PlantingSpec];
 
       if (aVal === null || aVal === undefined) return sortDirection === 'asc' ? 1 : -1;
       if (bVal === null || bVal === undefined) return sortDirection === 'asc' ? -1 : 1;
@@ -885,7 +884,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   }, []);
 
   // Add crops directly to the active plan via store
-  const addCropsToActivePlan = useCallback(async (cropsToAddNow: Crop[]) => {
+  const addCropsToActivePlan = useCallback(async (cropsToAddNow: PlantingSpec[]) => {
     if (!activePlanId || cropsToAddNow.length === 0) return;
 
     setAddingToPlan(true);
@@ -900,7 +899,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       // Add all crops as plantings in a single transaction
       // Get planYear from the loaded plan (may have been just loaded)
       const loadedPlanYear = usePlanStore.getState().currentPlan?.metadata?.year ?? new Date().getFullYear();
-      const newPlantings = cropsToAddNow.map(crop => createPlantingFromConfig(crop, loadedPlanYear));
+      const newPlantings = cropsToAddNow.map(crop => createPlantingFromSpec(crop, loadedPlanYear));
       const addedCount = await bulkAddPlantings(newPlantings);
 
       setAddToPlanMessage({
@@ -922,7 +921,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   }, [activePlanId, activePlan?.name, currentPlanId, loadPlanById, bulkAddPlantings]);
 
   // Quick add single crop to plan (from row button)
-  const handleQuickAdd = useCallback((crop: Crop, event: React.MouseEvent) => {
+  const handleQuickAdd = useCallback((crop: PlantingSpec, event: React.MouseEvent) => {
     event.stopPropagation();
     if (activePlanId) {
       // Add directly to active plan
@@ -965,7 +964,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       // Add all crops as plantings in a single transaction
       // Get planYear from the loaded plan (may have been just loaded)
       const loadedPlanYear = usePlanStore.getState().currentPlan?.metadata?.year ?? new Date().getFullYear();
-      const newPlantings = cropsToAdd.map(crop => createPlantingFromConfig(crop, loadedPlanYear));
+      const newPlantings = cropsToAdd.map(crop => createPlantingFromSpec(crop, loadedPlanYear));
       const addedCount = await bulkAddPlantings(newPlantings);
 
       // Set this as the active plan for future adds (store handles localStorage sync)
@@ -1009,21 +1008,21 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     return planCatalog.map(c => c.identifier);
   }, [activePlanId, planCatalog]);
 
-  // Handle opening the edit config modal
-  const handleEditConfig = useCallback((crop: Crop) => {
+  // Handle opening the edit spec modal
+  const handleEditSpec = useCallback((crop: PlantingSpec) => {
     if (!activePlanId) {
       setAddToPlanMessage({
         type: 'error',
-        text: 'Select an active plan first to edit configs',
+        text: 'Select an active plan first to edit specs',
       });
       return;
     }
-    setConfigToEdit(crop as CropConfig);
-    setShowEditConfig(true);
+    setSpecToEdit(crop as PlantingSpec);
+    setShowEditSpec(true);
   }, [activePlanId]);
 
-  // Handle saving an edited config via store
-  const handleSaveEditedConfig = useCallback(async (config: CropConfig) => {
+  // Handle saving an edited spec via store
+  const handleSaveEditedSpec = useCallback(async (spec: PlantingSpec) => {
     if (!activePlanId) {
       setAddToPlanMessage({
         type: 'error',
@@ -1038,26 +1037,26 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         await loadPlanById(activePlanId);
       }
 
-      // Update the config via the store (supports undo/redo)
-      await updateCropConfig(config);
+      // Update the spec via the store (supports undo/redo)
+      await updatePlantingSpec(spec);
 
       setAddToPlanMessage({
         type: 'success',
-        text: `Updated config "${config.identifier}"`,
+        text: `Updated spec "${spec.identifier}"`,
         planId: activePlanId,
       });
-      setShowEditConfig(false);
-      setConfigToEdit(null);
+      setShowEditSpec(false);
+      setSpecToEdit(null);
     } catch (err) {
       setAddToPlanMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to update config',
+        text: err instanceof Error ? err.message : 'Failed to update spec',
       });
     }
-  }, [activePlanId, currentPlanId, loadPlanById, updateCropConfig]);
+  }, [activePlanId, currentPlanId, loadPlanById, updatePlantingSpec]);
 
-  // Handle saving a new custom config via store
-  const handleSaveCustomConfig = useCallback(async (config: CropConfig) => {
+  // Handle saving a new custom spec via store
+  const handleSaveCustomSpec = useCallback(async (spec: PlantingSpec) => {
     if (!activePlanId) {
       setAddToPlanMessage({
         type: 'error',
@@ -1072,33 +1071,33 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         await loadPlanById(activePlanId);
       }
 
-      // Add the config via the store (supports undo/redo)
-      await addCropConfig(config);
+      // Add the spec via the store (supports undo/redo)
+      await addPlantingSpec(spec);
 
       setAddToPlanMessage({
         type: 'success',
-        text: `Created config "${config.identifier}"`,
+        text: `Created spec "${spec.identifier}"`,
         planId: activePlanId,
       });
-      setShowCreateConfig(false);
+      setShowCreateSpec(false);
     } catch (err) {
       setAddToPlanMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to create config',
+        text: err instanceof Error ? err.message : 'Failed to create spec',
       });
     }
-  }, [activePlanId, currentPlanId, loadPlanById, addCropConfig]);
+  }, [activePlanId, currentPlanId, loadPlanById, addPlantingSpec]);
 
-  // Handle initiating delete for a single config (from inspector)
-  const handleDeleteConfig = useCallback((crop: Crop) => {
+  // Handle initiating delete for a single spec (from inspector)
+  const handleDeleteSpec = useCallback((crop: PlantingSpec) => {
     if (!activePlanId) {
       setAddToPlanMessage({
         type: 'error',
-        text: 'Select an active plan first to delete configs',
+        text: 'Select an active plan first to delete specs',
       });
       return;
     }
-    setConfigsToDelete([crop]);
+    setSpecsToDelete([crop]);
     setShowDeleteConfirm(true);
   }, [activePlanId]);
 
@@ -1109,14 +1108,14 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
   // Auto-save changes immediately when value changes
   const handleCellChange = useCallback(async (identifier: string, field: string, value: unknown) => {
     try {
-      await bulkUpdateCropConfigs([{ identifier, changes: { [field]: value } }]);
+      await bulkUpdatePlantingSpecs([{ identifier, changes: { [field]: value } }]);
     } catch (err) {
       setAddToPlanMessage({
         type: 'error',
         text: err instanceof Error ? err.message : 'Failed to save change',
       });
     }
-  }, [bulkUpdateCropConfigs]);
+  }, [bulkUpdatePlantingSpecs]);
 
   const handleToggleEditMode = useCallback(() => {
     toggleEditMode();
@@ -1127,19 +1126,19 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     if (!activePlanId) {
       setAddToPlanMessage({
         type: 'error',
-        text: 'Select an active plan first to delete configs',
+        text: 'Select an active plan first to delete specs',
       });
       return;
     }
     const cropsToDeleteList = sortedCrops.filter(c => selectedCropIds.has(c.id));
     if (cropsToDeleteList.length === 0) return;
-    setConfigsToDelete(cropsToDeleteList);
+    setSpecsToDelete(cropsToDeleteList);
     setShowDeleteConfirm(true);
   }, [activePlanId, sortedCrops, selectedCropIds]);
 
   // Handle confirmed deletion (uses store actions from component-level hooks)
   const handleConfirmDelete = useCallback(async () => {
-    if (!activePlanId || configsToDelete.length === 0) return;
+    if (!activePlanId || specsToDelete.length === 0) return;
 
     setIsDeleting(true);
     try {
@@ -1148,11 +1147,11 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         await loadPlanById(activePlanId);
       }
 
-      const identifiers = configsToDelete.map(c => c.identifier);
-      const deletedCount = await deleteCropConfigs(identifiers);
+      const identifiers = specsToDelete.map(c => c.identifier);
+      const deletedCount = await deletePlantingSpecs(identifiers);
 
       if (deletedCount === 0) {
-        throw new Error('No configs were found to delete');
+        throw new Error('No specs were found to delete');
       }
 
       // No event dispatch needed - store update triggers UI refresh via Zustand reactivity
@@ -1161,54 +1160,54 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         type: 'success',
         text: deletedCount === 1
           ? `Deleted "${identifiers[0]}"`
-          : `Deleted ${deletedCount} configs`,
+          : `Deleted ${deletedCount} specs`,
         planId: activePlanId,
       });
 
       // Clear selection if we deleted selected items
       setSelectedCropIds(prev => {
         const next = new Set(prev);
-        configsToDelete.forEach(c => next.delete(c.id));
+        specsToDelete.forEach(c => next.delete(c.id));
         return next;
       });
 
       // Clear selected crop if it was deleted
-      if (selectedCropId && configsToDelete.some(c => c.id === selectedCropId)) {
+      if (selectedCropId && specsToDelete.some(c => c.id === selectedCropId)) {
         setSelectedCropId(null);
       }
 
       setShowDeleteConfirm(false);
-      setConfigsToDelete([]);
+      setSpecsToDelete([]);
     } catch (err) {
       setAddToPlanMessage({
         type: 'error',
-        text: err instanceof Error ? err.message : 'Failed to delete configs',
+        text: err instanceof Error ? err.message : 'Failed to delete specs',
       });
     } finally {
       setIsDeleting(false);
     }
-  }, [activePlanId, configsToDelete, selectedCropId, currentPlanId, loadPlanById, deleteCropConfigs]);
+  }, [activePlanId, specsToDelete, selectedCropId, currentPlanId, loadPlanById, deletePlantingSpecs]);
 
   // Handle cancel delete
   const handleCancelDelete = useCallback(() => {
     setShowDeleteConfirm(false);
-    setConfigsToDelete([]);
+    setSpecsToDelete([]);
   }, []);
 
-  // Handle copy config (from selection bar - single item only)
+  // Handle copy spec (from selection bar - single item only)
   const handleCopySelected = useCallback(() => {
     if (!activePlanId) {
       setAddToPlanMessage({
         type: 'error',
-        text: 'Select an active plan first to copy configs',
+        text: 'Select an active plan first to copy specs',
       });
       return;
     }
     if (selectedCropIds.size !== 1) return;
     const cropToCopy = sortedCrops.find(c => selectedCropIds.has(c.id));
     if (!cropToCopy) return;
-    setCopySourceConfig(cropToCopy);
-    setShowCreateConfig(true);
+    setCopySourceSpec(cropToCopy);
+    setShowCreateSpec(true);
   }, [activePlanId, selectedCropIds, sortedCrops]);
 
   // Handle bulk favorite (add all selected to favorites - single transaction)
@@ -1216,28 +1215,28 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
     if (!activePlanId) {
       setAddToPlanMessage({
         type: 'error',
-        text: 'Select an active plan first to favorite configs',
+        text: 'Select an active plan first to favorite specs',
       });
       return;
     }
-    const selectedConfigs = sortedCrops.filter(c => selectedCropIds.has(c.id));
-    const updates = selectedConfigs.map(c => ({ identifier: c.identifier, changes: { isFavorite: true } }));
+    const selectedSpecs = sortedCrops.filter(c => selectedCropIds.has(c.id));
+    const updates = selectedSpecs.map(c => ({ identifier: c.identifier, changes: { isFavorite: true } }));
 
-    const updatedCount = await bulkUpdateCropConfigs(updates);
+    const updatedCount = await bulkUpdatePlantingSpecs(updates);
 
     if (updatedCount === 0) {
       setAddToPlanMessage({
         type: 'success',
-        text: 'All selected configs are already favorites',
+        text: 'All selected specs are already favorites',
       });
     } else {
       setAddToPlanMessage({
         type: 'success',
-        text: `Added ${updatedCount} config${updatedCount !== 1 ? 's' : ''} to favorites`,
+        text: `Added ${updatedCount} spec${updatedCount !== 1 ? 's' : ''} to favorites`,
       });
     }
     deselectAll();
-  }, [activePlanId, selectedCropIds, sortedCrops, bulkUpdateCropConfigs, deselectAll]);
+  }, [activePlanId, selectedCropIds, sortedCrops, bulkUpdatePlantingSpecs, deselectAll]);
 
   return (
     <div className="flex h-full">
@@ -1398,7 +1397,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                 ? 'bg-amber-100 text-amber-700'
                 : 'text-gray-600 hover:bg-gray-100'
             }`}
-            title={showFavoritesOnly ? 'Show all configs' : 'Show only favorites'}
+            title={showFavoritesOnly ? 'Show all specs' : 'Show only favorites'}
           >
             <span className={showFavoritesOnly ? 'text-amber-500' : 'text-gray-400'}>★</span>
             <span>Favorites</span>
@@ -1429,7 +1428,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                   ? 'bg-blue-100 text-blue-700 border border-blue-300'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
-              title={isEditMode ? 'Exit edit mode' : 'Edit config values inline'}
+              title={isEditMode ? 'Exit edit mode' : 'Edit spec values inline'}
             >
               {isEditMode ? 'Exit Edit Mode' : 'Edit Data'}
             </button>
@@ -1466,16 +1465,16 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
               if (!activePlanId) {
                 setAddToPlanMessage({
                   type: 'error',
-                  text: 'Select an active plan first to create custom configs',
+                  text: 'Select an active plan first to create custom specs',
                 });
                 return;
               }
-              setShowCreateConfig(true);
+              setShowCreateSpec(true);
             }}
             className="px-3 py-1.5 text-sm text-white bg-green-600 hover:bg-green-700 rounded"
-            title="Create a custom crop config for your plan"
+            title="Create a custom planting spec for your plan"
           >
-            + Custom Config
+            + Custom Spec
           </button>
         </div>
 
@@ -1604,7 +1603,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
               </div>
             ) : !isPlanLoaded ? (
               <div className="flex flex-col items-center justify-center text-gray-600 h-full gap-4">
-                <p>Select a plan to view crop configurations</p>
+                <p>Select a plan to view planting specs</p>
                 <button
                   onClick={() => router.push('/plans')}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -1679,7 +1678,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
 
                         // For identifier column, add validation status indicator
                         const isIdentifierCol = col === 'identifier';
-                        const validation = isIdentifierCol ? validateCropConfig(crop as CropConfig) : null;
+                        const validation = isIdentifierCol ? validatePlantingSpec(crop as PlantingSpec) : null;
                         const hasIssues = validation && validation.status !== 'ok';
 
                         // Check if this column is editable in edit mode
@@ -1692,7 +1691,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                             : baseEditableConfig.options,
                         } : undefined;
                         const isEditable = isEditMode && editableConfig;
-                        const cellValue = crop[col as keyof Crop];
+                        const cellValue = crop[col as keyof PlantingSpec];
 
                         return (
                           <div
@@ -1721,14 +1720,14 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                   : 'text-amber-700'
                                 : 'text-gray-900'
                             }`}
-                            title={hasIssues ? `${crop[col as keyof Crop]}\n\nIssues:\n• ${validation.issues.join('\n• ')}` : String(crop[col as keyof Crop] ?? '')}
+                            title={hasIssues ? `${crop[col as keyof PlantingSpec]}\n\nIssues:\n• ${validation.issues.join('\n• ')}` : String(crop[col as keyof PlantingSpec] ?? '')}
                           >
                             {/* Favorite star for identifier column */}
                             {isIdentifierCol && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  toggleConfigFavorite(crop.identifier);
+                                  toggleSpecFavorite(crop.identifier);
                                 }}
                                 className={`shrink-0 transition-colors ${
                                   crop.isFavorite
@@ -1774,7 +1773,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                                 }}
                               />
                             ) : (
-                              <span className="truncate">{formatCellValue(crop[col as keyof Crop], col)}</span>
+                              <span className="truncate">{formatCellValue(crop[col as keyof PlantingSpec], col)}</span>
                             )}
                           </div>
                         );
@@ -1881,9 +1880,9 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
               + Add to Plan
             </button>
             <button
-              onClick={() => handleEditConfig(selectedCrop)}
+              onClick={() => handleEditSpec(selectedCrop)}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-              title="Edit this config in the active plan's catalog"
+              title="Edit this spec in the active plan's catalog"
             >
               Edit
             </button>
@@ -1891,7 +1890,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
           <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
             <div className="p-4 space-y-1">
               {allColumns.map(key => {
-                const value = selectedCrop[key as keyof Crop];
+                const value = selectedCrop[key as keyof PlantingSpec];
                 return (
                   <div key={key} className="flex py-1 border-b border-gray-50 last:border-0">
                     <span className="text-xs text-gray-600 w-36 flex-shrink-0 truncate" title={key}>{key}</span>
@@ -1904,10 +1903,10 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
           {/* Delete button at bottom */}
           <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
             <button
-              onClick={() => handleDeleteConfig(selectedCrop)}
+              onClick={() => handleDeleteSpec(selectedCrop)}
               className="w-full px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
             >
-              Delete Config
+              Delete Spec
             </button>
           </div>
         </div>
@@ -2017,7 +2016,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
               <button
                 onClick={() => {
                   const crop = sortedCrops.find(c => selectedCropIds.has(c.id));
-                  if (crop) handleEditConfig(crop);
+                  if (crop) handleEditSpec(crop);
                 }}
                 className="px-3 py-1.5 text-sm font-medium bg-purple-600 hover:bg-purple-700 rounded transition-colors"
               >
@@ -2072,27 +2071,27 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         </div>
       )}
 
-      {/* Create Custom Config Modal */}
-      <CropConfigCreator
-        isOpen={showCreateConfig}
-        onClose={() => { setShowCreateConfig(false); setCopySourceConfig(null); }}
-        onSave={handleSaveCustomConfig}
-        availableCrops={displayCrops as CropConfig[]}
+      {/* Create Custom Spec Modal */}
+      <PlantingSpecCreator
+        isOpen={showCreateSpec}
+        onClose={() => { setShowCreateSpec(false); setCopySourceSpec(null); }}
+        onSave={handleSaveCustomSpec}
+        availableSpecs={displayCrops as PlantingSpec[]}
         existingIdentifiers={existingIdentifiers}
         varieties={varieties}
         seedMixes={seedMixes}
         products={products}
         markets={markets}
-        initialSourceConfig={copySourceConfig as CropConfig | null}
+        initialSourceSpec={copySourceSpec as PlantingSpec | null}
         lastFrostDate={lastFrostDate}
       />
 
-      {/* Edit Config Modal */}
-      <CropConfigEditor
-        isOpen={showEditConfig}
-        crop={configToEdit}
-        onClose={() => { setShowEditConfig(false); setConfigToEdit(null); }}
-        onSave={handleSaveEditedConfig}
+      {/* Edit Spec Modal */}
+      <PlantingSpecEditor
+        isOpen={showEditSpec}
+        spec={specToEdit}
+        onClose={() => { setShowEditSpec(false); setSpecToEdit(null); }}
+        onSave={handleSaveEditedSpec}
         mode="edit"
         existingIdentifiers={existingIdentifiers}
         varieties={varieties}
@@ -2103,7 +2102,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
       />
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && configsToDelete.length > 0 && (
+      {showDeleteConfirm && specsToDelete.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
           <div className="bg-white rounded-lg shadow-xl w-[400px] max-h-[80vh] flex flex-col">
             <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
@@ -2118,19 +2117,19 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
             </div>
 
             <div className="p-4">
-              {configsToDelete.length === 1 ? (
+              {specsToDelete.length === 1 ? (
                 <p className="text-sm text-gray-600 mb-4">
-                  Are you sure you want to delete <strong>{configsToDelete[0].identifier}</strong>?
+                  Are you sure you want to delete <strong>{specsToDelete[0].identifier}</strong>?
                   This cannot be undone.
                 </p>
               ) : (
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">
-                    Are you sure you want to delete <strong>{configsToDelete.length} configs</strong>?
+                    Are you sure you want to delete <strong>{specsToDelete.length} specs</strong>?
                     This cannot be undone.
                   </p>
                   <div className="max-h-32 overflow-y-auto text-xs text-gray-600 bg-gray-50 rounded p-2 border border-gray-200">
-                    {configsToDelete.map(c => c.identifier).join(', ')}
+                    {specsToDelete.map(c => c.identifier).join(', ')}
                   </div>
                 </div>
               )}
@@ -2158,7 +2157,7 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
                     Deleting...
                   </>
                 ) : (
-                  `Delete ${configsToDelete.length === 1 ? 'Config' : `${configsToDelete.length} Configs`}`
+                  `Delete ${specsToDelete.length === 1 ? 'Spec' : `${specsToDelete.length} Specs`}`
                 )}
               </button>
             </div>
@@ -2166,11 +2165,11 @@ export default function CropExplorer({ allHeaders }: CropExplorerProps) {
         </div>
       )}
 
-      {/* Compare configs modal */}
+      {/* Compare specs modal */}
       {showCompare && (
-        <CompareConfigsModal
+        <CompareSpecsModal
           isOpen={true}
-          configs={sortedCrops.filter(c => selectedCropIds.has(c.id)) as CropConfig[]}
+          specs={sortedCrops.filter(c => selectedCropIds.has(c.id)) as PlantingSpec[]}
           onClose={() => setShowCompare(false)}
           products={products}
         />
@@ -2620,4 +2619,4 @@ function EditableCell({
   );
 }
 
-// formatValue and formatColumnHeader are now imported from crop-explorer-columns.ts
+// formatValue and formatColumnHeader are now imported from spec-explorer-columns.ts

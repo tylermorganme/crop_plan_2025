@@ -2,7 +2,7 @@
  * Revenue Calculation Module
  *
  * Calculates revenue from plantings based on:
- * - Product yields (from CropConfig.productYields)
+ * - Product yields (from PlantingSpec.productYields)
  * - Product prices (from Product.prices[marketId])
  * - Planting bed feet
  *
@@ -12,11 +12,11 @@
 import { parseISO, addDays } from 'date-fns';
 import type { Plan } from './plan-types';
 import type { Planting } from './entities/planting';
-import type { CropConfig, ProductYield } from './entities/crop-config';
+import type { PlantingSpec, ProductYield } from './entities/planting-specs';
 import type { Product } from './entities/product';
 import type { Market, MarketSplit } from './entities/market';
 import { DEFAULT_MARKET_IDS, getDefaultMarket } from './entities/market';
-import { evaluateYieldFormula, buildYieldContext, calculateFieldOccupationDays } from './entities/crop-config';
+import { evaluateYieldFormula, buildYieldContext, calculateFieldOccupationDays } from './entities/planting-specs';
 import { formatDateOnly } from './date-utils';
 
 // =============================================================================
@@ -107,7 +107,7 @@ export interface ProductRevenueResult {
 /** Revenue breakdown for a single planting */
 export interface PlantingRevenueResult {
   plantingId: string;
-  configId: string;
+  specId: string;
   crop: string;
   bedFeet: number;
   /** Days this planting occupies the field */
@@ -183,14 +183,14 @@ export function getDirectPrice(product: Product): number {
  * Uses direct market price by default.
  *
  * @param py - The ProductYield to calculate
- * @param config - The CropConfig (for spacing/rows context)
+ * @param spec - The PlantingSpec (for spacing/rows context)
  * @param bedFeet - The planting's bed feet
  * @param product - The Product entity (for pricing)
  * @returns Revenue result or null if can't calculate
  */
 export function calculateProductYieldRevenue(
   py: ProductYield,
-  config: CropConfig,
+  spec: PlantingSpec,
   bedFeet: number,
   product: Product | undefined
 ): ProductRevenueResult | null {
@@ -199,8 +199,8 @@ export function calculateProductYieldRevenue(
   }
 
   // Build context for formula evaluation
-  // Use the ProductYield's harvests, not the legacy config harvests
-  const context = buildYieldContext(config, bedFeet);
+  // Use the ProductYield's harvests, not the legacy spec harvests
+  const context = buildYieldContext(spec, bedFeet);
   // Override harvests with this ProductYield's value
   context.harvests = py.numberOfHarvests ?? 1;
   context.daysBetweenHarvest = py.daysBetweenHarvest ?? 7;
@@ -224,32 +224,32 @@ export function calculateProductYieldRevenue(
 }
 
 /**
- * Calculate total revenue for a CropConfig at a given bed length.
+ * Calculate total revenue for a PlantingSpec at a given bed length.
  *
  * This is the core revenue calculation used by both:
- * - CropExplorer (with STANDARD_BED_LENGTH for comparison)
+ * - SpecExplorer (with STANDARD_BED_LENGTH for comparison)
  * - Planting reports (with actual planting.bedFeet)
  *
- * @param config - The CropConfig to calculate
+ * @param spec - The PlantingSpec to calculate
  * @param bedFeet - Bed length in feet
  * @param products - Product catalog for pricing lookup
  * @returns Total revenue, or null if no valid product yields
  */
-export function calculateConfigRevenue(
-  config: CropConfig,
+export function calculateSpecRevenue(
+  spec: PlantingSpec,
   bedFeet: number,
   products: Record<string, Product>
 ): number | null {
-  if (!config.productYields?.length) {
+  if (!spec.productYields?.length) {
     return null;
   }
 
   let totalRevenue = 0;
   let hasValidProduct = false;
 
-  for (const py of config.productYields) {
+  for (const py of spec.productYields) {
     const product = products[py.productId];
-    const result = calculateProductYieldRevenue(py, config, bedFeet, product);
+    const result = calculateProductYieldRevenue(py, spec, bedFeet, product);
     if (result) {
       totalRevenue += result.revenue;
       hasValidProduct = true;
@@ -264,14 +264,14 @@ export function calculateConfigRevenue(
  * Uses market splits to calculate proper revenue by market.
  *
  * @param planting - The planting to calculate
- * @param config - The CropConfig for this planting
+ * @param spec - The PlantingSpec for this planting
  * @param products - All products (to look up pricing)
  * @param markets - All markets for the plan (for market split calculations)
  * @returns Revenue result for the planting with market breakdown
  */
 export function calculatePlantingRevenue(
   planting: Planting,
-  config: CropConfig,
+  spec: PlantingSpec,
   products: Record<string, Product>,
   markets: Record<string, Market> = {}
 ): PlantingRevenueResult {
@@ -279,17 +279,17 @@ export function calculatePlantingRevenue(
   const revenueByMarket: Record<string, number> = {};
 
   // Get effective market split for this planting
-  const marketSplit = getEffectiveMarketSplit(planting, config);
+  const marketSplit = getEffectiveMarketSplit(planting, spec);
 
   // Calculate revenue for each ProductYield with market breakdown
-  for (const py of config.productYields ?? []) {
+  for (const py of spec.productYields ?? []) {
     const product = products[py.productId];
 
     // Use market-aware calculation if we have markets
     if (Object.keys(markets).length > 0) {
       const marketResult = calculateProductYieldRevenueByMarket(
         py,
-        config,
+        spec,
         planting.bedFeet,
         product,
         marketSplit,
@@ -297,7 +297,7 @@ export function calculatePlantingRevenue(
       );
       if (marketResult) {
         // Calculate weighted average price for display
-        const yieldContext = buildYieldContext(config, planting.bedFeet);
+        const yieldContext = buildYieldContext(spec, planting.bedFeet);
         yieldContext.harvests = py.numberOfHarvests ?? 1;
         const yieldResult = evaluateYieldFormula(py.yieldFormula!, yieldContext);
         const yieldAmount = yieldResult.value ?? 0;
@@ -320,7 +320,7 @@ export function calculatePlantingRevenue(
       }
     } else {
       // Fallback to simple calculation (no markets defined)
-      const result = calculateProductYieldRevenue(py, config, planting.bedFeet, product);
+      const result = calculateProductYieldRevenue(py, spec, planting.bedFeet, product);
       if (result) {
         productResults.push(result);
       }
@@ -330,13 +330,13 @@ export function calculatePlantingRevenue(
   const totalRevenue = productResults.reduce((sum, r) => sum + r.revenue, 0);
 
   // Calculate days in field (bed occupation time, excludes greenhouse days)
-  const daysInField = calculateFieldOccupationDays(config);
+  const daysInField = calculateFieldOccupationDays(spec);
 
   // Calculate harvest start date from field start + DTM
   let harvestStartDate: string | null = null;
-  if (planting.fieldStartDate && config.productYields?.length) {
+  if (planting.fieldStartDate && spec.productYields?.length) {
     // Use the earliest product's DTM
-    const minDtm = Math.min(...config.productYields.map(py => py.dtm));
+    const minDtm = Math.min(...spec.productYields.map(py => py.dtm));
     const fieldStart = parseISO(planting.fieldStartDate);
     const harvestDate = addDays(fieldStart, minDtm);
     harvestStartDate = formatDateOnly(harvestDate);
@@ -344,8 +344,8 @@ export function calculatePlantingRevenue(
 
   return {
     plantingId: planting.id,
-    configId: planting.configId,
-    crop: config.crop,
+    specId: planting.specId,
+    crop: spec.crop,
     bedFeet: planting.bedFeet,
     daysInField,
     products: productResults,
@@ -370,17 +370,17 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
   const revenueByMarket: Record<string, number> = {};
 
   const plantings = plan.plantings ?? [];
-  const cropCatalog = plan.cropCatalog ?? {};
+  const specs = plan.specs ?? {};
   const products = plan.products ?? {};
   const markets = plan.markets ?? {};
 
   // Calculate revenue for each planting
   for (const planting of plantings) {
-    const config = cropCatalog[planting.configId];
-    if (!config) continue;
+    const spec = specs[planting.specId];
+    if (!spec) continue;
 
     // Pass markets for market-split-aware calculation
-    const result = calculatePlantingRevenue(planting, config, products, markets);
+    const result = calculatePlantingRevenue(planting, spec, products, markets);
     plantingResults.push(result);
 
     // Aggregate market revenue
@@ -392,7 +392,7 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
     const bedFootDays = planting.bedFeet * result.daysInField;
 
     // Aggregate by crop
-    const cropKey = config.crop;
+    const cropKey = spec.crop;
     const existing = cropTotals.get(cropKey) ?? { revenue: 0, bedFeet: 0, bedFootDays: 0, count: 0 };
     cropTotals.set(cropKey, {
       revenue: existing.revenue + result.totalRevenue,
@@ -410,7 +410,7 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
         if (productResult.revenue <= 0) continue;
 
         // Find the matching ProductYield for timing info
-        const py = config.productYields?.find(p => p.productId === productResult.productId);
+        const py = spec.productYields?.find((p: { productId: string }) => p.productId === productResult.productId);
         if (!py) continue;
 
         // Calculate harvest window for this product
@@ -511,24 +511,24 @@ export function formatMonth(month: string): string {
  *
  * Resolution order:
  * 1. If planting has a marketSplit set, use it
- * 2. Otherwise, fall back to config's defaultMarketSplit
+ * 2. Otherwise, fall back to spec's defaultMarketSplit
  * 3. If neither is set, returns undefined (all revenue goes to first active market)
  *
  * @param planting - The planting to check
- * @param config - The crop config for fallback
+ * @param spec - The planting spec for fallback
  * @returns The effective market split, or undefined if none set
  */
 export function getEffectiveMarketSplit(
   planting: Planting,
-  config: CropConfig
+  spec: PlantingSpec
 ): MarketSplit | undefined {
   // Planting-level market split takes precedence
   if (planting.marketSplit) {
     return planting.marketSplit;
   }
 
-  // Fall back to config default
-  return config.defaultMarketSplit;
+  // Fall back to spec default
+  return spec.defaultMarketSplit;
 }
 
 /** Revenue broken down by market */
@@ -546,7 +546,7 @@ export interface MarketRevenueBreakdown {
  * and applies the appropriate price for each market.
  *
  * @param py - The ProductYield to calculate
- * @param config - The CropConfig (for spacing/rows context)
+ * @param spec - The PlantingSpec (for spacing/rows context)
  * @param bedFeet - The planting's bed feet
  * @param product - The Product entity (for pricing)
  * @param marketSplit - The market split to apply
@@ -555,7 +555,7 @@ export interface MarketRevenueBreakdown {
  */
 export function calculateProductYieldRevenueByMarket(
   py: ProductYield,
-  config: CropConfig,
+  spec: PlantingSpec,
   bedFeet: number,
   product: Product | undefined,
   marketSplit: MarketSplit | undefined,
@@ -566,7 +566,7 @@ export function calculateProductYieldRevenueByMarket(
   }
 
   // Build context for formula evaluation
-  const context = buildYieldContext(config, bedFeet);
+  const context = buildYieldContext(spec, bedFeet);
   context.harvests = py.numberOfHarvests ?? 1;
   context.daysBetweenHarvest = py.daysBetweenHarvest ?? 7;
 

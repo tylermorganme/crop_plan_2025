@@ -126,11 +126,11 @@ export function getFirstPrice(product: Product): number | undefined {
 
 /**
  * Find a product matching a crop and unit.
- * Used to look up product info for a CropConfig based on its crop and yieldUnit.
+ * Used to look up product info for a PlantingSpec based on its crop and yieldUnit.
  *
  * @param products - Products record to search
  * @param crop - Crop name to match
- * @param unit - Unit to match (typically from CropConfig.yieldUnit)
+ * @param unit - Unit to match (typically from PlantingSpec.yieldUnit)
  * @returns Matching product or undefined
  */
 export function findProductByCropAndUnit(

@@ -64,7 +64,7 @@ function createTestPlan(overrides: Partial<Plan> = {}): Plan {
     beds: {},
     bedGroups: {},
     plantings: [],
-    cropCatalog: {},
+    specs: {},
     changeLog: [],
     ...overrides,
   };
@@ -147,7 +147,7 @@ describe('hydratePlan', () => {
       (draft) => {
         draft.plantings!.push({
           id: 'P1',
-          configId: 'config-1',
+          specId: 'config-1',
           fieldStartDate: '2025-03-15',
           startBed: null,
           bedFeet: 50,
@@ -164,7 +164,7 @@ describe('hydratePlan', () => {
       (draft) => {
         draft.plantings!.push({
           id: 'P2',
-          configId: 'config-2',
+          specId: 'config-2',
           fieldStartDate: '2025-04-01',
           startBed: null,
           bedFeet: 100,
@@ -245,7 +245,7 @@ describe('hydratePlan with checkpoints', () => {
       (draft) => {
         draft.plantings!.push({
           id: 'P1',
-          configId: 'config-1',
+          specId: 'config-1',
           fieldStartDate: '2025-03-15',
           startBed: null,
           bedFeet: 50,
@@ -266,7 +266,7 @@ describe('hydratePlan with checkpoints', () => {
       (draft) => {
         draft.plantings!.push({
           id: 'P2',
-          configId: 'config-2',
+          specId: 'config-2',
           fieldStartDate: '2025-04-01',
           startBed: null,
           bedFeet: 100,
@@ -296,7 +296,7 @@ describe('hydratePlan with checkpoints', () => {
         (draft) => {
           draft.plantings!.push({
             id: `P${i}`,
-            configId: `config-${i}`,
+            specId: `config-${i}`,
             fieldStartDate: '2025-03-15',
             startBed: null,
             bedFeet: 50,
@@ -319,7 +319,7 @@ describe('hydratePlan with checkpoints', () => {
         (draft) => {
           draft.plantings!.push({
             id: `P${i}`,
-            configId: `config-${i}`,
+            specId: `config-${i}`,
             fieldStartDate: '2025-04-01',
             startBed: null,
             bedFeet: 100,
@@ -352,7 +352,7 @@ describe('hydratePlan with checkpoints', () => {
         (draft) => {
           draft.plantings!.push({
             id: `P${i}`,
-            configId: `config-${i}`,
+            specId: `config-${i}`,
             fieldStartDate: '2025-03-15',
             startBed: null,
             bedFeet: 50,
@@ -376,7 +376,7 @@ describe('hydratePlan with checkpoints', () => {
         (draft) => {
           draft.plantings!.push({
             id: `P${i}`,
-            configId: `config-${i}`,
+            specId: `config-${i}`,
             fieldStartDate: '2025-04-01',
             startBed: null,
             bedFeet: 100,
@@ -527,7 +527,7 @@ describe('undoPatch (simplified)', () => {
       (draft) => {
         draft.plantings!.push({
           id: 'P1',
-          configId: 'config-1',
+          specId: 'config-1',
           fieldStartDate: '2025-03-15',
           startBed: null,
           bedFeet: 50,
@@ -595,7 +595,7 @@ describe('redoPatch (simplified)', () => {
       (draft) => {
         draft.plantings!.push({
           id: 'P1',
-          configId: 'config-1',
+          specId: 'config-1',
           fieldStartDate: '2025-03-15',
           startBed: null,
           bedFeet: 50,
@@ -762,7 +762,7 @@ describe('full hydration flow', () => {
       (draft) => {
         draft.plantings!.push({
           id: 'P1',
-          configId: 'config-1',
+          specId: 'config-1',
           fieldStartDate: '2025-03-15',
           startBed: null,
           bedFeet: 50,
@@ -791,7 +791,7 @@ describe('full hydration flow', () => {
         (draft) => {
           draft.plantings!.push({
             id: `P${i}`,
-            configId: `config-${i}`,
+            specId: `config-${i}`,
             fieldStartDate: '2025-03-15',
             startBed: null,
             bedFeet: 50,
@@ -854,7 +854,7 @@ describe('schema migration during hydration', () => {
       beds: {},
       bedGroups: {},
       plantings: [],
-      cropCatalog: {},
+      specs: {},
       changeLog: [],
     };
     db.prepare(`

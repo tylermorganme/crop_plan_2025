@@ -2,7 +2,7 @@
 /**
  * Backfill rowCover field to existing plans.
  *
- * This script updates cropCatalog entries in all existing plan databases
+ * This script updates specs entries in all existing plan databases
  * AND their checkpoint files to include the rowCover field from the template.
  *
  * Usage: node scripts/backfill-rowcover.js [--dry-run]
@@ -43,7 +43,7 @@ console.log(`With rowCover: ${template.crops.filter(c => c.rowCover).length}`);
 console.log(`Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}\n`);
 
 /**
- * Update cropCatalog in a single database file.
+ * Update specs in a single database file.
  * Returns the number of configs updated.
  */
 function updateDatabase(dbPath, label) {
@@ -56,16 +56,16 @@ function updateDatabase(dbPath, label) {
     }
 
     const plan = JSON.parse(row.data);
-    const cropCatalog = plan.cropCatalog;
+    const specs = plan.specs;
 
-    if (!cropCatalog) {
-      return { updated: 0, skipped: true, reason: 'no cropCatalog' };
+    if (!specs) {
+      return { updated: 0, skipped: true, reason: 'no specs' };
     }
 
     let updatedCount = 0;
 
     // Update each crop config
-    for (const [configKey, config] of Object.entries(cropCatalog)) {
+    for (const [configKey, config] of Object.entries(specs)) {
       // Try to find template data by ID first, then by identifier
       const templateData = templateById.get(config.id) ||
                           templateByIdentifier.get(config.identifier);

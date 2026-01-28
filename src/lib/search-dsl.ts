@@ -69,7 +69,7 @@ export function parseSearchQuery<TSortField extends string = string>(
 export function buildCropSearchText(crop: {
   name?: string;
   category?: string;
-  cropConfigId?: string;
+  specId?: string;
   resource?: string;
   crop?: string;
   notes?: string;
@@ -80,7 +80,7 @@ export function buildCropSearchText(crop: {
   return [
     crop.name,
     crop.category,
-    crop.cropConfigId,
+    crop.specId,
     crop.resource,
     crop.crop,
     crop.notes,

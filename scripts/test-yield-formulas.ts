@@ -3,10 +3,10 @@
  */
 
 import * as fs from 'fs';
-import { evaluateYieldFormula, buildYieldContext, type CropConfig } from '../src/lib/entities/crop-config';
+import { evaluateYieldFormula, buildYieldContext, type PlantingSpec } from '../src/lib/entities/planting-specs';
 
 const cropsData = JSON.parse(fs.readFileSync('./src/data/crop-config-template.json', 'utf8'));
-const crops = cropsData.crops as CropConfig[];
+const crops = cropsData.crops as PlantingSpec[];
 
 console.log('Testing yield formula evaluation...');
 console.log();

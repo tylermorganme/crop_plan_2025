@@ -16,12 +16,12 @@ import {
   calculateAggregateHarvestWindow,
   calculateDaysInCells,
   calculateFieldOccupationDays,
-} from '@/lib/entities/crop-config';
+} from '@/lib/entities/planting-specs';
 import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
-import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
+import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
 import { parseSearchQuery } from '@/lib/search-dsl';
 import { SearchInput } from '@/components/SearchInput';
-import type { CropConfig } from '@/lib/entities/crop-config';
+import type { PlantingSpec } from '@/lib/entities/planting-specs';
 import type { Planting } from '@/lib/entities/planting';
 import type { TimelineCrop } from '@/lib/plan-types';
 
@@ -71,7 +71,7 @@ const ALL_COLUMNS = [
   'addlDaysHarvest',
   'addlDaysField',
   'addlDaysCells',
-  'configId',
+  'specId',
   'lastModified',
 ] as const;
 
@@ -126,7 +126,7 @@ const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
   addlDaysField: 80,
   addlDaysCells: 80,
   id: 80,
-  configId: 200,
+  specId: 200,
   lastModified: 140,
 };
 
@@ -164,7 +164,7 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
   addlDaysField: '+Field',
   addlDaysCells: '+Cells',
   id: 'ID',
-  configId: 'Config ID',
+  specId: 'Config ID',
   lastModified: 'Modified',
 };
 
@@ -173,7 +173,7 @@ const SORTABLE_COLUMNS: Set<ColumnId> = new Set([
   'crop', 'category', 'identifier', 'fieldStartDate', 'ghDate',
   'harvestStart', 'harvestEnd', 'bed', 'bedFeet', 'dtm',
   'harvestWindow', 'daysInField', 'daysInCells', 'revenue', 'revenuePerFt',
-  'method', 'growingStructure', 'id', 'configId', 'lastModified',
+  'method', 'growingStructure', 'id', 'specId', 'lastModified',
 ]);
 
 // Editable columns (have inline editing or interactive controls)
@@ -792,7 +792,7 @@ export default function PlantingsPage() {
   // Lookups
   const bedsLookup = useMemo(() => currentPlan?.beds ?? {}, [currentPlan?.beds]);
   const bedGroupsLookup = useMemo(() => currentPlan?.bedGroups ?? {}, [currentPlan?.bedGroups]);
-  const catalogLookup = useMemo(() => currentPlan?.cropCatalog ?? {}, [currentPlan?.cropCatalog]);
+  const catalogLookup = useMemo(() => currentPlan?.specs ?? {}, [currentPlan?.specs]);
   const varietiesLookup = useMemo(() => currentPlan?.varieties ?? {}, [currentPlan?.varieties]);
   const seedMixesLookup = useMemo(() => currentPlan?.seedMixes ?? {}, [currentPlan?.seedMixes]);
   const productsLookup = useMemo(() => currentPlan?.products ?? {}, [currentPlan?.products]);
@@ -829,16 +829,16 @@ export default function PlantingsPage() {
       const cropsForPlanting = cropsByPlanting.get(p.id) || [];
       const firstCrop = cropsForPlanting[0]; // Dates same across all beds
 
-      // Get config for lookup fields
-      const config = catalogLookup[p.configId] as CropConfig | undefined;
+      // Get spec for lookup fields
+      const spec = catalogLookup[p.specId] as PlantingSpec | undefined;
       const bed = p.startBed ? bedsLookup[p.startBed] : null;
 
       // Extract pre-computed dates from TimelineCrop
       const dates = extractDatesFromTimelineCrop(firstCrop);
 
-      // Lookup config timing values (for display columns, not for date calculation)
-      const dtm = config ? getPrimarySeedToHarvest(config) : 0;
-      const harvestWindow = config ? calculateAggregateHarvestWindow(config) : 0;
+      // Lookup spec timing values (for display columns, not for date calculation)
+      const dtm = spec ? getPrimarySeedToHarvest(spec) : 0;
+      const harvestWindow = spec ? calculateAggregateHarvestWindow(spec) : 0;
 
       // Seed source display
       let seedSourceDisplay = '';
@@ -850,18 +850,18 @@ export default function PlantingsPage() {
           const mix = seedMixesLookup[p.seedSource.id];
           seedSourceDisplay = mix?.name ?? p.seedSource.id;
         }
-      } else if (config?.defaultSeedSource) {
-        if (config.defaultSeedSource.type === 'variety') {
-          const variety = varietiesLookup[config.defaultSeedSource.id];
-          seedSourceDisplay = variety?.name ?? config.defaultSeedSource.id;
-        } else if (config.defaultSeedSource.type === 'mix') {
-          const mix = seedMixesLookup[config.defaultSeedSource.id];
-          seedSourceDisplay = mix?.name ?? config.defaultSeedSource.id;
+      } else if (spec?.defaultSeedSource) {
+        if (spec.defaultSeedSource.type === 'variety') {
+          const variety = varietiesLookup[spec.defaultSeedSource.id];
+          seedSourceDisplay = variety?.name ?? spec.defaultSeedSource.id;
+        } else if (spec.defaultSeedSource.type === 'mix') {
+          const mix = seedMixesLookup[spec.defaultSeedSource.id];
+          seedSourceDisplay = mix?.name ?? spec.defaultSeedSource.id;
         }
       }
 
       // Plant count calculation
-      const plants = calculatePlantCount(p.bedFeet, config?.rows, config?.spacing);
+      const plants = calculatePlantCount(p.bedFeet, spec?.rows, spec?.spacing);
 
       // Beds display (formatted from TimelineCrop span)
       const bedsDisplay = formatBedSpan(cropsForPlanting);
@@ -878,9 +878,9 @@ export default function PlantingsPage() {
       }
 
       // Calculate timing and revenue fields
-      const daysInField = config ? calculateFieldOccupationDays(config) : 0;
-      const daysInCells = config ? calculateDaysInCells(config) : 0;
-      const revenue = config ? calculateConfigRevenue(config, p.bedFeet, productsLookup) : null;
+      const daysInField = spec ? calculateFieldOccupationDays(spec) : 0;
+      const daysInCells = spec ? calculateDaysInCells(spec) : 0;
+      const revenue = spec ? calculateSpecRevenue(spec, p.bedFeet, productsLookup) : null;
       const revenuePerFt = revenue !== null && p.bedFeet > 0 ? revenue / p.bedFeet : null;
 
       return {
@@ -890,13 +890,13 @@ export default function PlantingsPage() {
         dtm,
         harvestWindow,
 
-        // From config lookup
-        cropName: config?.crop ?? p.configId,
-        category: config?.category ?? '',
-        identifier: config?.identifier ?? p.configId,
-        rows: config?.rows ?? null,
-        spacing: config?.spacing ?? null,
-        growingStructure: config?.growingStructure ?? 'field',
+        // From spec lookup
+        cropName: spec?.crop ?? p.specId,
+        category: spec?.category ?? '',
+        identifier: spec?.identifier ?? p.specId,
+        rows: spec?.rows ?? null,
+        spacing: spec?.spacing ?? null,
+        growingStructure: spec?.growingStructure ?? 'field',
 
         // From bed lookup
         bedName: bed?.name ?? '',
@@ -1046,7 +1046,7 @@ export default function PlantingsPage() {
         case 'method': cmp = a.method.localeCompare(b.method); break;
         case 'growingStructure': cmp = a.growingStructure.localeCompare(b.growingStructure); break;
         case 'id': cmp = a.id.localeCompare(b.id); break;
-        case 'configId': cmp = a.configId.localeCompare(b.configId); break;
+        case 'specId': cmp = a.specId.localeCompare(b.specId); break;
         case 'lastModified': cmp = a.lastModified - b.lastModified; break;
       }
       return effectiveSortDirection === 'asc' ? cmp : -cmp;
@@ -1550,8 +1550,8 @@ export default function PlantingsPage() {
         );
       case 'id':
         return <span className="font-mono text-xs text-gray-400">{planting.id}</span>;
-      case 'configId':
-        return <span className="font-mono text-xs text-gray-400 truncate">{planting.configId}</span>;
+      case 'specId':
+        return <span className="font-mono text-xs text-gray-400 truncate">{planting.specId}</span>;
       case 'lastModified':
         return <span className="text-xs text-gray-500">{format(new Date(planting.lastModified), 'MMM d, HH:mm')}</span>;
       default:
@@ -1588,7 +1588,7 @@ export default function PlantingsPage() {
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Search plantings..."
-          sortFields={['crop', 'category', 'fieldStartDate', 'ghDate', 'bed', 'bedFeet', 'revenue', 'revenuePerFt', 'method', 'growingStructure', 'id', 'configId', 'lastModified']}
+          sortFields={['crop', 'category', 'fieldStartDate', 'ghDate', 'bed', 'bedFeet', 'revenue', 'revenuePerFt', 'method', 'growingStructure', 'id', 'specId', 'lastModified']}
           filterFields={['bed', 'group', 'bedGroup', 'category', 'method', 'crop', 'notes', 'structure']}
           width="w-64"
         />

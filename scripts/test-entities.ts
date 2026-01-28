@@ -9,7 +9,7 @@ import {
   type Bed,
   type BedGroup,
   type Planting,
-  type CropConfig,
+  type PlantingSpec,
   type Plan,
   type PlanMetadata,
   ROW_LENGTHS,
@@ -136,7 +136,7 @@ console.log('\n=== Planting Tests ===\n');
 
 test('createPlanting generates ID if not provided', () => {
   const planting = createPlanting({
-    configId: 'test-config',
+    specId: 'test-config',
     fieldStartDate: '2025-05-01',
     startBed: 'A1',
     bedFeet: 50,
@@ -147,7 +147,7 @@ test('createPlanting generates ID if not provided', () => {
 test('createPlanting uses provided ID', () => {
   const planting = createPlanting({
     id: 'CUSTOM001',
-    configId: 'test-config',
+    specId: 'test-config',
     fieldStartDate: '2025-05-01',
     startBed: 'A1',
     bedFeet: 50,
@@ -173,7 +173,7 @@ function createTestPlan(): Plan {
     [groupAId]: { id: groupAId, name: 'Row A', displayOrder: 0 },
   };
 
-  const cropCatalog: Record<string, CropConfig> = {
+  const specs: Record<string, PlantingSpec> = {
     'arugula-baby-leaf': {
       id: 'arugula-baby-leaf',
       identifier: 'Arugula - Baby Leaf | Field DS Sp',
@@ -186,7 +186,7 @@ function createTestPlan(): Plan {
   const plantings: Planting[] = [
     {
       id: 'P1',
-      configId: 'arugula-baby-leaf',
+      specId: 'arugula-baby-leaf',
       fieldStartDate: '2025-05-01',
       startBed: 'uuid-a1', // Now using UUID
       bedFeet: 50,
@@ -208,7 +208,7 @@ function createTestPlan(): Plan {
     metadata,
     beds,
     bedGroups,
-    cropCatalog,
+    specs,
     plantings,
     changeLog: [],
   };
@@ -219,9 +219,9 @@ test('validatePlan passes for valid plan', () => {
   validatePlan(plan); // Should not throw
 });
 
-test('validatePlan throws for missing configId', () => {
+test('validatePlan throws for missing specId', () => {
   const plan = createTestPlan();
-  plan.plantings![0].configId = 'nonexistent-config';
+  plan.plantings![0].specId = 'nonexistent-config';
 
   assertThrows(() => validatePlan(plan), PlanValidationError);
 });

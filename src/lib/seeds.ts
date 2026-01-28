@@ -9,7 +9,7 @@
 
 import type { Plan } from './plan-types';
 import type { Planting } from './entities/planting';
-import type { CropConfig } from './entities/crop-config';
+import type { PlantingSpec } from './entities/planting-specs';
 import type { Variety, DensityUnit } from './entities/variety';
 import { calculateWeightForSeeds, calculateSeedsFromWeight } from './entities/variety';
 import type { SeedMix } from './entities/seed-mix';
@@ -110,27 +110,27 @@ export interface PlanSeedReport {
  * otherwise calculates from spacing/rows/seedsPerPlanting.
  *
  * @param planting - The planting to calculate
- * @param config - The CropConfig for this planting
+ * @param spec - The PlantingSpec for this planting
  * @param seedOrderBuffer - Buffer multiplier for ordering (default 1.2)
  * @returns Number of seeds needed (rounded up)
  */
 export function calculateSeedsForPlanting(
   planting: Planting,
-  config: CropConfig,
+  spec: PlantingSpec,
   seedOrderBuffer: number = DEFAULT_SEED_ORDER_BUFFER
 ): number {
   // If seedsPerBed is pre-calculated, use it (scaled by bed feet)
-  if (config.seedsPerBed !== undefined && config.seedsPerBed > 0) {
+  if (spec.seedsPerBed !== undefined && spec.seedsPerBed > 0) {
     const bedsEquivalent = planting.bedFeet / STANDARD_BED_LENGTH;
-    return Math.ceil(config.seedsPerBed * bedsEquivalent * seedOrderBuffer);
+    return Math.ceil(spec.seedsPerBed * bedsEquivalent * seedOrderBuffer);
   }
 
   // Otherwise calculate from formula
-  const rows = config.rows ?? 1;
-  const spacing = config.spacing ?? 12;
-  const seedsPerPlanting = config.seedsPerPlanting ?? 1;
-  const safetyFactor = config.safetyFactor ?? 1;
-  const seedingFactor = config.seedingFactor ?? 1;
+  const rows = spec.rows ?? 1;
+  const spacing = spec.spacing ?? 12;
+  const seedsPerPlanting = spec.seedsPerPlanting ?? 1;
+  const safetyFactor = spec.safetyFactor ?? 1;
+  const seedingFactor = spec.seedingFactor ?? 1;
 
   if (spacing <= 0) return 0;
 
@@ -190,7 +190,7 @@ export function calculatePlanSeeds(
   const varietyTotals = new Map<string, { seeds: number; plantingIds: Set<string> }>();
 
   const plantings = plan.plantings ?? [];
-  const cropCatalog = plan.cropCatalog ?? {};
+  const specs = plan.specs ?? {};
   const varieties = plan.varieties ?? {};
   const seedMixes = plan.seedMixes ?? {};
   const seedOrders = plan.seedOrders ?? {};
@@ -198,14 +198,14 @@ export function calculatePlanSeeds(
   let plantingsWithoutSeed = 0;
 
   for (const planting of plantings) {
-    const config = cropCatalog[planting.configId];
-    if (!config) continue;
+    const spec = specs[planting.specId];
+    if (!spec) continue;
 
     // Resolve effective seed source:
-    // - If useDefaultSeedSource=true, use config.defaultSeedSource
+    // - If useDefaultSeedSource=true, use spec.defaultSeedSource
     // - Otherwise use planting.seedSource
     const effectiveSeedSource = planting.useDefaultSeedSource
-      ? config.defaultSeedSource
+      ? spec.defaultSeedSource
       : planting.seedSource;
 
     // Check if planting has a seed source assigned (either explicit or default)
@@ -214,7 +214,7 @@ export function calculatePlanSeeds(
       continue;
     }
 
-    const totalSeeds = calculateSeedsForPlanting(planting, config, seedOrderBuffer);
+    const totalSeeds = calculateSeedsForPlanting(planting, spec, seedOrderBuffer);
 
     if (effectiveSeedSource.type === 'variety') {
       // Direct variety assignment

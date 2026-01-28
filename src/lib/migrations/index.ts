@@ -484,6 +484,106 @@ function migrateV9ToV10(rawPlan: unknown): unknown {
   };
 }
 
+/**
+ * v10 → v11: Add cropName field to PlantingSpec (CropConfig)
+ * Copies the value from the deprecated 'crop' field to the new 'cropName' field.
+ * The 'crop' field is kept for backwards compatibility but code should use 'cropName'.
+ */
+function migrateV10ToV11(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    cropCatalog?: Record<string, { crop?: string; cropName?: string }>;
+    [key: string]: unknown;
+  };
+
+  if (!plan.cropCatalog) {
+    return plan;
+  }
+
+  // Check if already migrated (first config has cropName)
+  const firstConfig = Object.values(plan.cropCatalog)[0];
+  if (firstConfig && firstConfig.cropName) {
+    return plan;
+  }
+
+  const newCropCatalog: Record<string, unknown> = {};
+
+  for (const [key, config] of Object.entries(plan.cropCatalog)) {
+    // Copy crop to cropName if not already set
+    if (config.crop && !config.cropName) {
+      newCropCatalog[key] = {
+        ...config,
+        cropName: config.crop,
+      };
+    } else {
+      newCropCatalog[key] = { ...config };
+    }
+  }
+
+  return {
+    ...plan,
+    cropCatalog: newCropCatalog,
+  };
+}
+
+/**
+ * v11 → v12: Rename configId → specId and cropBoxDisplay → plantingBoxDisplay
+ * - Renames Planting.configId to Planting.specId (clearer naming)
+ * - Renames Plan.cropBoxDisplay to Plan.plantingBoxDisplay (these are planting boxes, not crop boxes)
+ */
+function migrateV11ToV12(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    plantings?: Array<{ configId?: string; specId?: string; [key: string]: unknown }>;
+    cropBoxDisplay?: unknown;
+    plantingBoxDisplay?: unknown;
+    [key: string]: unknown;
+  };
+
+  let result = { ...plan };
+
+  // Migrate plantings: configId → specId
+  if (plan.plantings) {
+    // Check if already migrated (first planting has specId instead of configId)
+    const hasOldField = plan.plantings.some(p => 'configId' in p && !('specId' in p));
+    if (hasOldField) {
+      result.plantings = plan.plantings.map(planting => {
+        if ('configId' in planting && !('specId' in planting)) {
+          const { configId, ...rest } = planting;
+          return { ...rest, specId: configId };
+        }
+        return planting;
+      });
+    }
+  }
+
+  // Migrate cropBoxDisplay → plantingBoxDisplay
+  if ('cropBoxDisplay' in plan && !('plantingBoxDisplay' in plan)) {
+    const { cropBoxDisplay, ...rest } = result;
+    result = { ...rest, plantingBoxDisplay: cropBoxDisplay };
+  }
+
+  return result;
+}
+
+/**
+ * v12 → v13: Rename cropCatalog → specs
+ * - Renames Plan.cropCatalog to Plan.specs (clearer naming - it stores PlantingSpecs, not Crops)
+ */
+function migrateV12ToV13(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    cropCatalog?: unknown;
+    specs?: unknown;
+    [key: string]: unknown;
+  };
+
+  // Migrate cropCatalog → specs
+  if ('cropCatalog' in plan && !('specs' in plan)) {
+    const { cropCatalog, ...rest } = plan;
+    return { ...rest, specs: cropCatalog };
+  }
+
+  return plan;
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -515,6 +615,9 @@ const migrations: MigrationFn[] = [
   migrateV7ToV8, // Index 6: v7 → v8 (add colorDefs for named color palettes)
   migrateV8ToV9, // Index 7: v8 → v9 (add cropId for stable crop linking)
   migrateV9ToV10, // Index 8: v9 → v10 (add createdAt/updatedAt to CropConfig)
+  migrateV10ToV11, // Index 9: v10 → v11 (add cropName field to PlantingSpec)
+  migrateV11ToV12, // Index 10: v11 → v12 (configId → specId, cropBoxDisplay → plantingBoxDisplay)
+  migrateV12ToV13, // Index 11: v12 → v13 (cropCatalog → specs)
 ];
 
 // =============================================================================

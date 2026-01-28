@@ -2,13 +2,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { Z_INDEX } from '@/lib/z-index';
-import type { CropConfig, ProductYield, TrayStage } from '@/lib/entities/crop-config';
+import type { PlantingSpec, ProductYield, TrayStage } from '@/lib/entities/planting-specs';
 import type { Product } from '@/lib/entities/product';
 import type { SeedSource } from '@/lib/entities/planting';
 
-interface CompareConfigsModalProps {
+interface CompareSpecsModalProps {
   isOpen: boolean;
-  configs: CropConfig[];
+  specs: PlantingSpec[];
   onClose: () => void;
   products?: Record<string, Product>;
 }
@@ -19,9 +19,9 @@ interface FieldGroup {
 }
 
 interface FieldDef {
-  key: keyof CropConfig | string;
+  key: keyof PlantingSpec | string;
   label: string;
-  format?: (value: unknown, config: CropConfig, products?: Record<string, Product>) => string;
+  format?: (value: unknown, spec: PlantingSpec, products?: Record<string, Product>) => string;
 }
 
 // Field definitions organized by group
@@ -69,7 +69,7 @@ const FIELD_GROUPS: FieldGroup[] = [
       {
         key: 'productYields',
         label: 'Product Yields',
-        format: (v, _config, products) => {
+        format: (v, _spec, products) => {
           const yields = v as ProductYield[] | undefined;
           if (!yields?.length) return '—';
           return yields.map((py) => {
@@ -115,7 +115,7 @@ const FIELD_GROUPS: FieldGroup[] = [
         key: 'defaultMarketSplit',
         label: 'Default Market Split',
         format: (v) => {
-          const split = v as CropConfig['defaultMarketSplit'];
+          const split = v as PlantingSpec['defaultMarketSplit'];
           if (!split) return '—';
           return Object.entries(split)
             .filter(([, pct]) => pct > 0)
@@ -149,11 +149,11 @@ const FIELD_GROUPS: FieldGroup[] = [
 function formatValue(
   value: unknown,
   fieldDef: FieldDef,
-  config: CropConfig,
+  spec: PlantingSpec,
   products?: Record<string, Product>
 ): string {
   if (fieldDef.format) {
-    return fieldDef.format(value, config, products);
+    return fieldDef.format(value, spec, products);
   }
   if (value === undefined || value === null || value === '') {
     return '—';
@@ -173,16 +173,16 @@ function formatValue(
   return String(value);
 }
 
-function getFieldValue(config: CropConfig, key: string): unknown {
-  return (config as unknown as Record<string, unknown>)[key];
+function getFieldValue(spec: PlantingSpec, key: string): unknown {
+  return (spec as unknown as Record<string, unknown>)[key];
 }
 
-export default function CompareConfigsModal({
+export default function CompareSpecsModal({
   isOpen,
-  configs,
+  specs,
   onClose,
   products,
-}: CompareConfigsModalProps) {
+}: CompareSpecsModalProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   // Track which fields have differences
@@ -190,7 +190,7 @@ export default function CompareConfigsModal({
     const diffs = new Set<string>();
     for (const group of FIELD_GROUPS) {
       for (const field of group.fields) {
-        const values = configs.map((c) => {
+        const values = specs.map((c) => {
           const val = getFieldValue(c, field.key);
           return formatValue(val, field, c, products);
         });
@@ -202,7 +202,7 @@ export default function CompareConfigsModal({
       }
     }
     return diffs;
-  }, [configs, products]);
+  }, [specs, products]);
 
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups((prev) => {
@@ -222,7 +222,7 @@ export default function CompareConfigsModal({
     }
   };
 
-  if (!isOpen || configs.length < 2) return null;
+  if (!isOpen || specs.length < 2) return null;
 
   return (
     <div
@@ -240,7 +240,7 @@ export default function CompareConfigsModal({
         {/* Header */}
         <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
-            Compare Configurations ({configs.length})
+            Compare Specs ({specs.length})
           </h2>
           <button
             onClick={onClose}
@@ -258,12 +258,12 @@ export default function CompareConfigsModal({
                 <th className="text-left p-2 border-b-2 border-gray-300 font-medium text-gray-600 min-w-[180px]">
                   Field
                 </th>
-                {configs.map((config) => (
+                {specs.map((spec) => (
                   <th
-                    key={config.id}
+                    key={spec.id}
                     className="text-left p-2 border-b-2 border-gray-300 font-medium text-gray-900 min-w-[180px]"
                   >
-                    {config.identifier || config.id}
+                    {spec.identifier || spec.id}
                   </th>
                 ))}
               </tr>
@@ -282,7 +282,7 @@ export default function CompareConfigsModal({
                       onClick={() => toggleGroup(group.name)}
                     >
                       <td
-                        colSpan={configs.length + 1}
+                        colSpan={specs.length + 1}
                         className="py-2 px-2 font-semibold text-gray-700 bg-gray-100 border-t border-gray-200"
                       >
                         <span className="inline-flex items-center gap-2">
@@ -309,13 +309,13 @@ export default function CompareConfigsModal({
                             <td className="p-2 border-b border-gray-100 text-gray-600 font-medium">
                               {field.label}
                             </td>
-                            {configs.map((config) => {
-                              const value = getFieldValue(config, field.key);
-                              const formatted = formatValue(value, field, config, products);
+                            {specs.map((spec) => {
+                              const value = getFieldValue(spec, field.key);
+                              const formatted = formatValue(value, field, spec, products);
 
                               return (
                                 <td
-                                  key={config.id}
+                                  key={spec.id}
                                   className={`p-2 border-b border-gray-100 ${
                                     hasDiff ? 'bg-amber-50' : ''
                                   }`}

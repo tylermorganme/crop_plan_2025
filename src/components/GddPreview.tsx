@@ -67,11 +67,11 @@ export function GddPreview({
     );
   }
 
-  // No target field date on config
+  // No target field date on spec
   if (!targetFieldDate) {
     return (
       <div className="text-xs text-gray-500">
-        Config needs targetFieldDate for GDD
+        Spec needs targetFieldDate for GDD
       </div>
     );
   }

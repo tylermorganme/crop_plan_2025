@@ -52,7 +52,7 @@ function createTestPlan(overrides: Partial<Plan> = {}): Plan {
     beds: {},
     bedGroups: {},
     plantings: [],
-    cropCatalog: {},
+    specs: {},
     changeLog: [],
     ...overrides,
   };
@@ -142,7 +142,7 @@ describe('sqlite-storage', () => {
         plantings: [
           {
             id: 'P1',
-            configId: 'config-1',
+            specId: 'config-1',
             fieldStartDate: '2025-03-15',
             startBed: null,
             bedFeet: 50,
@@ -158,14 +158,14 @@ describe('sqlite-storage', () => {
       expect(loaded!.id).toBe(plan.id);
       expect(loaded!.metadata.name).toBe(plan.metadata.name);
       expect(loaded!.plantings).toHaveLength(1);
-      expect(loaded!.plantings![0].configId).toBe('config-1');
+      expect(loaded!.plantings![0].specId).toBe('config-1');
     });
 
     it('preserves all plan fields', () => {
       const plan = createTestPlan({
         beds: { 'bed-1': { id: 'bed-1', name: 'A1', lengthFt: 50, groupId: 'g1', displayOrder: 0 } },
         bedGroups: { g1: { id: 'g1', name: 'Row A', displayOrder: 0 } },
-        cropCatalog: { 'crop-1': { id: 'crop-1', identifier: 'tomato-1', crop: 'Tomato' } as never },
+        specs: { 'crop-1': { id: 'crop-1', identifier: 'tomato-1', crop: 'Tomato' } as never },
         varieties: { 'var-1': { id: 'var-1', crop: 'Tomato', name: 'Cherokee Purple' } as never },
         seedMixes: { 'mix-1': { id: 'mix-1', name: 'Salad Mix' } as never },
         products: { 'prod-1': { id: 'prod-1', name: 'Tomatoes' } as never },
@@ -177,7 +177,7 @@ describe('sqlite-storage', () => {
 
       expect(loaded!.beds).toHaveProperty('bed-1');
       expect(loaded!.bedGroups).toHaveProperty('g1');
-      expect(loaded!.cropCatalog).toHaveProperty('crop-1');
+      expect(loaded!.specs).toHaveProperty('crop-1');
       expect(loaded!.varieties).toHaveProperty('var-1');
       expect(loaded!.seedMixes).toHaveProperty('mix-1');
       expect(loaded!.products).toHaveProperty('prod-1');
@@ -226,7 +226,7 @@ describe('sqlite-storage', () => {
           beds: {},
           bedGroups: {},
           plantings: [],
-          cropCatalog: {},
+          specs: {},
           changeLog: [],
           // Note: no products field (added in v4)
         };
@@ -477,7 +477,7 @@ describe('sqlite-storage', () => {
 
       // Modify the plan
       const modifiedPlan = createTestPlan({
-        plantings: [{ id: 'test-planting', configId: 'test-config' } as never],
+        plantings: [{ id: 'test-planting', specId: 'test-config' } as never],
       });
       savePlan(TEST_PLAN_ID, modifiedPlan);
 

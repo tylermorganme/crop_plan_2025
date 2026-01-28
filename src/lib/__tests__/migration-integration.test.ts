@@ -406,15 +406,15 @@ describe('end-to-end hydration with migration', () => {
 describe('realistic plan with template data', () => {
   it('creates plan with real template data, mutates, and verifies aggregates', async () => {
     // Import template data directly
-    const cropsData = await import('@/data/crop-config-template.json');
+    const cropsData = await import('@/data/planting-spec-template.json');
     const bedData = await import('@/data/bed-template.json');
 
     // Build a realistic plan with actual template data
-    // Type is flexible since CropConfig has many optional fields
+    // Type is flexible since PlantingSpec has many optional fields
     const crops = (cropsData as unknown as { crops: Array<{ id: string; identifier: string; crop: string; dtm?: number; harvestWindow?: number; [k: string]: unknown }> }).crops;
     const bedGroups = (bedData as { bedGroups: Record<string, string[]> }).bedGroups;
 
-    // Pick a few real crop configs from template
+    // Pick a few real planting specs from template
     const tomatoConfig = crops.find(c => c.crop?.toLowerCase().includes('tomato'));
     const lettuceConfig = crops.find(c => c.crop?.toLowerCase().includes('lettuce'));
     const basilConfig = crops.find(c => c.crop?.toLowerCase().includes('basil'));
@@ -617,7 +617,7 @@ describe('realistic plan with template data', () => {
   });
 
   it('verifies crop catalog has expected crop types', async () => {
-    const cropsData = await import('@/data/crop-config-template.json');
+    const cropsData = await import('@/data/planting-spec-template.json');
     const crops = (cropsData as { crops: Array<{ id: string; identifier: string; crop: string; category?: string }> }).crops;
 
     // Count by category
@@ -634,7 +634,7 @@ describe('realistic plan with template data', () => {
     expect(crops.length).toBeGreaterThan(100);
 
     // Log for debugging
-    console.log(`Template has ${crops.length} crop configs across categories:`, byCategory);
+    console.log(`Template has ${crops.length} planting specs across categories:`, byCategory);
   });
 });
 

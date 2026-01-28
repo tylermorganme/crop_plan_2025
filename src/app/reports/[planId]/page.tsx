@@ -1159,7 +1159,7 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
     };
   }, [resizing, startX, startWidth]);
 
-  // Resizable header component - uses div like CropExplorer
+  // Resizable header component - uses div like SpecExplorer
   const ResizableHeader = ({
     colKey,
     children,

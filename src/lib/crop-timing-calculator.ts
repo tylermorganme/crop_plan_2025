@@ -2,7 +2,7 @@
  * Crop Timing Calculator
  *
  * Implements the exact calculation chain from the Bed Plan Excel sheet.
- * This allows computing dates from normalized crop config data.
+ * This allows computing dates from normalized planting spec data.
  *
  * DAG Summary:
  *   Fixed Field Start Date

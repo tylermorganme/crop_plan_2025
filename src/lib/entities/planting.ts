@@ -11,7 +11,7 @@
 // =============================================================================
 
 /**
- * Overrides to default config values for this specific planting.
+ * Overrides to default spec values for this specific planting.
  * These are additive adjustments, not absolute values.
  */
 export interface PlantingOverrides {
@@ -58,8 +58,8 @@ export interface Planting {
   /** Unique planting identifier (e.g., "ARU001", "P1") */
   id: string;
 
-  /** Reference to CropConfig.id in plan's cropCatalog */
-  configId: string;
+  /** Reference to PlantingSpec.identifier in plan's specs */
+  specId: string;
 
   // ---- Scheduling ----
 
@@ -80,8 +80,8 @@ export interface Planting {
   seedSource?: SeedSource;
 
   /**
-   * When true, use the CropConfig's defaultSeedSource instead of seedSource.
-   * This allows the planting to automatically follow config updates.
+   * When true, use the PlantingSpec's defaultSeedSource instead of seedSource.
+   * This allows the planting to automatically follow spec updates.
    */
   useDefaultSeedSource?: boolean;
 
@@ -89,13 +89,13 @@ export interface Planting {
 
   /**
    * Market split for this planting - maps marketId to percentage (0-100).
-   * If not set, falls back to CropConfig's defaultMarketSplit.
+   * If not set, falls back to PlantingSpec's defaultMarketSplit.
    */
   marketSplit?: import('./market').MarketSplit;
 
   // ---- Adjustments ----
 
-  /** Overrides to default config timing */
+  /** Overrides to default spec timing */
   overrides?: PlantingOverrides;
 
   /** Actual dates for variance tracking */
@@ -162,8 +162,8 @@ export function initializePlantingIdCounter(existingIds: string[]): void {
 export interface CreatePlantingInput {
   /** Optional ID (generated if not provided) */
   id?: string;
-  /** Reference to crop config identifier */
-  configId: string;
+  /** Reference to planting spec identifier */
+  specId: string;
   /** When crop enters field (ISO date string) */
   fieldStartDate: string;
   /** Starting bed ID, or null if unassigned */
@@ -172,9 +172,9 @@ export interface CreatePlantingInput {
   bedFeet: number;
   /** Optional: seed variety or mix reference */
   seedSource?: SeedSource;
-  /** Optional: use config's default seed source */
+  /** Optional: use spec's default seed source */
   useDefaultSeedSource?: boolean;
-  /** Optional: market split for this planting (falls back to config if not set) */
+  /** Optional: market split for this planting (falls back to spec if not set) */
   marketSplit?: import('./market').MarketSplit;
   /** Optional: timing overrides */
   overrides?: PlantingOverrides;
@@ -194,7 +194,7 @@ export interface CreatePlantingInput {
 export function createPlanting(input: CreatePlantingInput): Planting {
   return {
     id: input.id ?? generatePlantingId(),
-    configId: input.configId,
+    specId: input.specId,
     fieldStartDate: input.fieldStartDate,
     startBed: input.startBed,
     bedFeet: input.bedFeet,
@@ -222,7 +222,7 @@ export function clonePlanting(
   overrides?: Partial<CreatePlantingInput>
 ): Planting {
   return createPlanting({
-    configId: source.configId,
+    specId: source.specId,
     fieldStartDate: source.fieldStartDate,
     startBed: overrides?.startBed !== undefined ? overrides.startBed : source.startBed,
     bedFeet: source.bedFeet,

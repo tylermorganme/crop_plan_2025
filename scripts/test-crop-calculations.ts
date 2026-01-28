@@ -13,12 +13,12 @@ import {
   calculatePlantingMethod,
   calculateHarvestWindow,
   calculateCropFields,
-  type CropConfig,
-} from '../src/lib/entities/crop-config';
+  type PlantingSpec,
+} from '../src/lib/entities/planting-specs';
 
 // Load both datasets
 const dataDir = path.join(__dirname, '../src/data');
-const newCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crops.json'), 'utf8')).crops as CropConfig[];
+const newCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crops.json'), 'utf8')).crops as PlantingSpec[];
 const oldCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crops.json.old'), 'utf8')).crops;
 
 // Create lookup by id
@@ -40,7 +40,7 @@ interface TestResult {
 
 function testField(
   fieldName: string,
-  calculator: (crop: CropConfig, old: Record<string, unknown>) => unknown,
+  calculator: (crop: PlantingSpec, old: Record<string, unknown>) => unknown,
   getExpected: (old: Record<string, unknown>) => unknown
 ): TestResult {
   const result: TestResult = {

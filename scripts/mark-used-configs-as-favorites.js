@@ -7,7 +7,7 @@
  * 2. Updates the crop-config-template.json
  *
  * For each plan, it finds all configIds used in plantings and marks those
- * configs as isFavorite: true in the cropCatalog.
+ * configs as isFavorite: true in the specs.
  *
  * For the template, it marks configs that are used in ANY plan as favorites.
  *
@@ -49,8 +49,8 @@ function processDatabase(dbPath) {
     // Add to global set for template
     usedConfigIds.forEach(id => allUsedConfigIds.add(id));
 
-    // Update cropCatalog
-    const catalog = plan.cropCatalog || {};
+    // Update specs
+    const catalog = plan.specs || {};
     let updatedCount = 0;
 
     for (const [identifier, config] of Object.entries(catalog)) {

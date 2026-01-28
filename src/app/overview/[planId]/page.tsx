@@ -9,7 +9,7 @@ import {
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
 import { getTimelineCropsFromPlan, buildBedMappings, expandCropsToBeds } from '@/lib/timeline-data';
-import { calculateConfigRevenue, formatCurrency } from '@/lib/revenue';
+import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
 import { parseSearchQuery, matchesCropFilter } from '@/lib/search-dsl';
 import { SearchInput } from '@/components/SearchInput';
 import { ConnectedPlantingInspector } from '@/components/ConnectedPlantingInspector';
@@ -200,7 +200,7 @@ interface CropBlock {
   plantingId: string; // For drag-drop operations
   name: string;
   category?: string;
-  cropConfigId?: string; // For search filtering
+  specId?: string; // For search filtering
   startPercent: number; // 0-100% of year
   widthPercent: number; // 0-100% of year
   bgColor: string;
@@ -256,7 +256,7 @@ function buildOverviewData(
   year: number,
   nameGroups: Record<string, string[]>,
   bedLengths: Record<string, number>,
-  cropCatalog?: Record<string, import('@/lib/entities/crop-config').CropConfig>
+  specs?: Record<string, import('@/lib/entities/planting-specs').PlantingSpec>
 ): BedGroupSection[] {
   // Group beds by their group
   const bedsByGroup = new Map<string, Bed[]>();
@@ -291,23 +291,23 @@ function buildOverviewData(
       const cropBlocks: CropBlock[] = bedCrops.map((crop) => {
         const startPercent = dateToYearPercent(crop.startDate, year);
         const endPercent = dateToYearPercent(crop.endDate, year);
-        // Look up config for irrigation/trellisType (these are config-level fields)
-        const config = cropCatalog?.[crop.cropConfigId];
+        // Look up spec for irrigation/trellisType (these are spec-level fields)
+        const spec = specs?.[crop.specId];
 
         return {
           id: crop.id,
           plantingId: crop.plantingId || crop.id, // For drag-drop
           name: crop.name,
           category: crop.category,
-          cropConfigId: crop.cropConfigId,
+          specId: crop.specId,
           startPercent,
           widthPercent: Math.max(0.5, endPercent - startPercent), // min width
           bgColor: crop.bgColor || DEFAULT_COLOR.bg,
           textColor: crop.textColor || DEFAULT_COLOR.text,
           growingStructure: crop.growingStructure,
           plantingMethod: crop.plantingMethod,
-          irrigation: config?.irrigation,
-          trellisType: config?.trellisType,
+          irrigation: spec?.irrigation,
+          trellisType: spec?.trellisType,
         };
       });
 
@@ -691,7 +691,7 @@ interface EnrichedUnassignedCrop {
   bgColor?: string;
   textColor?: string;
   // Fields from TimelineCrop for search consistency
-  cropConfigId: string;
+  specId: string;
   crop?: string;
   notes?: string;
   plantingMethod?: string;
@@ -1404,7 +1404,7 @@ export default function OverviewPage() {
   const updatePlanting = usePlanStore((state) => state.updatePlanting);
   const bulkUpdatePlantings = usePlanStore((state) => state.bulkUpdatePlantings);
   const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
-  const updateCropBoxDisplay = usePlanStore((state) => state.updateCropBoxDisplay);
+  const updatePlantingBoxDisplay = usePlanStore((state) => state.updatePlantingBoxDisplay);
 
   // UI store - selection state (shared across views)
   const selectedPlantingIds = useUIStore((state) => state.selectedPlantingIds);
@@ -1506,7 +1506,7 @@ export default function OverviewPage() {
       selectedYear,
       nameGroups,
       bedLengths,
-      currentPlan.cropCatalog
+      currentPlan.specs
     );
   }, [currentPlan, selectedYear]);
 
@@ -1518,7 +1518,7 @@ export default function OverviewPage() {
     if (!currentPlan || selectedYear === null) return [];
 
     const crops = getTimelineCropsFromPlan(currentPlan);
-    const catalog = currentPlan.cropCatalog ?? {};
+    const catalog = currentPlan.specs ?? {};
     const products = currentPlan.products ?? {};
 
     // Filter to unassigned crops that overlap with the selected year
@@ -1536,13 +1536,13 @@ export default function OverviewPage() {
         return start <= yearEnd && end >= yearStart;
       })
       .map(crop => {
-        const config = catalog[crop.cropConfigId];
-        const revenue = config ? calculateConfigRevenue(config, crop.feetNeeded, products) : null;
+        const spec = catalog[crop.specId];
+        const revenue = spec ? calculateSpecRevenue(spec, crop.feetNeeded, products) : null;
         return {
           ...crop,
-          cropName: config?.crop ?? crop.name,
-          category: config?.category ?? crop.category ?? '',
-          identifier: config?.identifier ?? crop.cropConfigId,
+          cropName: spec?.crop ?? crop.name,
+          category: spec?.category ?? crop.category ?? '',
+          identifier: spec?.identifier ?? crop.specId,
           revenue,
           bgColor: crop.bgColor,
           textColor: crop.textColor,
@@ -1638,12 +1638,12 @@ export default function OverviewPage() {
     return palette;
   }, [allTimelineCrops]);
 
-  // Build dynamic palettes for irrigation and trellisType from cropCatalog
+  // Build dynamic palettes for irrigation and trellisType from specs
   // Only show values that actually exist in the data
   const irrigationColorPalette = useMemo(() => {
-    if (!currentPlan?.cropCatalog) return {};
+    if (!currentPlan?.specs) return {};
     const uniqueValues = [...new Set(
-      Object.values(currentPlan.cropCatalog)
+      Object.values(currentPlan.specs)
         .map(c => c.irrigation)
         .filter(Boolean)
     )].sort();
@@ -1653,12 +1653,12 @@ export default function OverviewPage() {
       palette[val as string] = COLOR_BY_PALETTES.irrigation?.[val as string] ?? CATEGORY_COLORS[Object.keys(palette).length % CATEGORY_COLORS.length];
     });
     return palette;
-  }, [currentPlan?.cropCatalog]);
+  }, [currentPlan?.specs]);
 
   const trellisTypeColorPalette = useMemo(() => {
-    if (!currentPlan?.cropCatalog) return {};
+    if (!currentPlan?.specs) return {};
     const uniqueValues = [...new Set(
-      Object.values(currentPlan.cropCatalog)
+      Object.values(currentPlan.specs)
         .map(c => c.trellisType)
         .filter(Boolean)
     )].sort();
@@ -1668,7 +1668,7 @@ export default function OverviewPage() {
       palette[val as string] = COLOR_BY_PALETTES.trellisType?.[val as string] ?? CATEGORY_COLORS[Object.keys(palette).length % CATEGORY_COLORS.length];
     });
     return palette;
-  }, [currentPlan?.cropCatalog]);
+  }, [currentPlan?.specs]);
 
   // Combined color palettes including dynamic category colors
   const colorPalettes = useMemo((): Record<string, Record<string, string>> => ({
@@ -2055,11 +2055,11 @@ export default function OverviewPage() {
                 onBulkCropMove={handleBulkCropMove}
                 onBulkCropDateChange={handleBulkCropDateChange}
                 onDragEnd={handleDragEnd}
-                cropCatalog={currentPlan.cropCatalog}
+                specs={currentPlan.specs}
                 planYear={currentPlan.metadata.year}
                 products={currentPlan.products}
-                cropBoxDisplay={currentPlan.cropBoxDisplay}
-                onUpdateCropBoxDisplay={updateCropBoxDisplay}
+                plantingBoxDisplay={currentPlan.plantingBoxDisplay}
+                onUpdatePlantingBoxDisplay={updatePlantingBoxDisplay}
                 hideUnassigned
                 hideInspector
                 onExternalPlantingDrop={handleExternalPlantingDrop}

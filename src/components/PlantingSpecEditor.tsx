@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import {
-  type CropConfig,
+  type PlantingSpec,
   type TrayStage,
   type ProductYield,
   calculateDaysInCells,
@@ -11,7 +11,7 @@ import {
   calculateHarvestWindow,
   createBlankConfig,
   evaluateYieldForDisplay,
-} from '@/lib/entities/crop-config';
+} from '@/lib/entities/planting-specs';
 import type { Variety } from '@/lib/entities/variety';
 import type { SeedMix } from '@/lib/entities/seed-mix';
 import type { Product } from '@/lib/entities/product';
@@ -26,13 +26,13 @@ const TRAY_SIZES = [9, 18, 21, 50, 72, 128, 400] as const;
 /** User-facing growing method choices */
 type GrowingMethod = 'direct-seed' | 'transplant' | 'perennial';
 
-interface CropConfigEditorProps {
+interface PlantingSpecEditorProps {
   isOpen: boolean;
-  /** The crop to edit (required in edit mode, optional in create mode) */
-  crop: CropConfig | null;
+  /** The spec to edit (required in edit mode, optional in create mode) */
+  spec: PlantingSpec | null;
   onClose: () => void;
-  onSave: (updated: CropConfig) => void;
-  /** Mode: 'edit' for editing existing config, 'create' for creating new one */
+  onSave: (updated: PlantingSpec) => void;
+  /** Mode: 'edit' for editing existing spec, 'create' for creating new one */
   mode?: 'edit' | 'create';
   /** Optional validation: check if identifier already exists */
   existingIdentifiers?: string[];
@@ -54,7 +54,7 @@ interface CropConfigEditorProps {
  * - If has tray stages → transplant
  * - Otherwise → direct seed
  */
-function deriveGrowingMethod(crop: Partial<CropConfig>, trayStages: TrayStage[]): GrowingMethod {
+function deriveGrowingMethod(crop: Partial<PlantingSpec>, trayStages: TrayStage[]): GrowingMethod {
   if (crop.perennial) return 'perennial';
   if (trayStages.length > 0) return 'transplant';
   return 'direct-seed';
@@ -74,7 +74,7 @@ interface DataRemovalInfo {
 function getDataRemovalInfo(
   growingMethod: GrowingMethod,
   trayStages: TrayStage[],
-  formData: Partial<CropConfig>
+  formData: Partial<PlantingSpec>
 ): DataRemovalInfo | null {
   const info: DataRemovalInfo = {};
 
@@ -222,7 +222,7 @@ const FORMULA_TEMPLATES: FormulaTemplate[] = [
 // =============================================================================
 
 /**
- * Modal editor for CropConfig data.
+ * Modal editor for PlantingSpec data.
  * Shows all stored fields as editable inputs, plus calculated fields as read-only.
  *
  * The form separates two orthogonal concepts:
@@ -234,9 +234,9 @@ const FORMULA_TEMPLATES: FormulaTemplate[] = [
  * - All data is preserved until Save is clicked
  * - At save time, if data will be removed, a confirmation dialog is shown
  */
-export default function CropConfigEditor({
+export default function PlantingSpecEditor({
   isOpen,
-  crop,
+  spec,
   onClose,
   onSave,
   mode = 'edit',
@@ -246,9 +246,9 @@ export default function CropConfigEditor({
   products = {},
   markets = {},
   lastFrostDate,
-}: CropConfigEditorProps) {
-  // Form state - initialize from crop when opened
-  const [formData, setFormData] = useState<Partial<CropConfig>>({});
+}: PlantingSpecEditorProps) {
+  // Form state - initialize from spec when opened
+  const [formData, setFormData] = useState<Partial<PlantingSpec>>({});
   const [trayStages, setTrayStages] = useState<TrayStage[]>([]);
   const [growingMethod, setGrowingMethod] = useState<GrowingMethod>('direct-seed');
   const [showRemovalConfirm, setShowRemovalConfirm] = useState(false);
@@ -259,16 +259,16 @@ export default function CropConfigEditor({
   const [errorsClickedOpen, setErrorsClickedOpen] = useState(false);
   const identifierInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset form when crop changes or modal opens
+  // Reset form when spec changes or modal opens
   useEffect(() => {
     if (isOpen) {
-      // In create mode with no crop, start with blank config
-      const sourceConfig = crop ?? (mode === 'create' ? createBlankConfig() : null);
-      if (sourceConfig) {
-        setFormData({ ...sourceConfig });
-        const stages = sourceConfig.trayStages ? [...sourceConfig.trayStages] : [];
+      // In create mode with no spec, start with blank spec
+      const sourceSpec = spec ?? (mode === 'create' ? createBlankConfig() : null);
+      if (sourceSpec) {
+        setFormData({ ...sourceSpec });
+        const stages = sourceSpec.trayStages ? [...sourceSpec.trayStages] : [];
         setTrayStages(stages);
-        setGrowingMethod(deriveGrowingMethod(sourceConfig, stages));
+        setGrowingMethod(deriveGrowingMethod(sourceSpec, stages));
         setShowRemovalConfirm(false);
         setPendingRemovalInfo(null);
         setIdentifierError(null);
@@ -278,7 +278,7 @@ export default function CropConfigEditor({
         setTimeout(() => identifierInputRef.current?.focus(), 0);
       }
     }
-  }, [crop, isOpen, mode]);
+  }, [spec, isOpen, mode]);
 
   // Auto-collapse errors panel when issues are fixed (drop to 1 or 0)
   const currentErrorCount =
@@ -300,10 +300,10 @@ export default function CropConfigEditor({
   };
 
   /**
-   * Build the final crop config based on selected growing method.
+   * Build the final planting spec based on selected growing method.
    * This trims data that doesn't apply to the selected method.
    */
-  const buildFinalCrop = (): CropConfig => {
+  const buildFinalCrop = (): PlantingSpec => {
     const base = { ...formData };
 
     if (growingMethod === 'direct-seed') {
@@ -312,14 +312,14 @@ export default function CropConfigEditor({
       return {
         ...base,
         trayStages: undefined,
-      } as CropConfig;
+      } as PlantingSpec;
     } else if (growingMethod === 'transplant') {
       // Remove perennial flag, keep tray stages
       delete base.perennial;
       return {
         ...base,
         trayStages: trayStages.length > 0 ? trayStages : undefined,
-      } as CropConfig;
+      } as PlantingSpec;
     } else {
       // Perennial: set flag, remove normalMethod, keep tray stages for establishment
       delete base.normalMethod;
@@ -327,7 +327,7 @@ export default function CropConfigEditor({
         ...base,
         perennial: true,
         trayStages: trayStages.length > 0 ? trayStages : undefined,
-      } as CropConfig;
+      } as PlantingSpec;
     }
   };
 
@@ -351,11 +351,11 @@ export default function CropConfigEditor({
 
     // In create mode (or when identifier changed), check for duplicates
     const identifierToCheck = formData.identifier.trim();
-    const originalIdentifier = crop?.identifier;
+    const originalIdentifier = spec?.identifier;
     const isNewIdentifier = mode === 'create' || identifierToCheck !== originalIdentifier;
 
     if (isNewIdentifier && existingIdentifiers.includes(identifierToCheck)) {
-      setIdentifierError(`A config with identifier "${identifierToCheck}" already exists`);
+      setIdentifierError(`A spec with identifier "${identifierToCheck}" already exists`);
       identifierInputRef.current?.focus();
       return;
     }
@@ -391,13 +391,13 @@ export default function CropConfigEditor({
     }
   };
 
-  const updateField = <K extends keyof CropConfig>(field: K, value: CropConfig[K] | undefined) => {
+  const updateField = <K extends keyof PlantingSpec>(field: K, value: PlantingSpec[K] | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const updateNumberField = (field: keyof CropConfig, value: string) => {
+  const updateNumberField = (field: keyof PlantingSpec, value: string) => {
     const num = value === '' ? undefined : parseFloat(value);
-    updateField(field, num as CropConfig[typeof field]);
+    updateField(field, num as PlantingSpec[typeof field]);
   };
 
   const addTrayStage = () => {
@@ -414,9 +414,9 @@ export default function CropConfigEditor({
     ));
   };
 
-  // In edit mode, require crop. In create mode, we generate a blank one.
+  // In edit mode, require spec. In create mode, we generate a blank one.
   if (!isOpen) return null;
-  if (mode === 'edit' && !crop) return null;
+  if (mode === 'edit' && !spec) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
@@ -435,8 +435,8 @@ export default function CropConfigEditor({
         <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
             {mode === 'create'
-              ? 'Create Crop Configuration'
-              : `Edit Crop Configuration${formData.identifier ? ` for ${formData.identifier}` : ''}`}
+              ? 'Create Planting Spec'
+              : `Edit Planting Spec${formData.identifier ? ` for ${formData.identifier}` : ''}`}
           </h2>
           <button
             onClick={onClose}
@@ -614,7 +614,8 @@ export default function CropConfigEditor({
                   <label className="block text-xs font-medium text-gray-600 mb-1">In-Row Spacing (inches)</label>
                   <input
                     type="number"
-                    min="1"
+                    min="0.1"
+                    step="any"
                     max="72"
                     value={formData.spacing ?? ''}
                     onChange={(e) => updateNumberField('spacing', e.target.value)}
@@ -1005,7 +1006,7 @@ export default function CropConfigEditor({
                           </div>
                           {/* Formula validation */}
                           {py.yieldFormula && (() => {
-                            const result = evaluateYieldForDisplay({ ...formData, yieldFormula: py.yieldFormula, numberOfHarvests: py.numberOfHarvests } as CropConfig);
+                            const result = evaluateYieldForDisplay({ ...formData, yieldFormula: py.yieldFormula, numberOfHarvests: py.numberOfHarvests } as PlantingSpec);
                             if (result.error) {
                               const unknownVar = extractUnknownVariable(result.error);
                               const suggestions = unknownVar ? findSimilarVariables(unknownVar) : [];
@@ -1353,7 +1354,7 @@ export default function CropConfigEditor({
                       disabled={hasErrors}
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {mode === 'create' ? 'Create Config' : 'Save Changes'}
+                      {mode === 'create' ? 'Create Spec' : 'Save Changes'}
                     </button>
                   </div>
                 </div>

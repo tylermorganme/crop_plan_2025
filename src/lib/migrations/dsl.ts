@@ -448,6 +448,17 @@ export const declarativeMigrations: Record<number, MigrationOp[]> = {
     },
     { op: 'renamePath', from: 'plantings.*.bedsCount', to: 'plantings.*.bedFeet' },
   ],
+
+  // v11 → v12: Rename configId → specId, cropBoxDisplay → plantingBoxDisplay
+  11: [
+    { op: 'renamePath', from: 'plantings.*.configId', to: 'plantings.*.specId' },
+    { op: 'renamePath', from: 'cropBoxDisplay', to: 'plantingBoxDisplay' },
+  ],
+
+  // v12 → v13: Rename cropCatalog → specs
+  12: [
+    { op: 'renamePath', from: 'cropCatalog', to: 'specs' },
+  ],
 };
 
 /**

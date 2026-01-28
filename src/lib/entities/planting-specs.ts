@@ -1,8 +1,8 @@
 /**
- * Crop Config Entity
+ * Planting Spec Entity
  *
- * Represents a planting configuration - how a specific crop variety is grown.
- * Includes timing calculations for deriving harvest dates from config data.
+ * A PlantingSpec is a recipe/blueprint for creating plantings.
+ * It defines HOW to grow a specific crop variety - timing, spacing, yields.
  *
  * KEY CONCEPT: normalMethod vs plantingMethod
  *
@@ -37,12 +37,12 @@ export interface TrayStage {
 export type PlantingMethod = 'direct-seed' | 'transplant' | 'perennial';
 
 /**
- * ProductYield - Links a CropConfig to a Product with yield and timing info.
+ * ProductYield - Links a PlantingSpec to a Product with yield and timing info.
  *
- * Each ProductYield represents one product that this crop configuration produces,
+ * Each ProductYield represents one product that this planting spec produces,
  * with its own timing (DTM, harvest pattern) and yield formula.
  *
- * Example: Garlic config might have two ProductYields:
+ * Example: Garlic spec might have two ProductYields:
  * - Scapes: DTM 180, 1 harvest
  * - Bulbs: DTM 220, 1 harvest
  */
@@ -50,7 +50,7 @@ export interface ProductYield {
   /** Reference to Product in plan.products */
   productId: string;
 
-  /** Days to maturity for THIS product (same meaning as CropConfig.dtm) */
+  /** Days to maturity for THIS product (same meaning as PlantingSpec.dtm) */
   dtm: number;
 
   /** How many times this product is harvested */
@@ -59,7 +59,7 @@ export interface ProductYield {
   /** Days between harvests (only if numberOfHarvests > 1) */
   daysBetweenHarvest?: number;
 
-  /** Yield formula for this product (uses same context as CropConfig) */
+  /** Yield formula for this product (uses same context as PlantingSpec) */
   yieldFormula?: string;
 
   /** Buffer days for this product's initial harvest window */
@@ -70,20 +70,29 @@ export interface ProductYield {
 }
 
 /**
- * Crop configuration - what we store in crop-config-template.json and plan.cropCatalog.
+ * Planting Spec - a recipe/blueprint for creating plantings.
+ * Stored in planting-spec-template.json and plan.plantingSpecs.
  *
  * This is the "planting recipe" - all the data needed to calculate
  * timing and display for a specific way of growing a crop variety.
  */
-export interface CropConfig {
+export interface PlantingSpec {
   /** Unique identifier (e.g., "arugula-baby-leaf-field-ds-sp") */
   id: string;
 
   /** Human-readable identifier matching legacy data */
   identifier: string;
 
-  /** Crop family (e.g., "Arugula", "Tomato") */
+  /**
+   * @deprecated Use cropName instead. Kept for backwards compatibility with stored data.
+   */
   crop: string;
+
+  /**
+   * Crop name (e.g., "Arugula", "Tomato") - display name for the crop type.
+   * Preferred over deprecated 'crop' field. Access via getCropName() helper.
+   */
+  cropName?: string;
 
   /** Reference to Crop entity ID for stable linking (populated by migration) */
   cropId?: string;
@@ -232,14 +241,14 @@ export interface CropConfig {
   // ---- Default Seed Source ----
 
   /**
-   * Default seed variety or mix for this crop config.
+   * Default seed variety or mix for this planting spec.
    * When creating new plantings, this is auto-assigned if set.
    * Can be overridden per-planting.
    */
   defaultSeedSource?: import('./planting').SeedSource;
 
   /**
-   * Default market split for this crop config.
+   * Default market split for this planting spec.
    * Defines how revenue is allocated across markets (Direct, Wholesale, U-Pick).
    * When creating new plantings, this is auto-assigned if set.
    * Can be overridden per-planting.
@@ -320,7 +329,7 @@ const DEFAULT_ASSUMED_TRANSPLANT_DAYS = 30;
  * Calculate Days in Cells from tray stages.
  * This is the total time spent in greenhouse before transplanting.
  */
-export function calculateDaysInCells(crop: CropConfig): number {
+export function calculateDaysInCells(crop: PlantingSpec): number {
   if (!crop.trayStages || crop.trayStages.length === 0) {
     return 0;
   }
@@ -333,7 +342,7 @@ export function calculateDaysInCells(crop: CropConfig): number {
  * Converts the user-entered DTM into total time from seeding to harvest,
  * accounting for how DTM was measured vs how the crop is being grown.
  */
-export function calculateSeedToHarvest(crop: CropConfig, daysInCells: number): number {
+export function calculateSeedToHarvest(crop: PlantingSpec, daysInCells: number): number {
   const method = crop.normalMethod ?? 'total-time';
   const dtm = crop.dtm ?? 0;
   const dtg = crop.daysToGermination ?? 0;
@@ -370,7 +379,7 @@ export function calculateSeedToHarvest(crop: CropConfig, daysInCells: number): n
 /**
  * Calculate Planting Method from tray stages and perennial flag.
  */
-export function calculatePlantingMethod(crop: CropConfig): PlantingMethod {
+export function calculatePlantingMethod(crop: PlantingSpec): PlantingMethod {
   if (crop.perennial) {
     return 'perennial';
   }
@@ -645,10 +654,10 @@ export function evaluateYieldFormula(
 }
 
 /**
- * Build a YieldFormulaContext from a CropConfig and bed length.
+ * Build a YieldFormulaContext from a PlantingSpec and bed length.
  */
 export function buildYieldContext(
-  crop: CropConfig,
+  crop: PlantingSpec,
   bedFeet: number,
   rowsOverride?: number,
   spacingOverride?: number
@@ -677,7 +686,7 @@ export function buildYieldContext(
 }
 
 /**
- * Calculate total yield for a crop config at a given bed length.
+ * Calculate total yield for a planting spec at a given bed length.
  *
  * Priority order:
  * 1. yieldFormula - expression-based calculation
@@ -686,7 +695,7 @@ export function buildYieldContext(
  * Returns null if no yield data is available.
  */
 export function calculateTotalYield(
-  crop: CropConfig,
+  crop: PlantingSpec,
   bedFeet: number,
   rows?: number,
   inRowSpacing?: number
@@ -712,10 +721,10 @@ export function calculateTotalYield(
 }
 
 /**
- * Calculate yield per harvest for a crop config at a given bed length.
+ * Calculate yield per harvest for a planting spec at a given bed length.
  */
 export function calculateYieldPerHarvest(
-  crop: CropConfig,
+  crop: PlantingSpec,
   bedFeet: number,
   rows?: number,
   inRowSpacing?: number
@@ -732,7 +741,7 @@ export function calculateYieldPerHarvest(
  * Used for comparing configs in Explorer.
  */
 export function calculateStandardYield(
-  crop: CropConfig,
+  crop: PlantingSpec,
   rows?: number,
   inRowSpacing?: number
 ): number | null {
@@ -744,7 +753,7 @@ export function calculateStandardYield(
  * Includes the calculated value, any errors, and warnings.
  */
 export function evaluateYieldForDisplay(
-  crop: CropConfig,
+  crop: PlantingSpec,
   rows?: number,
   inRowSpacing?: number
 ): YieldFormulaResult & { context: YieldFormulaContext } {
@@ -891,7 +900,7 @@ export function getYieldBasisLabel(basis: YieldBasis): string {
  *
  * Formula: (numberOfHarvests - 1) * daysBetweenHarvest + harvestBufferDays + postHarvestFieldDays
  */
-export function calculateHarvestWindow(crop: CropConfig): number {
+export function calculateHarvestWindow(crop: PlantingSpec): number {
   const harvests = crop.numberOfHarvests ?? 1;
   const daysBetween = crop.daysBetweenHarvest ?? 0;
   const buffer = crop.harvestBufferDays ?? 0;
@@ -912,12 +921,12 @@ export function calculateHarvestWindow(crop: CropConfig): number {
 /**
  * Calculate Seed To Harvest for a specific ProductYield.
  *
- * Uses the product's DTM with the CropConfig's normalMethod and daysInCells,
+ * Uses the product's DTM with the PlantingSpec's normalMethod and daysInCells,
  * since growing method (transplant vs direct) is shared across all products.
  */
 export function calculateProductSeedToHarvest(
   productYield: ProductYield,
-  crop: CropConfig,
+  crop: PlantingSpec,
   daysInCells: number
 ): number {
   const method = crop.normalMethod ?? 'total-time';
@@ -965,7 +974,7 @@ export function calculateProductHarvestWindow(productYield: ProductYield): numbe
  */
 export function calculateProductEndDay(
   productYield: ProductYield,
-  crop: CropConfig,
+  crop: PlantingSpec,
   daysInCells: number
 ): number {
   const seedToHarvest = calculateProductSeedToHarvest(productYield, crop, daysInCells);
@@ -980,7 +989,7 @@ export function calculateProductEndDay(
  * This is measured from SEEDING (includes greenhouse time).
  * Requires productYields to be populated - no legacy fallback.
  */
-export function calculateCropEndDay(crop: CropConfig): number {
+export function calculateCropEndDay(crop: PlantingSpec): number {
   if (!crop.productYields || crop.productYields.length === 0) {
     // Return 0 for crops without products (will show as invalid in UI)
     return 0;
@@ -1002,7 +1011,7 @@ export function calculateCropEndDay(crop: CropConfig): number {
  * For transplants: cropEndDay - daysInCells
  * For direct seed: cropEndDay (daysInCells is 0)
  */
-export function calculateFieldOccupationDays(crop: CropConfig): number {
+export function calculateFieldOccupationDays(crop: PlantingSpec): number {
   const cropEndDay = calculateCropEndDay(crop);
   if (cropEndDay === 0) return 0;
 
@@ -1018,7 +1027,7 @@ export function calculateFieldOccupationDays(crop: CropConfig): number {
  *
  * Requires productYields to be populated - no legacy fallback.
  */
-export function calculateAggregateHarvestWindow(crop: CropConfig): number {
+export function calculateAggregateHarvestWindow(crop: PlantingSpec): number {
   if (!crop.productYields || crop.productYields.length === 0) {
     // Return 0 for crops without products (will show as invalid in UI)
     return 0;
@@ -1048,7 +1057,7 @@ export function calculateAggregateHarvestWindow(crop: CropConfig): number {
  * Returns the time from seeding to the first harvest of any product.
  * Requires productYields to be populated - no legacy fallback.
  */
-export function getPrimarySeedToHarvest(crop: CropConfig): number {
+export function getPrimarySeedToHarvest(crop: PlantingSpec): number {
   if (!crop.productYields || crop.productYields.length === 0) {
     // Return 0 for crops without products (will show as invalid in UI)
     return 0;
@@ -1071,7 +1080,7 @@ export function getPrimarySeedToHarvest(crop: CropConfig): number {
  * If productYields exists, uses the primary (earliest) product for seedToHarvest
  * and the aggregate harvest window across all products.
  */
-export function calculateCropFields(crop: CropConfig): CropCalculated {
+export function calculateCropFields(crop: PlantingSpec): CropCalculated {
   const daysInCells = calculateDaysInCells(crop);
   const plantingMethod = calculatePlantingMethod(crop);
 
@@ -1088,14 +1097,14 @@ export function calculateCropFields(crop: CropConfig): CropCalculated {
 }
 
 /**
- * Get the primary product name from a CropConfig.
+ * Get the primary product name from a PlantingSpec.
  * Returns the first product's name from productYields, or 'General' if none.
  *
- * @param crop - The crop config
+ * @param crop - The planting spec
  * @param products - Optional product lookup map (keyed by productId)
  */
 export function getPrimaryProductName(
-  crop: CropConfig,
+  crop: PlantingSpec,
   products?: Record<string, { product: string }>
 ): string {
   if (!crop.productYields?.length || !products) {
@@ -1112,11 +1121,11 @@ export function getPrimaryProductName(
  *
  * Uses product-aware calculations if productYields exists.
  *
- * @param crop - The crop config
+ * @param crop - The planting spec
  * @param products - Optional product lookup map for deriving product name
  */
 export function getTimelineConfig(
-  crop: CropConfig,
+  crop: PlantingSpec,
   products?: Record<string, { product: string }>
 ): {
   crop: string;
@@ -1131,7 +1140,7 @@ export function getTimelineConfig(
   const calculated = calculateCropFields(crop);
 
   return {
-    crop: crop.crop,
+    crop: crop.cropName ?? crop.crop,
     product: getPrimaryProductName(crop, products),
     category: crop.category ?? '',
     growingStructure: crop.growingStructure ?? 'field',
@@ -1147,7 +1156,7 @@ export function getTimelineConfig(
 // =============================================================================
 
 /**
- * Generate a unique ID for a custom crop config.
+ * Generate a unique ID for a custom planting spec.
  * Format: custom_{timestamp}_{random}
  */
 export function generateConfigId(): string {
@@ -1157,14 +1166,15 @@ export function generateConfigId(): string {
 }
 
 /**
- * Create a blank CropConfig with sensible defaults.
+ * Create a blank PlantingSpec with sensible defaults.
  * Used when creating a new config from scratch.
  */
-export function createBlankConfig(): CropConfig {
+export function createBlankConfig(): PlantingSpec {
   return {
     id: generateConfigId(),
     identifier: '',
     crop: '',
+    cropName: '',
     category: '',
     growingStructure: 'field',
     normalMethod: 'from-seeding',
@@ -1195,10 +1205,10 @@ function generateCopyName(name: string): string {
 }
 
 /**
- * Create a copy of an existing CropConfig for modification.
+ * Create a copy of an existing PlantingSpec for modification.
  * Generates a new ID and suggests a new identifier with (N) suffix.
  */
-export function copyConfig(source: CropConfig): CropConfig {
+export function copyConfig(source: PlantingSpec): PlantingSpec {
   return {
     ...source,
     id: generateConfigId(),
@@ -1207,26 +1217,26 @@ export function copyConfig(source: CropConfig): CropConfig {
 }
 
 /**
- * Clone a CropConfig for inclusion in a plan's local catalog.
+ * Clone a PlantingSpec for inclusion in a plan's local catalog.
  * Creates a deep copy preserving all fields including identifier.
  *
  * Use this when importing configs from master catalog to plan-local catalog.
  */
-export function cloneCropConfig(source: CropConfig): CropConfig {
+export function clonePlantingSpec(source: PlantingSpec): PlantingSpec {
   // Deep copy to avoid mutations affecting master catalog
   return JSON.parse(JSON.stringify(source));
 }
 
 /**
- * Clone multiple CropConfigs into a catalog keyed by identifier.
+ * Clone multiple PlantingSpecs into a catalog keyed by identifier.
  * Use this for bulk import from master catalog to plan-local catalog.
  */
-export function cloneCropCatalog(
-  sources: CropConfig[]
-): Record<string, CropConfig> {
-  const catalog: Record<string, CropConfig> = {};
+export function clonePlantingCatalog(
+  sources: PlantingSpec[]
+): Record<string, PlantingSpec> {
+  const catalog: Record<string, PlantingSpec> = {};
   for (const source of sources) {
-    catalog[source.identifier] = cloneCropConfig(source);
+    catalog[source.identifier] = clonePlantingSpec(source);
   }
   return catalog;
 }

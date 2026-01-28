@@ -47,7 +47,7 @@ export {
   createPlanting,
 } from './entities/planting';
 
-export type { CropConfig, CropCalculated, TrayStage, PlantingMethod, ProductYield } from './entities/crop-config';
+export type { PlantingSpec, CropCalculated, TrayStage, PlantingMethod, ProductYield } from './entities/planting-specs';
 export {
   calculateDaysInCells,
   calculateSeedToHarvest,
@@ -62,7 +62,7 @@ export {
   calculateProductHarvestWindow,
   calculateProductEndDay,
   calculateCropEndDay,
-} from './entities/crop-config';
+} from './entities/planting-specs';
 
 export type { SeedOrder, ProductUnit, CreateSeedOrderInput } from './entities/seed-order';
 export {
@@ -210,7 +210,7 @@ export function getBasePlantingId(plantingId: string): string {
 /** Required fields for creating a TimelineCrop */
 export interface CreateTimelineCropInput {
   plantingId: string;
-  cropConfigId: string;
+  specId: string;
   name: string;
   startDate: string;
   endDate: string;
@@ -246,7 +246,7 @@ export function createTimelineCrop(input: CreateTimelineCropInput): TimelineCrop
     startDate: input.startDate,
     endDate: input.endDate,
     resource: input.resource,
-    cropConfigId: input.cropConfigId,
+    specId: input.specId,
     totalBeds: input.totalBeds,
     bedIndex: input.bedIndex,
     groupId,

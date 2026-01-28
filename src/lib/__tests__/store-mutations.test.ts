@@ -17,9 +17,9 @@ import {
   createTestPlanting,
   createTestBed,
   createTestBedGroup,
-  createTestCropConfig,
+  createTestPlantingSpec,
   createTestPlanWithBeds,
-  createTestPlanWithConfig,
+  createTestPlanWithSpec,
 } from './test-helpers';
 import type { Plan } from '../plan-types';
 
@@ -131,7 +131,7 @@ describe('planting mutations', () => {
   describe('addPlanting', () => {
     it('adds planting to plan', async () => {
       const store = usePlanStore.getState();
-      const planting = createTestPlanting({ id: 'P1', configId: 'test-config' });
+      const planting = createTestPlanting({ id: 'P1', specId: 'test-config' });
 
       await store.addPlanting(planting);
 
@@ -192,7 +192,7 @@ describe('planting mutations', () => {
     });
 
     it('can be undone to restore planting', async () => {
-      const planting = createTestPlanting({ id: 'P1', configId: 'tomato' });
+      const planting = createTestPlanting({ id: 'P1', specId: 'tomato' });
       const plan = createTestPlan({ plantings: [planting] });
       resetStoreWithPlan(plan);
 
@@ -636,37 +636,37 @@ describe('bed group mutations', () => {
 });
 
 // =============================================================================
-// TESTS: CROP CONFIG OPERATIONS
+// TESTS: PLANTING SPEC OPERATIONS
 // =============================================================================
 
-describe('crop config mutations', () => {
+describe('planting spec mutations', () => {
   beforeEach(() => {
-    resetStoreWithPlan(createTestPlanWithConfig());
+    resetStoreWithPlan(createTestPlanWithSpec());
   });
 
-  describe('updateCropConfig', () => {
-    it('updates config in catalog', async () => {
+  describe('updatePlantingSpec', () => {
+    it('updates spec in catalog', async () => {
       const store = usePlanStore.getState();
-      const configId = Object.keys(store.currentPlan!.cropCatalog!)[0];
-      const config = store.currentPlan!.cropCatalog![configId];
+      const specId = Object.keys(store.currentPlan!.specs!)[0];
+      const spec = store.currentPlan!.specs![specId];
 
-      await store.updateCropConfig({ ...config, dtm: 90 });
+      await store.updatePlantingSpec({ ...spec, dtm: 90 });
 
       const state = usePlanStore.getState();
-      expect(state.currentPlan!.cropCatalog![configId].dtm).toBe(90);
+      expect(state.currentPlan!.specs![specId].dtm).toBe(90);
     });
 
     it('can be undone', async () => {
       const store = usePlanStore.getState();
-      const configId = Object.keys(store.currentPlan!.cropCatalog!)[0];
-      const config = store.currentPlan!.cropCatalog![configId];
-      const originalDtm = config.dtm;
+      const specId = Object.keys(store.currentPlan!.specs!)[0];
+      const spec = store.currentPlan!.specs![specId];
+      const originalDtm = spec.dtm;
 
-      await store.updateCropConfig({ ...config, dtm: 90 });
-      expect(usePlanStore.getState().currentPlan!.cropCatalog![configId].dtm).toBe(90);
+      await store.updatePlantingSpec({ ...spec, dtm: 90 });
+      expect(usePlanStore.getState().currentPlan!.specs![specId].dtm).toBe(90);
 
       await store.undo();
-      expect(usePlanStore.getState().currentPlan!.cropCatalog![configId].dtm).toBe(originalDtm);
+      expect(usePlanStore.getState().currentPlan!.specs![specId].dtm).toBe(originalDtm);
     });
   });
 });

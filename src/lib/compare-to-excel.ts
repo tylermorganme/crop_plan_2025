@@ -14,8 +14,8 @@ import {
   calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
-  type CropConfig,
-} from './entities/crop-config';
+  type PlantingSpec,
+} from './entities/planting-specs';
 
 // Get Excel export path from command line
 const excelExportPath = process.argv[2];
@@ -26,7 +26,7 @@ if (!excelExportPath) {
 
 // Load our crop-config-template.json
 const dataDir = path.join(__dirname, '../data');
-const ourCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crop-config-template.json'), 'utf8')).crops as CropConfig[];
+const ourCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crop-config-template.json'), 'utf8')).crops as PlantingSpec[];
 
 // Load fresh Excel export
 const excelCrops = JSON.parse(fs.readFileSync(excelExportPath, 'utf8')).crops;
@@ -49,7 +49,7 @@ interface TestResult {
 
 function testField(
   fieldName: string,
-  calculator: (crop: CropConfig) => unknown,
+  calculator: (crop: PlantingSpec) => unknown,
   getExpected: (excel: Record<string, unknown>) => unknown
 ): TestResult {
   const result: TestResult = {

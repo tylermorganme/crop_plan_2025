@@ -3,7 +3,7 @@
  */
 
 import { parseISO, format, addDays } from 'date-fns';
-import cropsData from '@/data/crop-config-template.json';
+import cropsData from '@/data/planting-spec-template.json';
 import bedPlanData from '@/data/bed-template.json';
 
 // Re-export types from plan-types for backwards compatibility
@@ -314,12 +314,12 @@ export function calculateRowSpan(
  * Get crops from bed plan formatted for the timeline.
  * Uses bed-plan.json for planting data and crops.json for config lookups.
  *
- * @param cropCatalog - Optional crop catalog to use instead of static import.
+ * @param specs - Optional crop catalog to use instead of static import.
  *   Pass dynamically fetched crops to get live updates after editing configs.
  */
-export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop[] {
+export function getTimelineCrops(specs?: CropCatalogEntry[]): TimelineCrop[] {
   const bedPlan = bedPlanData as BedPlanData;
-  const catalogCrops = cropCatalog || defaultCatalog;
+  const catalogCrops = specs || defaultCatalog;
 
   // Build bed lengths from template data (import-only, not runtime)
   const bedLengths = buildBedLengthsFromTemplate(bedPlan.beds);
@@ -386,7 +386,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
       const additionalDaysInCells = typeof assignment.additionalDaysInCells === 'number'
         ? assignment.additionalDaysInCells : 0;
 
-      const config = {
+      const spec = {
         ...baseConfig,
         dtm: baseConfig.dtm + additionalDaysInField,
         harvestWindow: baseConfig.harvestWindow + additionalDaysOfHarvest,
@@ -394,7 +394,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
       };
 
       // Compute timeline crops with calculated dates
-      const computed = expandToTimelineCrops(slim, config, bedPlan.bedGroups, bedLengths);
+      const computed = expandToTimelineCrops(slim, spec, bedPlan.bedGroups, bedLengths);
 
       for (const tc of computed) {
         timelineCrops.push({
@@ -440,7 +440,7 @@ export function getTimelineCrops(cropCatalog?: CropCatalogEntry[]): TimelineCrop
           structure,
           growingStructure,
           plantingId: assignment.identifier,
-          cropConfigId: assignment.crop,
+          specId: assignment.crop,
           totalBeds: bedSpanInfo.length,
           bedIndex: index + 1,
           groupId: assignment.identifier,
@@ -598,7 +598,7 @@ function preparePlantingForCalc(
 
   return {
     id: planting.id,
-    cropConfigId: planting.configId,
+    specId: planting.specId,
     bed: bedName,
     bedFeet: planting.bedFeet,
     fixedFieldStartDate: effectiveFieldStartDate ?? planting.fieldStartDate,
@@ -641,12 +641,12 @@ export function expandPlantingsToTimelineCrops(
 
   for (const planting of plantings) {
     // Try plan catalog first, then fall back to default catalog
-    let config = lookupConfigFromCatalog(planting.configId, catalogArray);
-    if (!config) {
-      config = lookupConfigFromCatalog(planting.configId, defaultCatalog);
+    let spec = lookupConfigFromCatalog(planting.specId, catalogArray);
+    if (!spec) {
+      spec = lookupConfigFromCatalog(planting.specId, defaultCatalog);
     }
-    if (!config) {
-      console.warn(`[expandPlantings] Config not found: ${planting.configId}`);
+    if (!spec) {
+      console.warn(`[expandPlantings] Spec not found: ${planting.specId}`);
       continue;
     }
 
@@ -665,7 +665,7 @@ export function expandPlantingsToTimelineCrops(
     }
 
     const slim = preparePlantingForCalc(planting, mappings.uuidToName, effectiveFieldStartDate);
-    const crops = expandToTimelineCrops(slim, config, mappings.nameGroups, mappings.bedLengths);
+    const crops = expandToTimelineCrops(slim, spec, mappings.nameGroups, mappings.bedLengths);
 
     // Add planting fields for inspector editing
     // NOTE: crop.resource remains a bed NAME for display matching.
@@ -677,8 +677,8 @@ export function expandPlantingsToTimelineCrops(
       crop.seedSource = planting.seedSource;
       crop.useDefaultSeedSource = planting.useDefaultSeedSource;
       // Store crop name and ID for filtering and color lookup
-      crop.crop = config.crop;
-      crop.cropId = config.cropId;
+      crop.crop = spec.crop;
+      crop.cropId = spec.cropId;
 
       // Add sequence membership info
       crop.sequenceId = planting.sequenceId;
@@ -689,11 +689,11 @@ export function expandPlantingsToTimelineCrops(
       // A planting is locked if it has actual greenhouse OR field date set
       crop.isLocked = !!(planting.actuals?.greenhouseDate || planting.actuals?.fieldDate);
 
-      // Calculate seeds needed based on CropConfig.seedsPerBed
-      if (config.seedsPerBed && planting.bedFeet) {
+      // Calculate seeds needed based on PlantingSpec.seedsPerBed
+      if (spec.seedsPerBed && planting.bedFeet) {
         // seedsPerBed is per 50ft bed, scale to actual feet
         const bedsEquivalent = planting.bedFeet / 50;
-        crop.seedsNeeded = Math.ceil(config.seedsPerBed * bedsEquivalent);
+        crop.seedsNeeded = Math.ceil(spec.seedsPerBed * bedsEquivalent);
       }
     }
 
@@ -710,14 +710,14 @@ export function expandPlantingsToTimelineCrops(
  * This is the single entry point for getting displayable crops from a plan.
  */
 export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
-  if (!plan.plantings || !plan.beds || !plan.cropCatalog) {
+  if (!plan.plantings || !plan.beds || !plan.specs) {
     return [];
   }
 
   const timelineCrops = expandPlantingsToTimelineCrops(
     plan.plantings,
     plan.beds,
-    plan.cropCatalog,
+    plan.specs,
     plan.bedGroups,
     plan.sequences
   );

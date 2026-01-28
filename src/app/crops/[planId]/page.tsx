@@ -270,9 +270,9 @@ export default function CropsPage() {
     if (!currentPlan) return new Map<string, number>();
     const usage = new Map<string, number>();
 
-    if (currentPlan.cropCatalog) {
-      for (const config of Object.values(currentPlan.cropCatalog)) {
-        const cropId = getCropId(config.crop);
+    if (currentPlan.specs) {
+      for (const spec of Object.values(currentPlan.specs)) {
+        const cropId = getCropId(spec.crop);
         usage.set(cropId, (usage.get(cropId) || 0) + 1);
       }
     }
@@ -332,7 +332,7 @@ export default function CropsPage() {
   const handleDeleteCrop = (crop: Crop) => {
     const usageCount = cropUsage.get(crop.id) || 0;
     if (usageCount > 0) {
-      alert(`Cannot delete "${crop.name}" - it's used by ${usageCount} crop config(s)`);
+      alert(`Cannot delete "${crop.name}" - it's used by ${usageCount} planting spec(s)`);
       return;
     }
 

@@ -1,5 +1,5 @@
 /**
- * Column schema for CropExplorer - single source of truth for all column metadata.
+ * Column schema for SpecExplorer - single source of truth for all column metadata.
  *
  * Uses TanStack Table v8 meta property pattern to consolidate:
  * - Display name (header)
@@ -12,7 +12,7 @@
  */
 
 import type { ColumnDef } from '@tanstack/react-table';
-import type { Crop } from '@/lib/crops';
+import type { PlantingSpec } from '@/lib/planting-specs';
 import columnAnalysis from '@/data/column-analysis.json';
 
 // =============================================================================
@@ -51,8 +51,8 @@ export interface ColumnMeta {
   sortable: boolean;
 }
 
-// Extended Crop type with computed fields
-export type CropWithRevenue = Crop & { revenuePerBed?: number | null };
+// Extended PlantingSpec type with computed fields
+export type CropWithRevenue = PlantingSpec & { revenuePerBed?: number | null };
 
 // =============================================================================
 // Build source type lookup from column-analysis.json

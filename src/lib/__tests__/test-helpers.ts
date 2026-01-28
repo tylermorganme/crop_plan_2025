@@ -4,7 +4,7 @@
  * Utilities for creating test data in plan-store integration tests.
  */
 
-import type { Plan, Planting, Bed, BedGroup, CropConfig } from '../plan-types';
+import type { Plan, Planting, Bed, BedGroup, PlantingSpec } from '../plan-types';
 import { CURRENT_SCHEMA_VERSION } from '../migrations';
 
 /**
@@ -26,7 +26,7 @@ export function createTestPlan(overrides: Partial<Plan> = {}): Plan {
     beds: {},
     bedGroups: {},
     plantings: [],
-    cropCatalog: {},
+    specs: {},
     changeLog: [],
     varieties: {},
     seedMixes: {},
@@ -44,7 +44,7 @@ export function createTestPlanting(overrides: Partial<Planting> = {}): Planting 
   const now = Date.now();
   return {
     id: overrides.id ?? `planting-${now}`,
-    configId: overrides.configId ?? 'test-config',
+    specId: overrides.specId ?? 'test-config',
     fieldStartDate: overrides.fieldStartDate ?? '2025-03-15',
     startBed: overrides.startBed ?? null,
     bedFeet: overrides.bedFeet ?? 50,
@@ -84,9 +84,9 @@ export function createTestBedGroup(overrides: Partial<BedGroup> = {}): BedGroup 
 }
 
 /**
- * Create a minimal valid CropConfig for testing.
+ * Create a minimal valid PlantingSpec for testing.
  */
-export function createTestCropConfig(overrides: Partial<CropConfig> = {}): CropConfig {
+export function createTestPlantingSpec(overrides: Partial<PlantingSpec> = {}): PlantingSpec {
   const id = overrides.id ?? `config-${Date.now()}`;
   return {
     id,
@@ -97,7 +97,7 @@ export function createTestCropConfig(overrides: Partial<CropConfig> = {}): CropC
     spacing: 6,
     dtm: 60,
     ...overrides,
-  } as CropConfig;
+  } as PlantingSpec;
 }
 
 /**
@@ -117,13 +117,13 @@ export function createTestPlanWithBeds(): Plan {
 }
 
 /**
- * Create a test plan with a crop config in the catalog.
+ * Create a test plan with a planting spec in the catalog.
  */
-export function createTestPlanWithConfig(): Plan {
-  const config = createTestCropConfig({ identifier: 'tomato-beefsteak' });
+export function createTestPlanWithSpec(): Plan {
+  const spec = createTestPlantingSpec({ identifier: 'tomato-beefsteak' });
   return createTestPlan({
-    cropCatalog: {
-      [config.identifier]: config,
+    specs: {
+      [spec.identifier]: spec,
     },
   });
 }

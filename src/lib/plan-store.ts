@@ -40,10 +40,10 @@ import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities
 import { createSequence, initializeSequenceIdCounter, type PlantingSequence } from './entities/planting-sequence';
 import { storage, onSyncMessage, type PlanSummary, type PlanData } from './sqlite-client';
 import bedPlanData from '@/data/bed-template.json';
-import { getAllCrops } from './crops';
+import { getAllCrops } from './planting-specs';
 import { getStockVarieties, getStockSeedMixes, getStockProducts, getStockMarkets } from './stock-data';
-import type { CropConfig } from './entities/crop-config';
-import { cloneCropConfig, cloneCropCatalog } from './entities/crop-config';
+import type { PlantingSpec } from './entities/planting-specs';
+import { clonePlantingSpec, clonePlantingCatalog } from './entities/planting-specs';
 import { createVariety, getVarietyKey, type Variety, type CreateVarietyInput, type DensityUnit } from './entities/variety';
 import { createSeedMix, getSeedMixKey, type SeedMix, type CreateSeedMixInput } from './entities/seed-mix';
 import { createProduct, getProductKey, type Product, type CreateProductInput } from './entities/product';
@@ -118,7 +118,7 @@ export interface RawSeedMixInput {
 export type { PlanSummary, PlanData };
 
 // Active plan ID key (shared with components that need it)
-export const ACTIVE_PLAN_KEY = 'crop-explorer-active-plan';
+export const ACTIVE_PLAN_KEY = 'spec-explorer-active-plan';
 
 // Get initial activePlanId synchronously from localStorage to avoid flash on HMR/reload
 function getInitialActivePlanId(): string | null {
@@ -372,8 +372,8 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     bedGroups = result.groups;
   }
 
-  const cropCatalog = state.currentPlan.cropCatalog
-    ? cloneCropCatalog(Object.values(state.currentPlan.cropCatalog))
+  const specs = state.currentPlan.specs
+    ? clonePlantingCatalog(Object.values(state.currentPlan.specs))
     : {};
 
   // Copy varieties, seed mixes, and products (shallow copy - IDs are preserved)
@@ -397,7 +397,7 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     plantings: newPlantings,
     beds,
     bedGroups,
-    cropCatalog,
+    specs,
     varieties,
     seedMixes,
     products,
@@ -493,20 +493,20 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk duplicate multiple plantings (single undo step) */
   bulkDuplicatePlantings: (plantingIds: string[]) => Promise<string[]>;
   /** Update a single planting. Returns error if validation fails (e.g., bedFeet exceeds bed capacity). */
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'configId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => Promise<MutationResult>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => Promise<MutationResult>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
-  recalculateCrops: (configIdentifier: string, catalog: import('./entities/crop-config').CropConfig[]) => Promise<number>;
-  /** Update a crop config in the plan's catalog and recalculate affected crops */
-  updateCropConfig: (config: import('./entities/crop-config').CropConfig) => Promise<number>;
-  /** Add a new crop config to the plan's catalog */
-  addCropConfig: (config: import('./entities/crop-config').CropConfig) => Promise<void>;
-  /** Delete crop configs from the plan's catalog by their identifiers */
-  deleteCropConfigs: (identifiers: string[]) => Promise<number>;
-  /** Toggle a crop config's favorite status */
-  toggleConfigFavorite: (identifier: string) => Promise<void>;
-  /** Bulk update multiple crop configs (single undo step) */
-  bulkUpdateCropConfigs: (updates: { identifier: string; changes: Partial<import('./entities/crop-config').CropConfig> }[]) => Promise<number>;
+  recalculateSpecs: (specIdentifier: string, catalog: import('./entities/planting-specs').PlantingSpec[]) => Promise<number>;
+  /** Update a planting spec in the plan's catalog and recalculate affected plantings */
+  updatePlantingSpec: (spec: import('./entities/planting-specs').PlantingSpec) => Promise<number>;
+  /** Add a new planting spec to the plan's catalog */
+  addPlantingSpec: (spec: import('./entities/planting-specs').PlantingSpec) => Promise<void>;
+  /** Delete planting specs from the plan's catalog by their identifiers */
+  deletePlantingSpecs: (identifiers: string[]) => Promise<number>;
+  /** Toggle a planting spec's favorite status */
+  toggleSpecFavorite: (identifier: string) => Promise<void>;
+  /** Bulk update multiple planting specs (single undo step) */
+  bulkUpdatePlantingSpecs: (updates: { identifier: string; changes: Partial<import('./entities/planting-specs').PlantingSpec> }[]) => Promise<number>;
   /** Update a crop entity's colors or name */
   updateCrop: (cropId: string, updates: { bgColor?: string; textColor?: string; name?: string; gddBaseTemp?: number; gddUpperTemp?: number }) => Promise<void>;
   /** Add a new crop entity */
@@ -642,7 +642,7 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Update plan notes */
   updatePlanNotes: (notes: string) => Promise<void>;
   /** Update crop box display configuration */
-  updateCropBoxDisplay: (config: import('./entities/plan').CropBoxDisplayConfig) => Promise<void>;
+  updatePlantingBoxDisplay: (config: import('./entities/plan').PlantingBoxDisplayConfig) => Promise<void>;
 
   // ---- Sequence Management (Succession Planting) ----
   /**
@@ -877,7 +877,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       // Build crop catalog map from master using CRUD function
       const masterCrops = getAllCrops();
-      const cropCatalog = cloneCropCatalog(masterCrops);
+      const specs = clonePlantingCatalog(masterCrops);
 
       // Build beds and groups from template
       const bedGroupsTemplate = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
@@ -911,7 +911,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         plantings: convertedPlantings,
         beds,
         bedGroups,
-        cropCatalog,
+        specs,
         varieties,
         seedMixes,
         products,
@@ -1193,9 +1193,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       // Check if planting should use default seed source
       let shouldUseDefaultSeedSource = false;
       if (!planting.seedSource && planting.useDefaultSeedSource === undefined &&
-          planting.configId && currentPlan.cropCatalog) {
-        const config = currentPlan.cropCatalog[planting.configId];
-        if (config?.defaultSeedSource) {
+          planting.specId && currentPlan.specs) {
+        const spec = currentPlan.specs[planting.specId];
+        if (spec?.defaultSeedSource) {
           shouldUseDefaultSeedSource = true;
         }
       }
@@ -1261,9 +1261,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
         // Check for default seed source
         if (!planting.seedSource && planting.useDefaultSeedSource === undefined &&
-            planting.configId && state.currentPlan!.cropCatalog) {
-          const config = state.currentPlan!.cropCatalog[planting.configId];
-          if (config?.defaultSeedSource) {
+            planting.specId && state.currentPlan!.specs) {
+          const spec = state.currentPlan!.specs[planting.specId];
+          if (spec?.defaultSeedSource) {
             processed.useDefaultSeedSource = true;
           }
         }
@@ -1486,7 +1486,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlantings.map(p => p.id);
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'configId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => {
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => {
       // Pre-validate
       const { currentPlan } = get();
       if (!currentPlan?.plantings) {
@@ -1544,8 +1544,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             const now = Date.now();
 
             // Apply updates
-            if (updates.configId !== undefined) {
-              p.configId = updates.configId;
+            if (updates.specId !== undefined) {
+              p.specId = updates.specId;
             }
             if ('startBed' in updates) {
               p.startBed = updates.startBed ?? null;
@@ -1615,14 +1615,14 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       await get().updatePlanting(plantingId, { seedSource: seedSource ?? undefined });
     },
 
-    recalculateCrops: async (configIdentifier: string) => {
+    recalculateSpecs: async (specIdentifier: string) => {
       const state = get();
       if (!state.currentPlan?.plantings) {
         throw new Error('No plan loaded');
       }
 
       // Count affected plantings
-      const affected = state.currentPlan.plantings.filter(p => p.configId === configIdentifier);
+      const affected = state.currentPlan.plantings.filter(p => p.specId === specIdentifier);
       if (affected.length === 0) {
         return 0;
       }
@@ -1637,10 +1637,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           (plan) => {
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
-              createChangeEntry('batch', `Config changed: ${configIdentifier}`, affected.map(p => p.id))
+              createChangeEntry('batch', `Spec changed: ${specIdentifier}`, affected.map(p => p.id))
             );
           },
-          `Config changed: ${configIdentifier}`
+          `Spec changed: ${specIdentifier}`
         );
         storeState.isDirty = true;
       });
@@ -1648,37 +1648,37 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return affected.length;
     },
 
-    updateCropConfig: async (config: CropConfig) => {
+    updatePlantingSpec: async (spec: PlantingSpec) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
       }
 
-      if (!state.currentPlan.cropCatalog) {
+      if (!state.currentPlan.specs) {
         throw new Error('Plan has no crop catalog');
       }
 
       // Count affected plantings
       const affectedPlantingIds = (state.currentPlan.plantings ?? [])
-        .filter(p => p.configId === config.identifier)
+        .filter(p => p.specId === spec.identifier)
         .map(p => p.id);
 
       set((storeState) => {
-        if (!storeState.currentPlan?.cropCatalog) return;
+        if (!storeState.currentPlan?.specs) return;
 
         mutateWithPatches(
           storeState,
           (plan) => {
             // Update catalog using CRUD function - display will recompute automatically
-            const cloned = cloneCropConfig(config);
+            const cloned = clonePlantingSpec(spec);
             cloned.updatedAt = new Date().toISOString();
-            plan.cropCatalog![config.identifier] = cloned;
+            plan.specs![spec.identifier] = cloned;
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
-              createChangeEntry('batch', `Updated config "${config.identifier}"`, affectedPlantingIds)
+              createChangeEntry('batch', `Updated spec "${spec.identifier}"`, affectedPlantingIds)
             );
           },
-          `Update config "${config.identifier}"`
+          `Update spec "${spec.identifier}"`
         );
         storeState.isDirty = true;
       });
@@ -1686,20 +1686,20 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return affectedPlantingIds.length;
     },
 
-    addCropConfig: async (config: CropConfig) => {
+    addPlantingSpec: async (spec: PlantingSpec) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
       }
 
       // Initialize catalog if it doesn't exist
-      if (!state.currentPlan.cropCatalog) {
-        state.currentPlan.cropCatalog = {};
+      if (!state.currentPlan.specs) {
+        state.currentPlan.specs = {};
       }
 
       // Check for duplicate identifier
-      if (state.currentPlan.cropCatalog[config.identifier]) {
-        throw new Error(`A config with identifier "${config.identifier}" already exists`);
+      if (state.currentPlan.specs[spec.identifier]) {
+        throw new Error(`A spec with identifier "${spec.identifier}" already exists`);
       }
 
       const now = new Date().toISOString();
@@ -1711,38 +1711,38 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           storeState,
           (plan) => {
             // Initialize catalog if needed
-            if (!plan.cropCatalog) {
-              plan.cropCatalog = {};
+            if (!plan.specs) {
+              plan.specs = {};
             }
-            // Add new config to catalog using CRUD function
-            const cloned = cloneCropConfig(config);
+            // Add new spec to catalog using CRUD function
+            const cloned = clonePlantingSpec(spec);
             cloned.createdAt = now;
             cloned.updatedAt = now;
-            plan.cropCatalog[config.identifier] = cloned;
+            plan.specs[spec.identifier] = cloned;
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
-              createChangeEntry('batch', `Added new config "${config.identifier}"`, [])
+              createChangeEntry('batch', `Added new spec "${spec.identifier}"`, [])
             );
           },
-          `Add config "${config.identifier}"`
+          `Add spec "${spec.identifier}"`
         );
         storeState.isDirty = true;
       });
     },
 
-    deleteCropConfigs: async (identifiers: string[]) => {
+    deletePlantingSpecs: async (identifiers: string[]) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
       }
 
-      if (!state.currentPlan.cropCatalog) {
+      if (!state.currentPlan.specs) {
         throw new Error('Plan has no crop catalog');
       }
 
       // Find which identifiers actually exist
       const existingIdentifiers = identifiers.filter(
-        id => state.currentPlan!.cropCatalog![id]
+        id => state.currentPlan!.specs![id]
       );
 
       if (existingIdentifiers.length === 0) {
@@ -1750,18 +1750,18 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       set((storeState) => {
-        if (!storeState.currentPlan?.cropCatalog) return;
+        if (!storeState.currentPlan?.specs) return;
 
         const description = existingIdentifiers.length === 1
-          ? `Delete config "${existingIdentifiers[0]}"`
-          : `Delete ${existingIdentifiers.length} configs`;
+          ? `Delete spec "${existingIdentifiers[0]}"`
+          : `Delete ${existingIdentifiers.length} specs`;
 
         mutateWithPatches(
           storeState,
           (plan) => {
-            // Delete configs from catalog
+            // Delete specs from catalog
             for (const identifier of existingIdentifiers) {
-              delete plan.cropCatalog![identifier];
+              delete plan.specs![identifier];
             }
 
             plan.metadata.lastModified = Date.now();
@@ -1777,33 +1777,33 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return existingIdentifiers.length;
     },
 
-    toggleConfigFavorite: async (identifier: string) => {
+    toggleSpecFavorite: async (identifier: string) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
       }
 
-      if (!state.currentPlan.cropCatalog) {
+      if (!state.currentPlan.specs) {
         throw new Error('Plan has no crop catalog');
       }
 
-      const config = state.currentPlan.cropCatalog[identifier];
-      if (!config) {
-        throw new Error(`Config "${identifier}" not found`);
+      const spec = state.currentPlan.specs[identifier];
+      if (!spec) {
+        throw new Error(`Spec "${identifier}" not found`);
       }
 
-      const newValue = !config.isFavorite;
+      const newValue = !spec.isFavorite;
       const description = newValue
         ? `Add "${identifier}" to favorites`
         : `Remove "${identifier}" from favorites`;
 
       set((storeState) => {
-        if (!storeState.currentPlan?.cropCatalog) return;
+        if (!storeState.currentPlan?.specs) return;
 
         mutateWithPatches(
           storeState,
           (plan) => {
-            plan.cropCatalog![identifier].isFavorite = newValue;
+            plan.specs![identifier].isFavorite = newValue;
             plan.metadata.lastModified = Date.now();
           },
           description
@@ -1812,35 +1812,35 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       });
     },
 
-    bulkUpdateCropConfigs: async (updates: { identifier: string; changes: Partial<CropConfig> }[]) => {
+    bulkUpdatePlantingSpecs: async (updates: { identifier: string; changes: Partial<PlantingSpec> }[]) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
       }
 
-      if (!state.currentPlan.cropCatalog) {
+      if (!state.currentPlan.specs) {
         throw new Error('Plan has no crop catalog');
       }
 
-      // Filter to only configs that exist
-      const validUpdates = updates.filter(u => state.currentPlan!.cropCatalog![u.identifier]);
+      // Filter to only specs that exist
+      const validUpdates = updates.filter(u => state.currentPlan!.specs![u.identifier]);
 
       if (validUpdates.length === 0) {
         return 0;
       }
 
-      const description = `Update ${validUpdates.length} crop config${validUpdates.length !== 1 ? 's' : ''}`;
+      const description = `Update ${validUpdates.length} planting spec${validUpdates.length !== 1 ? 's' : ''}`;
 
       const now = new Date().toISOString();
 
       set((storeState) => {
-        if (!storeState.currentPlan?.cropCatalog) return;
+        if (!storeState.currentPlan?.specs) return;
 
         mutateWithPatches(
           storeState,
           (plan) => {
             for (const { identifier, changes } of validUpdates) {
-              Object.assign(plan.cropCatalog![identifier], changes, { updatedAt: now });
+              Object.assign(plan.specs![identifier], changes, { updatedAt: now });
             }
             plan.metadata.lastModified = Date.now();
           },
@@ -1896,11 +1896,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
                 crop.name = newName;
 
                 // Propagate name change to all linked entities (by cropId)
-                // CropConfig
-                if (plan.cropCatalog) {
-                  for (const config of Object.values(plan.cropCatalog)) {
-                    if (config.cropId === cropId) {
-                      config.crop = newName;
+                // PlantingSpec
+                if (plan.specs) {
+                  for (const spec of Object.values(plan.specs)) {
+                    if (spec.cropId === cropId) {
+                      spec.crop = newName;
                     }
                   }
                 }
@@ -1977,13 +1977,13 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error(`Crop not found: ${cropId}`);
       }
 
-      // Check if crop is referenced by any configs
+      // Check if crop is referenced by any specs
       const { getCropId } = await import('./entities/crop');
-      const referencingConfigs = Object.values(state.currentPlan.cropCatalog || {})
-        .filter(config => getCropId(config.crop) === cropId);
+      const referencingSpecs = Object.values(state.currentPlan.specs || {})
+        .filter(spec => getCropId(spec.crop) === cropId);
 
-      if (referencingConfigs.length > 0) {
-        throw new Error(`Cannot delete crop "${existingCrop.name}" - used by ${referencingConfigs.length} config(s)`);
+      if (referencingSpecs.length > 0) {
+        throw new Error(`Cannot delete crop "${existingCrop.name}" - used by ${referencingSpecs.length} spec(s)`);
       }
 
       const cropName = existingCrop.name;
@@ -2086,8 +2086,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       // Filter to crops that exist and aren't referenced
       const { getCropId } = await import('./entities/crop');
       const referencedCropIds = new Set(
-        Object.values(state.currentPlan.cropCatalog || {})
-          .map(config => getCropId(config.crop))
+        Object.values(state.currentPlan.specs || {})
+          .map(spec => getCropId(spec.crop))
       );
 
       const deletableCropIds = cropIds.filter(id =>
@@ -3490,7 +3490,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       await get().refreshPlanList();
     },
 
-    updateCropBoxDisplay: async (config) => {
+    updatePlantingBoxDisplay: async (config) => {
       const { currentPlan } = get();
       if (!currentPlan) return;
 
@@ -3499,7 +3499,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         mutateWithPatches(
           state,
           (plan) => {
-            plan.cropBoxDisplay = config;
+            plan.plantingBoxDisplay = config;
             plan.metadata.lastModified = Date.now();
           },
           `Update crop box display settings`
@@ -3554,7 +3554,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       for (let i = 1; i < options.count; i++) {
         const offsetDate = addDays(anchorDate, i * options.offsetDays);
         const newPlanting = createPlanting({
-          configId: original.configId,
+          specId: original.specId,
           fieldStartDate: format(offsetDate, 'yyyy-MM-dd'),
           startBed: options.bedAssignment === 'same' ? original.startBed : null,
           bedFeet: original.bedFeet,
