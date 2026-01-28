@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import { useGdd, formatGddDifference, getGddExplanation } from '@/lib/gdd-client';
-import { DEFAULT_BASE_TEMPS } from '@/lib/gdd';
 
 interface GddPreviewProps {
   /** Days to maturity from config */
@@ -77,6 +76,15 @@ export function GddPreview({
     );
   }
 
+  // No GDD temps configured for this crop
+  if (baseTemp === undefined) {
+    return (
+      <div className="text-xs text-gray-500">
+        Crop has no GDD temps configured
+      </div>
+    );
+  }
+
   // Loading
   if (isLoading) {
     return (
@@ -103,8 +111,6 @@ export function GddPreview({
       </div>
     );
   }
-
-  const effectiveTbase = baseTemp ?? DEFAULT_BASE_TEMPS[category] ?? DEFAULT_BASE_TEMPS['default'];
 
   return (
     <div className="space-y-2">
@@ -141,8 +147,8 @@ export function GddPreview({
           <span className="font-medium">{gddData.referenceGdd}</span>
         </div>
         <div className="flex justify-between">
-          <span>Base temp ({category}):</span>
-          <span className="font-medium">{effectiveTbase}°F</span>
+          <span>Base temp:</span>
+          <span className="font-medium">{baseTemp}°F</span>
         </div>
       </div>
 

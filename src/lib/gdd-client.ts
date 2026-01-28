@@ -6,10 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { TemperatureHistory } from './gdd';
-import {
-  calculateGddAdjustedTiming,
-  getBaseTemp,
-} from './gdd';
+import { calculateGddAdjustedTiming } from './gdd';
 
 // =============================================================================
 // TYPES
@@ -143,14 +140,13 @@ export function useGdd(
     dtm: number,
     targetFieldDate: string,
     actualFieldDate: string,
-    category: string,
+    _category: string,
     baseTemp?: number
   ): GddPreviewData | null => {
-    if (!tempData || !targetFieldDate || !actualFieldDate) {
+    // Require baseTemp - no category-based guessing
+    if (!tempData || !targetFieldDate || !actualFieldDate || baseTemp === undefined) {
       return null;
     }
-
-    const tbase = getBaseTemp(baseTemp, category);
 
     try {
       const result = calculateGddAdjustedTiming(
@@ -158,7 +154,7 @@ export function useGdd(
         dtm,
         targetFieldDate,
         actualFieldDate,
-        tbase,
+        baseTemp,
         year
       );
 

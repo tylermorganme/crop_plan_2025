@@ -92,33 +92,6 @@ export interface GddAdjustedTiming {
 // CONSTANTS
 // =============================================================================
 
-/** Default base temperatures by crop category (°F) */
-export const DEFAULT_BASE_TEMPS: Record<string, number> = {
-  // Cool season crops
-  'Brassica': 40,
-  'Lettuce': 40,
-  'Spinach': 35,
-  'Pea': 40,
-  'Onion': 40,
-  'Carrot': 40,
-  'Beet': 40,
-  'Radish': 40,
-  'Green': 40,        // Catch-all for leafy greens
-
-  // Warm season crops
-  'Tomato': 50,
-  'Pepper': 55,
-  'Eggplant': 55,
-  'Squash': 50,
-  'Cucumber': 50,
-  'Melon': 55,
-  'Bean': 50,
-  'Corn': 50,
-
-  // Default for unknown
-  'default': 45,
-};
-
 /** Maximum days to look ahead when calculating GDD-to-days */
 const MAX_DAYS_LOOKAHEAD = 365;
 
@@ -335,27 +308,6 @@ export function calculateGddAdjustedTiming(
     daysDifference: adjustedDtm - originalDtm,
     hasEnoughData: true,
   };
-}
-
-/**
- * Get the base temperature for a crop category.
- * Falls back to default if category not found.
- */
-export function getBaseTempForCategory(category: string): number {
-  return DEFAULT_BASE_TEMPS[category] ?? DEFAULT_BASE_TEMPS['default'];
-}
-
-/**
- * Get the base temperature for a crop, checking category first.
- *
- * @param cropBaseTemp - Per-crop override (from Crop entity)
- * @param category - Crop category (for default lookup)
- */
-export function getBaseTemp(cropBaseTemp: number | undefined, category: string): number {
-  if (cropBaseTemp !== undefined) {
-    return cropBaseTemp;
-  }
-  return getBaseTempForCategory(category);
 }
 
 // =============================================================================
