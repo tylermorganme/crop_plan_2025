@@ -32,6 +32,9 @@ export interface Product {
 
   /** Prices per market - keys are market IDs, values are prices */
   prices: Record<string, number>;
+
+  /** How long (in days) this product can be held post-harvest before sale */
+  holdingWindow?: number;
 }
 
 /**
@@ -42,6 +45,7 @@ export interface CreateProductInput {
   product: string;
   unit: string;
   prices?: Record<string, number>;
+  holdingWindow?: number;
 }
 
 // =============================================================================
@@ -77,6 +81,7 @@ export function createProduct(input: CreateProductInput): Product {
     product: input.product.trim(),
     unit: input.unit.trim(),
     prices: input.prices ?? {},
+    holdingWindow: input.holdingWindow,
   };
 }
 
