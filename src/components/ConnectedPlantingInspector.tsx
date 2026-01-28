@@ -297,6 +297,7 @@ export function ConnectedPlantingInspector({
         onCloneConfig={handleCloneConfig}
         onRefreshFromConfig={handleRefreshFromConfig}
         cropCatalog={currentPlan.cropCatalog}
+        crops={currentPlan.crops}
         varieties={currentPlan.varieties}
         seedMixes={currentPlan.seedMixes}
         products={currentPlan.products}

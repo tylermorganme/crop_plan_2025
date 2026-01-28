@@ -224,6 +224,8 @@ export interface PlantingInspectorPanelProps {
 
   // Lookup data
   cropCatalog?: Record<string, CropConfig>;
+  /** Crop entities for color and GDD base temp lookup */
+  crops?: Record<string, { id: string; name: string; gddBaseTemp?: number }>;
   varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
   seedMixes?: Record<string, { id: string; crop: string; name: string }>;
   usedVarietyIds?: Set<string>;
@@ -258,6 +260,7 @@ export function PlantingInspectorPanel({
   onCloneConfig,
   onRefreshFromConfig,
   cropCatalog,
+  crops,
   varieties,
   seedMixes,
   usedVarietyIds,
@@ -882,6 +885,7 @@ export function PlantingInspectorPanel({
                 targetFieldDate={baseConfig.targetFieldDate}
                 actualFieldDate={crop.startDate.split('T')[0]}
                 category={baseConfig.category || 'default'}
+                baseTemp={crop.cropId ? crops?.[crop.cropId]?.gddBaseTemp : undefined}
                 location={location}
                 year={planYear}
               />
