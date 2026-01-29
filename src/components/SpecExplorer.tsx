@@ -7,7 +7,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Planting } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
-import { type PlantingSpec, calculatePlantingMethod } from '@/lib/entities/planting-specs';
+import { type PlantingSpec, calculatePlantingMethod, calculateYieldPerWeek, calculateYieldPerHarvest } from '@/lib/entities/planting-specs';
 import { calculateSpecRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
 import { getMarketSplitTotal } from '@/lib/entities/market';
 import PlantingSpecCreator from './PlantingSpecCreator';
@@ -238,6 +238,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   // Use shared store state - automatically syncs across tabs
   // Only subscribe to specs, not the entire plan (avoids re-renders when plantings change)
   const specs = usePlanStore((state) => state.currentPlan?.specs);
+  const plantings = usePlanStore((state) => state.currentPlan?.plantings);
   const currentPlanId = usePlanStore((state) => state.currentPlan?.id);
   const planYear = usePlanStore((state) => state.currentPlan?.metadata?.year) ?? new Date().getFullYear();
   const lastFrostDate = usePlanStore((state) => state.currentPlan?.metadata?.lastFrostDate);
@@ -284,24 +285,54 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     return [];
   }, [isPlanLoaded, planCatalog]);
 
-  // Extend type to include computed revenue field
-  type CropWithRevenue = PlantingSpec & { revenuePerBed?: number | null };
+  // Extend type to include computed fields
+  type CropWithComputed = PlantingSpec & {
+    revenuePerBed?: number | null;
+    maxYieldPerWeek?: string;
+    minYieldPerWeek?: string;
+    inUse?: boolean;
+    yieldPerHarvestDisplay?: string;
+    totalYieldDisplay?: string;
+  };
 
-  // Enrich crops with computed revenuePerBed (revenue for a standard bed)
-  const displayCrops: CropWithRevenue[] = useMemo(() => {
-    if (!products || Object.keys(products).length === 0) {
-      // No products loaded - return crops without revenue
-      return baseCrops;
-    }
+  // Build set of specIds that are in use (have plantings)
+  const specsInUse = useMemo(() => {
+    if (!plantings) return new Set<string>();
+    return new Set(plantings.map(p => p.specId));
+  }, [plantings]);
 
+  // Enrich crops with computed fields (revenue, yield per week, inUse for a standard bed)
+  const displayCrops: CropWithComputed[] = useMemo(() => {
     return baseCrops.map(crop => {
-      const revenue = calculateSpecRevenue(crop as PlantingSpec, STANDARD_BED_LENGTH, products);
+      const revenue = products && Object.keys(products).length > 0
+        ? calculateSpecRevenue(crop as PlantingSpec, STANDARD_BED_LENGTH, products)
+        : null;
+      const yieldPerWeek = products && Object.keys(products).length > 0
+        ? calculateYieldPerWeek(crop as PlantingSpec, STANDARD_BED_LENGTH, products)
+        : { displayMax: '', displayMin: '', products: [] };
+      // Calculate yield per harvest with unit (use calculated value to support yieldFormula-based specs)
+      const computedYieldPerHarvest = calculateYieldPerHarvest(crop as PlantingSpec, STANDARD_BED_LENGTH);
+      const yieldPerHarvestDisplay = computedYieldPerHarvest !== null
+        ? `${computedYieldPerHarvest >= 10 ? Math.round(computedYieldPerHarvest) : computedYieldPerHarvest.toFixed(1)} ${crop.yieldUnit ?? ''}`.trim()
+        : undefined;
+      // Calculate total yield display from yield formula results
+      const totalYieldDisplay = yieldPerWeek.products.length > 0
+        ? yieldPerWeek.products.map(p => {
+            const formatted = p.totalYield >= 10 ? Math.round(p.totalYield).toString() : p.totalYield.toFixed(1);
+            return `${formatted} ${p.unit ?? ''}`.trim();
+          }).join(', ')
+        : undefined;
       return {
         ...crop,
         revenuePerBed: revenue,
+        maxYieldPerWeek: yieldPerWeek.displayMax,
+        minYieldPerWeek: yieldPerWeek.displayMin,
+        inUse: specsInUse.has(crop.identifier),
+        yieldPerHarvestDisplay,
+        totalYieldDisplay,
       };
     });
-  }, [baseCrops, products]);
+  }, [baseCrops, products, specsInUse]);
 
   // All columns come from the schema - single source of truth
   const allColumns = allHeaders && allHeaders.length > 0 ? allHeaders : DEFAULT_COLUMN_ORDER;
@@ -622,7 +653,10 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     let cols = columnOrder;
     if (columnSearch) {
       const q = columnSearch.toLowerCase();
-      cols = cols.filter(col => col.toLowerCase().includes(q));
+      cols = cols.filter(col =>
+        col.toLowerCase().includes(q) ||
+        getColumnDisplayName(col).toLowerCase().includes(q)
+      );
     }
     if (columnFilter === 'visible') {
       cols = cols.filter(col => visibleColumns.has(col));
@@ -1753,7 +1787,12 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                                 }}
                               />
                             ) : (
-                              <span className="truncate">{formatCellValue(crop[col as keyof PlantingSpec], col)}</span>
+                              <span className="truncate">{formatCellValue(
+                                col === 'yieldPerHarvest' ? crop.yieldPerHarvestDisplay
+                                  : col === 'totalYield' ? crop.totalYieldDisplay
+                                  : crop[col as keyof PlantingSpec],
+                                col
+                              )}</span>
                             )}
                           </div>
                         );
@@ -1827,7 +1866,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                       onChange={() => toggleColumn(col)}
                       className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                     />
-                    <span className={`text-sm truncate ${visibleColumns.has(col) ? 'text-gray-900' : 'text-gray-600'}`}>{col}</span>
+                    <span className={`text-sm truncate ${visibleColumns.has(col) ? 'text-gray-900' : 'text-gray-600'}`}>{getColumnDisplayName(col)}</span>
                   </label>
                 ))}
               </div>
@@ -1870,7 +1909,11 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
           <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
             <div className="p-4 space-y-1">
               {allColumns.map(key => {
-                const value = selectedCrop[key as keyof PlantingSpec];
+                const value = key === 'yieldPerHarvest'
+                  ? selectedCrop.yieldPerHarvestDisplay
+                  : key === 'totalYield'
+                  ? selectedCrop.totalYieldDisplay
+                  : selectedCrop[key as keyof PlantingSpec];
                 return (
                   <div key={key} className="flex py-1 border-b border-gray-50 last:border-0">
                     <span className="text-xs text-gray-600 w-36 flex-shrink-0 truncate" title={key}>{key}</span>

@@ -52,7 +52,14 @@ export interface ColumnMeta {
 }
 
 // Extended PlantingSpec type with computed fields
-export type CropWithRevenue = PlantingSpec & { revenuePerBed?: number | null };
+export type CropWithRevenue = PlantingSpec & {
+  revenuePerBed?: number | null;
+  maxYieldPerWeek?: string;
+  minYieldPerWeek?: string;
+  inUse?: boolean;
+  yieldPerHarvestDisplay?: string;
+  totalYieldDisplay?: string;
+};
 
 // =============================================================================
 // Build source type lookup from column-analysis.json
@@ -219,10 +226,17 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     sourceType: getSourceType('yieldPerHarvest'),
     sortable: true,
   },
+  totalYield: {
+    displayName: 'Total Yield',
+    defaultWidth: 120,
+    defaultVisible: false,
+    sourceType: 'calculated',
+    sortable: true,
+  },
   yieldUnit: {
     displayName: 'Yield Unit',
     defaultWidth: 90,
-    defaultVisible: true,
+    defaultVisible: false,
     sourceType: getSourceType('yieldUnit'),
     sortable: true,
   },
@@ -286,6 +300,14 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     sourceType: 'static',
     sortable: true,
   },
+  inUse: {
+    displayName: 'In Use',
+    defaultWidth: 60,
+    defaultVisible: true,
+    format: formatBoolean,
+    sourceType: 'calculated',
+    sortable: true,
+  },
 
   // Computed columns
   revenuePerBed: {
@@ -295,6 +317,20 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     format: formatCurrency,
     sourceType: 'calculated',
     sortable: true,
+  },
+  maxYieldPerWeek: {
+    displayName: 'Max Yield/Wk',
+    defaultWidth: 140,
+    defaultVisible: false,
+    sourceType: 'calculated',
+    sortable: false,
+  },
+  minYieldPerWeek: {
+    displayName: 'Min Yield/Wk',
+    defaultWidth: 140,
+    defaultVisible: false,
+    sourceType: 'calculated',
+    sortable: false,
   },
 
   // Date fields

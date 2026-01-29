@@ -16,6 +16,7 @@ import {
   calculateAggregateHarvestWindow,
   calculateDaysInCells,
   calculateFieldOccupationDays,
+  calculateYieldPerWeek,
 } from '@/lib/entities/planting-specs';
 import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
@@ -59,6 +60,8 @@ const ALL_COLUMNS = [
   'daysInCells',
   'revenue',
   'revenuePerFt',
+  'maxYieldPerWeek',
+  'minYieldPerWeek',
   'method',
   'growingStructure',
   'seedSource',
@@ -113,6 +116,8 @@ const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
   daysInCells: 80,
   revenue: 90,
   revenuePerFt: 80,
+  maxYieldPerWeek: 140,
+  minYieldPerWeek: 140,
   method: 100,
   growingStructure: 100,
   seedSource: 150,
@@ -151,6 +156,8 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
   daysInCells: 'Cell Days',
   revenue: 'Revenue',
   revenuePerFt: '$/Ft',
+  maxYieldPerWeek: 'Max Yield/Wk',
+  minYieldPerWeek: 'Min Yield/Wk',
   method: 'Method',
   growingStructure: 'Structure',
   seedSource: 'Seed Source',
@@ -593,6 +600,8 @@ interface EnrichedPlanting extends Planting {
   daysInCells: number;       // Days in greenhouse cells (transplants)
   revenue: number | null;    // Expected revenue for this planting
   revenuePerFt: number | null; // Revenue per bed foot
+  maxYieldPerWeek: string;   // Max yield/week display string (e.g. "2.5 lb/wk")
+  minYieldPerWeek: string;   // Min yield/week display string (e.g. "1.8 lb/wk")
 }
 
 // =============================================================================
@@ -883,6 +892,9 @@ export default function PlantingsPage() {
       const revenue = spec ? calculateSpecRevenue(spec, p.bedFeet, productsLookup) : null;
       const revenuePerFt = revenue !== null && p.bedFeet > 0 ? revenue / p.bedFeet : null;
 
+      // Calculate yield per week (uses actual planting bedFeet)
+      const yieldPerWeek = spec ? calculateYieldPerWeek(spec, p.bedFeet, productsLookup) : null;
+
       return {
         ...p,
         // From TimelineCrop (pre-computed dates)
@@ -915,6 +927,10 @@ export default function PlantingsPage() {
         daysInCells,
         revenue,
         revenuePerFt,
+
+        // Yield per week
+        maxYieldPerWeek: yieldPerWeek?.displayMax ?? '',
+        minYieldPerWeek: yieldPerWeek?.displayMin ?? '',
       };
     });
   }, [currentPlan?.plantings, cropsByPlanting, catalogLookup, bedsLookup, varietiesLookup, seedMixesLookup, productsLookup]);
@@ -1444,6 +1460,14 @@ export default function PlantingsPage() {
       case 'revenuePerFt':
         return planting.revenuePerFt !== null
           ? <span className="text-green-600">${planting.revenuePerFt.toFixed(2)}</span>
+          : <span className="text-gray-300">—</span>;
+      case 'maxYieldPerWeek':
+        return planting.maxYieldPerWeek
+          ? <span className="text-gray-600 truncate" title={planting.maxYieldPerWeek}>{planting.maxYieldPerWeek}</span>
+          : <span className="text-gray-300">—</span>;
+      case 'minYieldPerWeek':
+        return planting.minYieldPerWeek
+          ? <span className="text-gray-600 truncate" title={planting.minYieldPerWeek}>{planting.minYieldPerWeek}</span>
           : <span className="text-gray-300">—</span>;
       case 'rows':
         return <span className="text-gray-600 text-right">{planting.rows ?? '—'}</span>;

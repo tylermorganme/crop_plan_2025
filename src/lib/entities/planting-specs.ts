@@ -1240,3 +1240,123 @@ export function clonePlantingCatalog(
   }
   return catalog;
 }
+
+// =============================================================================
+// YIELD PER WEEK CALCULATIONS
+// =============================================================================
+
+/** Result of yield per week calculation for a single product */
+export interface ProductYieldPerWeek {
+  /** Product ID */
+  productId: string;
+  /** Product name (for display) */
+  productName?: string;
+  /** Total yield for this product */
+  totalYield: number;
+  /** Harvest window in days (time from first to last harvest) */
+  harvestWindowDays: number;
+  /** Holding window in days (from Product entity) */
+  holdingWindowDays: number;
+  /** Max yield per week (yield spread over harvest window only) */
+  maxYieldPerWeek: number;
+  /** Min yield per week (yield spread over harvest window + holding window) */
+  minYieldPerWeek: number;
+  /** Unit from the product */
+  unit?: string;
+}
+
+/** Result of yield per week calculation for a PlantingSpec */
+export interface SpecYieldPerWeek {
+  /** Per-product breakdown */
+  products: ProductYieldPerWeek[];
+  /** Formatted string for display (e.g., "2.5-3.1 lb/wk, 1.2-1.8 bunch/wk") */
+  displayMax: string;
+  displayMin: string;
+}
+
+/**
+ * Calculate yield per week for each product in a PlantingSpec.
+ *
+ * Formulas:
+ * - harvestWindowDays = (numberOfHarvests - 1) * daysBetweenHarvest
+ * - maxYieldPerWeek = totalYield / harvestWindowDays * 7 (concentrated in harvest window)
+ * - minYieldPerWeek = totalYield / (harvestWindowDays + holdingWindow) * 7 (spread over extended period)
+ *
+ * @param spec - The PlantingSpec to calculate
+ * @param bedFeet - Bed length in feet (use STANDARD_BED_LENGTH for comparisons)
+ * @param products - Product catalog to look up holding windows and names
+ * @returns Yield per week results per product with formatted display strings
+ */
+export function calculateYieldPerWeek(
+  spec: PlantingSpec,
+  bedFeet: number,
+  products: Record<string, { holdingWindow?: number; product?: string; unit?: string }>
+): SpecYieldPerWeek {
+  const results: ProductYieldPerWeek[] = [];
+
+  if (!spec.productYields?.length) {
+    return { products: [], displayMax: '', displayMin: '' };
+  }
+
+  for (const py of spec.productYields) {
+    // Calculate total yield for this product
+    if (!py.yieldFormula) continue;
+
+    const context = buildYieldContext(spec, bedFeet);
+    context.harvests = py.numberOfHarvests ?? 1;
+    context.daysBetweenHarvest = py.daysBetweenHarvest ?? 7;
+
+    const yieldResult = evaluateYieldFormula(py.yieldFormula, context);
+    if (yieldResult.value === null) continue;
+
+    const totalYield = yieldResult.value;
+
+    // Calculate harvest window days
+    // harvestWindowDays = (numberOfHarvests - 1) * daysBetweenHarvest
+    const numHarvests = py.numberOfHarvests ?? 1;
+    const daysBetween = py.daysBetweenHarvest ?? 0;
+    const harvestWindowDays = numHarvests > 1 ? (numHarvests - 1) * daysBetween : 7; // Default to 7 days for single harvest
+
+    // Get holding window from product (productId should be the UUID)
+    const product = products[py.productId];
+    const holdingWindowDays = product?.holdingWindow ?? 0;
+
+    // Calculate yield per week
+    // Avoid division by zero
+    const effectiveHarvestDays = Math.max(harvestWindowDays, 1);
+    const maxYieldPerWeek = (totalYield / effectiveHarvestDays) * 7;
+
+    const effectiveTotalDays = Math.max(harvestWindowDays + holdingWindowDays, 1);
+    const minYieldPerWeek = (totalYield / effectiveTotalDays) * 7;
+
+    results.push({
+      productId: py.productId,
+      productName: product?.product,
+      totalYield,
+      harvestWindowDays,
+      holdingWindowDays,
+      maxYieldPerWeek,
+      minYieldPerWeek,
+      unit: product?.unit,
+    });
+  }
+
+  // Format display strings - group by unit
+  const formatDisplay = (getValue: (r: ProductYieldPerWeek) => number): string => {
+    if (results.length === 0) return '';
+
+    return results
+      .map(r => {
+        const value = getValue(r);
+        const formatted = value >= 10 ? Math.round(value).toString() : value.toFixed(1);
+        return `${formatted} ${r.unit ?? ''}`.trim();
+      })
+      .join(', ');
+  };
+
+  return {
+    products: results,
+    displayMax: formatDisplay(r => r.maxYieldPerWeek),
+    displayMin: formatDisplay(r => r.minYieldPerWeek),
+  };
+}

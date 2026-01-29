@@ -638,6 +638,96 @@ function migrateV13ToV14(rawPlan: unknown): unknown {
   };
 }
 
+/**
+ * v14 → v15: Fix productYields.productId references in PlantingSpecs
+ * The productId field was storing composite keys like "melon|ripe fruit|lb"
+ * instead of actual product UUIDs like "prod_abc123". This migration looks up
+ * the correct product UUID for each productYield entry.
+ */
+function migrateV14ToV15(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    products?: Record<string, {
+      id: string;
+      crop: string;
+      product: string;
+      unit: string;
+    }>;
+    specs?: Record<string, {
+      productYields?: Array<{
+        productId: string;
+        [key: string]: unknown;
+      }>;
+      [key: string]: unknown;
+    }>;
+    [key: string]: unknown;
+  };
+
+  if (!plan.specs || !plan.products) {
+    return plan;
+  }
+
+  // Build lookup from composite key to product UUID
+  // Composite key format: "crop|product|unit" (all lowercase)
+  const compositeKeyToUuid: Record<string, string> = {};
+  for (const product of Object.values(plan.products)) {
+    const key = `${product.crop.toLowerCase().trim()}|${product.product.toLowerCase().trim()}|${product.unit.toLowerCase().trim()}`;
+    compositeKeyToUuid[key] = product.id;
+  }
+
+  // Check if migration is needed (any productId that's not a UUID)
+  let needsMigration = false;
+  for (const spec of Object.values(plan.specs)) {
+    if (spec.productYields) {
+      for (const py of spec.productYields) {
+        if (py.productId && !py.productId.startsWith('prod_')) {
+          needsMigration = true;
+          break;
+        }
+      }
+    }
+    if (needsMigration) break;
+  }
+
+  if (!needsMigration) {
+    return plan;
+  }
+
+  // Migrate specs: update productYields.productId to use UUIDs
+  const newSpecs: Record<string, unknown> = {};
+  for (const [key, spec] of Object.entries(plan.specs)) {
+    if (!spec.productYields || spec.productYields.length === 0) {
+      newSpecs[key] = { ...spec };
+      continue;
+    }
+
+    const newProductYields = spec.productYields.map(py => {
+      // If already a UUID, keep it
+      if (py.productId.startsWith('prod_')) {
+        return py;
+      }
+
+      // Look up the UUID by composite key
+      const uuid = compositeKeyToUuid[py.productId];
+      if (uuid) {
+        return { ...py, productId: uuid };
+      }
+
+      // If no match found, keep the original (might be orphaned data)
+      return py;
+    });
+
+    newSpecs[key] = {
+      ...spec,
+      productYields: newProductYields,
+    };
+  }
+
+  return {
+    ...plan,
+    specs: newSpecs,
+  };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -673,6 +763,7 @@ const migrations: MigrationFn[] = [
   migrateV11ToV12, // Index 10: v11 → v12 (configId → specId, cropBoxDisplay → plantingBoxDisplay)
   migrateV12ToV13, // Index 11: v12 → v13 (cropCatalog → specs)
   migrateV13ToV14, // Index 12: v13 → v14 (product IDs: compound key → UUID)
+  migrateV14ToV15, // Index 13: v14 → v15 (fix productYields.productId references)
 ];
 
 // =============================================================================
