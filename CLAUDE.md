@@ -280,7 +280,7 @@ On cancel:
 
 **See `.claude/skills/migrations/skill.md` for migration writing rules.**
 
-For structural changes to the Plan schema, use the migration system in `src/lib/migrations/index.ts`:
+Migrations are for **generally applicable schema transformations** that apply to ALL plans forever. They handle structural changes to the Plan schema using the migration system in `src/lib/migrations/index.ts`:
 
 - **Automatic**: Migrations run on plan load (from SQLite)
 - **Append-only**: Never modify existing migrations
@@ -296,6 +296,10 @@ For structural changes to the Plan schema, use the migration system in `src/lib/
 **When you DON'T need a migration:**
 - Adding a new optional field (code handles `undefined`)
 - Adding a new entity type with empty default
+- **Fixing incorrectly imported data** → use a backfill script instead
+- **One-off data repairs for specific import bugs** → use a backfill script instead
+
+**Important:** Migrations must be generally applicable schema transformations. Do NOT put one-off data fixes or import bug repairs in migrations - those belong in backfill scripts. Migrations will run on every plan forever; backfill scripts run once to fix specific data issues.
 
 **To add a migration:**
 1. Create function in `migrations/index.ts`
@@ -324,6 +328,13 @@ This keeps the app simple - no special "shim" code paths. Enrichment happens out
 - **Replace**: Wholesale replacement of catalog (use with caution)
 
 ### Backfill Scripts
+
+Backfill scripts are for **one-off data repairs** to existing plans. Use them when:
+- **Fixing incorrectly imported data** - e.g., import script had a bug that created wrong references
+- **Testing new import logic** - apply new import data to existing plans without rebuilding from scratch
+- **Blending in new data** - adding data that wasn't in the original import
+
+This is distinct from migrations: migrations transform schema structure for all plans forever; backfill scripts fix specific data issues in existing plans once.
 
 **Prefer app mutations over direct SQLite writes.** See `.claude/skills/scripts/SKILL.md` for details.
 

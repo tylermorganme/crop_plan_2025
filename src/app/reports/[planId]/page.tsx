@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, Fragment } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -49,12 +49,19 @@ import type { Market } from '@/lib/entities/market';
 import { getActiveMarkets } from '@/lib/entities/market';
 import { Z_INDEX } from '@/lib/z-index';
 import AppHeader from '@/components/AppHeader';
+import { PageLayout } from '@/components/PageLayout';
+import {
+  calculatePlanProduction,
+  formatYield,
+  type PlanProductionReport,
+  type ProductProductionSummary,
+} from '@/lib/production';
 
 // =============================================================================
 // TAB TYPES
 // =============================================================================
 
-type ReportTab = 'revenue' | 'seeds';
+type ReportTab = 'revenue' | 'seeds' | 'production';
 
 // =============================================================================
 // SEED ORDER DEFAULTS
@@ -1356,11 +1363,10 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
         </button>
       </div>
 
-      {/* Table - flex-based, height constrained to viewport */}
+      {/* Table with internal scroll */}
       <div
         ref={containerRef}
-        className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col"
-        style={{ maxHeight: 'calc(100vh - 280px)' }}
+        className="bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col max-h-[600px]"
       >
         {filteredData.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
@@ -1431,6 +1437,218 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
 }
 
 // =============================================================================
+// PRODUCTION TAB
+// =============================================================================
+
+function ProductionTab({ report, initialProduct }: { report: PlanProductionReport; initialProduct?: string }) {
+  const [expandedProductId, setExpandedProductId] = useState<string | null>(() => {
+    // Initialize from URL param if it matches a valid product
+    if (initialProduct && report.byProduct.some(p => p.productId === initialProduct)) {
+      return initialProduct;
+    }
+    return null;
+  });
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'totalYield', desc: true },
+  ]);
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  // Table columns - each row is a product (crop + product type)
+  const columns = useMemo<ColumnDef<ProductProductionSummary>[]>(
+    () => [
+      {
+        id: 'expand',
+        header: '',
+        cell: ({ row }) => (
+          <span className="text-gray-400">
+            {expandedProductId === row.original.productId ? '▼' : '▶'}
+          </span>
+        ),
+        size: 30,
+      },
+      {
+        accessorKey: 'crop',
+        header: 'Crop',
+        cell: info => <span className="font-medium">{info.getValue() as string}</span>,
+      },
+      {
+        accessorKey: 'productName',
+        header: 'Product',
+        cell: info => <span className="text-gray-700">{info.getValue() as string}</span>,
+      },
+      {
+        accessorKey: 'totalYield',
+        header: 'Total Yield',
+        cell: ({ row }) => formatYield(row.original.totalYield, row.original.unit),
+        meta: { align: 'right' },
+      },
+      {
+        accessorKey: 'yieldPerFoot',
+        header: 'Yield/ft',
+        cell: ({ row }) => {
+          const value = row.original.yieldPerFoot;
+          return value > 0
+            ? `${value.toFixed(2)} ${row.original.unit}`
+            : <span className="text-gray-300">-</span>;
+        },
+        meta: { align: 'right' },
+      },
+      {
+        accessorKey: 'maxYieldPerWeek',
+        header: 'Max/Wk',
+        cell: ({ row }) => {
+          const value = row.original.maxYieldPerWeek;
+          return value > 0
+            ? `${value.toFixed(1)} ${row.original.unit}`
+            : <span className="text-gray-300">-</span>;
+        },
+        meta: { align: 'right' },
+      },
+      {
+        accessorKey: 'totalBedFeet',
+        header: 'Bed Feet',
+        cell: info => (info.getValue() as number).toLocaleString(),
+        meta: { align: 'right' },
+      },
+      {
+        accessorKey: 'plantingCount',
+        header: 'Plantings',
+        meta: { align: 'right' },
+      },
+    ],
+    [expandedProductId]
+  );
+
+  const table = useReactTable({
+    data: report.byProduct,
+    columns,
+    state: { sorting, globalFilter },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+  });
+
+  const colCount = columns.length;
+
+  return (
+    <div className="space-y-6">
+      {/* Products Table */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Production by Product</h3>
+          <input
+            type="text"
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            placeholder="Filter..."
+            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id} className="border-b border-gray-200">
+                  {headerGroup.headers.map((header) => {
+                    const align = (header.column.columnDef.meta as { align?: string })?.align;
+                    const isExpandCol = header.id === 'expand';
+                    return (
+                      <th
+                        key={header.id}
+                        onClick={isExpandCol ? undefined : header.column.getToggleSortingHandler()}
+                        className={`py-2 px-3 font-medium text-gray-600 select-none ${
+                          isExpandCol ? 'w-8' : 'cursor-pointer hover:bg-gray-50'
+                        } ${align === 'right' ? 'text-right' : 'text-left'}`}
+                      >
+                        <div className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : ''}`}>
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {!isExpandCol && {
+                            asc: ' ↑',
+                            desc: ' ↓',
+                          }[header.column.getIsSorted() as string]}
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row) => {
+                const isExpanded = expandedProductId === row.original.productId;
+                return (
+                  <Fragment key={row.id}>
+                    {/* Product row */}
+                    <tr
+                      onClick={() => setExpandedProductId(isExpanded ? null : row.original.productId)}
+                      className={`border-b border-gray-100 cursor-pointer ${
+                        isExpanded ? 'bg-blue-50' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const align = (cell.column.columnDef.meta as { align?: string })?.align;
+                        return (
+                          <td
+                            key={cell.id}
+                            className={`py-2 px-3 ${align === 'right' ? 'text-right' : ''}`}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                    {/* Expanded plantings */}
+                    {isExpanded && (
+                      <tr>
+                        <td colSpan={colCount} className="bg-gray-50 p-0">
+                          <div className="p-4">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="text-xs text-gray-500">
+                                  <th className="py-1 px-2 text-left font-medium">Identifier</th>
+                                  <th className="py-1 px-2 text-left font-medium">Bed</th>
+                                  <th className="py-1 px-2 text-right font-medium">Feet</th>
+                                  <th className="py-1 px-2 text-left font-medium">Field Date</th>
+                                  <th className="py-1 px-2 text-left font-medium">Harvest Start</th>
+                                  <th className="py-1 px-2 text-left font-medium">Harvest End</th>
+                                  <th className="py-1 px-2 text-right font-medium">Yield</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {row.original.plantings.map((p) => (
+                                  <tr key={p.plantingId} className="border-t border-gray-200">
+                                    <td className="py-1.5 px-2 font-medium text-gray-900">{p.identifier}</td>
+                                    <td className="py-1.5 px-2 text-gray-600">{p.startBed || '-'}</td>
+                                    <td className="py-1.5 px-2 text-right text-gray-600">{p.bedFeet}</td>
+                                    <td className="py-1.5 px-2 text-gray-600">{p.fieldStartDate}</td>
+                                    <td className="py-1.5 px-2 text-gray-600">{p.harvestStartDate || '-'}</td>
+                                    <td className="py-1.5 px-2 text-gray-600">{p.harvestEndDate || '-'}</td>
+                                    <td className="py-1.5 px-2 text-right text-gray-900">{formatYield(p.totalYield, row.original.unit)}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-3 text-sm text-gray-500">
+          {table.getFilteredRowModel().rows.length} products
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // MAIN PAGE
 // =============================================================================
 
@@ -1443,13 +1661,14 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ReportTab>(() => {
     const tabParam = searchParams.get('tab');
-    return tabParam === 'seeds' ? 'seeds' : 'revenue';
+    if (tabParam === 'seeds' || tabParam === 'production') return tabParam;
+    return 'revenue';
   });
 
   // Update tab when URL changes
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'seeds' || tabParam === 'revenue') {
+    if (tabParam === 'seeds' || tabParam === 'revenue' || tabParam === 'production') {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -1504,6 +1723,11 @@ export default function ReportsPage() {
     return calculatePlanSeeds(currentPlan);
   }, [currentPlan]);
 
+  const productionReport = useMemo(() => {
+    if (!currentPlan) return null;
+    return calculatePlanProduction(currentPlan);
+  }, [currentPlan]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -1529,63 +1753,81 @@ export default function ReportsPage() {
     );
   }
 
-  return (
-    <>
-      <AppHeader />
-      <div className="min-h-screen bg-gray-100">
-        {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link
-                href={`/timeline/${planId}`}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                ← Timeline
-              </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Reports: {currentPlan.metadata.name}
-              </h1>
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-4 -mb-px">
-            <button
-              onClick={() => setActiveTab('revenue')}
-              className={`py-3 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'revenue'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+  // Toolbar with page title and tabs
+  const toolbar = (
+    <div className="bg-white border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-12">
+          <div className="flex items-center gap-4">
+            <Link
+              href={`/timeline/${planId}`}
+              className="text-gray-600 hover:text-gray-900"
             >
-              Revenue
-            </button>
-            <button
-              onClick={() => setActiveTab('seeds')}
-              className={`py-3 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'seeds'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Seeds
-            </button>
+              ← Timeline
+            </Link>
+            <h1 className="text-lg font-semibold text-gray-900">
+              Reports: {currentPlan.metadata.name}
+            </h1>
           </div>
         </div>
-      </header>
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tabs */}
+        <div className="flex gap-4 -mb-px">
+          <button
+            onClick={() => setActiveTab('revenue')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'revenue'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Revenue
+          </button>
+          <button
+            onClick={() => setActiveTab('seeds')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'seeds'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Seeds
+          </button>
+          <button
+            onClick={() => setActiveTab('production')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'production'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Production
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <PageLayout
+      header={<AppHeader />}
+      toolbar={toolbar}
+      contentClassName="bg-gray-100"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'revenue' && revenueReport && (
           <RevenueTab report={revenueReport} markets={currentPlan.markets ?? {}} />
         )}
         {activeTab === 'seeds' && seedReport && (
           <SeedsTab report={seedReport} planId={planId} />
         )}
-      </main>
-    </div>
-    </>
+        {activeTab === 'production' && productionReport && (
+          <ProductionTab
+            report={productionReport}
+            initialProduct={searchParams.get('product') ?? undefined}
+          />
+        )}
+      </div>
+    </PageLayout>
   );
 }

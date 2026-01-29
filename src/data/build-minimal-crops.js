@@ -34,14 +34,12 @@ const DEFAULT_MARKET_SPLIT = {
   'market-direct': 100,
 };
 
-// Build product lookup by crop+unit for matching
+// Build product lookup by crop+product+unit for exact matching
+// This is the correct lookup - each (crop, product, unit) tuple uniquely identifies a Product
 const productLookup = new Map();
 for (const p of products) {
-  const key = `${p.crop.toLowerCase().trim()}|${p.unit.toLowerCase().trim()}`;
-  // Store first match (there might be multiple products with same crop+unit but different product names)
-  if (!productLookup.has(key)) {
-    productLookup.set(key, p);
-  }
+  const key = `${p.crop.toLowerCase().trim()}|${p.product.toLowerCase().trim()}|${p.unit.toLowerCase().trim()}`;
+  productLookup.set(key, p);
 }
 
 // =============================================================================
@@ -210,11 +208,12 @@ const cleanCrops = crops.map((c) => {
   // Single-harvest crops and crops with dbh=0: any Excel override is likely an error
   // Let the formula calculate correctly (7-day buffer)
 
-  // Create productYields[0] by matching to Product via crop+unit
+  // Create productYields[0] by matching to Product via crop+product+unit
   const cropName = c.Crop?.toLowerCase().trim();
+  const productName = c.Product?.toLowerCase().trim();
   const unit = c['Unit']?.toLowerCase().trim();
-  if (cropName && unit) {
-    const productKey = `${cropName}|${unit}`;
+  if (cropName && productName && unit) {
+    const productKey = `${cropName}|${productName}|${unit}`;
     const matchedProduct = productLookup.get(productKey);
     if (matchedProduct) {
       crop.productYields = [{

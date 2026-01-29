@@ -728,6 +728,21 @@ function migrateV14ToV15(rawPlan: unknown): unknown {
   };
 }
 
+/**
+ * v15 → v16: No-op placeholder
+ *
+ * This slot was originally used for a data repair operation to fix incorrect
+ * productYields.productId values caused by a bug in the import script. That
+ * bug has been fixed in build-minimal-crops.js, and existing data was repaired
+ * via the backfill script (scripts/backfill-product-yields.ts).
+ *
+ * Data repairs for import bugs belong in backfill scripts, not migrations.
+ * Migrations should only contain generally applicable schema transformations.
+ */
+function migrateV15ToV16(plan: unknown): unknown {
+  return plan;
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -764,6 +779,7 @@ const migrations: MigrationFn[] = [
   migrateV12ToV13, // Index 11: v12 → v13 (cropCatalog → specs)
   migrateV13ToV14, // Index 12: v13 → v14 (product IDs: compound key → UUID)
   migrateV14ToV15, // Index 13: v14 → v15 (fix productYields.productId references)
+  migrateV15ToV16, // Index 14: v15 → v16 (no-op placeholder - data repair done via backfill script)
 ];
 
 // =============================================================================
