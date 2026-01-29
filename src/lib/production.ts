@@ -28,6 +28,20 @@ import {
 // TYPES
 // =============================================================================
 
+/** A single harvest event (one bar on the timeline chart) */
+export interface HarvestEvent {
+  /** ISO date string of harvest */
+  date: string;
+  /** Yield amount for this harvest */
+  yield: number;
+  /** Planting ID this harvest belongs to */
+  plantingId: string;
+  /** Spec identifier for display */
+  identifier: string;
+  /** Bed name for tooltip */
+  bedName: string | null;
+}
+
 /** Production metrics for a single product in a planting */
 export interface ProductProductionResult {
   productId: string;
@@ -36,6 +50,10 @@ export interface ProductProductionResult {
   totalYield: number;
   /** Days from first to last harvest */
   harvestWindowDays: number;
+  /** Number of individual harvests */
+  numberOfHarvests: number;
+  /** Days between harvests */
+  daysBetweenHarvest: number;
   /** Max yield per week (concentrated in harvest window) */
   maxYieldPerWeek: number;
   /** Min yield per week (spread over harvest + holding window) */
@@ -132,7 +150,12 @@ export interface ProductProductionSummary {
     harvestEndDate: string | null;
     fieldStartDate: string;
     startBed: string | null;
+    bedName: string | null;
+    numberOfHarvests: number;
+    daysBetweenHarvest: number;
   }>;
+  /** Expanded harvest events for timeline chart */
+  harvestEvents: HarvestEvent[];
 }
 
 /** Complete production report for a plan */
@@ -283,6 +306,8 @@ function calculateProductProduction(
     unit: product.unit,
     totalYield,
     harvestWindowDays,
+    numberOfHarvests: py.numberOfHarvests ?? 1,
+    daysBetweenHarvest: py.daysBetweenHarvest ?? 7,
     maxYieldPerWeek,
     minYieldPerWeek,
     harvestStartDate: harvestStart.toISOString().split('T')[0],
@@ -425,6 +450,7 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
           maxYieldPerWeek: 0,
           minYieldPerWeek: 0,
           plantings: [],
+          harvestEvents: [],
         };
         productMap.set(productResult.productId, productSummary);
       }
@@ -434,6 +460,11 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
       productSummary.plantingCount += 1;
       productSummary.maxYieldPerWeek += productResult.maxYieldPerWeek;
       productSummary.minYieldPerWeek += productResult.minYieldPerWeek;
+      // Look up bed name
+      const bedName = planting.startBed && plan.beds?.[planting.startBed]
+        ? plan.beds[planting.startBed].name
+        : null;
+
       productSummary.plantings.push({
         plantingId: planting.id,
         identifier: spec.identifier,
@@ -443,7 +474,27 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
         harvestEndDate: productResult.harvestEndDate,
         fieldStartDate: planting.fieldStartDate,
         startBed: planting.startBed ?? null,
+        bedName,
+        numberOfHarvests: productResult.numberOfHarvests,
+        daysBetweenHarvest: productResult.daysBetweenHarvest,
       });
+
+      // Generate individual harvest events for timeline chart
+      if (productResult.harvestStartDate && productResult.numberOfHarvests > 0) {
+        const yieldPerHarvest = productResult.totalYield / productResult.numberOfHarvests;
+        const harvestStart = parseISO(productResult.harvestStartDate);
+
+        for (let i = 0; i < productResult.numberOfHarvests; i++) {
+          const harvestDate = addDays(harvestStart, i * productResult.daysBetweenHarvest);
+          productSummary.harvestEvents.push({
+            date: harvestDate.toISOString().split('T')[0],
+            yield: yieldPerHarvest,
+            plantingId: planting.id,
+            identifier: spec.identifier,
+            bedName,
+          });
+        }
+      }
     }
 
     // Distribute yield across months for timeline

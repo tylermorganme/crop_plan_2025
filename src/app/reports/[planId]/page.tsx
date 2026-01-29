@@ -15,6 +15,8 @@ import {
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -22,6 +24,7 @@ import {
   PieChart as RechartsPieChart,
   Pie,
   Cell,
+  ReferenceArea,
 } from 'recharts';
 import {
   usePlanStore,
@@ -48,13 +51,16 @@ import type { Variety, DensityUnit } from '@/lib/entities/variety';
 import type { Market } from '@/lib/entities/market';
 import { getActiveMarkets } from '@/lib/entities/market';
 import { Z_INDEX } from '@/lib/z-index';
+import { useUIStore } from '@/lib/ui-store';
 import AppHeader from '@/components/AppHeader';
 import { PageLayout } from '@/components/PageLayout';
+import { ConnectedPlantingInspector } from '@/components/ConnectedPlantingInspector';
 import {
   calculatePlanProduction,
   formatYield,
   type PlanProductionReport,
   type ProductProductionSummary,
+  type HarvestEvent,
 } from '@/lib/production';
 
 // =============================================================================
@@ -85,6 +91,13 @@ const DEFAULT_HAVE_UNIT: ProductUnit = 'g';
 // =============================================================================
 
 /** Convert weight between units for comparison */
+/** Format ISO date string as "Mon Day, Year" (e.g., "Jan 15, 2025") */
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 function convertWeight(value: number, fromUnit: ProductUnit, toUnit: ProductUnit): number {
   if (fromUnit === toUnit) return value;
 
@@ -275,6 +288,277 @@ function StackedAreaChart({
           ))}
         </AreaChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+// =============================================================================
+// PRODUCTION HARVEST CHART
+// =============================================================================
+
+/** LocalStorage key for production chart settings */
+const PRODUCTION_CHART_STORAGE_KEY = 'crop-plan-production-chart-settings';
+
+interface ProductionChartSettings {
+  yearOffset: number; // -1, 0, or 1 relative to plan year
+  startMonth: number; // 1-12
+  endMonth: number; // 1-12
+}
+
+const DEFAULT_CHART_SETTINGS: ProductionChartSettings = {
+  yearOffset: 0,
+  startMonth: 1,
+  endMonth: 12,
+};
+
+function loadChartSettings(): ProductionChartSettings {
+  if (typeof window === 'undefined') return DEFAULT_CHART_SETTINGS;
+  try {
+    const stored = localStorage.getItem(PRODUCTION_CHART_STORAGE_KEY);
+    if (stored) {
+      return { ...DEFAULT_CHART_SETTINGS, ...JSON.parse(stored) };
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return DEFAULT_CHART_SETTINGS;
+}
+
+function saveChartSettings(settings: ProductionChartSettings): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(PRODUCTION_CHART_STORAGE_KEY, JSON.stringify(settings));
+}
+
+/** Harvest timeline chart showing individual harvest events as bars */
+function ProductionChart({
+  harvestEvents,
+  unit,
+  planYear,
+  productName,
+  cropName,
+  onReset,
+}: {
+  harvestEvents: HarvestEvent[];
+  unit: string;
+  planYear: number;
+  productName: string;
+  cropName: string;
+  onReset?: () => void;
+}) {
+  const [settings, setSettings] = useState<ProductionChartSettings>(loadChartSettings);
+
+  // Calculate the display year
+  const displayYear = planYear + settings.yearOffset;
+
+  // Filter events to the selected year and month range
+  const filteredEvents = useMemo(() => {
+    return harvestEvents.filter(event => {
+      const date = new Date(event.date + 'T00:00:00');
+      if (date.getFullYear() !== displayYear) return false;
+      const month = date.getMonth() + 1;
+      return month >= settings.startMonth && month <= settings.endMonth;
+    });
+  }, [harvestEvents, displayYear, settings.startMonth, settings.endMonth]);
+
+  // Calculate day of year for temporal positioning
+  const getDayOfYear = useCallback((dateStr: string): number => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const start = new Date(date.getFullYear(), 0, 0);
+    const diff = date.getTime() - start.getTime();
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  }, []);
+
+  // Aggregate events by date for the bar chart with temporal positioning
+  const chartData = useMemo(() => {
+    const byDate = new Map<string, { date: string; dayOfYear: number; yield: number; events: HarvestEvent[] }>();
+
+    for (const event of filteredEvents) {
+      const existing = byDate.get(event.date);
+      if (existing) {
+        existing.yield += event.yield;
+        existing.events.push(event);
+      } else {
+        byDate.set(event.date, {
+          date: event.date,
+          dayOfYear: getDayOfYear(event.date),
+          yield: event.yield,
+          events: [event],
+        });
+      }
+    }
+
+    // Sort by date and create array
+    return Array.from(byDate.values()).sort((a, b) => a.dayOfYear - b.dayOfYear);
+  }, [filteredEvents, getDayOfYear]);
+
+  // Calculate axis domain based on month range
+  const axisDomain = useMemo(() => {
+    // Start of selected range
+    const startDate = new Date(displayYear, settings.startMonth - 1, 1);
+    const endDate = new Date(displayYear, settings.endMonth, 0); // Last day of end month
+    return [getDayOfYear(startDate.toISOString().split('T')[0]), getDayOfYear(endDate.toISOString().split('T')[0])];
+  }, [displayYear, settings.startMonth, settings.endMonth, getDayOfYear]);
+
+  // Update settings and save to localStorage
+  const updateSettings = useCallback((updates: Partial<ProductionChartSettings>) => {
+    setSettings(prev => {
+      const next = { ...prev, ...updates };
+      saveChartSettings(next);
+      return next;
+    });
+  }, []);
+
+  // Reset to defaults
+  const handleReset = useCallback(() => {
+    setSettings(DEFAULT_CHART_SETTINGS);
+    saveChartSettings(DEFAULT_CHART_SETTINGS);
+    onReset?.();
+  }, [onReset]);
+
+  // Total yield in filtered range
+  const totalYield = filteredEvents.reduce((sum, e) => sum + e.yield, 0);
+
+  // Month names for display
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  if (harvestEvents.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="h-48 flex items-center justify-center text-gray-400">
+          No harvest data available
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+      {/* Header with controls */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {cropName} - {productName}
+          </h3>
+          <div className="text-sm text-gray-500">
+            {formatYield(totalYield, unit)} across {filteredEvents.length} harvest events
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Year navigation */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => updateSettings({ yearOffset: settings.yearOffset - 1 })}
+              disabled={settings.yearOffset <= -1}
+              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ←
+            </button>
+            <span className="text-sm font-medium w-12 text-center">{displayYear}</span>
+            <button
+              onClick={() => updateSettings({ yearOffset: settings.yearOffset + 1 })}
+              disabled={settings.yearOffset >= 1}
+              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              →
+            </button>
+          </div>
+
+          {/* Month range */}
+          <div className="flex items-center gap-2 text-sm">
+            <select
+              value={settings.startMonth}
+              onChange={(e) => updateSettings({ startMonth: parseInt(e.target.value) })}
+              className="px-2 py-1 border border-gray-300 rounded text-sm"
+            >
+              {monthNames.map((name, i) => (
+                <option key={i} value={i + 1}>{name}</option>
+              ))}
+            </select>
+            <span className="text-gray-400">to</span>
+            <select
+              value={settings.endMonth}
+              onChange={(e) => updateSettings({ endMonth: parseInt(e.target.value) })}
+              className="px-2 py-1 border border-gray-300 rounded text-sm"
+            >
+              {monthNames.map((name, i) => (
+                <option key={i} value={i + 1}>{name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Reset button */}
+          <button
+            onClick={handleReset}
+            className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded hover:bg-gray-50"
+            title="Reset to defaults"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {/* Chart */}
+      {chartData.length === 0 ? (
+        <div className="h-48 flex items-center justify-center text-gray-400">
+          No harvests in selected range
+        </div>
+      ) : (
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 30, left: 40 }}>
+              <XAxis
+                dataKey="dayOfYear"
+                type="number"
+                domain={axisDomain}
+                tick={{ fontSize: 10 }}
+                tickFormatter={(dayOfYear) => {
+                  // Convert day of year back to date for display
+                  const d = new Date(displayYear, 0, dayOfYear);
+                  return `${d.getMonth() + 1}/${d.getDate()}`;
+                }}
+                angle={-45}
+                textAnchor="end"
+                height={50}
+              />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                tickFormatter={(value) => value.toFixed(0)}
+                label={{ value: unit, angle: -90, position: 'insideLeft', style: { fontSize: 11 } }}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const data = payload[0].payload as { date: string; yield: number; events: HarvestEvent[] };
+                  const d = new Date(data.date + 'T00:00:00');
+                  const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                  return (
+                    <div className="bg-white border border-gray-200 rounded shadow-lg p-2 text-xs max-w-xs">
+                      <div className="font-semibold mb-1">{dateStr}</div>
+                      <div className="mb-1">{formatYield(data.yield, unit)}</div>
+                      <div className="text-gray-500 text-xs">
+                        {data.events.length} planting{data.events.length > 1 ? 's' : ''}:
+                        <div className="max-h-24 overflow-y-auto mt-1">
+                          {data.events.slice(0, 5).map((e, i) => (
+                            <div key={i} className="truncate">
+                              {e.bedName || 'Unassigned'}: {formatYield(e.yield, unit)}
+                            </div>
+                          ))}
+                          {data.events.length > 5 && (
+                            <div className="text-gray-400">+{data.events.length - 5} more</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }}
+              />
+              <Bar dataKey="yield" fill="#3b82f6" radius={[2, 2, 0, 0]} barSize={8} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }
@@ -1440,7 +1724,14 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
 // PRODUCTION TAB
 // =============================================================================
 
-function ProductionTab({ report, initialProduct }: { report: PlanProductionReport; initialProduct?: string }) {
+interface ProductionTabProps {
+  report: PlanProductionReport;
+  initialProduct?: string;
+  globalFilter: string;
+  planYear: number;
+}
+
+function ProductionTab({ report, initialProduct, globalFilter, planYear }: ProductionTabProps) {
   const [expandedProductId, setExpandedProductId] = useState<string | null>(() => {
     // Initialize from URL param if it matches a valid product
     if (initialProduct && report.byProduct.some(p => p.productId === initialProduct)) {
@@ -1451,7 +1742,10 @@ function ProductionTab({ report, initialProduct }: { report: PlanProductionRepor
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'totalYield', desc: true },
   ]);
-  const [globalFilter, setGlobalFilter] = useState('');
+
+  // Planting selection for inspector panel
+  const selectedPlantingIds = useUIStore((state) => state.selectedPlantingIds);
+  const selectPlanting = useUIStore((state) => state.selectPlanting);
 
   // Table columns - each row is a product (crop + product type)
   const columns = useMemo<ColumnDef<ProductProductionSummary>[]>(
@@ -1524,7 +1818,6 @@ function ProductionTab({ report, initialProduct }: { report: PlanProductionRepor
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -1532,20 +1825,26 @@ function ProductionTab({ report, initialProduct }: { report: PlanProductionRepor
 
   const colCount = columns.length;
 
+  // Get selected product for chart
+  const selectedProduct = expandedProductId
+    ? report.byProduct.find(p => p.productId === expandedProductId)
+    : null;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Harvest Chart - shows when a product is selected */}
+      {selectedProduct && (
+        <ProductionChart
+          harvestEvents={selectedProduct.harvestEvents}
+          unit={selectedProduct.unit}
+          planYear={planYear}
+          productName={selectedProduct.productName}
+          cropName={selectedProduct.crop}
+        />
+      )}
+
       {/* Products Table */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Production by Product</h3>
-          <input
-            type="text"
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            placeholder="Filter..."
-            className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -1607,25 +1906,31 @@ function ProductionTab({ report, initialProduct }: { report: PlanProductionRepor
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="text-xs text-gray-500">
-                                  <th className="py-1 px-2 text-left font-medium">Identifier</th>
+                                  <th className="py-1 px-2 text-left font-medium">Planting ID</th>
                                   <th className="py-1 px-2 text-left font-medium">Bed</th>
-                                  <th className="py-1 px-2 text-right font-medium">Feet</th>
+                                  <th className="py-1 px-2 text-right font-medium">Yield</th>
                                   <th className="py-1 px-2 text-left font-medium">Field Date</th>
                                   <th className="py-1 px-2 text-left font-medium">Harvest Start</th>
                                   <th className="py-1 px-2 text-left font-medium">Harvest End</th>
-                                  <th className="py-1 px-2 text-right font-medium">Yield</th>
+                                  <th className="py-1 px-2 text-right font-medium">Feet</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {row.original.plantings.map((p) => (
-                                  <tr key={p.plantingId} className="border-t border-gray-200">
-                                    <td className="py-1.5 px-2 font-medium text-gray-900">{p.identifier}</td>
-                                    <td className="py-1.5 px-2 text-gray-600">{p.startBed || '-'}</td>
-                                    <td className="py-1.5 px-2 text-right text-gray-600">{p.bedFeet}</td>
-                                    <td className="py-1.5 px-2 text-gray-600">{p.fieldStartDate}</td>
-                                    <td className="py-1.5 px-2 text-gray-600">{p.harvestStartDate || '-'}</td>
-                                    <td className="py-1.5 px-2 text-gray-600">{p.harvestEndDate || '-'}</td>
+                                  <tr
+                                    key={p.plantingId}
+                                    className={`border-t border-gray-200 cursor-pointer hover:bg-blue-50 ${
+                                      selectedPlantingIds.has(p.plantingId) ? 'bg-blue-100' : ''
+                                    }`}
+                                    onClick={() => selectPlanting(p.plantingId)}
+                                  >
+                                    <td className="py-1.5 px-2 font-medium text-gray-900">{p.plantingId}</td>
+                                    <td className="py-1.5 px-2 text-gray-600">{p.bedName || '-'}</td>
                                     <td className="py-1.5 px-2 text-right text-gray-900">{formatYield(p.totalYield, row.original.unit)}</td>
+                                    <td className="py-1.5 px-2 text-gray-600">{formatDate(p.fieldStartDate)}</td>
+                                    <td className="py-1.5 px-2 text-gray-600">{formatDate(p.harvestStartDate)}</td>
+                                    <td className="py-1.5 px-2 text-gray-600">{formatDate(p.harvestEndDate)}</td>
+                                    <td className="py-1.5 px-2 text-right text-gray-600">{p.bedFeet}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -1664,6 +1969,7 @@ export default function ReportsPage() {
     if (tabParam === 'seeds' || tabParam === 'production') return tabParam;
     return 'revenue';
   });
+  const [productionFilter, setProductionFilter] = useState('');
 
   // Update tab when URL changes
   useEffect(() => {
@@ -1676,6 +1982,9 @@ export default function ReportsPage() {
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
+
+  // Selection state for inspector panel
+  const hasSelection = useUIStore((state) => state.selectedPlantingIds.size > 0);
 
   // Load the specific plan by ID
   useEffect(() => {
@@ -1753,56 +2062,54 @@ export default function ReportsPage() {
     );
   }
 
-  // Toolbar with page title and tabs
+  // Toolbar with tabs
   const toolbar = (
     <div className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-12">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/timeline/${planId}`}
-              className="text-gray-600 hover:text-gray-900"
+        <div className="flex items-center justify-between">
+          {/* Tabs */}
+          <div className="flex gap-4 -mb-px">
+            <button
+              onClick={() => setActiveTab('revenue')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'revenue'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
             >
-              ← Timeline
-            </Link>
-            <h1 className="text-lg font-semibold text-gray-900">
-              Reports: {currentPlan.metadata.name}
-            </h1>
+              Revenue
+            </button>
+            <button
+              onClick={() => setActiveTab('seeds')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'seeds'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Seeds
+            </button>
+            <button
+              onClick={() => setActiveTab('production')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'production'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Production
+            </button>
           </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-4 -mb-px">
-          <button
-            onClick={() => setActiveTab('revenue')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'revenue'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Revenue
-          </button>
-          <button
-            onClick={() => setActiveTab('seeds')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'seeds'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Seeds
-          </button>
-          <button
-            onClick={() => setActiveTab('production')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'production'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Production
-          </button>
+          {/* Filter (production tab only) */}
+          {activeTab === 'production' && (
+            <input
+              type="text"
+              value={productionFilter}
+              onChange={(e) => setProductionFilter(e.target.value)}
+              placeholder="Filter..."
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
         </div>
       </div>
     </div>
@@ -1813,6 +2120,14 @@ export default function ReportsPage() {
       header={<AppHeader />}
       toolbar={toolbar}
       contentClassName="bg-gray-100"
+      rightPanel={
+        activeTab === 'production' && hasSelection ? (
+          <ConnectedPlantingInspector
+            className="w-80 bg-white border-l flex flex-col shrink-0"
+            showTimingEdits={false}
+          />
+        ) : undefined
+      }
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'revenue' && revenueReport && (
@@ -1825,6 +2140,8 @@ export default function ReportsPage() {
           <ProductionTab
             report={productionReport}
             initialProduct={searchParams.get('product') ?? undefined}
+            globalFilter={productionFilter}
+            planYear={currentPlan.metadata.year}
           />
         )}
       </div>
