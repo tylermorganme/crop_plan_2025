@@ -9,7 +9,7 @@ import { createPlanting } from '@/lib/entities/planting';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
 import { type PlantingSpec, calculatePlantingMethod, calculateYieldPerWeek, calculateYieldPerHarvest } from '@/lib/entities/planting-specs';
 import { calculateSpecRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
-import { getMarketSplitTotal } from '@/lib/entities/market';
+import { getMarketSplitTotal, getActiveMarkets, type Market, type MarketSplit } from '@/lib/entities/market';
 import PlantingSpecCreator from './PlantingSpecCreator';
 import PlantingSpecEditor from './PlantingSpecEditor';
 import CompareSpecsModal from './CompareSpecsModal';
@@ -26,6 +26,9 @@ import {
   type DynamicOptionKey,
 } from '@/lib/spec-explorer-columns';
 import { moveFocusVerticalDirect } from '@/lib/table-navigation';
+import { parseSearchQuery, matchesFilter, type ParsedSearchQuery } from '@/lib/search-dsl';
+import { plantingSpecSearchConfig, getFilterFieldNames, getSortFieldNames } from '@/lib/search-configs';
+import { SearchInput } from './SearchInput';
 
 // =============================================================================
 // SPEC VALIDATION
@@ -92,6 +95,233 @@ function validatePlantingSpec(crop: PlantingSpec): SpecValidation {
   }
 
   return { status: 'ok', issues: [] };
+}
+
+// =============================================================================
+// BULK SPEC EDITOR MODAL
+// =============================================================================
+//
+// Extensible bulk editor for PlantingSpec fields.
+// Currently supports: Market Split
+//
+// TO ADD A NEW BULK EDIT FIELD:
+// 1. Add state for the field value (e.g., const [newField, setNewField] = useState(...))
+// 2. Add an "enabled" checkbox state (e.g., const [enableNewField, setEnableNewField] = useState(false))
+// 3. Add a FieldSection component for the UI
+// 4. In buildChanges(), add the field to the changes object when enabled
+// 5. Update hasChanges to include the new enabled state
+//
+// Future candidates for bulk editing (Option C from research):
+// - rows, spacing (safe across all methods)
+// - category, growingStructure
+// - deprecated, isFavorite
+// - targetFieldDate
+// - defaultSeedSource (would need variety/mix selector)
+// =============================================================================
+
+/** Props for a collapsible field section in the bulk editor */
+interface FieldSectionProps {
+  title: string;
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+  children: React.ReactNode;
+}
+
+/** Collapsible section for a bulk-editable field */
+function FieldSection({ title, enabled, onToggle, children }: FieldSectionProps) {
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <label className="flex items-center gap-3 px-3 py-2 bg-gray-50 cursor-pointer hover:bg-gray-100">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => onToggle(e.target.checked)}
+          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        />
+        <span className="text-sm font-medium text-gray-700">{title}</span>
+      </label>
+      {enabled && (
+        <div className="px-3 py-3 border-t border-gray-200 bg-white">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface BulkSpecEditorModalProps {
+  isOpen: boolean;
+  markets: Record<string, Market>;
+  selectedCount: number;
+  onClose: () => void;
+  onSave: (changes: Partial<PlantingSpec>) => void;
+}
+
+function BulkSpecEditorModal({
+  isOpen,
+  markets,
+  selectedCount,
+  onClose,
+  onSave,
+}: BulkSpecEditorModalProps) {
+  // ---- Market Split State ----
+  const [enableMarketSplit, setEnableMarketSplit] = useState(true); // Default enabled since it's why they opened this
+  const [marketSplit, setMarketSplit] = useState<MarketSplit>({});
+  const activeMarkets = getActiveMarkets(markets);
+
+  // ---- Future Field States ----
+  // Add new field states here following the pattern:
+  // const [enableFieldName, setEnableFieldName] = useState(false);
+  // const [fieldName, setFieldName] = useState<FieldType>(defaultValue);
+
+  // Initialize market split with 100% to first market
+  useEffect(() => {
+    if (isOpen && activeMarkets.length > 0 && Object.keys(marketSplit).length === 0) {
+      setMarketSplit({ [activeMarkets[0].id]: 100 });
+    }
+  }, [isOpen, activeMarkets, marketSplit]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setEnableMarketSplit(true);
+      setMarketSplit({});
+      // Reset other fields here when added
+    }
+  }, [isOpen]);
+
+  // Market split helpers
+  const marketSplitTotal = getMarketSplitTotal(marketSplit);
+  const isMarketSplitValid = Math.abs(marketSplitTotal - 100) < 0.01;
+
+  const handleMarketChange = (marketId: string, value: number) => {
+    setMarketSplit(prev => {
+      const newSplit = { ...prev };
+      if (value <= 0) {
+        delete newSplit[marketId];
+      } else {
+        newSplit[marketId] = value;
+      }
+      return newSplit;
+    });
+  };
+
+  // Build the changes object from enabled fields
+  const buildChanges = (): Partial<PlantingSpec> => {
+    const changes: Partial<PlantingSpec> = {};
+
+    if (enableMarketSplit && Object.keys(marketSplit).length > 0) {
+      changes.defaultMarketSplit = marketSplit;
+    }
+
+    // Add other fields here:
+    // if (enableFieldName && fieldName !== undefined) {
+    //   changes.fieldName = fieldName;
+    // }
+
+    return changes;
+  };
+
+  // Check if any changes are enabled
+  const hasChanges = enableMarketSplit && Object.keys(marketSplit).length > 0;
+  // Extend: const hasChanges = (enableMarketSplit && ...) || (enableOtherField && ...);
+
+  const handleSave = () => {
+    const changes = buildChanges();
+    if (Object.keys(changes).length === 0) return;
+    onSave(changes);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
+      <div className="bg-white rounded-lg shadow-xl w-[480px] max-h-[80vh] flex flex-col">
+        <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          <h2 className="font-semibold text-gray-900">Bulk Edit Specs</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-xl"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto flex-1">
+          <p className="text-sm text-gray-600 mb-4">
+            Edit <strong>{selectedCount}</strong> selected spec{selectedCount !== 1 ? 's' : ''}.
+            Enable the fields you want to update - only enabled fields will be changed.
+          </p>
+
+          <div className="space-y-3">
+            {/* ---- Market Split Section ---- */}
+            <FieldSection
+              title="Default Market Split"
+              enabled={enableMarketSplit}
+              onToggle={setEnableMarketSplit}
+            >
+              <div className="space-y-2">
+                {activeMarkets.map((market) => (
+                  <div key={market.id} className="flex items-center gap-3">
+                    <label className="text-sm text-gray-700 w-24 truncate" title={market.name}>
+                      {market.name}
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={5}
+                      value={marketSplit[market.id] ?? 0}
+                      onChange={(e) => handleMarketChange(market.id, parseInt(e.target.value) || 0)}
+                      className="w-20 px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+                    />
+                    <span className="text-sm text-gray-500">%</span>
+                  </div>
+                ))}
+                <div className={`flex items-center justify-end gap-2 text-sm pt-2 border-t border-gray-100 ${
+                  isMarketSplitValid ? 'text-gray-600' : 'text-amber-600'
+                }`}>
+                  <span>Total:</span>
+                  <span className="font-medium">{marketSplitTotal}%</span>
+                  {!isMarketSplitValid && <span title="Split doesn't total 100% - will be treated as ratio">⚠</span>}
+                </div>
+              </div>
+            </FieldSection>
+
+            {/* ---- Future Field Sections ---- */}
+            {/* Add new FieldSection components here for additional bulk-editable fields */}
+            {/* Example:
+            <FieldSection
+              title="Category"
+              enabled={enableCategory}
+              onToggle={setEnableCategory}
+            >
+              <select value={category} onChange={(e) => setCategory(e.target.value)}>
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </FieldSection>
+            */}
+          </div>
+        </div>
+
+        <div className="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!hasChanges}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Apply to {selectedCount} Spec{selectedCount !== 1 ? 's' : ''}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 interface SpecExplorerProps {
@@ -230,6 +460,9 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
 
   // Compare specs state
   const [showCompare, setShowCompare] = useState(false);
+
+  // Bulk spec editor state
+  const [showBulkEditor, setShowBulkEditor] = useState(false);
 
   // Track which column and row is currently being edited (has focus)
   const [activeEditColumn, setActiveEditColumn] = useState<string | null>(null);
@@ -562,86 +795,99 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     return columnWidths[col] ?? getDefaultColumnWidth(col);
   }, [columnWidths]);
 
+  // Parse search query using DSL
+  // Sort field names derived from config
+  const specSortFields = useMemo(() => new Set(getSortFieldNames(plantingSpecSearchConfig)), []);
+  const parsedSearch = useMemo((): ParsedSearchQuery => {
+    return parseSearchQuery(searchQuery, specSortFields);
+  }, [searchQuery, specSortFields]);
+
   // Filter crops
   const filteredCrops = useMemo(() => {
-    return displayCrops.filter(crop => {
-      // Hide deprecated crops if toggle is off
-      if (!showDeprecated && crop.deprecated) return false;
+    return displayCrops.filter(spec => {
+      // Hide deprecated specs if toggle is off
+      if (!showDeprecated && spec.deprecated) return false;
 
       // Show only favorites if toggle is on
-      if (showFavoritesOnly && !crop.isFavorite) return false;
+      if (showFavoritesOnly && !spec.isFavorite) return false;
 
-      // Text search - use materialized searchText if available, otherwise key fields
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const searchable = crop.searchText?.toLowerCase() ?? [
-          crop.identifier,
-          crop.crop,
-          crop.category,
-        ].filter(Boolean).join(' ').toLowerCase();
-        if (!searchable.includes(q)) return false;
-      }
+      // DSL search - supports field:value, negation, and plain text
+      if (!matchesFilter(spec, parsedSearch.filterTerms, plantingSpecSearchConfig)) return false;
 
-      // Column filters
+      // Column filters (sidebar filters)
       for (const [col, filterVal] of Object.entries(columnFilters)) {
         if (filterVal === null || filterVal === undefined || filterVal === '') continue;
         if (Array.isArray(filterVal) && filterVal.length === 0) continue;
 
-        const cropVal = crop[col as keyof PlantingSpec];
+        const specVal = spec[col as keyof PlantingSpec];
         const meta = columnMeta[col];
 
         if (!meta) continue;
 
         if (meta.type === 'boolean') {
-          if (filterVal === 'true' && cropVal !== true) return false;
-          if (filterVal === 'false' && cropVal !== false) return false;
+          if (filterVal === 'true' && specVal !== true) return false;
+          if (filterVal === 'false' && specVal !== false) return false;
         } else if (meta.type === 'number' && typeof filterVal === 'object' && !Array.isArray(filterVal)) {
-          const numVal = typeof cropVal === 'number' ? cropVal : null;
+          const numVal = typeof specVal === 'number' ? specVal : null;
           if (numVal === null) return false;
           if (filterVal.min !== undefined && numVal < filterVal.min) return false;
           if (filterVal.max !== undefined && numVal > filterVal.max) return false;
         } else if (meta.type === 'categorical') {
-          // Multi-select: filterVal is string[] - crop must match one of the selected values
+          // Multi-select: filterVal is string[] - spec must match one of the selected values
           if (Array.isArray(filterVal)) {
-            if (filterVal.length > 0 && !filterVal.includes(String(cropVal))) return false;
+            if (filterVal.length > 0 && !filterVal.includes(String(specVal))) return false;
           } else {
             // Legacy single-select support
-            if (String(cropVal) !== String(filterVal)) return false;
+            if (String(specVal) !== String(filterVal)) return false;
           }
         } else if (meta.type === 'text') {
-          if (!String(cropVal ?? '').toLowerCase().includes(String(filterVal).toLowerCase())) return false;
+          if (!String(specVal ?? '').toLowerCase().includes(String(filterVal).toLowerCase())) return false;
         }
       }
 
       return true;
     });
-  }, [displayCrops, searchQuery, columnFilters, columnMeta, showDeprecated, showFavoritesOnly]);
+  }, [displayCrops, parsedSearch.filterTerms, columnFilters, columnMeta, showDeprecated, showFavoritesOnly]);
 
-  // Sort crops
+  // Sort crops (DSL sort directive overrides column header sort)
   const sortedCrops = useMemo(() => {
-    if (!sortColumn || !sortDirection) return filteredCrops;
+    // Determine effective sort: DSL s:field directive takes precedence over column header click
+    const effectiveSortField = parsedSearch.sortField || sortColumn;
+    const effectiveSortDir = parsedSearch.sortField ? parsedSearch.sortDir : sortDirection;
+
+    if (!effectiveSortField || !effectiveSortDir) return filteredCrops;
 
     return [...filteredCrops].sort((a, b) => {
-      const aVal = a[sortColumn as keyof PlantingSpec];
-      const bVal = b[sortColumn as keyof PlantingSpec];
+      // Map DSL sort fields to spec properties
+      let aVal: unknown;
+      let bVal: unknown;
 
-      if (aVal === null || aVal === undefined) return sortDirection === 'asc' ? 1 : -1;
-      if (bVal === null || bVal === undefined) return sortDirection === 'asc' ? -1 : 1;
+      // Handle special DSL sort fields that don't map directly to spec properties
+      if (effectiveSortField === 'method') {
+        aVal = calculatePlantingMethod(a);
+        bVal = calculatePlantingMethod(b);
+      } else {
+        aVal = a[effectiveSortField as keyof PlantingSpec];
+        bVal = b[effectiveSortField as keyof PlantingSpec];
+      }
+
+      if (aVal === null || aVal === undefined) return effectiveSortDir === 'asc' ? 1 : -1;
+      if (bVal === null || bVal === undefined) return effectiveSortDir === 'asc' ? -1 : 1;
 
       if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+        return effectiveSortDir === 'asc' ? aVal - bVal : bVal - aVal;
       }
       if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
-        return sortDirection === 'asc'
+        return effectiveSortDir === 'asc'
           ? (aVal === bVal ? 0 : aVal ? -1 : 1)
           : (aVal === bVal ? 0 : aVal ? 1 : -1);
       }
 
       const aStr = String(aVal).toLowerCase();
       const bStr = String(bVal).toLowerCase();
-      return sortDirection === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
+      return effectiveSortDir === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
     });
-  }, [filteredCrops, sortColumn, sortDirection]);
+  }, [filteredCrops, sortColumn, sortDirection, parsedSearch.sortField, parsedSearch.sortDir]);
 
   const selectedCrop = useMemo(() => {
     if (!selectedCropId) return null;
@@ -1266,6 +1512,45 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     deselectAll();
   }, [activePlanId, selectedCropIds, sortedCrops, bulkUpdatePlantingSpecs, deselectAll]);
 
+  // Handle bulk spec editor save
+  const handleBulkEditorSave = useCallback(async (changes: Partial<PlantingSpec>) => {
+    if (!activePlanId) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'Select an active plan first to edit specs',
+      });
+      return;
+    }
+    const selectedSpecs = sortedCrops.filter(c => selectedCropIds.has(c.id));
+    const updates = selectedSpecs.map(c => ({
+      identifier: c.identifier,
+      changes,
+    }));
+
+    const updatedCount = await bulkUpdatePlantingSpecs(updates);
+
+    if (updatedCount === 0) {
+      setAddToPlanMessage({
+        type: 'error',
+        text: 'No specs were updated',
+      });
+    } else {
+      // Build description of what changed
+      const changedFields = Object.keys(changes);
+      const fieldNames = changedFields.map(f => {
+        if (f === 'defaultMarketSplit') return 'market split';
+        // Add friendly names for future fields here
+        return f;
+      }).join(', ');
+      setAddToPlanMessage({
+        type: 'success',
+        text: `Updated ${fieldNames} on ${updatedCount} spec${updatedCount !== 1 ? 's' : ''}`,
+      });
+    }
+    setShowBulkEditor(false);
+    deselectAll();
+  }, [activePlanId, selectedCropIds, sortedCrops, bulkUpdatePlantingSpecs, deselectAll]);
+
   return (
     <div className="flex h-full">
       {/* Collapsible Filter Pane */}
@@ -1306,14 +1591,15 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
               </div>
             </div>
 
-            {/* Search */}
+            {/* Search with DSL support */}
             <div className="px-3 py-2 border-b border-gray-100">
-              <input
-                type="text"
-                placeholder="Search all fields..."
+              <SearchInput
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-2 py-1.5 text-sm text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-500 placeholder:text-gray-600"
+                onChange={setSearchQuery}
+                placeholder="Search specs..."
+                sortFields={getSortFieldNames(plantingSpecSearchConfig)}
+                filterFields={getFilterFieldNames(plantingSpecSearchConfig)}
+                width="w-full"
               />
             </div>
 
@@ -2026,6 +2312,12 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
           >
             ★ Favorite
           </button>
+          <button
+            onClick={() => setShowBulkEditor(true)}
+            className="px-3 py-1.5 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
+          >
+            Bulk Edit
+          </button>
           {selectedCropIds.size >= 2 && (
             <button
               onClick={() => setShowCompare(true)}
@@ -2186,6 +2478,17 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bulk Spec Editor Modal */}
+      {showBulkEditor && markets && (
+        <BulkSpecEditorModal
+          isOpen={true}
+          markets={markets}
+          selectedCount={selectedCropIds.size}
+          onClose={() => setShowBulkEditor(false)}
+          onSave={handleBulkEditorSave}
+        />
       )}
 
       {/* Compare specs modal */}

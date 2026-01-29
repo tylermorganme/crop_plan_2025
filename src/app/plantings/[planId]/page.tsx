@@ -20,7 +20,8 @@ import {
 } from '@/lib/entities/planting-specs';
 import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
-import { parseSearchQuery } from '@/lib/search-dsl';
+import { parseSearchQuery, matchesFilter } from '@/lib/search-dsl';
+import { enrichedPlantingSearchConfig } from '@/lib/search-configs';
 import { SearchInput } from '@/components/SearchInput';
 import type { PlantingSpec } from '@/lib/entities/planting-specs';
 import type { Planting } from '@/lib/entities/planting';
@@ -954,13 +955,6 @@ export default function PlantingsPage() {
     return { filterTerms: parsed.filterTerms, sortOverride };
   }, [searchQuery]);
 
-  // Helper to get bed group letter from bed name (e.g., "A1" -> "A")
-  const getBedGroup = useCallback((bedName: string): string => {
-    if (!bedName) return '';
-    const match = bedName.match(/^([A-Za-z]+)/);
-    return match ? match[1] : '';
-  }, []);
-
   // Filter and sort plantings
   const displayPlantings = useMemo(() => {
     let result = enrichedPlantings;
@@ -972,69 +966,9 @@ export default function PlantingsPage() {
 
     if (!showFailed) result = result.filter((p) => !p.isFailed);
 
-    // Apply search DSL filter
+    // Apply search DSL filter using shared matcher
     if (parsedFilterTerms.length > 0) {
-      const fieldPattern = /^(-?)(bed|group|bedGroup|category|method|crop|notes|structure):(.+)$/i;
-
-      result = result.filter((p) => {
-        // Build searchable text from all relevant fields
-        const searchText = [
-          p.cropName,
-          p.category,
-          p.identifier,
-          p.bedName,
-          p.id,
-          p.notes,
-          p.method,
-          p.sequenceDisplay,
-          p.growingStructure,
-        ].filter(Boolean).join(' ').toLowerCase();
-
-        return parsedFilterTerms.every(term => {
-          const fieldMatch = term.match(fieldPattern);
-          if (fieldMatch) {
-            const [, negation, field, value] = fieldMatch;
-            const isNegated = negation === '-';
-            let matches = false;
-
-            switch (field.toLowerCase()) {
-              case 'bed':
-                matches = p.bedName?.toLowerCase().includes(value) ?? false;
-                break;
-              case 'group':
-              case 'bedgroup':
-                matches = getBedGroup(p.bedName).toLowerCase().includes(value);
-                break;
-              case 'category':
-                matches = p.category?.toLowerCase().includes(value) ?? false;
-                break;
-              case 'method':
-                matches = p.method?.toLowerCase().includes(value) ?? false;
-                break;
-              case 'crop':
-                matches = (p.cropName?.toLowerCase().includes(value) || p.identifier?.toLowerCase().includes(value)) ?? false;
-                break;
-              case 'notes':
-                matches = p.notes?.toLowerCase().includes(value) ?? false;
-                break;
-              case 'structure':
-                matches = p.growingStructure?.toLowerCase().includes(value) ?? false;
-                break;
-              default:
-                matches = searchText.includes(term);
-            }
-
-            return isNegated ? !matches : matches;
-          }
-
-          // Plain text search - check for negation prefix
-          if (term.startsWith('-') && term.length > 1) {
-            const searchTerm = term.slice(1);
-            return !searchText.includes(searchTerm);
-          }
-          return searchText.includes(term);
-        });
-      });
+      result = result.filter((p) => matchesFilter(p, parsedFilterTerms, enrichedPlantingSearchConfig));
     }
 
     // Use sortOverride from search DSL if present, otherwise use state
@@ -1069,7 +1003,7 @@ export default function PlantingsPage() {
     });
 
     return result;
-  }, [enrichedPlantings, assignmentFilter, showFailed, parsedFilterTerms, sortOverride, sortColumn, sortDirection, getBedGroup]);
+  }, [enrichedPlantings, assignmentFilter, showFailed, parsedFilterTerms, sortOverride, sortColumn, sortDirection]);
 
   // Inspector shows all selected plantings (like Timeline)
   const inspectedCrops: TimelineCrop[] = useMemo(() => {

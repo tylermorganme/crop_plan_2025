@@ -147,6 +147,8 @@ export interface TimelineCrop {
   sequenceSlot?: number;
   /** Whether this planting is locked due to actual dates being set */
   isLocked?: boolean;
+  /** Market split for this planting (marketId -> percentage) */
+  marketSplit?: import('./market').MarketSplit;
 }
 
 /**

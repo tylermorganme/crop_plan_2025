@@ -16,6 +16,8 @@ import type { Product } from '@/lib/entities/product';
 import type { TimelineCrop } from '@/lib/entities/plan';
 import type { SeedSource } from '@/lib/entities/planting';
 import type { MutationResult } from '@/lib/plan-store';
+import type { Market, MarketSplit } from '@/lib/entities/market';
+import { getActiveMarkets, getMarketSplitTotal } from '@/lib/entities/market';
 import { GddPreview } from './GddPreview';
 import { getPrimarySeedToHarvest } from '@/lib/entities/planting-specs';
 
@@ -189,6 +191,137 @@ function SeedSourcePicker({
 }
 
 // =============================================================================
+// Market Split Editor (inline component)
+// =============================================================================
+
+interface MarketSplitEditorProps {
+  /** Current planting-level market split (undefined = use spec default) */
+  currentSplit?: MarketSplit;
+  /** Spec default market split */
+  defaultSplit?: MarketSplit;
+  /** Available markets */
+  markets: Record<string, Market>;
+  /** Called when split changes */
+  onChange: (split?: MarketSplit) => void;
+}
+
+function MarketSplitEditor({
+  currentSplit,
+  defaultSplit,
+  markets,
+  onChange,
+}: MarketSplitEditorProps) {
+  const activeMarkets = getActiveMarkets(markets);
+
+  // Determine if using default or custom split
+  const isUsingDefault = currentSplit === undefined;
+
+  // Effective split to display (custom or default)
+  const effectiveSplit = currentSplit ?? defaultSplit ?? {};
+
+  // Calculate total for validation
+  const total = getMarketSplitTotal(effectiveSplit);
+  const isValidTotal = Math.abs(total - 100) < 0.01;
+
+  // Handle toggling between default and custom
+  const handleToggleDefault = (useDefault: boolean) => {
+    if (useDefault) {
+      onChange(undefined); // Clear custom split, use default
+    } else {
+      // Initialize custom split from default
+      onChange(defaultSplit ? { ...defaultSplit } : { [activeMarkets[0]?.id]: 100 });
+    }
+  };
+
+  // Handle changing a market's percentage
+  const handleMarketChange = (marketId: string, value: number) => {
+    const newSplit = { ...effectiveSplit };
+    if (value <= 0) {
+      delete newSplit[marketId];
+    } else {
+      newSplit[marketId] = value;
+    }
+    // If all values are 0 or removed, clear the split
+    if (Object.keys(newSplit).length === 0) {
+      onChange(defaultSplit ? undefined : { [activeMarkets[0]?.id]: 100 });
+    } else {
+      onChange(newSplit);
+    }
+  };
+
+  // Format display for default split
+  const formatSplitDisplay = (split: MarketSplit): string => {
+    const parts: string[] = [];
+    for (const [marketId, pct] of Object.entries(split)) {
+      if (pct > 0) {
+        const name = markets[marketId]?.name ?? marketId;
+        parts.push(`${name}: ${pct}%`);
+      }
+    }
+    return parts.join(', ') || 'None';
+  };
+
+  if (activeMarkets.length === 0) {
+    return <div className="text-xs text-gray-500">No markets configured</div>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Use Default Checkbox */}
+      {defaultSplit && Object.keys(defaultSplit).length > 0 && (
+        <label className="flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isUsingDefault}
+            onChange={(e) => handleToggleDefault(e.target.checked)}
+            className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <span className="text-gray-700">
+            Use default: <span className="font-medium">{formatSplitDisplay(defaultSplit)}</span>
+          </span>
+        </label>
+      )}
+
+      {/* Custom Split Editor */}
+      {!isUsingDefault && (
+        <div className="space-y-1.5">
+          {activeMarkets.map((market) => (
+            <div key={market.id} className="flex items-center gap-2">
+              <label className="text-xs text-gray-700 w-20 truncate" title={market.name}>
+                {market.name}
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                step={5}
+                value={effectiveSplit[market.id] ?? 0}
+                onChange={(e) => handleMarketChange(market.id, parseInt(e.target.value) || 0)}
+                className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+              />
+              <span className="text-xs text-gray-500">%</span>
+            </div>
+          ))}
+          {/* Total indicator */}
+          <div className={`flex items-center justify-end gap-2 text-xs pt-1 border-t border-gray-100 ${
+            isValidTotal ? 'text-gray-600' : 'text-amber-600'
+          }`}>
+            <span>Total:</span>
+            <span className="font-medium">{total}%</span>
+            {!isValidTotal && <span>⚠</span>}
+          </div>
+        </div>
+      )}
+
+      {/* Read-only display when using default */}
+      {isUsingDefault && defaultSplit && (
+        <div className="text-sm text-gray-700">{formatSplitDisplay(defaultSplit)}</div>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -231,6 +364,8 @@ export interface PlantingInspectorPanelProps {
   usedVarietyIds?: Set<string>;
   usedMixIds?: Set<string>;
   products?: Record<string, Product>;
+  /** Markets for market split editor */
+  markets?: Record<string, Market>;
 
   // UI options
   showTimingEdits?: boolean;
@@ -266,6 +401,7 @@ export function PlantingInspectorPanel({
   usedVarietyIds,
   usedMixIds,
   products,
+  markets,
   showTimingEdits = false,
   className = '',
   location,
@@ -912,6 +1048,19 @@ export function PlantingInspectorPanel({
                 onToggleDefault={(useDefault) =>
                   onUpdatePlanting(crop.groupId, { useDefaultSeedSource: useDefault })
                 }
+              />
+            </div>
+          )}
+
+          {/* Market Split - Editable */}
+          {onUpdatePlanting && markets && Object.keys(markets).length > 0 && (
+            <div className="pt-3 border-t">
+              <div className="text-xs text-gray-600 mb-1">Market Split</div>
+              <MarketSplitEditor
+                currentSplit={crop.marketSplit}
+                defaultSplit={baseSpec?.defaultMarketSplit}
+                markets={markets}
+                onChange={(split) => onUpdatePlanting(crop.groupId, { marketSplit: split })}
               />
             </div>
           )}

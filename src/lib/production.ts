@@ -15,6 +15,7 @@ import type { Plan } from './plan-types';
 import type { Planting } from './entities/planting';
 import type { PlantingSpec, ProductYield } from './entities/planting-specs';
 import type { Product } from './entities/product';
+import type { MarketSplit } from './entities/market';
 import {
   evaluateYieldFormula,
   buildYieldContext,
@@ -32,8 +33,10 @@ import {
 export interface HarvestEvent {
   /** ISO date string of harvest */
   date: string;
-  /** Yield amount for this harvest */
+  /** Total yield amount for this harvest */
   yield: number;
+  /** Yield broken down by market (marketId -> yield) */
+  yieldByMarket: Record<string, number>;
   /** Planting ID this harvest belongs to */
   plantingId: string;
   /** Spec identifier for display */
@@ -385,6 +388,7 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
 
   const specs = plan.specs ?? {};
   const products = plan.products ?? {};
+  const markets = plan.markets ?? {};
 
   // Process each planting
   for (const planting of plan.plantings ?? []) {
@@ -484,11 +488,32 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
         const yieldPerHarvest = productResult.totalYield / productResult.numberOfHarvests;
         const harvestStart = parseISO(productResult.harvestStartDate);
 
+        // Get effective market split: planting override > spec default > 100% Direct
+        const marketSplit = planting.marketSplit ?? spec.defaultMarketSplit;
+
         for (let i = 0; i < productResult.numberOfHarvests; i++) {
           const harvestDate = addDays(harvestStart, i * productResult.daysBetweenHarvest);
+
+          // Calculate yield by market
+          const yieldByMarket: Record<string, number> = {};
+          if (marketSplit && Object.keys(marketSplit).length > 0) {
+            // Calculate total percentage for normalization
+            const totalPct = Object.values(marketSplit).reduce((sum, pct) => sum + (pct || 0), 0);
+            for (const [marketId, pct] of Object.entries(marketSplit)) {
+              if (pct > 0 && markets[marketId]?.active !== false) {
+                yieldByMarket[marketId] = yieldPerHarvest * (pct / totalPct);
+              }
+            }
+          } else {
+            // Default: all to first active market or 'market-direct'
+            const defaultMarketId = Object.values(markets).find(m => m.active)?.id ?? 'market-direct';
+            yieldByMarket[defaultMarketId] = yieldPerHarvest;
+          }
+
           productSummary.harvestEvents.push({
             date: harvestDate.toISOString().split('T')[0],
             yield: yieldPerHarvest,
+            yieldByMarket,
             plantingId: planting.id,
             identifier: spec.identifier,
             bedName,
@@ -651,4 +676,17 @@ export function getReportUnits(report: PlanProductionReport): string[] {
     const bTotal = report.totalYieldByUnit[b] ?? 0;
     return bTotal - aTotal;
   });
+}
+
+/**
+ * Get unique market IDs from harvest events.
+ */
+export function getHarvestEventMarkets(harvestEvents: HarvestEvent[]): string[] {
+  const marketIds = new Set<string>();
+  for (const event of harvestEvents) {
+    for (const marketId of Object.keys(event.yieldByMarket)) {
+      marketIds.add(marketId);
+    }
+  }
+  return Array.from(marketIds);
 }

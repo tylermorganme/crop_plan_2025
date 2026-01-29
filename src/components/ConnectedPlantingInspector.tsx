@@ -301,6 +301,7 @@ export function ConnectedPlantingInspector({
         varieties={currentPlan.varieties}
         seedMixes={currentPlan.seedMixes}
         products={currentPlan.products}
+        markets={currentPlan.markets}
         showTimingEdits={showTimingEdits}
         className={className}
         location={currentPlan.metadata.location}

@@ -58,6 +58,7 @@ import { ConnectedPlantingInspector } from '@/components/ConnectedPlantingInspec
 import {
   calculatePlanProduction,
   formatYield,
+  getHarvestEventMarkets,
   type PlanProductionReport,
   type ProductProductionSummary,
   type HarvestEvent,
@@ -303,12 +304,14 @@ interface ProductionChartSettings {
   yearOffset: number; // -1, 0, or 1 relative to plan year
   startMonth: number; // 1-12
   endMonth: number; // 1-12
+  selectedMarkets: string[]; // Array of market IDs to show (empty = all markets)
 }
 
 const DEFAULT_CHART_SETTINGS: ProductionChartSettings = {
   yearOffset: 0,
   startMonth: 1,
   endMonth: 12,
+  selectedMarkets: [], // Empty = show all markets
 };
 
 function loadChartSettings(): ProductionChartSettings {
@@ -329,6 +332,22 @@ function saveChartSettings(settings: ProductionChartSettings): void {
   localStorage.setItem(PRODUCTION_CHART_STORAGE_KEY, JSON.stringify(settings));
 }
 
+/** Colors for market bars in stacked chart */
+const MARKET_COLORS: Record<string, string> = {
+  'market-direct': '#22c55e', // green - Direct sales
+  'market-wholesale': '#3b82f6', // blue - Wholesale
+  'market-upick': '#f97316', // orange - U-Pick
+  'market-farmers-market': '#8b5cf6', // violet - Farmers Market
+};
+
+/** Fallback colors for markets without predefined colors */
+const FALLBACK_MARKET_COLORS = ['#ef4444', '#eab308', '#14b8a6', '#ec4899', '#6b7280'];
+
+/** Get color for a market ID */
+function getMarketColor(marketId: string, index: number): string {
+  return MARKET_COLORS[marketId] ?? FALLBACK_MARKET_COLORS[index % FALLBACK_MARKET_COLORS.length];
+}
+
 /** Harvest timeline chart showing individual harvest events as bars */
 function ProductionChart({
   harvestEvents,
@@ -336,6 +355,7 @@ function ProductionChart({
   planYear,
   productName,
   cropName,
+  markets,
   onReset,
 }: {
   harvestEvents: HarvestEvent[];
@@ -343,12 +363,31 @@ function ProductionChart({
   planYear: number;
   productName: string;
   cropName: string;
+  markets: Record<string, Market>;
   onReset?: () => void;
 }) {
   const [settings, setSettings] = useState<ProductionChartSettings>(loadChartSettings);
 
   // Calculate the display year
   const displayYear = planYear + settings.yearOffset;
+
+  // Get all unique markets from harvest events
+  const availableMarkets = useMemo(() => {
+    const marketIds = getHarvestEventMarkets(harvestEvents);
+    return marketIds.map(id => ({
+      id,
+      name: markets[id]?.name ?? id.replace('market-', ''),
+      color: getMarketColor(id, marketIds.indexOf(id)),
+    }));
+  }, [harvestEvents, markets]);
+
+  // Effective selected markets (empty = all selected)
+  const effectiveSelectedMarkets = useMemo(() => {
+    if (settings.selectedMarkets.length === 0) {
+      return availableMarkets.map(m => m.id);
+    }
+    return settings.selectedMarkets.filter(id => availableMarkets.some(m => m.id === id));
+  }, [settings.selectedMarkets, availableMarkets]);
 
   // Filter events to the selected year and month range
   const filteredEvents = useMemo(() => {
@@ -369,27 +408,53 @@ function ProductionChart({
   }, []);
 
   // Aggregate events by date for the bar chart with temporal positioning
+  // Now includes yield breakdown by market for stacked bars
   const chartData = useMemo(() => {
-    const byDate = new Map<string, { date: string; dayOfYear: number; yield: number; events: HarvestEvent[] }>();
+    const byDate = new Map<string, {
+      date: string;
+      dayOfYear: number;
+      totalYield: number;
+      events: HarvestEvent[];
+      [key: string]: unknown; // Market IDs will be added here
+    }>();
 
     for (const event of filteredEvents) {
       const existing = byDate.get(event.date);
       if (existing) {
-        existing.yield += event.yield;
+        existing.totalYield += event.yield;
         existing.events.push(event);
+        // Add market yields
+        for (const [marketId, marketYield] of Object.entries(event.yieldByMarket)) {
+          if (effectiveSelectedMarkets.includes(marketId)) {
+            existing[marketId] = ((existing[marketId] as number) || 0) + marketYield;
+          }
+        }
       } else {
-        byDate.set(event.date, {
+        const entry: {
+          date: string;
+          dayOfYear: number;
+          totalYield: number;
+          events: HarvestEvent[];
+          [key: string]: unknown;
+        } = {
           date: event.date,
           dayOfYear: getDayOfYear(event.date),
-          yield: event.yield,
+          totalYield: event.yield,
           events: [event],
-        });
+        };
+        // Initialize market yields
+        for (const [marketId, marketYield] of Object.entries(event.yieldByMarket)) {
+          if (effectiveSelectedMarkets.includes(marketId)) {
+            entry[marketId] = marketYield;
+          }
+        }
+        byDate.set(event.date, entry);
       }
     }
 
     // Sort by date and create array
     return Array.from(byDate.values()).sort((a, b) => a.dayOfYear - b.dayOfYear);
-  }, [filteredEvents, getDayOfYear]);
+  }, [filteredEvents, getDayOfYear, effectiveSelectedMarkets]);
 
   // Calculate axis domain based on month range
   const axisDomain = useMemo(() => {
@@ -408,6 +473,35 @@ function ProductionChart({
     });
   }, []);
 
+  // Toggle a market selection
+  const toggleMarket = useCallback((marketId: string) => {
+    setSettings(prev => {
+      let newSelected: string[];
+      if (prev.selectedMarkets.length === 0) {
+        // Currently "all selected" - switching to explicit selection minus this one
+        newSelected = availableMarkets.map(m => m.id).filter(id => id !== marketId);
+      } else if (prev.selectedMarkets.includes(marketId)) {
+        // Already selected - remove it
+        newSelected = prev.selectedMarkets.filter(id => id !== marketId);
+        // If removing would leave empty, switch to "none" (show at least one)
+        if (newSelected.length === 0) {
+          newSelected = availableMarkets.map(m => m.id).filter(id => id !== marketId);
+          if (newSelected.length === 0) newSelected = [marketId]; // Can't deselect the only market
+        }
+      } else {
+        // Not selected - add it
+        newSelected = [...prev.selectedMarkets, marketId];
+        // If now all are selected, switch back to empty (meaning "all")
+        if (newSelected.length === availableMarkets.length) {
+          newSelected = [];
+        }
+      }
+      const next = { ...prev, selectedMarkets: newSelected };
+      saveChartSettings(next);
+      return next;
+    });
+  }, [availableMarkets]);
+
   // Reset to defaults
   const handleReset = useCallback(() => {
     setSettings(DEFAULT_CHART_SETTINGS);
@@ -415,11 +509,26 @@ function ProductionChart({
     onReset?.();
   }, [onReset]);
 
-  // Total yield in filtered range
-  const totalYield = filteredEvents.reduce((sum, e) => sum + e.yield, 0);
+  // Total yield in filtered range (only for selected markets)
+  const totalYield = useMemo(() => {
+    let sum = 0;
+    for (const event of filteredEvents) {
+      for (const [marketId, marketYield] of Object.entries(event.yieldByMarket)) {
+        if (effectiveSelectedMarkets.includes(marketId)) {
+          sum += marketYield;
+        }
+      }
+    }
+    return sum;
+  }, [filteredEvents, effectiveSelectedMarkets]);
 
   // Month names for display
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // Get market info for rendering (only selected ones)
+  const selectedMarketInfo = useMemo(() => {
+    return availableMarkets.filter(m => effectiveSelectedMarkets.includes(m.id));
+  }, [availableMarkets, effectiveSelectedMarkets]);
 
   if (harvestEvents.length === 0) {
     return (
@@ -498,6 +607,41 @@ function ProductionChart({
         </div>
       </div>
 
+      {/* Market filter */}
+      {availableMarkets.length > 1 && (
+        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-100">
+          <span className="text-sm text-gray-600">Markets:</span>
+          {availableMarkets.map((market) => {
+            const isSelected = effectiveSelectedMarkets.includes(market.id);
+            return (
+              <label
+                key={market.id}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-sm ${
+                  isSelected ? 'bg-gray-100' : 'hover:bg-gray-50'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggleMarket(market.id)}
+                  className="sr-only"
+                />
+                <span
+                  className="w-3 h-3 rounded-sm border"
+                  style={{
+                    backgroundColor: isSelected ? market.color : 'transparent',
+                    borderColor: market.color,
+                  }}
+                />
+                <span className={isSelected ? 'text-gray-900' : 'text-gray-400'}>
+                  {market.name}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+
       {/* Chart */}
       {chartData.length === 0 ? (
         <div className="h-48 flex items-center justify-center text-gray-400">
@@ -529,14 +673,50 @@ function ProductionChart({
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
-                  const data = payload[0].payload as { date: string; yield: number; events: HarvestEvent[] };
+                  const data = payload[0].payload as {
+                    date: string;
+                    totalYield: number;
+                    events: HarvestEvent[];
+                    [key: string]: unknown;
+                  };
                   const d = new Date(data.date + 'T00:00:00');
                   const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                  // Calculate yield by market for this date
+                  const marketBreakdown = selectedMarketInfo.map(m => ({
+                    name: m.name,
+                    color: m.color,
+                    yield: (data[m.id] as number) || 0,
+                  })).filter(m => m.yield > 0);
+
+                  const visibleTotal = marketBreakdown.reduce((sum, m) => sum + m.yield, 0);
 
                   return (
                     <div className="bg-white border border-gray-200 rounded shadow-lg p-2 text-xs max-w-xs">
                       <div className="font-semibold mb-1">{dateStr}</div>
-                      <div className="mb-1">{formatYield(data.yield, unit)}</div>
+                      {/* Market breakdown */}
+                      {marketBreakdown.length > 1 ? (
+                        <div className="mb-1 space-y-0.5">
+                          {marketBreakdown.map((m, i) => (
+                            <div key={i} className="flex items-center justify-between gap-3">
+                              <span className="flex items-center gap-1">
+                                <span
+                                  className="w-2 h-2 rounded-sm"
+                                  style={{ backgroundColor: m.color }}
+                                />
+                                {m.name}
+                              </span>
+                              <span>{formatYield(m.yield, unit)}</span>
+                            </div>
+                          ))}
+                          <div className="border-t border-gray-200 pt-0.5 flex justify-between font-medium">
+                            <span>Total</span>
+                            <span>{formatYield(visibleTotal, unit)}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mb-1">{formatYield(visibleTotal, unit)}</div>
+                      )}
                       <div className="text-gray-500 text-xs">
                         {data.events.length} planting{data.events.length > 1 ? 's' : ''}:
                         <div className="max-h-24 overflow-y-auto mt-1">
@@ -554,7 +734,17 @@ function ProductionChart({
                   );
                 }}
               />
-              <Bar dataKey="yield" fill="#3b82f6" radius={[2, 2, 0, 0]} barSize={8} />
+              {/* Stacked bars for each selected market */}
+              {selectedMarketInfo.map((market, index) => (
+                <Bar
+                  key={market.id}
+                  dataKey={market.id}
+                  stackId="markets"
+                  fill={market.color}
+                  radius={index === selectedMarketInfo.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]}
+                  barSize={8}
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -1729,9 +1919,10 @@ interface ProductionTabProps {
   initialProduct?: string;
   globalFilter: string;
   planYear: number;
+  markets: Record<string, Market>;
 }
 
-function ProductionTab({ report, initialProduct, globalFilter, planYear }: ProductionTabProps) {
+function ProductionTab({ report, initialProduct, globalFilter, planYear, markets }: ProductionTabProps) {
   const [expandedProductId, setExpandedProductId] = useState<string | null>(() => {
     // Initialize from URL param if it matches a valid product
     if (initialProduct && report.byProduct.some(p => p.productId === initialProduct)) {
@@ -1840,6 +2031,7 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear }: Produ
           planYear={planYear}
           productName={selectedProduct.productName}
           cropName={selectedProduct.crop}
+          markets={markets}
         />
       )}
 
@@ -2142,6 +2334,7 @@ export default function ReportsPage() {
             initialProduct={searchParams.get('product') ?? undefined}
             globalFilter={productionFilter}
             planYear={currentPlan.metadata.year}
+            markets={currentPlan.markets ?? {}}
           />
         )}
       </div>

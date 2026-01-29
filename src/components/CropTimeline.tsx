@@ -9,7 +9,8 @@ import { useUIStore } from '@/lib/ui-store';
 import { expandCropsToBeds } from '@/lib/timeline-data';
 import { getBedGroup } from '@/lib/plan-types';
 import { calculateSpecRevenue } from '@/lib/revenue';
-import { parseSearchQuery, buildCropSearchText } from '@/lib/search-dsl';
+import { parseSearchQuery, matchesFilter } from '@/lib/search-dsl';
+import { timelineCropSearchConfig } from '@/lib/search-configs';
 import type { PlantingBoxDisplayConfig } from '@/lib/entities/plan';
 import AddToBedPanel from './AddToBedPanel';
 import { ConnectedPlantingInspector } from './ConnectedPlantingInspector';
@@ -500,60 +501,9 @@ export default function CropTimeline({
       result = result.filter(crop => !crop.seedSource);
     }
 
-    // Apply search filter terms
+    // Apply search filter terms using shared DSL matcher
     if (parsedFilterTerms.length > 0) {
-      // Support negation with - prefix: -structure:field excludes field crops
-      const fieldPattern = /^(-?)(bed|group|bedGroup|category|method|crop|notes|structure):(.+)$/i;
-
-      result = result.filter(crop => {
-        // Use shared search text builder for consistency across views
-        const searchText = buildCropSearchText(crop);
-
-        return parsedFilterTerms.every(term => {
-          const fieldMatch = term.match(fieldPattern);
-          if (fieldMatch) {
-            const [, negation, field, value] = fieldMatch;
-            const isNegated = negation === '-';
-            let matches = false;
-
-            switch (field.toLowerCase()) {
-              case 'bed':
-                matches = crop.resource?.toLowerCase().includes(value) ?? false;
-                break;
-              case 'group':
-              case 'bedgroup':
-                matches = getBedGroup(crop.resource || '').toLowerCase().includes(value);
-                break;
-              case 'category':
-                matches = crop.category?.toLowerCase().includes(value) ?? false;
-                break;
-              case 'method':
-                matches = crop.plantingMethod?.toLowerCase().includes(value) ?? false;
-                break;
-              case 'crop':
-                matches = (crop.crop?.toLowerCase().includes(value) || crop.name?.toLowerCase().includes(value)) ?? false;
-                break;
-              case 'notes':
-                matches = crop.notes?.toLowerCase().includes(value) ?? false;
-                break;
-              case 'structure':
-                matches = crop.growingStructure?.toLowerCase().includes(value) ?? false;
-                break;
-              default:
-                matches = searchText.includes(term);
-            }
-
-            return isNegated ? !matches : matches;
-          }
-
-          // Plain text search - check for negation prefix
-          if (term.startsWith('-') && term.length > 1) {
-            const searchTerm = term.slice(1);
-            return !searchText.includes(searchTerm);
-          }
-          return searchText.includes(term);
-        });
-      });
+      result = result.filter(crop => matchesFilter(crop, parsedFilterTerms, timelineCropSearchConfig));
     }
 
     // Sort filtered crops

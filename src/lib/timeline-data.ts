@@ -689,6 +689,9 @@ export function expandPlantingsToTimelineCrops(
       // A planting is locked if it has actual greenhouse OR field date set
       crop.isLocked = !!(planting.actuals?.greenhouseDate || planting.actuals?.fieldDate);
 
+      // Add market split for revenue/production allocation
+      crop.marketSplit = planting.marketSplit;
+
       // Calculate seeds needed based on PlantingSpec.seedsPerBed
       if (spec.seedsPerBed && planting.bedFeet) {
         // seedsPerBed is per 50ft bed, scale to actual feet
