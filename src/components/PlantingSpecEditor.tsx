@@ -1163,9 +1163,9 @@ export default function PlantingSpecEditor({
                       className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select...</option>
-                      <option value="from-seeding">DS: Germination → Harvest</option>
-                      <option value="from-transplant">TP: Day of Planting → Harvest</option>
-                      <option value="total-time">TP: Seeding → Harvest</option>
+                      <option value="from-seeding">Direct Seed: From Germination</option>
+                      <option value="from-transplant">Transplant: From Planting</option>
+                      <option value="total-time">Transplant: From Seeding</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
                       How DTM values in products are measured
