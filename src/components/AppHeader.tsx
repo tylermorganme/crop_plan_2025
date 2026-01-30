@@ -319,6 +319,33 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
           </button>
         )}
 
+        {/* Debug button - copies useful context */}
+        {activePlanId && (
+          <button
+            onClick={() => {
+              const debugInfo = {
+                url: typeof window !== 'undefined' ? window.location.href : '',
+                planId: activePlanId,
+                planName: currentPlanName,
+                pathname,
+                timestamp: new Date().toISOString(),
+              };
+              navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
+              // Brief visual feedback
+              const btn = document.activeElement as HTMLButtonElement;
+              const original = btn?.textContent;
+              if (btn) {
+                btn.textContent = '✓';
+                setTimeout(() => { btn.textContent = original; }, 500);
+              }
+            }}
+            className="px-2 py-1 text-sm font-medium text-gray-400 hover:text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100"
+            title="Copy debug info to clipboard"
+          >
+            🐛
+          </button>
+        )}
+
         {/* Plan Dropdown */}
         <PlanDropdown />
       </div>

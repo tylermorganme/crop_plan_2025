@@ -17,6 +17,8 @@ import {
   Area,
   BarChart,
   Bar,
+  Line,
+  ComposedChart,
   XAxis,
   YAxis,
   Tooltip,
@@ -24,7 +26,9 @@ import {
   PieChart as RechartsPieChart,
   Pie,
   Cell,
-  ReferenceArea,
+  ReferenceLine,
+  CartesianGrid,
+  LabelList,
 } from 'recharts';
 import {
   usePlanStore,
@@ -305,6 +309,8 @@ interface ProductionChartSettings {
   startMonth: number; // 1-12
   endMonth: number; // 1-12
   selectedMarkets: string[]; // Array of market IDs to show (empty = all markets)
+  showWeeklyAvg: boolean; // Show weekly average line
+  rollingWindowDays: number; // Rolling window size in days (7, 14, 21, 28)
 }
 
 const DEFAULT_CHART_SETTINGS: ProductionChartSettings = {
@@ -312,6 +318,8 @@ const DEFAULT_CHART_SETTINGS: ProductionChartSettings = {
   startMonth: 1,
   endMonth: 12,
   selectedMarkets: [], // Empty = show all markets
+  showWeeklyAvg: true,
+  rollingWindowDays: 21, // 3-week window by default
 };
 
 function loadChartSettings(): ProductionChartSettings {
@@ -353,6 +361,7 @@ function ProductionChart({
   harvestEvents,
   unit,
   planYear,
+  planId,
   productName,
   cropName,
   markets,
@@ -361,6 +370,7 @@ function ProductionChart({
   harvestEvents: HarvestEvent[];
   unit: string;
   planYear: number;
+  planId: string;
   productName: string;
   cropName: string;
   markets: Record<string, Market>;
@@ -453,8 +463,44 @@ function ProductionChart({
     }
 
     // Sort by date and create array
-    return Array.from(byDate.values()).sort((a, b) => a.dayOfYear - b.dayOfYear);
+    const sorted = Array.from(byDate.values()).sort((a, b) => a.dayOfYear - b.dayOfYear);
+
+    // Calculate the visible yield for each entry (sum of selected markets)
+    for (const entry of sorted) {
+      let visibleYield = 0;
+      for (const marketId of effectiveSelectedMarkets) {
+        visibleYield += (entry[marketId] as number) || 0;
+      }
+      entry.visibleYield = visibleYield;
+    }
+
+    return sorted;
   }, [filteredEvents, getDayOfYear, effectiveSelectedMarkets]);
+
+  // Compute weekly average using symmetric rolling window, normalized to 7 days
+  const chartDataWithAvg = useMemo(() => {
+    if (chartData.length === 0) return chartData;
+
+    const windowDays = settings.rollingWindowDays;
+    const halfWindow = Math.floor(windowDays / 2);
+    const normalizer = windowDays / 7; // Normalize to weekly equivalent
+
+    // Build a map of dayOfYear -> visibleYield for quick lookup
+    const yieldByDay = new Map<number, number>();
+    for (const entry of chartData) {
+      yieldByDay.set(entry.dayOfYear, (entry.visibleYield as number) || 0);
+    }
+
+    // Create new entries with weeklyAvg computed
+    return chartData.map(entry => {
+      let sum = 0;
+      // Symmetric window: from (day - halfWindow) to (day + halfWindow)
+      for (let d = entry.dayOfYear - halfWindow; d <= entry.dayOfYear + halfWindow; d++) {
+        sum += yieldByDay.get(d) || 0;
+      }
+      return { ...entry, weeklyAvg: sum / normalizer };
+    });
+  }, [chartData, settings.rollingWindowDays]);
 
   // Calculate axis domain based on month range
   const axisDomain = useMemo(() => {
@@ -463,6 +509,46 @@ function ProductionChart({
     const endDate = new Date(displayYear, settings.endMonth, 0); // Last day of end month
     return [getDayOfYear(startDate.toISOString().split('T')[0]), getDayOfYear(endDate.toISOString().split('T')[0])];
   }, [displayYear, settings.startMonth, settings.endMonth, getDayOfYear]);
+
+  // Calculate nice Y-axis tick values for consistent grid lines and center labels
+  const yAxisTicks = useMemo(() => {
+    if (chartDataWithAvg.length === 0) return [0];
+
+    // Find max value across all bars and the weekly avg line
+    let maxVal = 0;
+    for (const entry of chartDataWithAvg) {
+      // Sum up all selected market yields for this entry
+      let barTotal = 0;
+      const entryRecord = entry as Record<string, unknown>;
+      for (const marketId of effectiveSelectedMarkets) {
+        barTotal += (entryRecord[marketId] as number) || 0;
+      }
+      maxVal = Math.max(maxVal, barTotal);
+      if (settings.showWeeklyAvg && (entry as { weeklyAvg?: number }).weeklyAvg) {
+        maxVal = Math.max(maxVal, (entry as { weeklyAvg?: number }).weeklyAvg ?? 0);
+      }
+    }
+
+    if (maxVal === 0) return [0];
+
+    // Calculate nice tick interval (aim for 4-6 ticks)
+    const roughInterval = maxVal / 5;
+    // Round to nice number (1, 2, 5, 10, 20, 50, 100, etc.)
+    const magnitude = Math.pow(10, Math.floor(Math.log10(roughInterval)));
+    const normalized = roughInterval / magnitude;
+    let niceInterval: number;
+    if (normalized <= 1) niceInterval = 1 * magnitude;
+    else if (normalized <= 2) niceInterval = 2 * magnitude;
+    else if (normalized <= 5) niceInterval = 5 * magnitude;
+    else niceInterval = 10 * magnitude;
+
+    // Generate ticks from 0 to just above max
+    const ticks: number[] = [];
+    for (let t = 0; t <= maxVal + niceInterval * 0.1; t += niceInterval) {
+      ticks.push(Math.round(t));
+    }
+    return ticks;
+  }, [chartDataWithAvg, effectiveSelectedMarkets, settings.showWeeklyAvg]);
 
   // Update settings and save to localStorage
   const updateSettings = useCallback((updates: Partial<ProductionChartSettings>) => {
@@ -596,6 +682,32 @@ function ProductionChart({
             </select>
           </div>
 
+          {/* Weekly average toggle and window selector */}
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={settings.showWeeklyAvg}
+                onChange={(e) => updateSettings({ showWeeklyAvg: e.target.checked })}
+                className="w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+              />
+              <span className="text-gray-700">Wkly avg</span>
+            </label>
+            {settings.showWeeklyAvg && (
+              <select
+                value={settings.rollingWindowDays}
+                onChange={(e) => updateSettings({ rollingWindowDays: parseInt(e.target.value) })}
+                className="px-1.5 py-0.5 text-xs border border-gray-300 rounded"
+                title="Rolling window size"
+              >
+                <option value={7}>7d</option>
+                <option value={14}>14d</option>
+                <option value={21}>21d</option>
+                <option value={28}>28d</option>
+              </select>
+            )}
+          </div>
+
           {/* Reset button */}
           <button
             onClick={handleReset}
@@ -603,6 +715,41 @@ function ProductionChart({
             title="Reset to defaults"
           >
             Reset
+          </button>
+
+          {/* Debug button */}
+          <button
+            onClick={() => {
+              const debugInfo = {
+                timestamp: new Date().toISOString(),
+                url: typeof window !== 'undefined' ? window.location.href : '',
+                planId,
+                crop: cropName,
+                product: productName,
+                unit,
+                settings,
+                harvestEvents: harvestEvents.length,
+                filteredEvents: filteredEvents.length,
+                chartData: chartDataWithAvg.map(d => ({
+                  date: d.date,
+                  dayOfYear: d.dayOfYear,
+                  visibleYield: (d as { visibleYield?: number }).visibleYield,
+                  weeklyAvg: (d as { weeklyAvg?: number }).weeklyAvg,
+                })),
+              };
+              navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
+              // Brief visual feedback
+              const btn = document.activeElement as HTMLButtonElement;
+              const original = btn?.textContent;
+              if (btn) {
+                btn.textContent = '✓';
+                setTimeout(() => { btn.textContent = original; }, 500);
+              }
+            }}
+            className="px-2 py-1 text-sm text-gray-400 hover:text-gray-600 border border-gray-200 rounded hover:bg-gray-50"
+            title="Copy debug info"
+          >
+            🐛
           </button>
         </div>
       </div>
@@ -650,25 +797,90 @@ function ProductionChart({
       ) : (
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 30, left: 40 }}>
+            <ComposedChart data={chartDataWithAvg} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+              {/* Horizontal grid lines */}
+              <CartesianGrid
+                horizontal={true}
+                vertical={false}
+                stroke="#9ca3af"
+                strokeDasharray="3 3"
+                yAxisId="left"
+              />
+              {/* Month boundary vertical lines */}
+              {(() => {
+                const lines = [];
+                for (let m = settings.startMonth; m <= settings.endMonth + 1; m++) {
+                  const d = new Date(displayYear, m - 1, 1);
+                  const doy = Math.floor((d.getTime() - new Date(displayYear, 0, 0).getTime()) / 86400000);
+                  lines.push(
+                    <ReferenceLine
+                      key={`month-${m}`}
+                      x={doy}
+                      yAxisId="left"
+                      stroke="#9ca3af"
+                      strokeWidth={1}
+                      strokeDasharray="3 3"
+                    />
+                  );
+                }
+                return lines;
+              })()}
+              {/* Centered labels on horizontal grid lines - rendered early so they're behind data */}
+              {yAxisTicks.slice(1).map((yVal) => (
+                <ReferenceLine
+                  key={`y-label-${yVal}`}
+                  y={yVal}
+                  yAxisId="left"
+                  stroke="transparent"
+                  label={{
+                    value: yVal.toFixed(0),
+                    position: 'center',
+                    fill: '#6b7280',
+                    fontSize: 10,
+                  }}
+                />
+              ))}
+              {/* Single clean axis with month names */}
               <XAxis
                 dataKey="dayOfYear"
                 type="number"
                 domain={axisDomain}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 11, fill: '#374151' }}
+                ticks={(() => {
+                  const ticks: number[] = [];
+                  for (let m = settings.startMonth; m <= settings.endMonth; m++) {
+                    // Middle of month for centered label
+                    const mid = new Date(displayYear, m - 1, 15);
+                    const doy = Math.floor((mid.getTime() - new Date(displayYear, 0, 0).getTime()) / 86400000);
+                    ticks.push(doy);
+                  }
+                  return ticks;
+                })()}
                 tickFormatter={(dayOfYear) => {
-                  // Convert day of year back to date for display
                   const d = new Date(displayYear, 0, dayOfYear);
-                  return `${d.getMonth() + 1}/${d.getDate()}`;
+                  return d.toLocaleDateString('en-US', { month: 'short' });
                 }}
-                angle={-45}
-                textAnchor="end"
-                height={50}
+                tickLine={false}
+                axisLine={{ stroke: '#d1d5db' }}
               />
               <YAxis
-                tick={{ fontSize: 11 }}
+                yAxisId="left"
+                tick={{ fontSize: 10, fill: '#6b7280' }}
                 tickFormatter={(value) => value.toFixed(0)}
-                label={{ value: unit, angle: -90, position: 'insideLeft', style: { fontSize: 11 } }}
+                width={35}
+                ticks={yAxisTicks}
+                domain={[0, yAxisTicks[yAxisTicks.length - 1] || 'auto']}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tick={{ fontSize: 10, fill: '#6b7280' }}
+                tickFormatter={(value) => value.toFixed(0)}
+                width={35}
+                ticks={yAxisTicks}
+                domain={[0, yAxisTicks[yAxisTicks.length - 1] || 'auto']}
+                axisLine={{ stroke: '#9ca3af' }}
+                tickLine={{ stroke: '#9ca3af' }}
               />
               <Tooltip
                 content={({ active, payload }) => {
@@ -676,6 +888,7 @@ function ProductionChart({
                   const data = payload[0].payload as {
                     date: string;
                     totalYield: number;
+                    weeklyAvg: number;
                     events: HarvestEvent[];
                     [key: string]: unknown;
                   };
@@ -717,7 +930,17 @@ function ProductionChart({
                       ) : (
                         <div className="mb-1">{formatYield(visibleTotal, unit)}</div>
                       )}
-                      <div className="text-gray-500 text-xs">
+                      {/* Weekly average */}
+                      {settings.showWeeklyAvg && data.weeklyAvg > 0 && (
+                        <div className="flex items-center justify-between gap-3 text-gray-600 border-t border-gray-100 pt-1 mt-1">
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-0.5 bg-orange-500 rounded" />
+                            Weekly avg
+                          </span>
+                          <span>{formatYield(data.weeklyAvg, unit)}/wk</span>
+                        </div>
+                      )}
+                      <div className="text-gray-500 text-xs mt-1">
                         {data.events.length} planting{data.events.length > 1 ? 's' : ''}:
                         <div className="max-h-24 overflow-y-auto mt-1">
                           {data.events.slice(0, 5).map((e, i) => (
@@ -739,13 +962,62 @@ function ProductionChart({
                 <Bar
                   key={market.id}
                   dataKey={market.id}
+                  yAxisId="left"
                   stackId="markets"
                   fill={market.color}
                   radius={index === selectedMarketInfo.length - 1 ? [2, 2, 0, 0] : [0, 0, 0, 0]}
                   barSize={8}
                 />
               ))}
-            </BarChart>
+              {/* Weekly average line - neutral gray with dash to distinguish from market colors */}
+              {settings.showWeeklyAvg && (
+                <Line
+                  type="monotone"
+                  dataKey="weeklyAvg"
+                  yAxisId="left"
+                  stroke="#374151"
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, fill: '#374151' }}
+                  strokeDasharray="4 2"
+                >
+                  <LabelList
+                    dataKey="weeklyAvg"
+                    position="top"
+                    content={({ x, y, value, index }) => {
+                      // Only show label at the maximum weekly average point
+                      if (!value || (value as number) <= 0) return null;
+
+                      // Find the index of the maximum weeklyAvg
+                      let maxIndex = 0;
+                      let maxVal = 0;
+                      chartDataWithAvg.forEach((d, i) => {
+                        const avg = (d as { weeklyAvg?: number }).weeklyAvg ?? 0;
+                        if (avg > maxVal) {
+                          maxVal = avg;
+                          maxIndex = i;
+                        }
+                      });
+
+                      if (index !== maxIndex) return null;
+
+                      return (
+                        <text
+                          x={x}
+                          y={(y as number) - 8}
+                          fill="#374151"
+                          fontSize={10}
+                          fontWeight={500}
+                          textAnchor="middle"
+                        >
+                          {Math.round(value as number)}
+                        </text>
+                      );
+                    }}
+                  />
+                </Line>
+              )}
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       )}
@@ -1919,10 +2191,11 @@ interface ProductionTabProps {
   initialProduct?: string;
   globalFilter: string;
   planYear: number;
+  planId: string;
   markets: Record<string, Market>;
 }
 
-function ProductionTab({ report, initialProduct, globalFilter, planYear, markets }: ProductionTabProps) {
+function ProductionTab({ report, initialProduct, globalFilter, planYear, planId, markets }: ProductionTabProps) {
   const [expandedProductId, setExpandedProductId] = useState<string | null>(() => {
     // Initialize from URL param if it matches a valid product
     if (initialProduct && report.byProduct.some(p => p.productId === initialProduct)) {
@@ -2022,24 +2295,27 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, markets
     : null;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4 h-full min-h-0">
       {/* Harvest Chart - shows when a product is selected */}
       {selectedProduct && (
-        <ProductionChart
-          harvestEvents={selectedProduct.harvestEvents}
-          unit={selectedProduct.unit}
-          planYear={planYear}
-          productName={selectedProduct.productName}
-          cropName={selectedProduct.crop}
-          markets={markets}
-        />
+        <div className="flex-shrink-0">
+          <ProductionChart
+            harvestEvents={selectedProduct.harvestEvents}
+            unit={selectedProduct.unit}
+            planYear={planYear}
+            planId={planId}
+            productName={selectedProduct.productName}
+            cropName={selectedProduct.crop}
+            markets={markets}
+          />
+        </div>
       )}
 
       {/* Products Table */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="overflow-x-auto">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 flex-1 min-h-0 flex flex-col">
+        <div className="overflow-auto flex-1 min-h-0">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="sticky top-0 bg-white z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} className="border-b border-gray-200">
                   {headerGroup.headers.map((header) => {
@@ -2049,7 +2325,7 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, markets
                       <th
                         key={header.id}
                         onClick={isExpandCol ? undefined : header.column.getToggleSortingHandler()}
-                        className={`py-2 px-3 font-medium text-gray-600 select-none ${
+                        className={`py-2 px-3 font-medium text-gray-600 select-none bg-white ${
                           isExpandCol ? 'w-8' : 'cursor-pointer hover:bg-gray-50'
                         } ${align === 'right' ? 'text-right' : 'text-left'}`}
                       >
@@ -2321,7 +2597,7 @@ export default function ReportsPage() {
         ) : undefined
       }
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="h-full flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {activeTab === 'revenue' && revenueReport && (
           <RevenueTab report={revenueReport} markets={currentPlan.markets ?? {}} />
         )}
@@ -2334,6 +2610,7 @@ export default function ReportsPage() {
             initialProduct={searchParams.get('product') ?? undefined}
             globalFilter={productionFilter}
             planYear={currentPlan.metadata.year}
+            planId={planId}
             markets={currentPlan.markets ?? {}}
           />
         )}
