@@ -36,6 +36,8 @@ export interface UseGddResult {
   error: string | null;
   /** Number of days of temperature data */
   dayCount: number;
+  /** Raw temperature history data (for direct access) */
+  tempData: TemperatureHistory | null;
   /** Calculate GDD-adjusted timing for a specific planting */
   calculateAdjustedTiming: (
     dtm: number,
@@ -183,6 +185,7 @@ export function useGdd(
     isLoading,
     error,
     dayCount: tempData?.daily.length ?? 0,
+    tempData,
     calculateAdjustedTiming,
     refresh: loadData,
   };

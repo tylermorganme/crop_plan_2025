@@ -6,6 +6,7 @@ import { usePlanStore } from '@/lib/plan-store';
 import { TIMEZONE_OPTIONS, DEFAULT_TIMEZONE, parseMonthDay, formatMonthDay } from '@/lib/date-utils';
 import AppHeader from '@/components/AppHeader';
 import type { TemperatureHistory } from '@/lib/gdd';
+import { DEFAULT_TRANSPLANT_SHOCK_DAYS, DEFAULT_ASSUMED_TRANSPLANT_AGE } from '@/lib/entities/planting-specs';
 import { calculateDayLength, getDayOfYearFromDate } from '@/lib/gdd';
 import { Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, ComposedChart, ReferenceLine } from 'recharts';
 
@@ -797,6 +798,77 @@ export default function SettingsPage() {
               </div>
               <p className="mt-1 text-sm text-gray-500">
                 Average last frost date for your area. Used to calculate weeks-from-frost for crop scheduling.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Calculation Settings Section */}
+        <section className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Calculation Settings</h2>
+
+          <div className="space-y-4">
+            {/* Transplant Shock Days */}
+            <div>
+              <label htmlFor="transplantShockDays" className="block text-sm font-medium text-gray-700 mb-1">
+                Transplant Shock Adjustment
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="transplantShockDays"
+                  type="number"
+                  value={metadata.transplantShockDays ?? DEFAULT_TRANSPLANT_SHOCK_DAYS}
+                  onChange={(e) => updatePlanMetadata({ transplantShockDays: parseInt(e.target.value) || DEFAULT_TRANSPLANT_SHOCK_DAYS })}
+                  min={0}
+                  max={30}
+                  className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <span className="text-sm text-gray-600">days</span>
+                {metadata.transplantShockDays !== undefined && metadata.transplantShockDays !== DEFAULT_TRANSPLANT_SHOCK_DAYS && (
+                  <button
+                    type="button"
+                    onClick={() => updatePlanMetadata({ transplantShockDays: undefined })}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Reset to default ({DEFAULT_TRANSPLANT_SHOCK_DAYS})
+                  </button>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Transplants take longer overall than direct-seeded crops due to root disturbance and establishment.
+                This adjustment compensates when converting timing between methods. Default: {DEFAULT_TRANSPLANT_SHOCK_DAYS} days.
+              </p>
+            </div>
+
+            {/* Default Assumed Transplant Age */}
+            <div>
+              <label htmlFor="defaultTransplantAge" className="block text-sm font-medium text-gray-700 mb-1">
+                Default Assumed Transplant Age
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="defaultTransplantAge"
+                  type="number"
+                  value={metadata.defaultTransplantAge ?? DEFAULT_ASSUMED_TRANSPLANT_AGE}
+                  onChange={(e) => updatePlanMetadata({ defaultTransplantAge: parseInt(e.target.value) || DEFAULT_ASSUMED_TRANSPLANT_AGE })}
+                  min={7}
+                  max={90}
+                  className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <span className="text-sm text-gray-600">days</span>
+                {metadata.defaultTransplantAge !== undefined && metadata.defaultTransplantAge !== DEFAULT_ASSUMED_TRANSPLANT_AGE && (
+                  <button
+                    type="button"
+                    onClick={() => updatePlanMetadata({ defaultTransplantAge: undefined })}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    Reset to default ({DEFAULT_ASSUMED_TRANSPLANT_AGE})
+                  </button>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                When DTM is measured &quot;from transplant,&quot; we need to know how old the transplant was assumed to be.
+                This default is used when a spec doesn&apos;t specify its own value. Default: {DEFAULT_ASSUMED_TRANSPLANT_AGE} days.
               </p>
             </div>
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import type { PlantingSpec } from '@/lib/entities/planting-specs';
+import type { PlantingSpec, TimingSettings } from '@/lib/entities/planting-specs';
 import { copyConfig } from '@/lib/entities/planting-specs';
 import type { Variety } from '@/lib/entities/variety';
 import type { SeedMix } from '@/lib/entities/seed-mix';
@@ -30,6 +30,8 @@ interface PlantingSpecCreatorProps {
   initialSourceSpec?: PlantingSpec | null;
   /** Last frost date for weeks-from-frost calculation (ISO date string) */
   lastFrostDate?: string;
+  /** Plan-level timing settings (optional, uses defaults if not provided) */
+  timingSettings?: Partial<TimingSettings>;
 }
 
 type Step = 'choose' | 'edit';
@@ -53,6 +55,7 @@ export default function PlantingSpecCreator({
   markets,
   initialSourceSpec,
   lastFrostDate,
+  timingSettings,
 }: PlantingSpecCreatorProps) {
   const [step, setStep] = useState<Step>('choose');
   const [createMode, setCreateMode] = useState<CreateMode>('blank');
@@ -149,6 +152,7 @@ export default function PlantingSpecCreator({
         products={products}
         markets={markets}
         lastFrostDate={lastFrostDate}
+        timingSettings={timingSettings}
       />
     );
   }

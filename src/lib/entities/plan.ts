@@ -53,6 +53,22 @@ export interface PlanMetadata {
     lon: number;
     name?: string;
   };
+
+  /**
+   * Transplant shock compensation (days).
+   * Transplants take longer overall than direct-seeded crops despite
+   * having a head start, because of establishment shock.
+   * Default: 14 days (Johnny's Seeds reference)
+   */
+  transplantShockDays?: number;
+
+  /**
+   * Default assumed transplant age (days) when DTM is measured from transplant.
+   * Used to estimate total time when DTM is "from transplant" but we're
+   * calculating for direct seeding.
+   * Default: 30 days (~4 weeks)
+   */
+  defaultTransplantAge?: number;
 }
 
 /** A single change entry for history/undo */

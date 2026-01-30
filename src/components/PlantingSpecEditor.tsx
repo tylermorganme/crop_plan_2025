@@ -1,16 +1,20 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { usePlanStore } from '@/lib/plan-store';
 import {
   type PlantingSpec,
   type TrayStage,
   type ProductYield,
+  type TimingSettings,
   calculateDaysInCells,
   calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
   createBlankConfig,
   evaluateYieldForDisplay,
+  DEFAULT_TRANSPLANT_SHOCK_DAYS,
+  DEFAULT_ASSUMED_TRANSPLANT_AGE,
 } from '@/lib/entities/planting-specs';
 import type { Variety } from '@/lib/entities/variety';
 import type { SeedMix } from '@/lib/entities/seed-mix';
@@ -46,6 +50,8 @@ interface PlantingSpecEditorProps {
   markets?: Record<string, Market>;
   /** Last frost date for weeks-from-frost calculation (MM-DD format, e.g., "04-01") */
   lastFrostDate?: string;
+  /** Plan-level timing settings (optional, uses defaults if not provided) */
+  timingSettings?: Partial<TimingSettings>;
 }
 
 /**
@@ -246,7 +252,13 @@ export default function PlantingSpecEditor({
   products = {},
   markets = {},
   lastFrostDate,
+  timingSettings,
 }: PlantingSpecEditorProps) {
+  // Read timing settings directly from store for live updates (cross-tab sync)
+  const storeMetadata = usePlanStore((s) => s.currentPlan?.metadata);
+  // Prefer store values, fall back to props, then defaults
+  const transplantShockDays = storeMetadata?.transplantShockDays ?? timingSettings?.transplantShockDays ?? DEFAULT_TRANSPLANT_SHOCK_DAYS;
+  const defaultTransplantAge = storeMetadata?.defaultTransplantAge ?? timingSettings?.defaultTransplantAge ?? DEFAULT_ASSUMED_TRANSPLANT_AGE;
   // Form state - initialize from spec when opened
   const [formData, setFormData] = useState<Partial<PlantingSpec>>({});
   const [trayStages, setTrayStages] = useState<TrayStage[]>([]);
@@ -257,6 +269,7 @@ export default function PlantingSpecEditor({
   const [productError, setProductError] = useState<string | null>(null);
   const [errorsExpanded, setErrorsExpanded] = useState(false);
   const [errorsClickedOpen, setErrorsClickedOpen] = useState(false);
+  const [showDtmHelp, setShowDtmHelp] = useState(false);
   const identifierInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when spec changes or modal opens
@@ -1133,16 +1146,26 @@ export default function PlantingSpecEditor({
                 <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Timing (Shared)</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">DTM Measured From</label>
+                    <div className="flex items-center gap-1 mb-1">
+                      <label className="block text-xs font-medium text-gray-600">DTM Measured From</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowDtmHelp(true)}
+                        className="w-4 h-4 rounded-full bg-gray-200 text-gray-600 hover:bg-blue-100 hover:text-blue-700 text-xs font-bold flex items-center justify-center"
+                        title="Learn about DTM measurement options"
+                      >
+                        ?
+                      </button>
+                    </div>
                     <select
                       value={formData.normalMethod || ''}
                       onChange={(e) => updateField('normalMethod', e.target.value as 'from-seeding' | 'from-transplant' | 'total-time' | undefined)}
                       className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select...</option>
-                      <option value="from-seeding">From seeding (seed packet)</option>
-                      <option value="from-transplant">From transplant date (seed packet)</option>
-                      <option value="total-time">Full seed-to-harvest (grower/book)</option>
+                      <option value="from-seeding">DS: Germination → Harvest</option>
+                      <option value="from-transplant">TP: Day of Planting → Harvest</option>
+                      <option value="total-time">TP: Seeding → Harvest</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
                       How DTM values in products are measured
@@ -1412,6 +1435,247 @@ export default function PlantingSpecEditor({
                 className="px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-md hover:bg-amber-700"
               >
                 Remove &amp; Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DTM Measurement Help Modal */}
+      {showDtmHelp && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL_CONFIRM }}>
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowDtmHelp(false)}
+          />
+          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[85vh] flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
+              <h2 className="text-lg font-semibold text-gray-900">Understanding DTM Measurement</h2>
+              <button
+                onClick={() => setShowDtmHelp(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl leading-none p-1"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4 overflow-y-auto flex-1 text-sm text-gray-700 space-y-5">
+              <section>
+                <h3 className="font-semibold text-gray-900 mb-2">What is DTM?</h3>
+                <p className="mb-2">
+                  &quot;Days to Maturity&quot; (DTM) always measures the time until the <strong>first harvest</strong> of
+                  a crop from some point in time. But what that starting point is varies quite a bit depending on
+                  where you&apos;re sourcing your information.
+                </p>
+                <p className="mb-3">
+                  In general, people get this number from their <strong>seed seller</strong> or from their
+                  <strong> own records</strong>. Seed sellers typically list DTM assuming either direct seeding
+                  or transplanting—and which one they assume depends on the crop. Sometimes they explicitly state
+                  which, but often they don&apos;t. Always consult your seed seller&apos;s literature to understand
+                  what their numbers represent.
+                </p>
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-3">
+                  <div className="text-xs text-amber-800">
+                    <strong className="text-amber-900">What seed sellers typically mean:</strong> The amount of time
+                    there was a green plant in the field before it was harvested. They exclude germination time, and
+                    for transplants they also exclude greenhouse/prop room time.
+                  </div>
+                </div>
+                <p>
+                  We also support a third, non-standard method that we find useful for generating assumptions
+                  from your own farming records: measuring from when you seed a transplant all the way to harvest.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-gray-900 mb-2">The Three Options</h3>
+                <div className="space-y-4">
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-blue-900 mb-1"><span className="font-bold">Direct Seed:</span> <span className="font-bold">From Germination</span> to First Harvest</div>
+                    <p className="text-blue-800 text-xs mb-2">
+                      The number represents days from when a direct-seeded crop germinates to first harvest.
+                    </p>
+                    <p className="text-blue-700 text-xs">
+                      This is what seed sellers typically mean when they assume a crop will be direct seeded.
+                      The count starts after the seed sprouts in the field—does not include germination time.
+                    </p>
+                    <p className="text-blue-600 text-xs mt-1 italic">
+                      Example: Arugula listed as &quot;25 days&quot; means 25 days from emergence to harvest.
+                    </p>
+                    <details className="mt-2 pt-2 border-t border-blue-200">
+                      <summary className="text-blue-700 text-xs cursor-pointer hover:text-blue-900">
+                        See how we use this internally
+                      </summary>
+                      <div className="mt-2 text-blue-700 text-xs space-y-2">
+                        <p className="text-blue-600">
+                          We calculate <strong>Seed to Harvest</strong> (total days from seeding to first harvest) based on how you actually grow it:
+                        </p>
+                        <div className="bg-blue-100/50 rounded p-2 space-y-3">
+                          <div>
+                            <div className="font-bold">If you grow as direct seed:</div>
+                            <div className="font-mono mt-1 ml-2">Days to Germination + DTM</div>
+                          </div>
+                          <div>
+                            <div className="font-bold">If you grow as transplant:</div>
+                            <div className="font-mono mt-1 ml-2">Days to Germination + DTM + Shock Adjustment</div>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+
+                  <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="text-purple-900 mb-1"><span className="font-bold">Transplant:</span> <span className="font-bold">From Planting</span> to First Harvest</div>
+                    <p className="text-purple-800 text-xs mb-2">
+                      The number represents days from when a transplant goes into the ground to first harvest.
+                    </p>
+                    <p className="text-purple-700 text-xs">
+                      This is what seed sellers typically mean when they assume a crop will be transplanted.
+                      The count starts when the plug is planted in the field, not when it was seeded.
+                    </p>
+                    <p className="text-purple-600 text-xs mt-1 italic">
+                      Example: Tomatoes listed as &quot;69 days from transplant&quot; means 69 days after planting a start.
+                    </p>
+                    <p className="text-purple-500 text-xs mt-2">
+                      When using this option, we also need the <strong>Assumed Transplant Age</strong>—how
+                      old the transplant was assumed to be. There&apos;s a big difference between a tiny
+                      200-cell plug vs. a 4-inch pot. You can often estimate this from how many weeks before
+                      planting the seller recommends starting seeds (e.g., &quot;3 weeks before planting&quot; = 21 days).
+                    </p>
+                    <details className="mt-2 pt-2 border-t border-purple-200">
+                      <summary className="text-purple-700 text-xs cursor-pointer hover:text-purple-900">
+                        See how we use this internally
+                      </summary>
+                      <div className="mt-2 text-purple-700 text-xs space-y-2">
+                        <p className="text-purple-600">
+                          We calculate <strong>Seed to Harvest</strong> (total days from seeding to first harvest) based on how you actually grow it:
+                        </p>
+                        <div className="bg-purple-100/50 rounded p-2 space-y-3">
+                          <div>
+                            <div className="font-bold">If you grow as transplant:</div>
+                            <div className="font-mono mt-1 ml-2">Days in Greenhouse + DTM</div>
+                          </div>
+                          <div>
+                            <div className="font-bold">If you grow as direct seed:</div>
+                            <div className="font-mono mt-1 ml-2">Assumed Transplant Age + DTM − Shock Adjustment</div>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+
+                  <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="text-purple-900 mb-1"><span className="font-bold">Transplant:</span> <span className="font-bold">From Seeding</span> to First Harvest</div>
+                    <p className="text-purple-800 text-xs mb-2">
+                      The number represents total days from seeding a transplant to first harvest.
+                    </p>
+                    <p className="text-purple-700 text-xs">
+                      This non-standard option is useful when working from your own records. It includes
+                      greenhouse time, transplant shock, and field time—the entire journey from when seeds
+                      go into trays to when you harvest.
+                    </p>
+                    <p className="text-purple-600 text-xs mt-1 italic">
+                      Example: Your records show tomatoes take &quot;115 days&quot; from seeding trays to first harvest.
+                    </p>
+                    <details className="mt-2 pt-2 border-t border-purple-200">
+                      <summary className="text-purple-700 text-xs cursor-pointer hover:text-purple-900">
+                        See how we use this internally
+                      </summary>
+                      <div className="mt-2 text-purple-700 text-xs space-y-2">
+                        <p className="text-purple-600">
+                          We calculate <strong>Seed to Harvest</strong> (total days from seeding to first harvest) based on how you actually grow it:
+                        </p>
+                        <div className="bg-purple-100/50 rounded p-2 space-y-3">
+                          <div>
+                            <div className="font-bold">If you grow as transplant:</div>
+                            <div className="font-mono mt-1 ml-2">DTM <span className="font-sans text-purple-500">(already includes everything)</span></div>
+                          </div>
+                          <div>
+                            <div className="font-bold">If you grow as direct seed:</div>
+                            <div className="font-mono mt-1 ml-2">DTM − Shock Adjustment</div>
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+                <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-amber-800 text-sm">
+                    <strong>Note:</strong> None of this applies to perennials, which are assumed to be mature plants already in the ground.
+                  </p>
+                </div>
+                <p className="mt-4">
+                  What matters is that the number you input represents what you think it does. Whether it came
+                  from a seed supplier or your own records, you&apos;re free to input that number however you see
+                  fit—just make sure the software knows what it represents.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-gray-900 mb-2">Understanding Transplant Shock</h3>
+                <p className="mb-2">
+                  Crops that are transplanted actually take <strong>slightly longer overall</strong> than
+                  crops grown directly from seed—from the time they&apos;re seeded to harvest. This is because
+                  their growth is limited while in the cell, and they experience some shock from
+                  being disturbed during transplanting.
+                </p>
+                <p className="mb-2">
+                  However, transplants spend <strong>less time in the field</strong>. What you gain by
+                  transplanting is giving them a head start before the weather is good enough outside.
+                </p>
+                <p className="text-sm text-gray-500">
+                  If you take DTM measured for a direct-seeded crop and assume you can just subtract
+                  the propagation time, you&apos;ll underestimate the actual field time. We account
+                  for this with a &quot;transplant shock adjustment.&quot; The default is 14 days to be
+                  conservative—many plants treated well only experience a few days of difference.
+                </p>
+              </section>
+
+              <section className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <h3 className="font-semibold text-gray-900 mb-1">Current Plan Settings</h3>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div className="flex justify-between">
+                    <span>Transplant shock adjustment:</span>
+                    <span className="font-mono text-gray-900">{transplantShockDays} days</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Default assumed transplant age:</span>
+                    <span className="font-mono text-gray-900">{defaultTransplantAge} days</span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  You can override the assumed transplant age per-spec below this dropdown when using
+                  the &quot;Transplant&quot; option. Plan-level defaults can be changed in Settings.
+                </p>
+              </section>
+
+              <section className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <h3 className="font-semibold text-green-900 mb-2">Why go to all this trouble?</h3>
+                <p className="text-green-800 text-sm mb-2">
+                  Market gardeners often plant crops unconventionally. While a commercial grower might always
+                  direct seed or always transplant a particular crop, there can be good reasons in a market
+                  garden context to do the exact opposite.
+                </p>
+                <p className="text-green-800 text-sm mb-2">
+                  As you can see, trying to do this math in your head can be daunting.
+                </p>
+                <p className="text-green-700 text-sm font-medium">
+                  Our goal is to let you put in whatever information you have—whether from seed catalogs,
+                  your own records, or anywhere else—and then plant it however you&apos;d like.
+                </p>
+              </section>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-3 border-t bg-gray-50 rounded-b-lg shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowDtmHelp(false)}
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                Got it
               </button>
             </div>
           </div>

@@ -313,13 +313,34 @@ export interface CropCalculated {
  * Johnny's Seeds reference: "subtract about 14 days for days to maturity
  * from transplant" when converting TP timing to DS timing.
  */
-const PLANTING_METHOD_DELTA_DAYS = 14;
+export const DEFAULT_TRANSPLANT_SHOCK_DAYS = 14;
 
 /**
  * Default assumed transplant age (days) for TP crops.
  * ~4 weeks, a rough middle-ground assumption.
  */
-const DEFAULT_ASSUMED_TRANSPLANT_DAYS = 30;
+export const DEFAULT_ASSUMED_TRANSPLANT_AGE = 30;
+
+// Keep internal const aliases for backwards compatibility within this file
+const PLANTING_METHOD_DELTA_DAYS = DEFAULT_TRANSPLANT_SHOCK_DAYS;
+const DEFAULT_ASSUMED_TRANSPLANT_DAYS = DEFAULT_ASSUMED_TRANSPLANT_AGE;
+
+/**
+ * Timing settings that affect DTM calculations.
+ * These can be customized per-plan.
+ */
+export interface TimingSettings {
+  /** Transplant shock compensation (days). Default: 14 */
+  transplantShockDays: number;
+  /** Assumed transplant age when DTM is from-transplant (days). Default: 30 */
+  defaultTransplantAge: number;
+}
+
+/** Default timing settings */
+export const DEFAULT_TIMING_SETTINGS: TimingSettings = {
+  transplantShockDays: DEFAULT_TRANSPLANT_SHOCK_DAYS,
+  defaultTransplantAge: DEFAULT_ASSUMED_TRANSPLANT_AGE,
+};
 
 // =============================================================================
 // CALCULATIONS

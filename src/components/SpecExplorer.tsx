@@ -13,6 +13,8 @@ import { getMarketSplitTotal, getActiveMarkets, type Market, type MarketSplit } 
 import PlantingSpecCreator from './PlantingSpecCreator';
 import PlantingSpecEditor from './PlantingSpecEditor';
 import CompareSpecsModal from './CompareSpecsModal';
+import GddExplorerModal from './GddExplorerModal';
+import { useGdd } from '@/lib/gdd-client';
 import { Z_INDEX } from '@/lib/z-index';
 import {
   DEFAULT_VISIBLE_COLUMNS,
@@ -461,6 +463,9 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   // Compare specs state
   const [showCompare, setShowCompare] = useState(false);
 
+  // GDD explorer state
+  const [showGddExplorer, setShowGddExplorer] = useState(false);
+
   // Bulk spec editor state
   const [showBulkEditor, setShowBulkEditor] = useState(false);
 
@@ -475,10 +480,14 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   const currentPlanId = usePlanStore((state) => state.currentPlan?.id);
   const planYear = usePlanStore((state) => state.currentPlan?.metadata?.year) ?? new Date().getFullYear();
   const lastFrostDate = usePlanStore((state) => state.currentPlan?.metadata?.lastFrostDate);
+  // Note: timingSettings (transplantShockDays, defaultTransplantAge) are read directly
+  // from store by PlantingSpecEditor - no need to subscribe here and cause table refreshes
   const varieties = usePlanStore((state) => state.currentPlan?.varieties);
   const seedMixes = usePlanStore((state) => state.currentPlan?.seedMixes);
   const products = usePlanStore((state) => state.currentPlan?.products);
   const markets = usePlanStore((state) => state.currentPlan?.markets);
+  const crops = usePlanStore((state) => state.currentPlan?.crops);
+  const gddLocation = usePlanStore((state) => state.currentPlan?.metadata?.location);
   const catalogLoading = usePlanStore((state) => state.isLoading);
   const loadPlanById = usePlanStore((state) => state.loadPlanById);
   const bulkAddPlantings = usePlanStore((state) => state.bulkAddPlantings);
@@ -496,6 +505,9 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     if (!activePlanId) return null;
     return planList.find(p => p.id === activePlanId) ?? null;
   }, [planList, activePlanId]);
+
+  // GDD temperature data for selected spec
+  const gdd = useGdd(gddLocation?.lat, gddLocation?.lon, planYear);
 
   // Convert catalog object to array for display
   const planCatalog = useMemo(() => {
@@ -2191,6 +2203,14 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
             >
               Edit
             </button>
+            <button
+              onClick={() => setShowGddExplorer(true)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              title="Explore GDD timing for this spec"
+              disabled={!gdd.isLoaded || !selectedCrop.productYields?.length}
+            >
+              GDD
+            </button>
           </div>
           <div className="overflow-y-auto max-h-[calc(100vh-300px)]">
             <div className="p-4 space-y-1">
@@ -2415,6 +2435,22 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         markets={markets}
         lastFrostDate={lastFrostDate}
       />
+
+      {/* GDD Explorer Modal */}
+      {showGddExplorer && selectedCrop && gdd.isLoaded && gdd.tempData && (
+        <GddExplorerModal
+          spec={selectedCrop}
+          products={products ?? {}}
+          baseTemp={(() => {
+            // Get base temp from crop entity, or default to 50°F
+            const cropEntity = crops?.[selectedCrop.cropId ?? ''];
+            return cropEntity?.gddBaseTemp ?? 50;
+          })()}
+          tempData={gdd.tempData}
+          planYear={planYear}
+          onClose={() => setShowGddExplorer(false)}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && specsToDelete.length > 0 && (

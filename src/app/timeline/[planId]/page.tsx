@@ -447,6 +447,10 @@ export default function TimelinePlanPage() {
         products={currentPlan?.products}
         markets={currentPlan?.markets}
         lastFrostDate={currentPlan?.metadata.lastFrostDate}
+        timingSettings={{
+          transplantShockDays: currentPlan?.metadata.transplantShockDays,
+          defaultTransplantAge: currentPlan?.metadata.defaultTransplantAge,
+        }}
       />
     </PageLayout>
   );
