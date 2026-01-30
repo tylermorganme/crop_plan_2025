@@ -309,7 +309,8 @@ interface ProductionChartSettings {
   startMonth: number; // 1-12
   endMonth: number; // 1-12
   selectedMarkets: string[]; // Array of market IDs to show (empty = all markets)
-  showWeeklyAvg: boolean; // Show weekly average line
+  showBars: boolean; // Show harvest event bars
+  showWeeklyAvg: boolean; // Show weekly average lines
   rollingWindowDays: number; // Rolling window size in days (7, 14, 21, 28)
 }
 
@@ -318,6 +319,7 @@ const DEFAULT_CHART_SETTINGS: ProductionChartSettings = {
   startMonth: 1,
   endMonth: 12,
   selectedMarkets: [], // Empty = show all markets
+  showBars: true,
   showWeeklyAvg: true,
   rollingWindowDays: 21, // 3-week window by default
 };
@@ -477,7 +479,8 @@ function ProductionChart({
     return sorted;
   }, [filteredEvents, getDayOfYear, effectiveSelectedMarkets]);
 
-  // Compute weekly average using symmetric rolling window, normalized to 7 days
+  // Compute weekly averages using symmetric rolling window, normalized to 7 days
+  // Calculates both total weekly avg and per-market weekly averages
   const chartDataWithAvg = useMemo(() => {
     if (chartData.length === 0) return chartData;
 
@@ -485,22 +488,47 @@ function ProductionChart({
     const halfWindow = Math.floor(windowDays / 2);
     const normalizer = windowDays / 7; // Normalize to weekly equivalent
 
-    // Build a map of dayOfYear -> visibleYield for quick lookup
-    const yieldByDay = new Map<number, number>();
-    for (const entry of chartData) {
-      yieldByDay.set(entry.dayOfYear, (entry.visibleYield as number) || 0);
+    // Build maps of dayOfYear -> yield for quick lookup (total and per-market)
+    const totalYieldByDay = new Map<number, number>();
+    const marketYieldByDay = new Map<string, Map<number, number>>();
+
+    // Initialize per-market maps
+    for (const marketId of effectiveSelectedMarkets) {
+      marketYieldByDay.set(marketId, new Map<number, number>());
     }
 
-    // Create new entries with weeklyAvg computed
-    return chartData.map(entry => {
-      let sum = 0;
-      // Symmetric window: from (day - halfWindow) to (day + halfWindow)
-      for (let d = entry.dayOfYear - halfWindow; d <= entry.dayOfYear + halfWindow; d++) {
-        sum += yieldByDay.get(d) || 0;
+    for (const entry of chartData) {
+      totalYieldByDay.set(entry.dayOfYear, (entry.visibleYield as number) || 0);
+      // Per-market yields
+      const entryRecord = entry as Record<string, unknown>;
+      for (const marketId of effectiveSelectedMarkets) {
+        const marketYield = (entryRecord[marketId] as number) || 0;
+        marketYieldByDay.get(marketId)!.set(entry.dayOfYear, marketYield);
       }
-      return { ...entry, weeklyAvg: sum / normalizer };
+    }
+
+    // Create new entries with weeklyAvg computed (total and per-market)
+    return chartData.map(entry => {
+      // Total rolling average
+      let totalSum = 0;
+      for (let d = entry.dayOfYear - halfWindow; d <= entry.dayOfYear + halfWindow; d++) {
+        totalSum += totalYieldByDay.get(d) || 0;
+      }
+
+      // Per-market rolling averages
+      const marketAvgs: Record<string, number> = {};
+      for (const marketId of effectiveSelectedMarkets) {
+        let marketSum = 0;
+        const yieldMap = marketYieldByDay.get(marketId)!;
+        for (let d = entry.dayOfYear - halfWindow; d <= entry.dayOfYear + halfWindow; d++) {
+          marketSum += yieldMap.get(d) || 0;
+        }
+        marketAvgs[`${marketId}_avg`] = marketSum / normalizer;
+      }
+
+      return { ...entry, weeklyAvg: totalSum / normalizer, ...marketAvgs };
     });
-  }, [chartData, settings.rollingWindowDays]);
+  }, [chartData, settings.rollingWindowDays, effectiveSelectedMarkets]);
 
   // Calculate axis domain based on month range
   const axisDomain = useMemo(() => {
@@ -514,18 +542,34 @@ function ProductionChart({
   const yAxisTicks = useMemo(() => {
     if (chartDataWithAvg.length === 0) return [0];
 
-    // Find max value across all bars and the weekly avg line
+    // Find max value across all bars and the weekly avg lines
     let maxVal = 0;
     for (const entry of chartDataWithAvg) {
-      // Sum up all selected market yields for this entry
-      let barTotal = 0;
       const entryRecord = entry as Record<string, unknown>;
-      for (const marketId of effectiveSelectedMarkets) {
-        barTotal += (entryRecord[marketId] as number) || 0;
+
+      // Sum up all selected market yields for bars
+      if (settings.showBars) {
+        let barTotal = 0;
+        for (const marketId of effectiveSelectedMarkets) {
+          barTotal += (entryRecord[marketId] as number) || 0;
+        }
+        maxVal = Math.max(maxVal, barTotal);
       }
-      maxVal = Math.max(maxVal, barTotal);
+
+      // Total weekly avg
       if (settings.showWeeklyAvg && (entry as { weeklyAvg?: number }).weeklyAvg) {
         maxVal = Math.max(maxVal, (entry as { weeklyAvg?: number }).weeklyAvg ?? 0);
+      }
+
+      // Per-market weekly averages (lines are stacked visually, so check individual values)
+      if (settings.showWeeklyAvg) {
+        for (const marketId of effectiveSelectedMarkets) {
+          const avgKey = `${marketId}_avg`;
+          const avgVal = (entryRecord[avgKey] as number) || 0;
+          // Note: per-market lines aren't stacked, but total line covers the sum
+          // Just ensure we catch any edge cases
+          maxVal = Math.max(maxVal, avgVal);
+        }
       }
     }
 
@@ -681,6 +725,17 @@ function ProductionChart({
               ))}
             </select>
           </div>
+
+          {/* Show bars toggle */}
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.showBars}
+              onChange={(e) => updateSettings({ showBars: e.target.checked })}
+              className="w-3.5 h-3.5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Bars</span>
+          </label>
 
           {/* Weekly average toggle and window selector */}
           <div className="flex items-center gap-2">
@@ -958,7 +1013,7 @@ function ProductionChart({
                 }}
               />
               {/* Stacked bars for each selected market */}
-              {selectedMarketInfo.map((market, index) => (
+              {settings.showBars && selectedMarketInfo.map((market, index) => (
                 <Bar
                   key={market.id}
                   dataKey={market.id}
@@ -969,8 +1024,21 @@ function ProductionChart({
                   barSize={8}
                 />
               ))}
-              {/* Weekly average line - neutral gray with dash to distinguish from market colors */}
-              {settings.showWeeklyAvg && (
+              {/* Per-market weekly average lines */}
+              {settings.showWeeklyAvg && selectedMarketInfo.map((market) => (
+                <Line
+                  key={`${market.id}_avg`}
+                  type="monotone"
+                  dataKey={`${market.id}_avg`}
+                  yAxisId="left"
+                  stroke={market.color}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4, fill: market.color }}
+                />
+              ))}
+              {/* Total weekly average line - neutral gray with dash to distinguish from market colors */}
+              {settings.showWeeklyAvg && selectedMarketInfo.length > 1 && (
                 <Line
                   type="monotone"
                   dataKey="weeklyAvg"
