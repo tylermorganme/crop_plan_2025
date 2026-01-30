@@ -156,6 +156,8 @@ export interface ProductProductionSummary {
     bedName: string | null;
     numberOfHarvests: number;
     daysBetweenHarvest: number;
+    /** Max yield per week for this planting (used for overlap calculation) */
+    maxYieldPerWeek: number;
   }>;
   /** Expanded harvest events for timeline chart */
   harvestEvents: HarvestEvent[];
@@ -255,6 +257,66 @@ function distributeYieldAcrossWindow(
   }
 
   return result;
+}
+
+/**
+ * Calculate the true maximum yield per week based on overlapping harvest windows.
+ *
+ * Instead of naively summing all per-planting maxYieldPerWeek values (which assumes
+ * all plantings harvest simultaneously), this uses an interval sweep algorithm to find
+ * the actual peak week based on when harvest windows overlap.
+ *
+ * Algorithm:
+ * 1. Create "start" and "end" events for each harvest window
+ * 2. Sort events chronologically (ends before starts on same day)
+ * 3. Walk through events, tracking active yield/week
+ * 4. Return the maximum sum encountered
+ */
+function calculatePeakOverlapYieldPerWeek(
+  plantings: Array<{
+    harvestStartDate: string | null;
+    harvestEndDate: string | null;
+    maxYieldPerWeek: number;
+  }>
+): number {
+  // Build events: +yieldPerWeek at start, -yieldPerWeek at end
+  type IntervalEvent = { date: string; delta: number };
+  const events: IntervalEvent[] = [];
+
+  for (const p of plantings) {
+    if (!p.harvestStartDate || !p.harvestEndDate || p.maxYieldPerWeek <= 0) continue;
+
+    events.push({ date: p.harvestStartDate, delta: p.maxYieldPerWeek });
+    // End is exclusive - yield stops after the last harvest day
+    // Add 1 day to end date for the "stop" event
+    const endDate = new Date(p.harvestEndDate + 'T00:00:00');
+    endDate.setDate(endDate.getDate() + 1);
+    events.push({ date: endDate.toISOString().split('T')[0], delta: -p.maxYieldPerWeek });
+  }
+
+  if (events.length === 0) return 0;
+
+  // Sort by date, with ends (-delta) before starts (+delta) on same day
+  // This ensures we process "stop" before "start" when both occur on the same day
+  events.sort((a, b) => {
+    const dateCompare = a.date.localeCompare(b.date);
+    if (dateCompare !== 0) return dateCompare;
+    // On same day, negative deltas (ends) come before positive deltas (starts)
+    return a.delta - b.delta;
+  });
+
+  // Sweep through events tracking active yield
+  let currentYield = 0;
+  let maxYield = 0;
+
+  for (const event of events) {
+    currentYield += event.delta;
+    if (currentYield > maxYield) {
+      maxYield = currentYield;
+    }
+  }
+
+  return maxYield;
 }
 
 // =============================================================================
@@ -462,7 +524,7 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
       productSummary.totalYield += productResult.totalYield;
       productSummary.totalBedFeet += planting.bedFeet;
       productSummary.plantingCount += 1;
-      productSummary.maxYieldPerWeek += productResult.maxYieldPerWeek;
+      // Note: maxYieldPerWeek will be recalculated using interval overlap after all plantings collected
       productSummary.minYieldPerWeek += productResult.minYieldPerWeek;
       // Look up bed name
       const bedName = planting.startBed && plan.beds?.[planting.startBed]
@@ -481,6 +543,7 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
         bedName,
         numberOfHarvests: productResult.numberOfHarvests,
         daysBetweenHarvest: productResult.daysBetweenHarvest,
+        maxYieldPerWeek: productResult.maxYieldPerWeek,
       });
 
       // Generate individual harvest events for timeline chart
@@ -564,11 +627,14 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
     }
   }
 
-  // Calculate yield efficiency for each product and build sorted list
+  // Calculate yield efficiency and true max per week for each product
   for (const productSummary of productMap.values()) {
     if (productSummary.totalBedFeet > 0) {
       productSummary.yieldPerFoot = productSummary.totalYield / productSummary.totalBedFeet;
     }
+    // Calculate true max per week using interval overlap algorithm
+    // This finds the actual peak based on overlapping harvest windows
+    productSummary.maxYieldPerWeek = calculatePeakOverlapYieldPerWeek(productSummary.plantings);
   }
 
   // Sort products by total yield (descending)
