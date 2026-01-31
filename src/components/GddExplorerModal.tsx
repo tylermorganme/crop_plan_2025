@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ComposedChart,
   Line,
@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  ReferenceArea,
   CartesianGrid,
 } from 'recharts';
 import type { PlantingSpec } from '@/lib/entities/planting-specs';
@@ -124,6 +125,17 @@ function daysToAccumulateGdd(
     days++;
   }
 
+  // Interpolate fractional day to avoid step discontinuities
+  // When we exit, 'days' full days were added but we may have overshot targetGdd
+  if (days > 0 && accumulated > targetGdd) {
+    const lastDoy = ((startDoy + days - 2) % 365) + 1;
+    const lastDayGdd = avgGddByDay.get(lastDoy) ?? 10;
+    if (lastDayGdd > 0) {
+      const overshoot = accumulated - targetGdd;
+      return days - (overshoot / lastDayGdd);
+    }
+  }
+
   return days;
 }
 
@@ -180,8 +192,20 @@ export default function GddExplorerModal({
   planYear,
   onClose,
 }: GddExplorerModalProps) {
-  // View mode: 'field' shows field days only, 'sth' shows seed-to-harvest
-  const [viewMode, setViewMode] = useState<'field' | 'sth'>('field');
+
+  // Track hovered data point for field span visualization
+  const [hoveredPoint, setHoveredPoint] = useState<ChartDataPoint | null>(null);
+  const tooltipDataRef = useRef<ChartDataPoint | null>(null);
+
+  // Sync tooltip active data to hoveredPoint state
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (tooltipDataRef.current !== hoveredPoint) {
+        setHoveredPoint(tooltipDataRef.current);
+      }
+    }, 50);
+    return () => clearInterval(interval);
+  }, [hoveredPoint]);
 
   // HACK: Flat +20°F offset for non-field structures
   const structureOffset = growingStructure && growingStructure !== 'field'
@@ -201,21 +225,23 @@ export default function GddExplorerModal({
   const daysInCells = useMemo(() => calculateDaysInCells(spec), [spec]);
 
   // Calculate chart data
+  // X-axis = field start date (when plant enters the field)
+  // Y-axis = field days until harvest
   const chartData = useMemo(() => {
     const data: ChartDataPoint[] = [];
 
-    // For each test date across the year (this is the SEEDING date)
+    // For each test date across the year (this is the FIELD START date)
     for (let month = 1; month <= 12; month++) {
       for (const day of TEST_DAYS) {
         // Skip invalid dates (e.g., Feb 30)
         const date = new Date(planYear, month - 1, day);
         if (date.getMonth() !== month - 1) continue;
 
-        const seedingDoy = getDayOfYear(date);
+        const fieldStartDoy = getDayOfYear(date);
         const dateLabel = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
         const point: ChartDataPoint = {
-          dayOfYear: seedingDoy,
+          dayOfYear: fieldStartDoy,
           dateLabel,
           month,
         };
@@ -236,15 +262,11 @@ export default function GddExplorerModal({
             planYear
           );
 
-          // For the test seeding date, when does plant enter field?
-          const fieldEntryDoy = seedingDoy + daysInCells;
-
-          // How many field days to accumulate that reference GDD?
-          const adjustedFieldDays = daysToAccumulateGdd(fieldEntryDoy, referenceGdd, avgGddByDay);
+          // How many field days to accumulate that reference GDD starting from this field start date?
+          const adjustedFieldDays = daysToAccumulateGdd(fieldStartDoy, referenceGdd, avgGddByDay);
 
           // Store values for chart and tooltip
           point[`${py.productId}_field`] = adjustedFieldDays;
-          point[`${py.productId}_sth`] = daysInCells + adjustedFieldDays;
           point[`${py.productId}_baseField`] = baseFieldDays;
           point[`${py.productId}_refGdd`] = Math.round(referenceGdd);
         }
@@ -256,14 +278,13 @@ export default function GddExplorerModal({
     return data;
   }, [productYields, spec, daysInCells, avgGddByDay, planYear]);
 
-  // Calculate Y-axis domain based on view mode
+  // Calculate Y-axis domain for field days
   const yDomain = useMemo(() => {
     let min = Infinity;
     let max = 0;
-    const suffix = viewMode === 'field' ? '_field' : '_sth';
     for (const point of chartData) {
       for (const py of productYields) {
-        const val = point[`${py.productId}${suffix}`] as number;
+        const val = point[`${py.productId}_field`] as number;
         if (val !== undefined) {
           min = Math.min(min, val);
           max = Math.max(max, val);
@@ -273,7 +294,25 @@ export default function GddExplorerModal({
     // Add some padding
     const padding = Math.ceil((max - min) * 0.1);
     return [Math.max(0, Math.floor(min - padding)), Math.ceil(max + padding)];
-  }, [chartData, productYields, viewMode]);
+  }, [chartData, productYields]);
+
+  // Compute growing span for hover highlight
+  // X-axis represents field start dates - the hovered day IS when the plant enters the field
+  const fieldSpan = useMemo(() => {
+    if (!hoveredPoint || productYields.length === 0) return null;
+
+    const py = productYields[0];
+    const adjustedFieldDays = hoveredPoint[`${py.productId}_field`] as number;
+    if (!adjustedFieldDays || isNaN(adjustedFieldDays)) return null;
+
+    // The hovered dayOfYear IS the field entry date
+    const fieldStartDoy = hoveredPoint.dayOfYear;
+    const harvestDoy = fieldStartDoy + Math.round(adjustedFieldDays);
+
+    return harvestDoy <= 365
+      ? { x1: fieldStartDoy, x2: harvestDoy, wrap: null }
+      : { x1: fieldStartDoy, x2: 365, wrap: { x1: 1, x2: harvestDoy - 365 } };
+  }, [hoveredPoint, productYields]);
 
   // Get product name helper
   const getProductName = (productId: string): string => {
@@ -297,33 +336,16 @@ export default function GddExplorerModal({
               GDD Explorer: {spec.cropName ?? spec.crop}
             </h2>
             <p className="text-sm text-gray-500">
-              {viewMode === 'field' ? 'Field days' : 'Seed-to-harvest'} by planting date
-              (base: {baseTemp}°F{upperTemp ? `, ceiling: ${upperTemp}°F` : ''}{daysInCells > 0 ? `, ${daysInCells}d in greenhouse` : ''})
+              Field days by field start date
+              (base: {baseTemp}°F{upperTemp ? `, ceiling: ${upperTemp}°F` : ''})
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            {/* View mode toggle */}
-            <div className="flex rounded-lg border border-gray-300 overflow-hidden text-sm">
-              <button
-                onClick={() => setViewMode('field')}
-                className={`px-3 py-1.5 ${viewMode === 'field' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-              >
-                Field Days
-              </button>
-              <button
-                onClick={() => setViewMode('sth')}
-                className={`px-3 py-1.5 border-l border-gray-300 ${viewMode === 'sth' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-              >
-                Seed→Harvest
-              </button>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-            >
-              &times;
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+          >
+            &times;
+          </button>
         </div>
 
         {/* Structure offset warning */}
@@ -348,8 +370,29 @@ export default function GddExplorerModal({
           ) : (
             <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 20, left: 40 }}>
+                <ComposedChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, bottom: 20, left: 40 }}
+                  onMouseLeave={() => setHoveredPoint(null)}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  {/* Field span highlight on hover */}
+                  {fieldSpan && (
+                    <ReferenceArea
+                      x1={fieldSpan.x1}
+                      x2={fieldSpan.x2}
+                      fill={PRODUCT_COLORS[0]}
+                      fillOpacity={0.2}
+                    />
+                  )}
+                  {fieldSpan?.wrap && (
+                    <ReferenceArea
+                      x1={fieldSpan.wrap.x1}
+                      x2={fieldSpan.wrap.x2}
+                      fill={PRODUCT_COLORS[0]}
+                      fillOpacity={0.2}
+                    />
+                  )}
                   {/* Month boundaries */}
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => {
                     const doy = getDayOfYear(new Date(planYear, month - 1, 1));
@@ -396,7 +439,7 @@ export default function GddExplorerModal({
                     tick={{ fontSize: 11 }}
                     tickFormatter={(val) => `${val}d`}
                     label={{
-                      value: viewMode === 'field' ? 'Field Days' : 'Seed-to-Harvest Days',
+                      value: 'Field Days',
                       angle: -90,
                       position: 'insideLeft',
                       style: { textAnchor: 'middle', fontSize: 12, fill: '#6b7280' },
@@ -404,12 +447,15 @@ export default function GddExplorerModal({
                   />
                   <Tooltip
                     content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
+                      if (!active || !payload?.length) {
+                        tooltipDataRef.current = null;
+                        return null;
+                      }
                       const data = payload[0].payload as ChartDataPoint;
-                      const suffix = viewMode === 'field' ? '_field' : '_sth';
+                      tooltipDataRef.current = data;
                       return (
                         <div className="bg-white border border-gray-200 rounded shadow-lg p-3 text-sm">
-                          <div className="font-semibold mb-2">{data.dateLabel} (seeding)</div>
+                          <div className="font-semibold mb-2">{data.dateLabel} (field start)</div>
                           {productYields.map((py, i) => {
                             const fieldDays = data[`${py.productId}_field`] as number;
                             const baseFieldDays = data[`${py.productId}_baseField`] as number;
@@ -422,7 +468,7 @@ export default function GddExplorerModal({
                                 />
                                 <span className="text-gray-600">{getProductName(py.productId)}:</span>
                                 <span className="font-medium">
-                                  {data[`${py.productId}${suffix}`]}d
+                                  {typeof fieldDays === 'number' ? fieldDays.toFixed(1) : fieldDays}d
                                 </span>
                                 <span className="text-gray-400 text-xs">
                                   (base: {baseFieldDays}d = {refGdd} GDD)
@@ -439,10 +485,11 @@ export default function GddExplorerModal({
                     <Line
                       key={py.productId}
                       type="monotone"
-                      dataKey={`${py.productId}${viewMode === 'field' ? '_field' : '_sth'}`}
+                      dataKey={`${py.productId}_field`}
                       stroke={PRODUCT_COLORS[i % PRODUCT_COLORS.length]}
                       strokeWidth={2}
                       dot={false}
+                      activeDot={{ r: 5 }}
                       name={getProductName(py.productId)}
                     />
                   ))}
@@ -481,10 +528,7 @@ export default function GddExplorerModal({
               })}
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              {viewMode === 'field'
-                ? `Showing GDD-adjusted field days (excludes ${daysInCells}d greenhouse time).`
-                : `Showing total seed-to-harvest time (${daysInCells}d greenhouse + field days).`}
-              {' '}Based on {tempData.daily.length.toLocaleString()} days of historical temperature data.
+              GDD-adjusted field days based on {tempData.daily.length.toLocaleString()} days of historical temperature data.
             </p>
           </div>
         )}
