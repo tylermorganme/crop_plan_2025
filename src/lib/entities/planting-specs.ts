@@ -4,21 +4,20 @@
  * A PlantingSpec is a recipe/blueprint for creating plantings.
  * It defines HOW to grow a specific crop variety - timing, spacing, yields.
  *
- * KEY CONCEPT: normalMethod vs plantingMethod
+ * KEY CONCEPT: dtmBasis vs plantingMethod
  *
- * normalMethod (input) = How DTM is defined for this crop variety:
- *   - "from-seeding": DTM is from direct seeding in field (seed packet says "60 days from sowing")
- *   - "from-transplant": DTM is from transplant in field (seed packet says "60 days from transplant")
- *   - "total-time": DTM is total time from seeding a TRANSPLANT to harvest (from growers/books,
- *          includes greenhouse time and transplant shock in the total)
+ * dtmBasis (input) = How DTM was measured for this crop variety:
+ *   - "ds-from-germination-to-harvest": Direct seed DTM, measured from germination to harvest
+ *   - "tp-from-planting-to-harvest": Transplant DTM, measured from field transplant to harvest
+ *   - "tp-from-seeding-to-harvest": Transplant DTM, includes entire journey from seeding to harvest
  *
  * plantingMethod (calculated) = How you're actually growing it:
  *   - "direct-seed": Direct seeding (no tray stages)
  *   - "transplant": Transplanting (has tray stages)
  *   - "perennial": Perennial (persists across seasons)
  *
- * These are independent! A crop with normalMethod "from-seeding" can still be grown as
- * transplants if you add tray stages.
+ * These are independent! A crop with dtmBasis "ds-from-germination-to-harvest" can still be grown
+ * as transplants if you add tray stages.
  */
 
 // =============================================================================
@@ -127,14 +126,19 @@ export interface PlantingSpec {
   /** Row cover timing/requirement (e.g., "None", "AMAP", "Young", "Early", "Late") */
   rowCover?: string;
 
-  /** How DTM is measured: from-seeding, from-transplant, or total-time */
-  normalMethod?: 'from-seeding' | 'from-transplant' | 'total-time';
+  /**
+   * How DTM was measured for this crop variety.
+   * - "ds-from-germination-to-harvest": Direct seed, DTM from germination to harvest
+   * - "tp-from-planting-to-harvest": Transplant, DTM from field planting to harvest
+   * - "tp-from-seeding-to-harvest": Transplant, DTM includes entire journey from seeding
+   */
+  dtmBasis?: 'ds-from-germination-to-harvest' | 'tp-from-planting-to-harvest' | 'tp-from-seeding-to-harvest';
 
   // ---- Timing Inputs ----
 
   /**
    * @deprecated Use productYields[].dtm instead.
-   * Days to maturity (meaning depends on normalMethod).
+   * Days to maturity (meaning depends on dtmBasis).
    * Legacy field kept for backwards compatibility with old saved plans.
    */
   dtm?: number;
@@ -358,25 +362,25 @@ export function calculateDaysInCells(crop: PlantingSpec): number {
 }
 
 /**
- * Calculate Seed To Harvest based on normalMethod.
+ * Calculate Seed To Harvest based on dtmBasis.
  *
  * Converts the user-entered DTM into total time from seeding to harvest,
  * accounting for how DTM was measured vs how the crop is being grown.
  */
 export function calculateSeedToHarvest(crop: PlantingSpec, daysInCells: number): number {
-  const method = crop.normalMethod ?? 'total-time';
+  const basis = crop.dtmBasis ?? 'tp-from-seeding-to-harvest';
   const dtm = crop.dtm ?? 0;
   const dtg = crop.daysToGermination ?? 0;
   const isTransplant = daysInCells > 0;
 
-  switch (method) {
-    case 'from-seeding':
-      // DTM is measured from emergence (germination)
+  switch (basis) {
+    case 'ds-from-germination-to-harvest':
+      // DTM is measured from emergence (germination) for direct seed
       // direct: dtg + dtm
       // transplant: dtg + dtm + shock
       return dtg + dtm + (isTransplant ? PLANTING_METHOD_DELTA_DAYS : 0);
 
-    case 'from-transplant': {
+    case 'tp-from-planting-to-harvest': {
       // DTM is measured from transplant date (in-field time only)
       // transplant: daysInCells + dtm
       // direct: assumedDays + dtm - delta
@@ -386,7 +390,7 @@ export function calculateSeedToHarvest(crop: PlantingSpec, daysInCells: number):
         : assumedDays + dtm - PLANTING_METHOD_DELTA_DAYS;
     }
 
-    case 'total-time':
+    case 'tp-from-seeding-to-harvest':
       // DTM is total time from seeding a transplant to harvest
       // transplant: dtm (use as-is)
       // direct: dtm - delta (no shock = faster)
@@ -942,7 +946,7 @@ export function calculateHarvestWindow(crop: PlantingSpec): number {
 /**
  * Calculate Seed To Harvest for a specific ProductYield.
  *
- * Uses the product's DTM with the PlantingSpec's normalMethod and daysInCells,
+ * Uses the product's DTM with the PlantingSpec's dtmBasis and daysInCells,
  * since growing method (transplant vs direct) is shared across all products.
  */
 export function calculateProductSeedToHarvest(
@@ -950,23 +954,23 @@ export function calculateProductSeedToHarvest(
   crop: PlantingSpec,
   daysInCells: number
 ): number {
-  const method = crop.normalMethod ?? 'total-time';
+  const basis = crop.dtmBasis ?? 'tp-from-seeding-to-harvest';
   const dtm = productYield.dtm;
   const dtg = crop.daysToGermination ?? 0;
   const isTransplant = daysInCells > 0;
 
-  switch (method) {
-    case 'from-seeding':
+  switch (basis) {
+    case 'ds-from-germination-to-harvest':
       return dtg + dtm + (isTransplant ? PLANTING_METHOD_DELTA_DAYS : 0);
 
-    case 'from-transplant': {
+    case 'tp-from-planting-to-harvest': {
       const assumedDays = crop.assumedTransplantDays ?? DEFAULT_ASSUMED_TRANSPLANT_DAYS;
       return isTransplant
         ? daysInCells + dtm
         : assumedDays + dtm - PLANTING_METHOD_DELTA_DAYS;
     }
 
-    case 'total-time':
+    case 'tp-from-seeding-to-harvest':
       return dtm - (isTransplant ? 0 : PLANTING_METHOD_DELTA_DAYS);
 
     default:
@@ -1198,7 +1202,7 @@ export function createBlankConfig(): PlantingSpec {
     cropName: '',
     category: '',
     growingStructure: 'field',
-    normalMethod: 'from-seeding',
+    dtmBasis: 'ds-from-germination-to-harvest',
     dtm: 60,
     daysToGermination: 7,
     harvestWindow: 7,

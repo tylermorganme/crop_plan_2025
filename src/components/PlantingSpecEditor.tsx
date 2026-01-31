@@ -70,7 +70,7 @@ function deriveGrowingMethod(crop: Partial<PlantingSpec>, trayStages: TrayStage[
 interface DataRemovalInfo {
   trayStages?: number;  // Number of tray stages to remove
   perennial?: boolean;  // Will remove perennial flag
-  normalMethod?: string; // Will remove normalMethod
+  dtmBasis?: string; // Will remove dtmBasis
 }
 
 /**
@@ -98,10 +98,10 @@ function getDataRemovalInfo(
       info.perennial = true;
     }
   } else if (growingMethod === 'perennial') {
-    // Perennial removes: normalMethod (timing section not shown)
+    // Perennial removes: dtmBasis (timing section not shown)
     // But keeps tray stages for establishment
-    if (formData.normalMethod) {
-      info.normalMethod = formData.normalMethod;
+    if (formData.dtmBasis) {
+      info.dtmBasis = formData.dtmBasis;
     }
   }
 
@@ -121,13 +121,13 @@ function formatRemovalDescription(info: DataRemovalInfo): string[] {
   if (info.perennial) {
     items.push('perennial flag');
   }
-  if (info.normalMethod) {
-    const methodLabels: Record<string, string> = {
-      'from-seeding': 'DTM measurement basis (from seeding)',
-      'from-transplant': 'DTM measurement basis (from transplant)',
-      'total-time': 'DTM measurement basis (full seed-to-harvest)',
+  if (info.dtmBasis) {
+    const basisLabels: Record<string, string> = {
+      'ds-from-germination-to-harvest': 'DTM basis (from germination)',
+      'tp-from-planting-to-harvest': 'DTM basis (from transplant)',
+      'tp-from-seeding-to-harvest': 'DTM basis (full seed-to-harvest)',
     };
-    items.push(methodLabels[info.normalMethod] || info.normalMethod);
+    items.push(basisLabels[info.dtmBasis] || info.dtmBasis);
   }
 
   return items;
@@ -334,8 +334,8 @@ export default function PlantingSpecEditor({
         trayStages: trayStages.length > 0 ? trayStages : undefined,
       } as PlantingSpec;
     } else {
-      // Perennial: set flag, remove normalMethod, keep tray stages for establishment
-      delete base.normalMethod;
+      // Perennial: set flag, remove dtmBasis, keep tray stages for establishment
+      delete base.dtmBasis;
       return {
         ...base,
         perennial: true,
@@ -1158,14 +1158,14 @@ export default function PlantingSpecEditor({
                       </button>
                     </div>
                     <select
-                      value={formData.normalMethod || ''}
-                      onChange={(e) => updateField('normalMethod', e.target.value as 'from-seeding' | 'from-transplant' | 'total-time' | undefined)}
+                      value={formData.dtmBasis || ''}
+                      onChange={(e) => updateField('dtmBasis', e.target.value as 'ds-from-germination-to-harvest' | 'tp-from-planting-to-harvest' | 'tp-from-seeding-to-harvest' | undefined)}
                       className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select...</option>
-                      <option value="from-seeding">Direct Seed: From Germination</option>
-                      <option value="from-transplant">Transplant: From Planting</option>
-                      <option value="total-time">Transplant: From Seeding</option>
+                      <option value="ds-from-germination-to-harvest">Direct Seed: From Germination</option>
+                      <option value="tp-from-planting-to-harvest">Transplant: From Planting</option>
+                      <option value="tp-from-seeding-to-harvest">Transplant: From Seeding</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
                       How DTM values in products are measured
@@ -1182,8 +1182,8 @@ export default function PlantingSpecEditor({
                   </div>
                 </div>
 
-                {/* Assumed Transplant Days - only relevant for from-transplant normalMethod */}
-                {formData.normalMethod === 'from-transplant' && (
+                {/* Assumed Transplant Days - only relevant for tp-from-planting-to-harvest dtmBasis */}
+                {formData.dtmBasis === 'tp-from-planting-to-harvest' && (
                   <div className="mt-4">
                     <div className="flex items-center gap-1 mb-1">
                       <label className="block text-xs font-medium text-gray-600">Assumed Transplant Age</label>

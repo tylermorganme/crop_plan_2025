@@ -229,7 +229,7 @@ export default function PlantingSpecCreator({
                   >
                     <div className="font-medium text-gray-900 text-sm">{spec.identifier}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
-                      {[spec.category, spec.growingStructure, spec.normalMethod].filter(Boolean).join(' · ')}
+                      {[spec.category, spec.growingStructure, spec.dtmBasis].filter(Boolean).join(' · ')}
                       {spec.dtm ? ` · ${spec.dtm} DTM` : ''}
                     </div>
                   </button>

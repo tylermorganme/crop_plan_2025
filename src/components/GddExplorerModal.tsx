@@ -211,7 +211,7 @@ export default function GddExplorerModal({
 
         // Calculate adjusted field days for each product
         for (const py of productYields) {
-          // Use the calibrated seedToHarvest calculation (accounts for normalMethod × plantingMethod)
+          // Use the calibrated seedToHarvest calculation (accounts for dtmBasis × plantingMethod)
           const seedToHarvest = calculateProductSeedToHarvest(py, spec, daysInCells);
           // Field days = seedToHarvest minus greenhouse time
           const baseFieldDays = seedToHarvest - daysInCells;

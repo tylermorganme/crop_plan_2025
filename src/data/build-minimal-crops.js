@@ -4,12 +4,12 @@
  * Based on notes from DAG reconciliation:
  * - Tray Size -> cellsPerTray (better name for tray size enum)
  * - Category should eventually be product-level (for now keep on config)
- * - Normal Method describes what DTM means: from-seeding, from-transplant, or total-time
+ * - DTM Basis describes how DTM was measured
  * - Variety might be better named "variant" to not conflate with actual crop varieties
  *
  * NAMING CONVENTIONS:
  * Excel values are mapped to self-documenting names at import time:
- * - normalMethod: DS → 'from-seeding', TP → 'from-transplant', X → 'total-time'
+ * - dtmBasis: DS → 'ds-from-germination-to-harvest', TP → 'tp-from-planting-to-harvest', X → 'tp-from-seeding-to-harvest'
  * - growingStructure: Field → 'field', Greenhouse → 'greenhouse', Tunnel → 'high-tunnel'
  * - plantingMethod: DS → 'direct-seed', TP → 'transplant', PE → 'perennial'
  *
@@ -45,10 +45,10 @@ for (const p of products) {
 // =============================================================================
 // NAMING CONVENTION MAPPINGS - Convert Excel abbreviations to self-documenting names
 // =============================================================================
-const NORMAL_METHOD_MAP = {
-  'DS': 'from-seeding',      // DTM measured from direct seeding (emergence)
-  'TP': 'from-transplant',   // DTM measured from transplant in field
-  'X': 'total-time',         // DTM is total time from seed to harvest
+const DTM_BASIS_MAP = {
+  'DS': 'ds-from-germination-to-harvest',  // Direct seed: DTM from germination to harvest
+  'TP': 'tp-from-planting-to-harvest',     // Transplant: DTM from field transplant to harvest
+  'X': 'tp-from-seeding-to-harvest',       // Transplant: DTM includes entire journey from seeding
 };
 
 const GROWING_STRUCTURE_MAP = {
@@ -145,8 +145,8 @@ const cleanCrops = crops.map((c) => {
     // Materialized search text for efficient filtering
     searchText,
     growingStructure: GROWING_STRUCTURE_MAP[c['Growing Structure']] || 'field',
-    // normalMethod describes what DTM means, not how it's planted
-    normalMethod: NORMAL_METHOD_MAP[c['Normal Method']] || 'total-time',
+    // dtmBasis describes how DTM was measured, not how it's planted
+    dtmBasis: DTM_BASIS_MAP[c['Normal Method']] || 'tp-from-seeding-to-harvest',
     dtm: c.DTM,
     daysToGermination: c['Days to Germination'] || undefined,
     deprecated: c.Deprecated || false,

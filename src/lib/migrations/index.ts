@@ -743,6 +743,42 @@ function migrateV15ToV16(plan: unknown): unknown {
   return plan;
 }
 
+/**
+ * v16 → v17: Rename normalMethod → dtmBasis with self-documenting values
+ *
+ * The old field name "normalMethod" was cryptic. The new name "dtmBasis" clearly
+ * indicates this field describes how the DTM (Days to Maturity) value was measured.
+ *
+ * Value transformations:
+ * - "from-seeding" → "ds-from-germination-to-harvest"
+ *   (Direct Seed: DTM measured from germination to harvest)
+ * - "from-transplant" → "tp-from-planting-to-harvest"
+ *   (Transplant: DTM measured from field transplant to harvest)
+ * - "total-time" → "tp-from-seeding-to-harvest"
+ *   (Transplant: DTM includes entire journey from seeding to harvest)
+ */
+function migrateV16ToV17(rawPlan: unknown): unknown {
+  const plan = rawPlan as { specs?: Record<string, { normalMethod?: string }> };
+  if (!plan.specs) return plan;
+
+  const VALUE_MAP: Record<string, string> = {
+    'from-seeding': 'ds-from-germination-to-harvest',
+    'from-transplant': 'tp-from-planting-to-harvest',
+    'total-time': 'tp-from-seeding-to-harvest',
+  };
+
+  const newSpecs: Record<string, unknown> = {};
+  for (const [key, spec] of Object.entries(plan.specs)) {
+    const { normalMethod, ...rest } = spec as Record<string, unknown>;
+    newSpecs[key] = {
+      ...rest,
+      dtmBasis: normalMethod ? VALUE_MAP[normalMethod as string] ?? normalMethod : undefined,
+    };
+  }
+
+  return { ...plan, specs: newSpecs };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -780,6 +816,7 @@ const migrations: MigrationFn[] = [
   migrateV13ToV14, // Index 12: v13 → v14 (product IDs: compound key → UUID)
   migrateV14ToV15, // Index 13: v14 → v15 (fix productYields.productId references)
   migrateV15ToV16, // Index 14: v15 → v16 (no-op placeholder - data repair done via backfill script)
+  migrateV16ToV17, // Index 15: v16 → v17 (normalMethod → dtmBasis with clearer values)
 ];
 
 // =============================================================================

@@ -459,6 +459,23 @@ export const declarativeMigrations: Record<number, MigrationOp[]> = {
   12: [
     { op: 'renamePath', from: 'cropCatalog', to: 'specs' },
   ],
+
+  // v16 → v17: Rename normalMethod → dtmBasis with value transformation
+  16: [
+    {
+      op: 'transformValue',
+      path: 'specs.*.normalMethod',
+      fn: (v: unknown) => {
+        const map: Record<string, string> = {
+          'from-seeding': 'ds-from-germination-to-harvest',
+          'from-transplant': 'tp-from-planting-to-harvest',
+          'total-time': 'tp-from-seeding-to-harvest',
+        };
+        return typeof v === 'string' ? map[v] ?? v : v;
+      },
+    },
+    { op: 'renamePath', from: 'specs.*.normalMethod', to: 'specs.*.dtmBasis' },
+  ],
 };
 
 /**

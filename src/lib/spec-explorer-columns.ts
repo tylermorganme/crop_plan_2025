@@ -173,11 +173,11 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     sourceType: getSourceType('growingStructure'),
     sortable: true,
   },
-  normalMethod: {
-    displayName: 'Method',
+  dtmBasis: {
+    displayName: 'DTM Basis',
     defaultWidth: 120,
     defaultVisible: true,
-    sourceType: getSourceType('normalMethod'),
+    sourceType: getSourceType('dtmBasis'),
     sortable: true,
   },
 

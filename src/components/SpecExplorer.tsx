@@ -68,8 +68,8 @@ function validatePlantingSpec(crop: PlantingSpec): SpecValidation {
 
   // Warnings - potentially misconfigured
   const plantingMethod = calculatePlantingMethod(crop);
-  if (plantingMethod !== 'perennial' && !crop.normalMethod) {
-    issues.push('DTM measurement basis not set');
+  if (plantingMethod !== 'perennial' && !crop.dtmBasis) {
+    issues.push('DTM basis not set');
   }
 
   if (crop.defaultMarketSplit) {

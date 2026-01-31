@@ -5,7 +5,7 @@
  * This module standardizes how field names and enum values are presented in the UI.
  *
  * NAMING CONVENTIONS:
- * - Internal codes use lowercase-hyphenated format: 'direct-seed', 'from-seeding'
+ * - Internal codes use lowercase-hyphenated format: 'direct-seed', 'ds-from-germination-to-harvest'
  * - Field names use camelCase: 'plantingsPerBed', 'daysBetweenHarvest'
  * - Display labels use Title Case with spaces: 'Direct Seed', 'Days Between Harvest'
  */
@@ -17,8 +17,8 @@
 /** Planting method - how the crop is actually grown */
 export type PlantingMethod = 'direct-seed' | 'transplant' | 'perennial';
 
-/** Normal method - how DTM was measured for this crop */
-export type NormalMethod = 'from-seeding' | 'from-transplant' | 'total-time';
+/** DTM basis - how DTM was measured for this crop */
+export type DtmBasis = 'ds-from-germination-to-harvest' | 'tp-from-planting-to-harvest' | 'tp-from-seeding-to-harvest';
 
 /** Growing structure - where the crop is grown */
 export type GrowingStructure = 'field' | 'greenhouse' | 'high-tunnel';
@@ -34,11 +34,11 @@ export const PLANTING_METHOD_LABELS: Record<PlantingMethod, string> = {
   'perennial': 'Perennial',
 };
 
-/** Display labels for normal methods (how DTM was measured) */
-export const NORMAL_METHOD_LABELS: Record<NormalMethod, string> = {
-  'from-seeding': 'From Seeding',
-  'from-transplant': 'From Transplant',
-  'total-time': 'Total Time',
+/** Display labels for DTM basis (how DTM was measured) */
+export const DTM_BASIS_LABELS: Record<DtmBasis, string> = {
+  'ds-from-germination-to-harvest': 'Direct Seed: From Germination',
+  'tp-from-planting-to-harvest': 'Transplant: From Planting',
+  'tp-from-seeding-to-harvest': 'Transplant: From Seeding',
 };
 
 /** Display labels for growing structures */
@@ -74,7 +74,7 @@ export const FIELD_LABELS: Record<string, string> = {
 
   // Methods and structure
   plantingMethod: 'Planting Method',
-  normalMethod: 'DTM Measured From',
+  dtmBasis: 'DTM Basis',
   growingStructure: 'Growing Structure',
 
   // Timing fields
@@ -120,12 +120,12 @@ export function formatPlantingMethod(code: string | undefined): string {
 }
 
 /**
- * Format a normal method code to display text.
+ * Format a DTM basis code to display text.
  * Returns the code itself if not recognized (graceful fallback).
  */
-export function formatNormalMethod(code: string | undefined): string {
+export function formatDtmBasis(code: string | undefined): string {
   if (!code) return '–';
-  return NORMAL_METHOD_LABELS[code as NormalMethod] ?? code;
+  return DTM_BASIS_LABELS[code as DtmBasis] ?? code;
 }
 
 /**
@@ -185,8 +185,8 @@ export const PLANTING_METHOD_OPTIONS = Object.entries(PLANTING_METHOD_LABELS).ma
   ([value, label]) => ({ value, label })
 );
 
-/** Options for normal method select */
-export const NORMAL_METHOD_OPTIONS = Object.entries(NORMAL_METHOD_LABELS).map(
+/** Options for DTM basis select */
+export const DTM_BASIS_OPTIONS = Object.entries(DTM_BASIS_LABELS).map(
   ([value, label]) => ({ value, label })
 );
 

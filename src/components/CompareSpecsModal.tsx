@@ -48,7 +48,7 @@ const FIELD_GROUPS: FieldGroup[] = [
   {
     name: 'Timing',
     fields: [
-      { key: 'normalMethod', label: 'DTM Method' },
+      { key: 'dtmBasis', label: 'DTM Basis' },
       { key: 'dtm', label: 'DTM (legacy)' },
       { key: 'daysToGermination', label: 'Days to Germination' },
       { key: 'assumedTransplantDays', label: 'Assumed TP Days' },

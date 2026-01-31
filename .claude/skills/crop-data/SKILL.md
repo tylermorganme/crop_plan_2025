@@ -47,7 +47,7 @@ CROP (~100 unique) ────────────────────�
        ▼                                                            │
 CROP CONFIG (339 total in stock)                                    │
 │ structure (field/greenhouse/high-tunnel)                          │
-│ normalMethod (from-seeding/from-transplant/total-time)           │
+│ dtmBasis (ds-from-germination-to-harvest/tp-from-planting-to-harvest/tp-from-seeding-to-harvest)
 │ product type, DTM, spacing, rows                                  │
 │ Identifier: "Arugula - Baby Leaf 1X | Field DS Sp"               │
        │                                    │                       │
@@ -69,9 +69,9 @@ PLANTING (per-plan instance)          PRODUCT (processing info) ◄──┘
 | `crop` | string | Crop name (e.g., "Tomato") |
 | `variant` | string | Variety (e.g., "Cherry") |
 | `product` | string | Product type (e.g., "Slicing") |
-| `normalMethod` | enum | How DTM is measured: `from-seeding`, `from-transplant`, `total-time` |
+| `dtmBasis` | enum | How DTM was measured: `ds-from-germination-to-harvest`, `tp-from-planting-to-harvest`, `tp-from-seeding-to-harvest` |
 | `growingStructure` | enum | Where grown: `field`, `greenhouse`, `high-tunnel` |
-| `dtm` | number | Days to maturity (interpretation depends on normalMethod) |
+| `dtm` | number | Days to maturity (interpretation depends on dtmBasis) |
 | `daysToGermination` | number | Days from seeding to emergence |
 | `trayStages` | array | Greenhouse stages: `[{days, cellsPerTray}]` |
 | `rows` | number | Rows per bed |
@@ -92,25 +92,25 @@ PLANTING (per-plan instance)          PRODUCT (processing info) ◄──┘
 |-------|-------------|
 | `daysInCells` | Sum of tray stage days |
 | `plantingMethod` | `perennial` if flag set, else `transplant` if daysInCells > 0, else `direct-seed` |
-| `seedToHarvest` | Total days from seeding to first harvest (accounts for normalMethod) |
+| `seedToHarvest` | Total days from seeding to first harvest (accounts for dtmBasis) |
 | `harvestWindow` | Duration of harvest period |
 | `plantingsPerBed` | `(12 / spacing) * rows * bedFeet` |
 
-### seedToHarvest Calculation (by normalMethod)
+### seedToHarvest Calculation (by dtmBasis)
 
 ```typescript
-switch (normalMethod) {
-  case 'from-seeding':
-    // DTM measured from emergence
-    return daysToGermination + dtm + (isTransplant ? 15 : 0);
+switch (dtmBasis) {
+  case 'ds-from-germination-to-harvest':
+    // Direct seed: DTM from germination to harvest
+    return daysToGermination + dtm + (isTransplant ? 14 : 0);
 
-  case 'from-transplant':
-    // DTM measured from transplant date
-    return isTransplant ? daysInCells + dtm : 20 + dtm - 15;
+  case 'tp-from-planting-to-harvest':
+    // Transplant: DTM from field transplant to harvest
+    return isTransplant ? daysInCells + dtm : assumedTransplantAge + dtm - 14;
 
-  case 'total-time':
-    // DTM is total time (use as-is for transplants)
-    return isTransplant ? dtm : dtm - 15;
+  case 'tp-from-seeding-to-harvest':
+    // Transplant: DTM includes entire journey from seeding
+    return isTransplant ? dtm : dtm - 14;
 }
 ```
 
