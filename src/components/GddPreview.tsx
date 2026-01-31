@@ -4,8 +4,10 @@ import { useMemo } from 'react';
 import { useGdd, formatGddDifference, getGddExplanation } from '@/lib/gdd-client';
 
 interface GddPreviewProps {
-  /** Days to maturity from config */
-  dtm: number;
+  /** Seed-to-harvest time (includes greenhouse + field) */
+  seedToHarvest: number;
+  /** Days spent in greenhouse (0 for direct-seed) */
+  daysInCells: number;
   /** Target field date from config (MM-DD format) */
   targetFieldDate?: string;
   /** Actual field start date of the planting (YYYY-MM-DD format) */
@@ -31,7 +33,8 @@ interface GddPreviewProps {
  * DTM (based on actual planting date and historical temperatures).
  */
 export function GddPreview({
-  dtm,
+  seedToHarvest,
+  daysInCells,
   targetFieldDate,
   actualFieldDate,
   category,
@@ -45,16 +48,21 @@ export function GddPreview({
     year
   );
 
+  // Calculate field days - only field time is GDD-adjusted
+  // Greenhouse time is fixed (controlled environment)
+  const fieldDays = seedToHarvest - daysInCells;
+
   const gddData = useMemo(() => {
     if (!isLoaded || !targetFieldDate) return null;
+    // Pass field days to GDD calculation, not full seed-to-harvest
     return calculateAdjustedTiming(
-      dtm,
+      fieldDays,
       targetFieldDate,
       actualFieldDate,
       category,
       baseTemp
     );
-  }, [isLoaded, dtm, targetFieldDate, actualFieldDate, category, baseTemp, calculateAdjustedTiming]);
+  }, [isLoaded, fieldDays, targetFieldDate, actualFieldDate, category, baseTemp, calculateAdjustedTiming]);
 
   // No location configured
   if (!location) {
@@ -112,36 +120,52 @@ export function GddPreview({
     );
   }
 
+  // Calculate adjusted seed-to-harvest (greenhouse + adjusted field)
+  const adjustedSeedToHarvest = daysInCells + gddData.adjustedDtm;
+  const seedToHarvestDiff = adjustedSeedToHarvest - seedToHarvest;
+
   return (
     <div className="space-y-2">
-      {/* Main comparison */}
+      {/* Main comparison - shows total seed-to-harvest */}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
-          <div className="text-xs text-gray-500">Original DTM</div>
-          <div className="text-sm font-medium">{gddData.originalDtm}d</div>
+          <div className="text-xs text-gray-500">Seed→Harvest</div>
+          <div className="text-sm font-medium">{seedToHarvest}d</div>
         </div>
         <div>
           <div className="text-xs text-gray-500">GDD Adjusted</div>
           <div className={`text-sm font-medium ${
-            gddData.daysDifference > 0 ? 'text-amber-600' :
-            gddData.daysDifference < 0 ? 'text-green-600' : ''
+            seedToHarvestDiff > 0 ? 'text-amber-600' :
+            seedToHarvestDiff < 0 ? 'text-green-600' : ''
           }`}>
-            {gddData.adjustedDtm}d
+            {adjustedSeedToHarvest}d
           </div>
         </div>
         <div>
           <div className="text-xs text-gray-500">Difference</div>
           <div className={`text-sm font-medium ${
-            gddData.daysDifference > 0 ? 'text-amber-600' :
-            gddData.daysDifference < 0 ? 'text-green-600' : 'text-gray-500'
+            seedToHarvestDiff > 0 ? 'text-amber-600' :
+            seedToHarvestDiff < 0 ? 'text-green-600' : 'text-gray-500'
           }`}>
-            {formatGddDifference(gddData.daysDifference)}
+            {formatGddDifference(seedToHarvestDiff)}
           </div>
         </div>
       </div>
 
       {/* Details */}
       <div className="text-xs text-gray-500 space-y-1">
+        {daysInCells > 0 && (
+          <div className="flex justify-between">
+            <span>Greenhouse:</span>
+            <span className="font-medium">{daysInCells}d (fixed)</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span>Field days:</span>
+          <span className="font-medium">
+            {fieldDays}d → {gddData.adjustedDtm}d
+          </span>
+        </div>
         <div className="flex justify-between">
           <span>Reference GDD:</span>
           <span className="font-medium">{gddData.referenceGdd}</span>

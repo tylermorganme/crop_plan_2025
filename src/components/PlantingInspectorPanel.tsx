@@ -1017,7 +1017,8 @@ export function PlantingInspectorPanel({
                 GDD Timing Preview
               </div>
               <GddPreview
-                dtm={getPrimarySeedToHarvest(baseSpec)}
+                seedToHarvest={getPrimarySeedToHarvest(baseSpec)}
+                daysInCells={calculateDaysInCells(baseSpec)}
                 targetFieldDate={baseSpec.targetFieldDate}
                 actualFieldDate={crop.startDate.split('T')[0]}
                 category={baseSpec.category || 'default'}
