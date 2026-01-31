@@ -37,7 +37,7 @@
     "bgColor": "#92d050",
     "textColor": "#000000",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_asian-greens",
@@ -45,7 +45,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_atriplex",
@@ -93,7 +93,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_borage",
@@ -221,7 +221,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_choi-sum",
@@ -229,7 +229,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_chrysanthemum",
@@ -269,7 +269,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_corn",
@@ -307,7 +307,7 @@
     "bgColor": "#ff99ff",
     "textColor": "#000000",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_cucumber",
@@ -499,7 +499,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_kale",
@@ -507,7 +507,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_kohlrabi",
@@ -515,7 +515,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_komatsuna",
@@ -523,7 +523,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_leek",
@@ -619,7 +619,7 @@
     "bgColor": "#92d050",
     "textColor": "#000000",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_milkweed",
@@ -651,7 +651,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_nausturtium",
@@ -779,7 +779,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_ranunculus",
@@ -803,7 +803,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_rose",
@@ -843,7 +843,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_sage",
@@ -931,7 +931,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_strawberry",
@@ -1041,7 +1041,7 @@
     "bgColor": "#00b050",
     "textColor": "#ffffff",
     "gddBaseTemp": 40,
-    "gddUpperTemp": 90
+    "gddUpperTemp": 65
   },
   {
     "id": "crop_wisteria",

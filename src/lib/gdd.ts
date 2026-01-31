@@ -5,11 +5,13 @@
  * Plants respond to accumulated heat rather than calendar time, so GDD
  * provides more accurate timing predictions across different planting dates.
  *
- * Basic formula: GDD = max(0, (Tmax + Tmin) / 2 - Tbase)
+ * Formula with ceiling and structure offset:
+ *   effectiveTemp = min(avgTemp + structureOffset, ceiling)
+ *   GDD = max(0, effectiveTemp - base)
  *
- * Different crops have different base temperatures:
- * - Cool season (brassicas, lettuce, peas): ~40°F / 4.4°C
- * - Warm season (tomatoes, peppers, squash): ~50°F / 10°C
+ * Different crops have different base and ceiling temperatures:
+ * - Cool season (brassicas, lettuce, peas): base ~40°F, ceiling ~75-85°F
+ * - Warm season (tomatoes, peppers, squash): base ~50°F, ceiling ~86-95°F
  */
 
 // =============================================================================
@@ -95,6 +97,13 @@ export interface GddAdjustedTiming {
 /** Maximum days to look ahead when calculating GDD-to-days */
 const MAX_DAYS_LOOKAHEAD = 365;
 
+/**
+ * HACK: Flat temperature offset for non-field structures.
+ * Tunnels/greenhouses are warmer than outdoor weather data.
+ * This is a rough approximation - actual temps vary by management.
+ */
+export const NON_FIELD_STRUCTURE_OFFSET = 20;  // °F
+
 // =============================================================================
 // CORE CALCULATIONS
 // =============================================================================
@@ -105,11 +114,20 @@ const MAX_DAYS_LOOKAHEAD = 365;
  * @param tmax - Maximum temperature (°F)
  * @param tmin - Minimum temperature (°F)
  * @param tbase - Base temperature (°F)
+ * @param tupper - Ceiling temperature (°F) - temps above this are capped
+ * @param structureOffset - Temperature offset for non-field structures (°F)
  * @returns GDD for that day (always >= 0)
  */
-export function calculateDailyGdd(tmax: number, tmin: number, tbase: number): number {
-  const avgTemp = (tmax + tmin) / 2;
-  return Math.max(0, avgTemp - tbase);
+export function calculateDailyGdd(
+  tmax: number,
+  tmin: number,
+  tbase: number,
+  tupper?: number,
+  structureOffset: number = 0
+): number {
+  const avgTemp = (tmax + tmin) / 2 + structureOffset;
+  const effectiveTemp = tupper !== undefined ? Math.min(avgTemp, tupper) : avgTemp;
+  return Math.max(0, effectiveTemp - tbase);
 }
 
 /**
@@ -119,13 +137,17 @@ export function calculateDailyGdd(tmax: number, tmin: number, tbase: number): nu
  * @param startDate - Start date (YYYY-MM-DD)
  * @param days - Number of days to accumulate
  * @param tbase - Base temperature (°F)
+ * @param tupper - Ceiling temperature (°F) - temps above this are capped
+ * @param structureOffset - Temperature offset for non-field structures (°F)
  * @returns GDD result with total and daily breakdown
  */
 export function calculateGdd(
   tempData: TemperatureHistory,
   startDate: string,
   days: number,
-  tbase: number
+  tbase: number,
+  tupper?: number,
+  structureOffset: number = 0
 ): GddResult {
   // Build a date-indexed lookup for temperatures
   const tempByDate = new Map<string, DailyTemperature>();
@@ -146,14 +168,14 @@ export function calculateGdd(
 
     const temp = tempByDate.get(dateStr);
     if (temp) {
-      const gdd = calculateDailyGdd(temp.tmax, temp.tmin, tbase);
+      const gdd = calculateDailyGdd(temp.tmax, temp.tmin, tbase, tupper, structureOffset);
       totalGdd += gdd;
       dailyGdd.push({ date: dateStr, gdd });
       actualDays++;
     } else {
       // No data for this date - use average from surrounding dates or skip
       // For now, we'll use an interpolated/average value
-      const avgGdd = estimateGddForMissingDate(tempData, dateStr, tbase);
+      const avgGdd = estimateGddForMissingDate(tempData, dateStr, tbase, tupper, structureOffset);
       totalGdd += avgGdd;
       dailyGdd.push({ date: dateStr, gdd: avgGdd });
       actualDays++;
@@ -174,7 +196,9 @@ export function calculateGdd(
 function estimateGddForMissingDate(
   tempData: TemperatureHistory,
   targetDate: string,
-  tbase: number
+  tbase: number,
+  tupper?: number,
+  structureOffset: number = 0
 ): number {
   const target = new Date(targetDate);
   const targetDayOfYear = getDayOfYear(target);
@@ -192,7 +216,7 @@ function estimateGddForMissingDate(
 
   // Calculate average GDD for this day-of-year
   const avgGdd = sameDay.reduce((sum, t) => {
-    return sum + calculateDailyGdd(t.tmax, t.tmin, tbase);
+    return sum + calculateDailyGdd(t.tmax, t.tmin, tbase, tupper, structureOffset);
   }, 0) / sameDay.length;
 
   return avgGdd;
@@ -215,13 +239,17 @@ function getDayOfYear(date: Date): number {
  * @param startDate - Start date (YYYY-MM-DD)
  * @param targetGdd - Target GDD to accumulate
  * @param tbase - Base temperature (°F)
+ * @param tupper - Ceiling temperature (°F) - temps above this are capped
+ * @param structureOffset - Temperature offset for non-field structures (°F)
  * @returns Number of days needed, or null if not enough data
  */
 export function daysToAccumulateGdd(
   tempData: TemperatureHistory,
   startDate: string,
   targetGdd: number,
-  tbase: number
+  tbase: number,
+  tupper?: number,
+  structureOffset: number = 0
 ): number | null {
   // Build a date-indexed lookup for temperatures
   const tempByDate = new Map<string, DailyTemperature>();
@@ -239,8 +267,8 @@ export function daysToAccumulateGdd(
 
     const temp = tempByDate.get(dateStr);
     const gdd = temp
-      ? calculateDailyGdd(temp.tmax, temp.tmin, tbase)
-      : estimateGddForMissingDate(tempData, dateStr, tbase);
+      ? calculateDailyGdd(temp.tmax, temp.tmin, tbase, tupper, structureOffset)
+      : estimateGddForMissingDate(tempData, dateStr, tbase, tupper, structureOffset);
 
     accumulatedGdd += gdd;
 
@@ -270,6 +298,8 @@ export function daysToAccumulateGdd(
  * @param actualFieldDate - Actual planting date (YYYY-MM-DD format)
  * @param tbase - Base temperature (°F)
  * @param planYear - Year to use for calculating dates
+ * @param tupper - Ceiling temperature (°F) - temps above this are capped
+ * @param structureOffset - Temperature offset for non-field structures (°F)
  */
 export function calculateGddAdjustedTiming(
   tempData: TemperatureHistory,
@@ -277,18 +307,20 @@ export function calculateGddAdjustedTiming(
   targetFieldDate: string,
   actualFieldDate: string,
   tbase: number,
-  planYear: number
+  planYear: number,
+  tupper?: number,
+  structureOffset: number = 0
 ): GddAdjustedTiming {
   // Parse target field date (MM-DD) to full date
   const [month, day] = targetFieldDate.split('-').map(Number);
   const referenceStartDate = `${planYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
   // Calculate reference GDD (how much heat the crop needs)
-  const referenceResult = calculateGdd(tempData, referenceStartDate, originalDtm, tbase);
+  const referenceResult = calculateGdd(tempData, referenceStartDate, originalDtm, tbase, tupper, structureOffset);
   const referenceGdd = referenceResult.totalGdd;
 
   // Calculate adjusted days from actual planting date
-  const adjustedDtm = daysToAccumulateGdd(tempData, actualFieldDate, referenceGdd, tbase);
+  const adjustedDtm = daysToAccumulateGdd(tempData, actualFieldDate, referenceGdd, tbase, tupper, structureOffset);
 
   if (adjustedDtm === null) {
     return {

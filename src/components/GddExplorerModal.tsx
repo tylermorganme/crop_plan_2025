@@ -14,7 +14,7 @@ import {
 import type { PlantingSpec } from '@/lib/entities/planting-specs';
 import { calculateDaysInCells, calculateProductSeedToHarvest } from '@/lib/entities/planting-specs';
 import type { TemperatureHistory } from '@/lib/gdd';
-import { calculateDailyGdd } from '@/lib/gdd';
+import { calculateDailyGdd, NON_FIELD_STRUCTURE_OFFSET } from '@/lib/gdd';
 import { Z_INDEX } from '@/lib/z-index';
 
 // =============================================================================
@@ -25,6 +25,8 @@ interface GddExplorerModalProps {
   spec: PlantingSpec;
   products: Record<string, { product: string }>;
   baseTemp: number;
+  upperTemp?: number;
+  growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
   tempData: TemperatureHistory;
   planYear: number;
   onClose: () => void;
@@ -64,7 +66,9 @@ const PRODUCT_COLORS = [
  */
 function buildAverageDailyGdd(
   tempData: TemperatureHistory,
-  baseTemp: number
+  baseTemp: number,
+  upperTemp?: number,
+  structureOffset: number = 0
 ): Map<number, number> {
   // Group temperatures by day-of-year
   const byDayOfYear = new Map<number, number[]>();
@@ -72,7 +76,7 @@ function buildAverageDailyGdd(
   for (const day of tempData.daily) {
     const date = new Date(day.date + 'T00:00:00');
     const doy = getDayOfYear(date);
-    const gdd = calculateDailyGdd(day.tmax, day.tmin, baseTemp);
+    const gdd = calculateDailyGdd(day.tmax, day.tmin, baseTemp, upperTemp, structureOffset);
 
     if (!byDayOfYear.has(doy)) {
       byDayOfYear.set(doy, []);
@@ -170,6 +174,8 @@ export default function GddExplorerModal({
   spec,
   products,
   baseTemp,
+  upperTemp,
+  growingStructure,
   tempData,
   planYear,
   onClose,
@@ -177,10 +183,15 @@ export default function GddExplorerModal({
   // View mode: 'field' shows field days only, 'sth' shows seed-to-harvest
   const [viewMode, setViewMode] = useState<'field' | 'sth'>('field');
 
-  // Pre-compute average GDD by day-of-year
+  // HACK: Flat +20°F offset for non-field structures
+  const structureOffset = growingStructure && growingStructure !== 'field'
+    ? NON_FIELD_STRUCTURE_OFFSET
+    : 0;
+
+  // Pre-compute average GDD by day-of-year (with ceiling and structure offset)
   const avgGddByDay = useMemo(
-    () => buildAverageDailyGdd(tempData, baseTemp),
-    [tempData, baseTemp]
+    () => buildAverageDailyGdd(tempData, baseTemp, upperTemp, structureOffset),
+    [tempData, baseTemp, upperTemp, structureOffset]
   );
 
   // Get products from the spec
@@ -287,7 +298,7 @@ export default function GddExplorerModal({
             </h2>
             <p className="text-sm text-gray-500">
               {viewMode === 'field' ? 'Field days' : 'Seed-to-harvest'} by planting date
-              (base temp: {baseTemp}°F{daysInCells > 0 ? `, ${daysInCells}d in greenhouse` : ''})
+              (base: {baseTemp}°F{upperTemp ? `, ceiling: ${upperTemp}°F` : ''}{daysInCells > 0 ? `, ${daysInCells}d in greenhouse` : ''})
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -314,6 +325,19 @@ export default function GddExplorerModal({
             </button>
           </div>
         </div>
+
+        {/* Structure offset warning */}
+        {structureOffset > 0 && (
+          <div className="mx-6 mt-4 text-sm text-amber-600 bg-amber-50 p-3 rounded border border-amber-200">
+            <strong>⚠️ Structure offset applied (+{structureOffset}°F)</strong>
+            <p className="mt-1 text-xs">
+              This is a HACK: Adding flat +20°F to temps for non-field structures.
+              In reality, tunnel temps vary by season and management. This rough
+              approximation helps account for spring tunnels being warmer than
+              outdoor weather data shows.
+            </p>
+          </div>
+        )}
 
         {/* Chart */}
         <div className="flex-1 p-6 min-h-0">

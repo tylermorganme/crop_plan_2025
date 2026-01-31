@@ -2446,6 +2446,8 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
             const cropEntity = crops?.[selectedCrop.cropId ?? ''];
             return cropEntity?.gddBaseTemp ?? 50;
           })()}
+          upperTemp={crops?.[selectedCrop.cropId ?? '']?.gddUpperTemp}
+          growingStructure={selectedCrop.growingStructure as 'field' | 'greenhouse' | 'high-tunnel' | undefined}
           tempData={gdd.tempData}
           planYear={planYear}
           onClose={() => setShowGddExplorer(false)}

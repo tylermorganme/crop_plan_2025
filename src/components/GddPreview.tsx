@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useGdd, formatGddDifference, getGddExplanation } from '@/lib/gdd-client';
+import { NON_FIELD_STRUCTURE_OFFSET } from '@/lib/gdd';
 
 interface GddPreviewProps {
   /** Seed-to-harvest time (includes greenhouse + field) */
@@ -16,6 +17,10 @@ interface GddPreviewProps {
   category: string;
   /** Optional override for base temperature */
   baseTemp?: number;
+  /** Ceiling temperature (°F) - temps above this are capped */
+  upperTemp?: number;
+  /** Growing structure - affects temperature offset */
+  growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
   /** Location coordinates */
   location?: {
     lat: number;
@@ -39,6 +44,8 @@ export function GddPreview({
   actualFieldDate,
   category,
   baseTemp,
+  upperTemp,
+  growingStructure,
   location,
   year,
 }: GddPreviewProps) {
@@ -52,6 +59,11 @@ export function GddPreview({
   // Greenhouse time is fixed (controlled environment)
   const fieldDays = seedToHarvest - daysInCells;
 
+  // HACK: Flat +20°F offset for non-field structures
+  const structureOffset = growingStructure && growingStructure !== 'field'
+    ? NON_FIELD_STRUCTURE_OFFSET
+    : 0;
+
   const gddData = useMemo(() => {
     if (!isLoaded || !targetFieldDate) return null;
     // Pass field days to GDD calculation, not full seed-to-harvest
@@ -60,9 +72,11 @@ export function GddPreview({
       targetFieldDate,
       actualFieldDate,
       category,
-      baseTemp
+      baseTemp,
+      upperTemp,
+      structureOffset
     );
-  }, [isLoaded, fieldDays, targetFieldDate, actualFieldDate, category, baseTemp, calculateAdjustedTiming]);
+  }, [isLoaded, fieldDays, targetFieldDate, actualFieldDate, category, baseTemp, upperTemp, structureOffset, calculateAdjustedTiming]);
 
   // No location configured
   if (!location) {
@@ -174,7 +188,28 @@ export function GddPreview({
           <span>Base temp:</span>
           <span className="font-medium">{baseTemp}°F</span>
         </div>
+        {upperTemp && (
+          <div className="flex justify-between">
+            <span>Ceiling temp:</span>
+            <span className="font-medium">{upperTemp}°F</span>
+          </div>
+        )}
+        {structureOffset > 0 && (
+          <div className="flex justify-between text-amber-600">
+            <span>Structure offset:</span>
+            <span className="font-medium">+{structureOffset}°F</span>
+          </div>
+        )}
       </div>
+
+      {/* Structure offset warning */}
+      {structureOffset > 0 && (
+        <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded">
+          ⚠️ HACK: Using flat +{structureOffset}°F for non-field structures.
+          This is a rough approximation - tunnels are warmer than field
+          especially in spring, but actual temps vary by management.
+        </div>
+      )}
 
       {/* Explanation */}
       {gddData.daysDifference !== 0 && (

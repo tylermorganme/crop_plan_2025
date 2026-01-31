@@ -357,8 +357,8 @@ export interface PlantingInspectorPanelProps {
 
   // Lookup data
   specs?: Record<string, PlantingSpec>;
-  /** Crop entities for color and GDD base temp lookup */
-  crops?: Record<string, { id: string; name: string; gddBaseTemp?: number }>;
+  /** Crop entities for color and GDD temp lookup */
+  crops?: Record<string, { id: string; name: string; gddBaseTemp?: number; gddUpperTemp?: number }>;
   varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
   seedMixes?: Record<string, { id: string; crop: string; name: string }>;
   usedVarietyIds?: Set<string>;
@@ -1023,6 +1023,8 @@ export function PlantingInspectorPanel({
                 actualFieldDate={crop.startDate.split('T')[0]}
                 category={baseSpec.category || 'default'}
                 baseTemp={crop.cropId ? crops?.[crop.cropId]?.gddBaseTemp : undefined}
+                upperTemp={crop.cropId ? crops?.[crop.cropId]?.gddUpperTemp : undefined}
+                growingStructure={baseSpec.growingStructure as 'field' | 'greenhouse' | 'high-tunnel' | undefined}
                 location={location}
                 year={planYear}
               />

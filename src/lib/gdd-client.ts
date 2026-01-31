@@ -44,7 +44,9 @@ export interface UseGddResult {
     targetFieldDate: string,
     actualFieldDate: string,
     category: string,
-    baseTemp?: number
+    baseTemp?: number,
+    upperTemp?: number,
+    structureOffset?: number
   ) => GddPreviewData | null;
   /** Refresh temperature data from API */
   refresh: () => Promise<void>;
@@ -143,7 +145,9 @@ export function useGdd(
     targetFieldDate: string,
     actualFieldDate: string,
     _category: string,
-    baseTemp?: number
+    baseTemp?: number,
+    upperTemp?: number,
+    structureOffset?: number
   ): GddPreviewData | null => {
     // Require baseTemp - no category-based guessing
     if (!tempData || !targetFieldDate || !actualFieldDate || baseTemp === undefined) {
@@ -157,7 +161,9 @@ export function useGdd(
         targetFieldDate,
         actualFieldDate,
         baseTemp,
-        year
+        year,
+        upperTemp,
+        structureOffset ?? 0
       );
 
       return {
