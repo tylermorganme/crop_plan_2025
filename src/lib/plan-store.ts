@@ -497,8 +497,11 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
   recalculateSpecs: (specIdentifier: string, catalog: import('./entities/planting-specs').PlantingSpec[]) => Promise<number>;
-  /** Update a planting spec in the plan's catalog and recalculate affected plantings */
-  updatePlantingSpec: (spec: import('./entities/planting-specs').PlantingSpec) => Promise<number>;
+  /** Update a planting spec in the plan's catalog and recalculate affected plantings.
+   * @param spec - The updated spec
+   * @param originalIdentifier - The original identifier if it was renamed (required when identifier changes)
+   */
+  updatePlantingSpec: (spec: import('./entities/planting-specs').PlantingSpec, originalIdentifier?: string) => Promise<number>;
   /** Add a new planting spec to the plan's catalog */
   addPlantingSpec: (spec: import('./entities/planting-specs').PlantingSpec) => Promise<void>;
   /** Delete planting specs from the plan's catalog by their identifiers */
@@ -1648,7 +1651,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return affected.length;
     },
 
-    updatePlantingSpec: async (spec: PlantingSpec) => {
+    updatePlantingSpec: async (spec: PlantingSpec, originalIdentifier?: string) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
@@ -1658,10 +1661,19 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error('Plan has no crop catalog');
       }
 
-      // Count affected plantings
+      // Determine if this is a rename operation
+      const isRename = originalIdentifier && originalIdentifier !== spec.identifier;
+      const lookupIdentifier = originalIdentifier ?? spec.identifier;
+
+      // Count affected plantings (use original identifier for lookup)
       const affectedPlantingIds = (state.currentPlan.plantings ?? [])
-        .filter(p => p.specId === spec.identifier)
+        .filter(p => p.specId === lookupIdentifier)
         .map(p => p.id);
+
+      // Check for duplicate identifier on rename
+      if (isRename && state.currentPlan.specs[spec.identifier]) {
+        throw new Error(`A spec with identifier "${spec.identifier}" already exists`);
+      }
 
       set((storeState) => {
         if (!storeState.currentPlan?.specs) return;
@@ -1669,16 +1681,30 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         mutateWithPatches(
           storeState,
           (plan) => {
-            // Update catalog using CRUD function - display will recompute automatically
             const cloned = clonePlantingSpec(spec);
             cloned.updatedAt = new Date().toISOString();
+
+            // If identifier changed, delete old entry and update planting references
+            if (isRename) {
+              delete plan.specs![originalIdentifier];
+              // Update plantings to reference the new identifier
+              for (const planting of plan.plantings ?? []) {
+                if (planting.specId === originalIdentifier) {
+                  planting.specId = spec.identifier;
+                }
+              }
+            }
+
+            // Add/update with new identifier
             plan.specs![spec.identifier] = cloned;
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
               createChangeEntry('batch', `Updated spec "${spec.identifier}"`, affectedPlantingIds)
             );
           },
-          `Update spec "${spec.identifier}"`
+          isRename
+            ? `Rename spec "${originalIdentifier}" to "${spec.identifier}"`
+            : `Update spec "${spec.identifier}"`
         );
         storeState.isDirty = true;
       });

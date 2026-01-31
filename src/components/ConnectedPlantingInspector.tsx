@@ -126,10 +126,11 @@ export function ConnectedPlantingInspector({
   // Save edited planting spec
   const handleSaveSpec = useCallback(
     async (spec: PlantingSpec) => {
-      await updatePlantingSpec(spec);
+      // Pass original identifier to handle renames correctly
+      await updatePlantingSpec(spec, editingSpecId ?? undefined);
       setEditingSpecId(null);
     },
-    [updatePlantingSpec]
+    [updatePlantingSpec, editingSpecId]
   );
 
   // Clone spec handler - opens PlantingSpecCreator

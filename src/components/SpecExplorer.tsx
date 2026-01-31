@@ -1328,7 +1328,8 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
       }
 
       // Update the spec via the store (supports undo/redo)
-      await updatePlantingSpec(spec);
+      // Pass original identifier to handle renames correctly
+      await updatePlantingSpec(spec, specToEdit?.identifier);
 
       setAddToPlanMessage({
         type: 'success',
@@ -1343,7 +1344,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         text: err instanceof Error ? err.message : 'Failed to update spec',
       });
     }
-  }, [activePlanId, currentPlanId, loadPlanById, updatePlantingSpec]);
+  }, [activePlanId, currentPlanId, loadPlanById, updatePlantingSpec, specToEdit]);
 
   // Handle saving a new custom spec via store
   const handleSaveCustomSpec = useCallback(async (spec: PlantingSpec) => {
