@@ -5,12 +5,17 @@
  * Plants respond to accumulated heat rather than calendar time, so GDD
  * provides more accurate timing predictions across different planting dates.
  *
- * Formula with ceiling and structure offset:
- *   effectiveTemp = min(avgTemp + structureOffset, ceiling)
- *   GDD = max(0, effectiveTemp - base)
+ * Uses the Baskerville-Emin (1972) sine wave method for days that cross
+ * the base temperature. This properly accounts for partial-day heat
+ * accumulation instead of zeroing out days where avg < base.
+ *
+ * Three cases:
+ * - All day above base: GDD = tavg - tbase (simple average)
+ * - All day below base: GDD = 0
+ * - Crossing case: Sine wave integration
  *
  * Different crops have different base and ceiling temperatures:
- * - Cool season (brassicas, lettuce, peas): base ~40°F, ceiling ~75-85°F
+ * - Cool season (brassicas, lettuce, peas): base ~40°F, ceiling ~65-75°F
  * - Warm season (tomatoes, peppers, squash): base ~50°F, ceiling ~86-95°F
  */
 
@@ -109,7 +114,29 @@ export const NON_FIELD_STRUCTURE_OFFSET = 20;  // °F
 // =============================================================================
 
 /**
- * Calculate GDD for a single day.
+ * Baskerville-Emin sine wave integration for partial-day heat accumulation.
+ * Returns GDD accumulated above the cutoff temperature.
+ *
+ * When temperature crosses the base during the day (tmin < tbase < tmax),
+ * this integrates the area under a sine wave above the base, properly
+ * crediting the hours when temp was above base.
+ */
+function sineIntegrationAbove(tavg: number, amplitude: number, cutoff: number): number {
+  // Edge case: no temperature variation (tmax == tmin)
+  if (amplitude === 0) {
+    return tavg >= cutoff ? tavg - cutoff : 0;
+  }
+  const theta = Math.acos((cutoff - tavg) / amplitude);
+  return (1 / Math.PI) * (amplitude * Math.sin(theta) - (cutoff - tavg) * theta);
+}
+
+/**
+ * Calculate GDD for a single day using Baskerville-Emin sine wave method.
+ *
+ * This method models temperature as a sine wave between tmin and tmax,
+ * then integrates the area above base (and below ceiling if set).
+ * This properly credits partial-day heat accumulation for days that
+ * cross the base temperature.
  *
  * @param tmax - Maximum temperature (°F)
  * @param tmin - Minimum temperature (°F)
@@ -125,9 +152,29 @@ export function calculateDailyGdd(
   tupper?: number,
   structureOffset: number = 0
 ): number {
-  const avgTemp = (tmax + tmin) / 2 + structureOffset;
-  const effectiveTemp = tupper !== undefined ? Math.min(avgTemp, tupper) : avgTemp;
-  return Math.max(0, effectiveTemp - tbase);
+  // Apply structure offset to both temps
+  const adjMax = tmax + structureOffset;
+  const adjMin = tmin + structureOffset;
+
+  // Apply ceiling cap if set
+  const cappedMax = tupper !== undefined ? Math.min(adjMax, tupper) : adjMax;
+  const cappedMin = tupper !== undefined ? Math.min(adjMin, tupper) : adjMin;
+
+  const tavg = (cappedMax + cappedMin) / 2;
+  const amplitude = (cappedMax - cappedMin) / 2;
+
+  // Case 1: All day below base
+  if (cappedMax <= tbase) {
+    return 0;
+  }
+
+  // Case 2: All day above base (simple average)
+  if (cappedMin >= tbase) {
+    return tavg - tbase;
+  }
+
+  // Case 3: Crosses base - Baskerville-Emin sine integration
+  return sineIntegrationAbove(tavg, amplitude, tbase);
 }
 
 /**
