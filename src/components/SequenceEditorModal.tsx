@@ -20,6 +20,7 @@ interface SequenceEditorModalProps {
   onUpdateName: (newName: string | undefined) => void;
   onUnlinkPlanting: (plantingId: string) => void;
   onReorderSlots: (newSlotAssignments: { plantingId: string; slot: number }[]) => void;
+  onAddSlot: () => Promise<void>;
 }
 
 interface SlotInfo {
@@ -41,6 +42,7 @@ export default function SequenceEditorModal({
   onUpdateName,
   onUnlinkPlanting,
   onReorderSlots,
+  onAddSlot,
 }: SequenceEditorModalProps) {
   const [name, setName] = useState(sequence.name ?? '');
   const [offsetDays, setOffsetDays] = useState(sequence.offsetDays);
@@ -353,35 +355,48 @@ export default function SequenceEditorModal({
                 </div>
               ))}
             </div>
+
+            {/* Add Slot button */}
+            <button
+              onClick={onAddSlot}
+              className="mt-2 w-full px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Slot
+            </button>
           </div>
 
-          {/* Date preview when offset changes */}
-          {offsetChanged && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <div className="text-sm font-medium text-amber-800 mb-2">
-                Preview with new offset
-              </div>
+          {/* Date preview - always visible */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Preview {offsetChanged && <span className="text-amber-600 font-normal">(with new offset)</span>}
+            </label>
+            <div className={`rounded-lg p-3 ${offsetChanged ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50'}`}>
               <div className="flex flex-wrap gap-2">
-                {slots.filter(s => s.planting).slice(0, 6).map((s) => (
+                {slots.filter(s => s.planting).slice(0, 10).map((s) => (
                   <span
                     key={s.slot}
                     className={`inline-flex items-center px-2 py-1 rounded text-xs ${
                       s.slot === 0
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-amber-100 text-amber-800'
+                        ? 'bg-purple-100 text-purple-800 font-medium'
+                        : offsetChanged
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-gray-200 text-gray-700'
                     }`}
                   >
                     #{s.slot + 1}: {format(parseISO(s.computedDate), 'MMM d')}
                   </span>
                 ))}
-                {slots.filter(s => s.planting).length > 6 && (
-                  <span className="text-xs text-amber-600">
-                    ...and {slots.filter(s => s.planting).length - 6} more
+                {slots.filter(s => s.planting).length > 10 && (
+                  <span className={`text-xs ${offsetChanged ? 'text-amber-600' : 'text-gray-500'}`}>
+                    ...and {slots.filter(s => s.planting).length - 10} more
                   </span>
                 )}
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Footer */}

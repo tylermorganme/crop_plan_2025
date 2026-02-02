@@ -705,6 +705,13 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
 
   /** Get all plantings in a sequence, sorted by index */
   getSequencePlantings: (sequenceId: string) => Planting[];
+
+  /**
+   * Add a new planting to an existing sequence.
+   * Creates a clone of the anchor planting at the next slot (max + 1).
+   * Returns the new planting ID.
+   */
+  addPlantingToSequence: (sequenceId: string) => Promise<string>;
 }
 
 type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
@@ -3904,6 +3911,54 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       });
 
       return count;
+    },
+
+    addPlantingToSequence: async (sequenceId) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.plantings || !currentPlan.sequences) {
+        throw new Error('No plan loaded');
+      }
+
+      const sequence = currentPlan.sequences[sequenceId];
+      if (!sequence) {
+        throw new Error(`Sequence not found: ${sequenceId}`);
+      }
+
+      // Get all plantings in this sequence
+      const sequencePlantings = currentPlan.plantings
+        .filter(p => p.sequenceId === sequenceId)
+        .sort((a, b) => (a.sequenceSlot ?? 0) - (b.sequenceSlot ?? 0));
+
+      if (sequencePlantings.length === 0) {
+        throw new Error('Sequence has no plantings');
+      }
+
+      // Find the anchor (slot 0) to clone
+      const anchor = sequencePlantings.find(p => p.sequenceSlot === 0);
+      if (!anchor) {
+        throw new Error('Sequence has no anchor planting');
+      }
+
+      // Find the max slot number
+      const maxSlot = Math.max(...sequencePlantings.map(p => p.sequenceSlot ?? 0));
+      const newSlot = maxSlot + 1;
+
+      // Clone the anchor planting
+      const newPlanting = clonePlanting(anchor, {
+        sequenceId,
+        sequenceSlot: newSlot,
+        // Don't copy startBed - let user assign it
+        startBed: null,
+        // Clear the fieldStartDate - it will be computed from sequence formula
+        // Actually, we need to set fieldStartDate since that's required
+        // The UI will show the computed date based on sequence offset
+        fieldStartDate: anchor.fieldStartDate,
+      });
+
+      // Add the planting
+      await get().addPlanting(newPlanting);
+
+      return newPlanting.id;
     },
 
     getSequence: (sequenceId) => {

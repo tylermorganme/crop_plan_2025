@@ -53,6 +53,7 @@ export function ConnectedPlantingInspector({
   const updateSequenceName = usePlanStore((s) => s.updateSequenceName);
   const reorderSequenceSlots = usePlanStore((s) => s.reorderSequenceSlots);
   const unlinkFromSequence = usePlanStore((s) => s.unlinkFromSequence);
+  const addPlantingToSequence = usePlanStore((s) => s.addPlantingToSequence);
   const getSequence = usePlanStore((s) => s.getSequence);
   const getSequencePlantings = usePlanStore((s) => s.getSequencePlantings);
 
@@ -337,6 +338,9 @@ export function ConnectedPlantingInspector({
           }}
           onReorderSlots={async (newSlotAssignments) => {
             await reorderSequenceSlots(editingSequenceId!, newSlotAssignments);
+          }}
+          onAddSlot={async () => {
+            await addPlantingToSequence(editingSequenceId!);
           }}
         />
       )}
