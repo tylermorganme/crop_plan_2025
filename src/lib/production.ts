@@ -382,18 +382,26 @@ function calculateProductProduction(
 
 /**
  * Calculate production metrics for a single planting.
+ *
+ * @param planting - The planting to calculate production for
+ * @param spec - The planting spec with yield info
+ * @param products - Product catalog
+ * @param effectiveFieldStartDate - Optional GDD-adjusted field start date (overrides planting.fieldStartDate)
  */
 export function calculatePlantingProduction(
   planting: Planting,
   spec: PlantingSpec,
-  products: Record<string, Product>
+  products: Record<string, Product>,
+  effectiveFieldStartDate?: string
 ): PlantingProductionResult {
   const productResults: ProductProductionResult[] = [];
   const totalYieldByUnit: Record<string, number> = {};
   let earliestHarvestStart: string | null = null;
   let latestHarvestEnd: string | null = null;
 
-  const fieldStartDate = parseISO(planting.fieldStartDate);
+  // Use effective date if provided (from GDD-adjusted timeline crops), otherwise use stored date
+  const fieldStartDateStr = effectiveFieldStartDate ?? planting.fieldStartDate;
+  const fieldStartDate = parseISO(fieldStartDateStr);
 
   // Calculate production for each product yield
   for (const py of spec.productYields ?? []) {
@@ -430,14 +438,22 @@ export function calculatePlantingProduction(
     harvestStartDate: earliestHarvestStart,
     harvestEndDate: latestHarvestEnd,
     startBed: planting.startBed ?? null,
-    fieldStartDate: planting.fieldStartDate,
+    fieldStartDate: fieldStartDateStr,
   };
 }
 
 /**
  * Calculate complete production report for a plan.
+ *
+ * @param plan - The plan to calculate production for
+ * @param effectiveDates - Optional map of planting ID to effective field start date.
+ *                         Used to apply GDD-adjusted dates from timeline crops.
+ *                         If not provided, uses the stored planting.fieldStartDate.
  */
-export function calculatePlanProduction(plan: Plan): PlanProductionReport {
+export function calculatePlanProduction(
+  plan: Plan,
+  effectiveDates?: Map<string, string>
+): PlanProductionReport {
   const plantingResults: PlantingProductionResult[] = [];
   const totalYieldByUnit: Record<string, number> = {};
   const cropMap = new Map<string, CropProductionResult>();
@@ -460,7 +476,9 @@ export function calculatePlanProduction(plan: Plan): PlanProductionReport {
     // Skip failed plantings
     if (planting.actuals?.failed) continue;
 
-    const plantingProduction = calculatePlantingProduction(planting, spec, products);
+    // Get effective date from map if provided (for GDD-adjusted dates)
+    const effectiveDate = effectiveDates?.get(planting.id);
+    const plantingProduction = calculatePlantingProduction(planting, spec, products, effectiveDate);
     plantingResults.push(plantingProduction);
 
     // Add to totals
