@@ -70,7 +70,19 @@
       "WebFetch(domain:tanstack.com)",
       "WebFetch(domain:borstch.com)",
       "Bash(npx eslint:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:extension.oregonstate.edu)",
+      "WebFetch(domain:www.sciencedirect.com)",
+      "WebFetch(domain:www.agry.purdue.edu)",
+      "WebFetch(domain:extension.umn.edu)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:nmsp.cals.cornell.edu)",
+      "Bash(git mv:*)",
+      "Bash(wc:*)",
+      "Bash(for db in /home/tyler/Projects/crop_plan_2025/data/plans/*.db)",
+      "Bash(do echo \"=== $db ===\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

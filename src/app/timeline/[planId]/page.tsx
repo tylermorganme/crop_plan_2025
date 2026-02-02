@@ -7,12 +7,13 @@ import CropTimeline from '@/components/CropTimeline';
 import PlantingSpecEditor from '@/components/PlantingSpecEditor';
 import { PageLayout } from '@/components/PageLayout';
 import AppHeader from '@/components/AppHeader';
-import { type PlantingSpec } from '@/lib/entities/planting-specs';
+import { type PlantingSpec, calculateDaysInCells, getPrimarySeedToHarvest } from '@/lib/entities/planting-specs';
 // useSnapshotScheduler removed - SQLite storage handles persistence directly
-import { calculateRowSpan, buildBedMappings } from '@/lib/timeline-data';
+import { calculateRowSpan, buildBedMappings, getTimelineCropsFromPlan } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
 import { useComputedCrops } from '@/lib/use-computed-crops';
+import { findHarvestDate, findPlantDate, makeCacheKey, getGddForDays } from '@/lib/gdd-cache';
 import {
   usePlanStore,
   loadPlanFromLibrary,
@@ -99,7 +100,7 @@ export default function TimelinePlanPage() {
   }, [currentPlan?.beds, currentPlan?.bedGroups]);
 
   // Get computed crops from centralized hook (includes GDD adjustments)
-  const { crops: baseCrops, gddLoading, hasGddCalculator } = useComputedCrops();
+  const { crops: baseCrops, gddLoading, hasGddCalculator, gddCalculator } = useComputedCrops();
 
   // Load the specific plan by ID
   useEffect(() => {
@@ -208,32 +209,131 @@ export default function TimelinePlanPage() {
   }, []);
 
   // Handle drag end - commit or discard pending changes
+  // When ANY sequence member is dragged, recalculate and commit ALL members' dates
   const handleDragEnd = useCallback((committed: boolean) => {
     if (!committed || pendingDragChanges.size === 0) {
-      // Drag cancelled or no changes - just clear pending state
       setPendingDragChanges(new Map());
       return;
+    }
+
+    // Build a map of recalculated dates for ALL sequence members when any member moves
+    // Key: planting ID, Value: new field start date
+    const recalculatedDates = new Map<string, string>();
+
+    // Check each pending date change to see if it belongs to a sequence
+    for (const [plantingId, changes] of pendingDragChanges) {
+      if (!changes.fieldStartDate) continue;
+
+      const draggedPlanting = currentPlan?.plantings?.find(p => p.id === plantingId);
+      if (!draggedPlanting?.sequenceId) continue;
+
+      const sequence = currentPlan?.sequences?.[draggedPlanting.sequenceId];
+      if (!sequence) continue;
+
+      // Get all plantings in this sequence
+      const sequenceMembers = currentPlan?.plantings?.filter(
+        p => p.sequenceId === draggedPlanting.sequenceId
+      ) ?? [];
+
+      // Get spec for GDD calculations
+      const spec = currentPlan?.specs?.[draggedPlanting.specId];
+      if (!spec) continue;
+
+      // For GDD-staggered sequences with a GDD calculator, do proper harvest-date-based recalculation
+      if (sequence.useGddStagger && gddCalculator && spec.cropId) {
+        const cropEntity = currentPlan?.crops?.[spec.cropId];
+        const baseTemp = cropEntity?.gddBaseTemp;
+
+        if (baseTemp !== undefined) {
+          const daysInCells = calculateDaysInCells(spec);
+          const seedToHarvest = getPrimarySeedToHarvest(spec);
+          const fieldDaysToHarvest = seedToHarvest - daysInCells;
+          const structureOffset = spec.growingStructure && spec.growingStructure !== 'field' ? 20 : 0;
+          const cacheKey = makeCacheKey(baseTemp, cropEntity?.gddUpperTemp, structureOffset);
+          const gddCache = gddCalculator.getCache();
+
+          // Calculate GDD needed to harvest
+          const gddNeeded = getGddForDays(
+            gddCache,
+            changes.fieldStartDate,
+            fieldDaysToHarvest,
+            cacheKey
+          ) ?? fieldDaysToHarvest * 15; // Fallback: ~15 GDD per day
+
+          // Calculate dragged planting's new harvest date
+          const draggedHarvestDate = findHarvestDate(
+            gddCache,
+            changes.fieldStartDate,
+            gddNeeded,
+            cacheKey
+          );
+
+          if (draggedHarvestDate) {
+            const draggedSlot = draggedPlanting.sequenceSlot ?? 0;
+
+            // Recalculate all members' dates based on the dragged member's harvest
+            for (const member of sequenceMembers) {
+              const memberSlot = member.sequenceSlot ?? 0;
+              const slotDiff = memberSlot - draggedSlot;
+              const additionalDays = member.overrides?.additionalDaysInField ?? 0;
+
+              // Calculate target harvest date for this member
+              // target = dragged_harvest + (slot_diff × offsetDays) + additionalDays
+              const targetHarvestMs = new Date(draggedHarvestDate).getTime() +
+                (slotDiff * sequence.offsetDays + additionalDays) * 24 * 60 * 60 * 1000;
+              const targetHarvestDate = new Date(targetHarvestMs).toISOString().split('T')[0];
+
+              // Back-calculate plant date from target harvest
+              const plantDate = findPlantDate(
+                gddCache,
+                targetHarvestDate,
+                gddNeeded,
+                cacheKey
+              );
+
+              if (plantDate) {
+                recalculatedDates.set(member.id, plantDate);
+              }
+            }
+          }
+        }
+      } else {
+        // Non-GDD sequence: simple calendar offset from dragged member
+        const draggedSlot = draggedPlanting.sequenceSlot ?? 0;
+
+        for (const member of sequenceMembers) {
+          const memberSlot = member.sequenceSlot ?? 0;
+          const slotDiff = memberSlot - draggedSlot;
+          const additionalDays = member.overrides?.additionalDaysInField ?? 0;
+
+          // Calculate new date: dragged_date + (slot_diff × offsetDays) + additionalDays
+          const newDateMs = new Date(changes.fieldStartDate).getTime() +
+            (slotDiff * sequence.offsetDays + additionalDays) * 24 * 60 * 60 * 1000;
+          const newDate = new Date(newDateMs).toISOString().split('T')[0];
+
+          recalculatedDates.set(member.id, newDate);
+        }
+      }
     }
 
     // Commit all pending changes in a single bulk update
     const updates: { id: string; changes: { startBed?: string | null; bedFeet?: number; fieldStartDate?: string } }[] = [];
 
+    // First, handle directly changed plantings (bed moves and non-sequence date changes)
     for (const [groupId, changes] of pendingDragChanges) {
+      const planting = currentPlan?.plantings?.find(p => p.id === groupId);
+      if (!planting) {
+        console.error(`handleDragEnd: planting not found for groupId ${groupId}`);
+        continue;
+      }
+
       const updateChanges: { startBed?: string | null; bedFeet?: number; fieldStartDate?: string } = {};
 
-      // Handle bed change
+      // Handle bed change (always applies)
       if (changes.startBed !== undefined) {
         if (changes.startBed === null) {
-          // Moving to unassigned
           updateChanges.startBed = null;
         } else {
-          // Moving to a real bed - resolve name to UUID
-          const planting = currentPlan?.plantings?.find(p => p.id === groupId);
-          if (!planting) {
-            console.error(`handleDragEnd: planting not found for groupId ${groupId}`);
-            continue;
-          }
-
           const { bedSpanInfo, isComplete } = calculateRowSpan(
             planting.bedFeet,
             changes.startBed,
@@ -251,8 +351,12 @@ export default function TimelinePlanPage() {
         }
       }
 
-      // Handle date change
-      if (changes.fieldStartDate !== undefined) {
+      // Handle date change - use recalculated date if available (for sequence members)
+      const recalcDate = recalculatedDates.get(groupId);
+      if (recalcDate) {
+        updateChanges.fieldStartDate = recalcDate;
+      } else if (changes.fieldStartDate !== undefined) {
+        // Non-sequence planting - use direct date change
         updateChanges.fieldStartDate = changes.fieldStartDate;
       }
 
@@ -261,13 +365,20 @@ export default function TimelinePlanPage() {
       }
     }
 
+    // Add updates for sequence members that weren't directly dragged but need date recalculation
+    for (const [memberId, newDate] of recalculatedDates) {
+      // Skip if already handled above
+      if (pendingDragChanges.has(memberId)) continue;
+
+      updates.push({ id: memberId, changes: { fieldStartDate: newDate } });
+    }
+
     if (updates.length > 0) {
       bulkUpdatePlantings(updates);
     }
 
-    // Clear pending state
     setPendingDragChanges(new Map());
-  }, [pendingDragChanges, bulkUpdatePlantings, bedMappings, currentPlan?.beds, currentPlan?.plantings]);
+  }, [pendingDragChanges, bulkUpdatePlantings, bedMappings, currentPlan?.beds, currentPlan?.plantings, currentPlan?.sequences, currentPlan?.specs, currentPlan?.crops, gddCalculator]);
 
   const handleAddPlanting = useCallback(async (specId: string, fieldStartDate: string, bedId: string): Promise<string> => {
     const newPlanting = createPlanting({
@@ -327,48 +438,160 @@ export default function TimelinePlanPage() {
     }
   }, [updatePlantingSpec, setToast]);
 
-  // Compute preview crops: apply pending drag changes on top of computed base crops
-  // Bed spanning is computed at render time in CropTimeline's cropsByResource
+  // Compute preview crops using data-driven approach:
+  // Apply pending changes to create a virtual plan, then use the same
+  // getTimelineCropsFromPlan() function that renders use.
+  //
+  // Key insight: When ANY sequence member is dragged, recalculate ALL members' dates.
+  // The dragged member's new harvest date becomes the reference point for calculating
+  // all other members' target harvest dates (offset by slot × offsetDays).
   const previewCrops = useMemo(() => {
     // No pending changes - return computed crops as-is
-    if (pendingDragChanges.size === 0) {
+    if (pendingDragChanges.size === 0 || !currentPlan) {
       return baseCrops;
     }
 
-    // Apply pending changes directly to crop entries (1:1 with plantings)
-    return baseCrops.map(crop => {
-      const changes = pendingDragChanges.get(crop.groupId);
-      if (!changes) return crop;
+    // Build a map of recalculated dates for ALL sequence members when any member moves
+    // Key: planting ID, Value: new field start date
+    const recalculatedDates = new Map<string, string>();
 
-      return {
-        ...crop,
-        // Update resource (bed name) - null becomes '' for unassigned
-        resource: changes.startBed !== undefined
-          ? (changes.startBed || '')
-          : crop.resource,
-        // Update start/end dates if fieldStartDate changed
-        ...(changes.fieldStartDate !== undefined ? (() => {
-          // Find the planting to compute date delta
-          const planting = currentPlan?.plantings?.find(p => p.id === crop.groupId);
-          if (!planting) return {};
+    // Check each pending date change to see if it belongs to a sequence
+    for (const [plantingId, changes] of pendingDragChanges) {
+      if (!changes.fieldStartDate) continue;
 
-          const originalFieldDate = new Date(planting.fieldStartDate);
-          const newFieldDate = new Date(changes.fieldStartDate);
-          const deltaDays = Math.round((newFieldDate.getTime() - originalFieldDate.getTime()) / (1000 * 60 * 60 * 24));
+      const draggedPlanting = currentPlan.plantings?.find(p => p.id === plantingId);
+      if (!draggedPlanting?.sequenceId) continue;
 
-          const newStart = new Date(crop.startDate);
-          const newEnd = new Date(crop.endDate);
-          newStart.setDate(newStart.getDate() + deltaDays);
-          newEnd.setDate(newEnd.getDate() + deltaDays);
+      const sequence = currentPlan.sequences?.[draggedPlanting.sequenceId];
+      if (!sequence) continue;
 
-          return {
-            startDate: newStart.toISOString().split('T')[0],
-            endDate: newEnd.toISOString().split('T')[0],
-          };
-        })() : {}),
-      };
-    });
-  }, [baseCrops, pendingDragChanges, currentPlan?.plantings]);
+      // Get all plantings in this sequence
+      const sequenceMembers = currentPlan.plantings?.filter(
+        p => p.sequenceId === draggedPlanting.sequenceId
+      ) ?? [];
+
+      // Get spec for GDD calculations
+      const spec = currentPlan.specs?.[draggedPlanting.specId];
+      if (!spec) continue;
+
+      // For GDD-staggered sequences with a GDD calculator, do proper harvest-date-based recalculation
+      if (sequence.useGddStagger && gddCalculator && spec.cropId) {
+        const cropEntity = currentPlan.crops?.[spec.cropId];
+        const baseTemp = cropEntity?.gddBaseTemp;
+
+        if (baseTemp !== undefined) {
+          const daysInCells = calculateDaysInCells(spec);
+          const seedToHarvest = getPrimarySeedToHarvest(spec);
+          const fieldDaysToHarvest = seedToHarvest - daysInCells;
+          const structureOffset = spec.growingStructure && spec.growingStructure !== 'field' ? 20 : 0;
+          const cacheKey = makeCacheKey(baseTemp, cropEntity?.gddUpperTemp, structureOffset);
+          const gddCache = gddCalculator.getCache();
+
+          // Calculate GDD needed to harvest
+          const gddNeeded = getGddForDays(
+            gddCache,
+            changes.fieldStartDate,
+            fieldDaysToHarvest,
+            cacheKey
+          ) ?? fieldDaysToHarvest * 15; // Fallback: ~15 GDD per day
+
+          // Calculate dragged planting's new harvest date
+          const draggedHarvestDate = findHarvestDate(
+            gddCache,
+            changes.fieldStartDate,
+            gddNeeded,
+            cacheKey
+          );
+
+          if (draggedHarvestDate) {
+            const draggedSlot = draggedPlanting.sequenceSlot ?? 0;
+
+            // Recalculate all members' dates based on the dragged member's harvest
+            for (const member of sequenceMembers) {
+              const memberSlot = member.sequenceSlot ?? 0;
+              const slotDiff = memberSlot - draggedSlot;
+              const additionalDays = member.overrides?.additionalDaysInField ?? 0;
+
+              // Calculate target harvest date for this member
+              // target = dragged_harvest + (slot_diff × offsetDays) + additionalDays
+              const targetHarvestMs = new Date(draggedHarvestDate).getTime() +
+                (slotDiff * sequence.offsetDays + additionalDays) * 24 * 60 * 60 * 1000;
+              const targetHarvestDate = new Date(targetHarvestMs).toISOString().split('T')[0];
+
+              // Back-calculate plant date from target harvest
+              const plantDate = findPlantDate(
+                gddCache,
+                targetHarvestDate,
+                gddNeeded,
+                cacheKey
+              );
+
+              if (plantDate) {
+                recalculatedDates.set(member.id, plantDate);
+              }
+            }
+          }
+        }
+      } else {
+        // Non-GDD sequence: simple calendar offset from dragged member
+        const draggedSlot = draggedPlanting.sequenceSlot ?? 0;
+
+        for (const member of sequenceMembers) {
+          const memberSlot = member.sequenceSlot ?? 0;
+          const slotDiff = memberSlot - draggedSlot;
+          const additionalDays = member.overrides?.additionalDaysInField ?? 0;
+
+          // Calculate new date: dragged_date + (slot_diff × offsetDays) + additionalDays
+          const newDateMs = new Date(changes.fieldStartDate).getTime() +
+            (slotDiff * sequence.offsetDays + additionalDays) * 24 * 60 * 60 * 1000;
+          const newDate = new Date(newDateMs).toISOString().split('T')[0];
+
+          recalculatedDates.set(member.id, newDate);
+        }
+      }
+    }
+
+    // Create modified plantings with all changes applied
+    const modifiedPlantings = currentPlan.plantings?.map(planting => {
+      const directChanges = pendingDragChanges.get(planting.id);
+      const recalcDate = recalculatedDates.get(planting.id);
+
+      // No changes for this planting
+      if (!directChanges && !recalcDate) return planting;
+
+      let modified = { ...planting };
+
+      // Apply bed change
+      if (directChanges?.startBed !== undefined) {
+        if (directChanges.startBed === null) {
+          modified.startBed = null;
+        } else {
+          const bed = currentPlan.beds ? Object.values(currentPlan.beds).find(b => b.name === directChanges.startBed) : null;
+          if (bed) {
+            modified.startBed = bed.id;
+          }
+        }
+      }
+
+      // Apply date change - prefer recalculated (for sequence members) over direct
+      if (recalcDate) {
+        modified.fieldStartDate = recalcDate;
+      } else if (directChanges?.fieldStartDate !== undefined) {
+        modified.fieldStartDate = directChanges.fieldStartDate;
+      }
+
+      return modified;
+    }) ?? [];
+
+    // Create virtual plan with modified plantings
+    const virtualPlan = {
+      ...currentPlan,
+      plantings: modifiedPlantings,
+    };
+
+    // Use the same function that render uses - this ensures preview matches committed result
+    return getTimelineCropsFromPlan(virtualPlan, gddCalculator);
+  }, [baseCrops, pendingDragChanges, currentPlan, gddCalculator]);
 
   if (loading) {
     return (

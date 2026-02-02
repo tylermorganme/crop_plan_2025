@@ -63,28 +63,30 @@ function createTestPlan(schemaVersion: number): Plan {
     plantings: [
       {
         id: 'planting-1',
-        configId: 'config-1',
+        specId: 'spec-1',
         fieldStartDate: '2025-04-01',
         startBed: 'bed-1',
         bedFeet: 100,
-        sequenceSlot: 0,
+        lastModified: Date.now(),
       },
       {
         id: 'planting-2',
-        configId: 'config-2',
+        specId: 'spec-2',
         fieldStartDate: '2025-05-01',
         startBed: 'bed-2',
         bedFeet: 50,
-        sequenceSlot: 1,
+        lastModified: Date.now(),
       },
     ],
     beds: {},
     bedGroups: {},
-    cropCatalog: {},
+    specs: {},
+    crops: {},
     products: {},
     varieties: {},
     seedMixes: {},
     seedOrders: {},
+    changeLog: [],
   } as Plan;
 }
 
@@ -458,7 +460,7 @@ describe('realistic plan with template data', () => {
     const plantings = [
       {
         id: 'P1',
-        configId: tomatoConfig!.identifier,
+        specId: tomatoConfig!.identifier,
         fieldStartDate: '2025-04-15',
         startBed: Object.keys(beds)[0], // First bed
         bedFeet: 100,
@@ -466,7 +468,7 @@ describe('realistic plan with template data', () => {
       },
       {
         id: 'P2',
-        configId: lettuceConfig!.identifier,
+        specId: lettuceConfig!.identifier,
         fieldStartDate: '2025-03-01',
         startBed: Object.keys(beds)[5], // 6th bed
         bedFeet: 50,
@@ -474,7 +476,7 @@ describe('realistic plan with template data', () => {
       },
       {
         id: 'P3',
-        configId: basilConfig!.identifier,
+        specId: basilConfig!.identifier,
         fieldStartDate: '2025-05-01',
         startBed: Object.keys(beds)[10], // 11th bed
         bedFeet: 75,
@@ -496,7 +498,7 @@ describe('realistic plan with template data', () => {
       plantings,
       beds: beds as Plan['beds'],
       bedGroups: bedGroupsRecord as Plan['bedGroups'],
-      cropCatalog: cropCatalog as Plan['cropCatalog'],
+      specs: cropCatalog as Plan['specs'],
       products: {},
       varieties: {},
       seedMixes: {},

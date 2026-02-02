@@ -359,9 +359,17 @@ function getMarketColor(marketId: string, index: number): string {
   return MARKET_COLORS[marketId] ?? FALLBACK_MARKET_COLORS[index % FALLBACK_MARKET_COLORS.length];
 }
 
+/** Planting info needed for weekly capacity calculation */
+interface PlantingForCapacity {
+  harvestStartDate: string | null;
+  harvestEndDate: string | null;
+  maxYieldPerWeek: number;
+}
+
 /** Harvest timeline chart showing individual harvest events as bars */
 function ProductionChart({
   harvestEvents,
+  plantings,
   unit,
   planYear,
   planId,
@@ -371,6 +379,7 @@ function ProductionChart({
   onReset,
 }: {
   harvestEvents: HarvestEvent[];
+  plantings: PlantingForCapacity[];
   unit: string;
   planYear: number;
   planId: string;
@@ -480,56 +489,42 @@ function ProductionChart({
     return sorted;
   }, [filteredEvents, getDayOfYear, effectiveSelectedMarkets]);
 
-  // Compute weekly averages using symmetric rolling window, normalized to 7 days
-  // Calculates both total weekly avg and per-market weekly averages
-  const chartDataWithAvg = useMemo(() => {
+  // Compute weekly capacity for each day by summing maxYieldPerWeek from all
+  // plantings whose harvest window overlaps that day.
+  // This shows "production capacity" - what your peak weekly output could be
+  // at any point based on which plantings are in their harvest window.
+  const chartDataWithCapacity = useMemo(() => {
     if (chartData.length === 0) return chartData;
 
-    const windowDays = settings.rollingWindowDays;
-    const halfWindow = Math.floor(windowDays / 2);
-    const normalizer = windowDays / 7; // Normalize to weekly equivalent
-
-    // Build maps of dayOfYear -> yield for quick lookup (total and per-market)
-    const totalYieldByDay = new Map<number, number>();
-    const marketYieldByDay = new Map<string, Map<number, number>>();
-
-    // Initialize per-market maps
-    for (const marketId of effectiveSelectedMarkets) {
-      marketYieldByDay.set(marketId, new Map<number, number>());
-    }
-
-    for (const entry of chartData) {
-      totalYieldByDay.set(entry.dayOfYear, (entry.visibleYield as number) || 0);
-      // Per-market yields
-      const entryRecord = entry as Record<string, unknown>;
-      for (const marketId of effectiveSelectedMarkets) {
-        const marketYield = (entryRecord[marketId] as number) || 0;
-        marketYieldByDay.get(marketId)!.set(entry.dayOfYear, marketYield);
-      }
-    }
-
-    // Create new entries with weeklyAvg computed (total and per-market)
-    return chartData.map(entry => {
-      // Total rolling average
-      let totalSum = 0;
-      for (let d = entry.dayOfYear - halfWindow; d <= entry.dayOfYear + halfWindow; d++) {
-        totalSum += totalYieldByDay.get(d) || 0;
-      }
-
-      // Per-market rolling averages
-      const marketAvgs: Record<string, number> = {};
-      for (const marketId of effectiveSelectedMarkets) {
-        let marketSum = 0;
-        const yieldMap = marketYieldByDay.get(marketId)!;
-        for (let d = entry.dayOfYear - halfWindow; d <= entry.dayOfYear + halfWindow; d++) {
-          marketSum += yieldMap.get(d) || 0;
-        }
-        marketAvgs[`${marketId}_avg`] = marketSum / normalizer;
-      }
-
-      return { ...entry, weeklyAvg: totalSum / normalizer, ...marketAvgs };
+    // Filter plantings to those with valid harvest windows in display year
+    const validPlantings = plantings.filter(p => {
+      if (!p.harvestStartDate || !p.harvestEndDate || p.maxYieldPerWeek <= 0) return false;
+      const startYear = new Date(p.harvestStartDate + 'T00:00:00').getFullYear();
+      const endYear = new Date(p.harvestEndDate + 'T00:00:00').getFullYear();
+      return startYear === displayYear || endYear === displayYear;
     });
-  }, [chartData, settings.rollingWindowDays, effectiveSelectedMarkets]);
+
+    // Pre-compute day-of-year ranges for each planting
+    const plantingRanges = validPlantings.map(p => ({
+      startDoy: getDayOfYear(p.harvestStartDate!),
+      // Add 1 to include the end day in the range
+      endDoy: getDayOfYear(p.harvestEndDate!) + 1,
+      maxYieldPerWeek: p.maxYieldPerWeek,
+    }));
+
+    // For each chart data point, sum capacity from all active plantings
+    return chartData.map(entry => {
+      let weeklyCapacity = 0;
+      for (const range of plantingRanges) {
+        // Check if this day falls within the planting's harvest window
+        if (entry.dayOfYear >= range.startDoy && entry.dayOfYear < range.endDoy) {
+          weeklyCapacity += range.maxYieldPerWeek;
+        }
+      }
+
+      return { ...entry, weeklyCapacity };
+    });
+  }, [chartData, plantings, displayYear, getDayOfYear]);
 
   // Calculate axis domain based on month range
   const axisDomain = useMemo(() => {
@@ -541,11 +536,11 @@ function ProductionChart({
 
   // Calculate nice Y-axis tick values for consistent grid lines and center labels
   const yAxisTicks = useMemo(() => {
-    if (chartDataWithAvg.length === 0) return [0];
+    if (chartDataWithCapacity.length === 0) return [0];
 
-    // Find max value across all bars and the weekly avg lines
+    // Find max value across all bars and the weekly capacity line
     let maxVal = 0;
-    for (const entry of chartDataWithAvg) {
+    for (const entry of chartDataWithCapacity) {
       const entryRecord = entry as Record<string, unknown>;
 
       // Sum up all selected market yields for bars
@@ -557,20 +552,9 @@ function ProductionChart({
         maxVal = Math.max(maxVal, barTotal);
       }
 
-      // Total weekly avg
-      if (settings.showWeeklyAvg && (entry as { weeklyAvg?: number }).weeklyAvg) {
-        maxVal = Math.max(maxVal, (entry as { weeklyAvg?: number }).weeklyAvg ?? 0);
-      }
-
-      // Per-market weekly averages (lines are stacked visually, so check individual values)
-      if (settings.showWeeklyAvg) {
-        for (const marketId of effectiveSelectedMarkets) {
-          const avgKey = `${marketId}_avg`;
-          const avgVal = (entryRecord[avgKey] as number) || 0;
-          // Note: per-market lines aren't stacked, but total line covers the sum
-          // Just ensure we catch any edge cases
-          maxVal = Math.max(maxVal, avgVal);
-        }
+      // Weekly capacity line
+      if (settings.showWeeklyAvg && (entry as { weeklyCapacity?: number }).weeklyCapacity) {
+        maxVal = Math.max(maxVal, (entry as { weeklyCapacity?: number }).weeklyCapacity ?? 0);
       }
     }
 
@@ -593,7 +577,7 @@ function ProductionChart({
       ticks.push(Math.round(t));
     }
     return ticks;
-  }, [chartDataWithAvg, effectiveSelectedMarkets, settings.showBars, settings.showWeeklyAvg]);
+  }, [chartDataWithCapacity, effectiveSelectedMarkets, settings.showBars, settings.showWeeklyAvg]);
 
   // Update settings and save to localStorage
   const updateSettings = useCallback((updates: Partial<ProductionChartSettings>) => {
@@ -738,31 +722,16 @@ function ProductionChart({
             <span className="text-gray-700">Bars</span>
           </label>
 
-          {/* Weekly average toggle and window selector */}
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.showWeeklyAvg}
-                onChange={(e) => updateSettings({ showWeeklyAvg: e.target.checked })}
-                className="w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
-              />
-              <span className="text-gray-700">Wkly avg</span>
-            </label>
-            {settings.showWeeklyAvg && (
-              <select
-                value={settings.rollingWindowDays}
-                onChange={(e) => updateSettings({ rollingWindowDays: parseInt(e.target.value) })}
-                className="px-1.5 py-0.5 text-xs border border-gray-300 rounded"
-                title="Rolling window size"
-              >
-                <option value={7}>7d</option>
-                <option value={14}>14d</option>
-                <option value={21}>21d</option>
-                <option value={28}>28d</option>
-              </select>
-            )}
-          </div>
+          {/* Weekly capacity toggle */}
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.showWeeklyAvg}
+              onChange={(e) => updateSettings({ showWeeklyAvg: e.target.checked })}
+              className="w-3.5 h-3.5 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+            />
+            <span className="text-gray-700">Max/wk</span>
+          </label>
 
           {/* Reset button */}
           <button
@@ -786,11 +755,11 @@ function ProductionChart({
                 settings,
                 harvestEvents: harvestEvents.length,
                 filteredEvents: filteredEvents.length,
-                chartData: chartDataWithAvg.map(d => ({
+                chartData: chartDataWithCapacity.map((d: { date: string; dayOfYear: number; visibleYield?: number; weeklyCapacity?: number }) => ({
                   date: d.date,
                   dayOfYear: d.dayOfYear,
-                  visibleYield: (d as { visibleYield?: number }).visibleYield,
-                  weeklyAvg: (d as { weeklyAvg?: number }).weeklyAvg,
+                  visibleYield: d.visibleYield,
+                  weeklyCapacity: d.weeklyCapacity,
                 })),
               };
               navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
@@ -853,7 +822,7 @@ function ProductionChart({
       ) : (
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartDataWithAvg} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
+            <ComposedChart data={chartDataWithCapacity} margin={{ top: 20, right: 40, bottom: 20, left: 40 }}>
               {/* Horizontal grid lines */}
               <CartesianGrid
                 horizontal={true}
@@ -944,7 +913,7 @@ function ProductionChart({
                   const data = payload[0].payload as {
                     date: string;
                     totalYield: number;
-                    weeklyAvg: number;
+                    weeklyCapacity: number;
                     events: HarvestEvent[];
                     [key: string]: unknown;
                   };
@@ -986,14 +955,14 @@ function ProductionChart({
                       ) : (
                         <div className="mb-1">{formatYield(visibleTotal, unit)}</div>
                       )}
-                      {/* Weekly average */}
-                      {settings.showWeeklyAvg && data.weeklyAvg > 0 && (
+                      {/* Weekly capacity */}
+                      {settings.showWeeklyAvg && data.weeklyCapacity > 0 && (
                         <div className="flex items-center justify-between gap-3 text-gray-600 border-t border-gray-100 pt-1 mt-1">
                           <span className="flex items-center gap-1">
                             <span className="w-2 h-0.5 bg-orange-500 rounded" />
-                            Weekly avg
+                            Max/wk
                           </span>
-                          <span>{formatYield(data.weeklyAvg, unit)}/wk</span>
+                          <span>{formatYield(data.weeklyCapacity, unit)}/wk</span>
                         </div>
                       )}
                       <div className="text-gray-500 text-xs mt-1">
@@ -1025,24 +994,11 @@ function ProductionChart({
                   barSize={8}
                 />
               ))}
-              {/* Per-market weekly average lines */}
-              {settings.showWeeklyAvg && selectedMarketInfo.map((market) => (
-                <Line
-                  key={`${market.id}_avg`}
-                  type="monotone"
-                  dataKey={`${market.id}_avg`}
-                  yAxisId="left"
-                  stroke={market.color}
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, fill: market.color }}
-                />
-              ))}
-              {/* Total weekly average line - neutral gray with dash to distinguish from market colors */}
-              {settings.showWeeklyAvg && selectedMarketInfo.length > 1 && (
+              {/* Weekly capacity line - shows sum of max/wk for all plantings with active harvest windows */}
+              {settings.showWeeklyAvg && (
                 <Line
                   type="monotone"
-                  dataKey="weeklyAvg"
+                  dataKey="weeklyCapacity"
                   yAxisId="left"
                   stroke="#374151"
                   strokeWidth={2}
@@ -1051,22 +1007,22 @@ function ProductionChart({
                   strokeDasharray="4 2"
                 >
                   <LabelList
-                    dataKey="weeklyAvg"
+                    dataKey="weeklyCapacity"
                     position="top"
                     content={({ x, y, value, index }) => {
-                      // Only show label at the maximum weekly average point
+                      // Only show label at the maximum weekly capacity point
                       if (!value || (value as number) <= 0) return null;
 
-                      // Find the index of the maximum weeklyAvg
+                      // Find the index of the maximum weeklyCapacity
                       let maxIndex = 0;
                       let maxVal = 0;
-                      chartDataWithAvg.forEach((d, i) => {
-                        const avg = (d as { weeklyAvg?: number }).weeklyAvg ?? 0;
-                        if (avg > maxVal) {
-                          maxVal = avg;
+                      for (let i = 0; i < chartDataWithCapacity.length; i++) {
+                        const cap = (chartDataWithCapacity[i] as { weeklyCapacity?: number }).weeklyCapacity ?? 0;
+                        if (cap > maxVal) {
+                          maxVal = cap;
                           maxIndex = i;
                         }
-                      });
+                      }
 
                       if (index !== maxIndex) return null;
 
@@ -2371,6 +2327,7 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
           <ProductionChart
             key={`${selectedProduct.productId}-${selectedProduct.totalYield}-${selectedProduct.totalBedFeet}`}
             harvestEvents={selectedProduct.harvestEvents}
+            plantings={selectedProduct.plantings}
             unit={selectedProduct.unit}
             planYear={planYear}
             planId={planId}
