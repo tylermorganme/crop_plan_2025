@@ -256,15 +256,18 @@ export default function TimelinePlanPage() {
           // This is the biological constant - how much heat the crop needs to mature
           // Using targetFieldDate (not the drag position) ensures consistent GDD across seasons
           let gddNeeded: number;
+          let referenceDate: string;
           if (spec.targetFieldDate) {
             const planYear = currentPlan?.metadata?.year ?? new Date().getFullYear();
             const [month, day] = spec.targetFieldDate.split('-').map(Number);
-            const referenceDate = `${planYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            gddNeeded = getGddForDays(gddCache, referenceDate, fieldDaysToHarvest, cacheKey)
-              ?? fieldDaysToHarvest * 15;
+            referenceDate = `${planYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           } else {
-            gddNeeded = fieldDaysToHarvest * 15;
+            // Fall back to anchor's field start date (consistent with render path)
+            const anchor = sequenceMembers.find(p => p.sequenceSlot === 0);
+            referenceDate = anchor?.fieldStartDate ?? changes.fieldStartDate;
           }
+          gddNeeded = getGddForDays(gddCache, referenceDate, fieldDaysToHarvest, cacheKey)
+            ?? fieldDaysToHarvest * 15;
 
           // Calculate dragged planting's new harvest date
           const draggedHarvestDate = findHarvestDate(
@@ -497,15 +500,18 @@ export default function TimelinePlanPage() {
           // This is the biological constant - how much heat the crop needs to mature
           // Using targetFieldDate (not the drag position) ensures consistent GDD across seasons
           let gddNeeded: number;
+          let referenceDate: string;
           if (spec.targetFieldDate) {
             const planYear = currentPlan.metadata?.year ?? new Date().getFullYear();
             const [month, day] = spec.targetFieldDate.split('-').map(Number);
-            const referenceDate = `${planYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            gddNeeded = getGddForDays(gddCache, referenceDate, fieldDaysToHarvest, cacheKey)
-              ?? fieldDaysToHarvest * 15;
+            referenceDate = `${planYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           } else {
-            gddNeeded = fieldDaysToHarvest * 15;
+            // Fall back to anchor's field start date (consistent with render path)
+            const anchor = sequenceMembers.find(p => p.sequenceSlot === 0);
+            referenceDate = anchor?.fieldStartDate ?? changes.fieldStartDate;
           }
+          gddNeeded = getGddForDays(gddCache, referenceDate, fieldDaysToHarvest, cacheKey)
+            ?? fieldDaysToHarvest * 15;
 
           // Calculate dragged planting's new harvest date
           const draggedHarvestDate = findHarvestDate(

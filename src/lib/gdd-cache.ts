@@ -439,18 +439,26 @@ function binarySearchGddReverse(
 
 /**
  * Get day of year (1-366) from a Date object.
+ * Uses UTC to avoid timezone-related off-by-one errors.
  */
 function getDayOfYear(date: Date): number {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const diff = date.getTime() - start.getTime();
+  // Use UTC methods to avoid timezone issues
+  // When parsing "2025-05-01", JS interprets as UTC midnight,
+  // so we must use UTC getters consistently
+  const year = date.getUTCFullYear();
+  const startOfYear = Date.UTC(year, 0, 1); // Jan 1 00:00 UTC
+  const current = Date.UTC(year, date.getUTCMonth(), date.getUTCDate());
   const oneDay = 1000 * 60 * 60 * 24;
-  return Math.floor(diff / oneDay);
+  return Math.floor((current - startOfYear) / oneDay) + 1; // +1 because Jan 1 is DOY 1
 }
 
 /**
  * Convert day of year to date string (YYYY-MM-DD).
+ * Uses UTC to match getDayOfYear's UTC-based calculation.
  */
 function dayOfYearToDateStr(doy: number, year: number): string {
-  const date = new Date(year, 0, doy);
+  // Create date in UTC: Jan 1 + (doy - 1) days
+  const ms = Date.UTC(year, 0, 1) + (doy - 1) * 24 * 60 * 60 * 1000;
+  const date = new Date(ms);
   return date.toISOString().split('T')[0];
 }

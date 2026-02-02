@@ -660,10 +660,6 @@ export function expandPlantingsToTimelineCrops(
       continue;
     }
 
-    // Track whether this planting is in a GDD-staggered sequence
-    // If so, we skip per-planting GDD adjustment to avoid double adjustment
-    let isInGddStaggeredSequence = false;
-
     // Compute effective field start date for sequence followers
     let effectiveFieldStartDate = planting.fieldStartDate;
     if (planting.sequenceId && planting.sequenceSlot !== undefined && planting.sequenceSlot > 0) {
@@ -680,7 +676,10 @@ export function expandPlantingsToTimelineCrops(
           const baseTemp = cropEntity?.gddBaseTemp ?? spec.gddBaseTemp;
 
           if (baseTemp !== undefined) {
-            // Calculate field days to harvest (DTM - greenhouse time)
+            // Calculate field days to harvest
+            // Note: spec is PlantingConfigLookup which already has product-aware values:
+            // - spec.dtm = seedToHarvest (computed via getPrimarySeedToHarvest in lookupConfigFromCatalog)
+            // - spec.daysInCells = daysInCells (computed via calculateDaysInCells in lookupConfigFromCatalog)
             const daysInCells = spec.daysInCells ?? 0;
             const fieldDaysToHarvest = spec.dtm - daysInCells;
 
@@ -702,9 +701,6 @@ export function expandPlantingsToTimelineCrops(
               sequence.offsetDays,
               additionalDaysInField
             );
-
-            // Mark as being in a GDD-staggered sequence
-            isInGddStaggeredSequence = true;
           }
         }
 
@@ -716,18 +712,6 @@ export function expandPlantingsToTimelineCrops(
           const anchorDate = parseISO(anchor.fieldStartDate);
           const totalOffset = planting.sequenceSlot * sequence.offsetDays + additionalDaysInField;
           effectiveFieldStartDate = format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
-        }
-      }
-    }
-
-    // Also check if anchor is in a GDD-staggered sequence
-    if (planting.sequenceId && planting.sequenceSlot === 0) {
-      const sequence = sequences?.[planting.sequenceId];
-      if (sequence?.useGddStagger && gddCalculator && spec.cropId) {
-        const cropEntity = cropEntities?.[spec.cropId];
-        const baseTemp = cropEntity?.gddBaseTemp ?? spec.gddBaseTemp;
-        if (baseTemp !== undefined) {
-          isInGddStaggeredSequence = true;
         }
       }
     }
@@ -746,15 +730,17 @@ export function expandPlantingsToTimelineCrops(
     }
 
     const slim = preparePlantingForCalc(planting, mappings.uuidToName, effectiveFieldStartDate);
-    // Skip per-planting GDD adjustment for plantings in GDD-staggered sequences
-    // because the sequence logic already handles GDD timing
+    // For GDD-staggered sequences:
+    // - Plant dates are calculated by sequence logic (computeSequenceDateWithGddStagger)
+    // - But harvest date DISPLAY still needs GDD adjustment to show correct bar width
+    // The gddCalculator adjusts field days for display, which is independent of plant date calculation
     const expandedCrops = expandToTimelineCrops(
       slim,
       enrichedSpec,
       mappings.nameGroups,
       mappings.bedLengths,
       undefined, // getFollowedCropEndDate
-      isInGddStaggeredSequence ? undefined : gddCalculator
+      gddCalculator // Always pass gddCalculator for correct harvest date display
     );
 
     // Add planting fields for inspector editing
