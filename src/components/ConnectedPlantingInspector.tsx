@@ -51,6 +51,7 @@ export function ConnectedPlantingInspector({
   const createSequenceFromPlanting = usePlanStore((s) => s.createSequenceFromPlanting);
   const updateSequenceOffset = usePlanStore((s) => s.updateSequenceOffset);
   const updateSequenceName = usePlanStore((s) => s.updateSequenceName);
+  const updateSequenceGddStagger = usePlanStore((s) => s.updateSequenceGddStagger);
   const reorderSequenceSlots = usePlanStore((s) => s.reorderSequenceSlots);
   const unlinkFromSequence = usePlanStore((s) => s.unlinkFromSequence);
   const addPlantingToSequence = usePlanStore((s) => s.addPlantingToSequence);
@@ -339,6 +340,9 @@ export function ConnectedPlantingInspector({
           }}
           onUpdateName={async (newName) => {
             await updateSequenceName(editingSequenceId!, newName);
+          }}
+          onUpdateGddStagger={async (useGddStagger) => {
+            await updateSequenceGddStagger(editingSequenceId!, useGddStagger);
           }}
           onUnlinkPlanting={async (plantingId) => {
             await unlinkFromSequence(plantingId);

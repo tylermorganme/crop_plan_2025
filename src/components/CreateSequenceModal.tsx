@@ -9,6 +9,8 @@ export interface CreateSequenceOptions {
   offsetDays: number;
   name?: string;
   bedAssignment: 'same' | 'unassigned';
+  /** Use GDD-based harvest staggering */
+  useGddStagger?: boolean;
 }
 
 interface CreateSequenceModalProps {
@@ -30,6 +32,8 @@ export default function CreateSequenceModal({
   const [offsetDays, setOffsetDays] = useState(7);
   const [name, setName] = useState('');
   const [bedAssignment, setBedAssignment] = useState<'same' | 'unassigned'>('unassigned');
+  const [useGddStagger, setUseGddStagger] = useState(false);
+  const [showGddHelp, setShowGddHelp] = useState(false);
   const countInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when modal opens
@@ -39,6 +43,8 @@ export default function CreateSequenceModal({
       setOffsetDays(7);
       setName('');
       setBedAssignment('unassigned');
+      setUseGddStagger(false);
+      setShowGddHelp(false);
       setTimeout(() => countInputRef.current?.focus(), 0);
     }
   }, [isOpen]);
@@ -66,6 +72,7 @@ export default function CreateSequenceModal({
       offsetDays,
       name: name.trim() || undefined,
       bedAssignment,
+      useGddStagger: useGddStagger || undefined,
     });
   };
 
@@ -147,7 +154,7 @@ export default function CreateSequenceModal({
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
-                  Days between each planting
+                  {useGddStagger ? 'Days between harvests' : 'Days between plantings'}
                 </label>
                 <div className="flex items-center gap-1">
                   <input
@@ -211,6 +218,47 @@ export default function CreateSequenceModal({
               </div>
             </div>
 
+            {/* GDD-based harvest stagger */}
+            <div>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={useGddStagger}
+                    onChange={(e) => setUseGddStagger(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Use GDD-based harvest stagger</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowGddHelp(!showGddHelp)}
+                  className="text-gray-400 hover:text-gray-600"
+                  title="What is this?"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              </div>
+              {showGddHelp && (
+                <div className="mt-2 p-3 bg-blue-50 rounded-md text-xs text-blue-800">
+                  <p className="font-medium mb-1">What is GDD-based staggering?</p>
+                  <p className="mb-2">
+                    Normally, succession plantings are spaced by fixed planting dates (e.g., plant every 7 days).
+                    But crops grow faster in warm weather and slower in cool weather, so harvest dates end up unevenly spaced.
+                  </p>
+                  <p className="mb-2">
+                    With GDD staggering enabled, the system calculates variable planting offsets so your <strong>harvests</strong> are
+                    evenly spaced by your target interval. Early-season plantings may be closer together; late-season plantings may be further apart.
+                  </p>
+                  <p className="text-blue-600">
+                    Note: Requires location to be set in plan settings for temperature data.
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Name (optional) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -228,7 +276,7 @@ export default function CreateSequenceModal({
             {/* Preview */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Preview
+                {useGddStagger ? 'Preview (target harvests)' : 'Preview (planting dates)'}
               </label>
               <div className="bg-gray-50 rounded-md p-3 text-sm">
                 <div className="flex flex-wrap gap-2">
@@ -248,6 +296,11 @@ export default function CreateSequenceModal({
                     <span className="text-gray-500">...and {count - 10} more</span>
                   )}
                 </div>
+                {useGddStagger && (
+                  <p className="mt-2 text-xs text-gray-500">
+                    Planting dates will be calculated to achieve these harvest targets.
+                  </p>
+                )}
               </div>
             </div>
           </div>

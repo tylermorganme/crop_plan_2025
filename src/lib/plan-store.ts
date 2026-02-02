@@ -664,6 +664,8 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
       name?: string;
       /** Bed assignment for new plantings: 'same' keeps original bed, 'unassigned' sets to null */
       bedAssignment: 'same' | 'unassigned';
+      /** Use GDD-based harvest staggering */
+      useGddStagger?: boolean;
     }
   ) => Promise<{ sequenceId: string; plantingIds: string[] }>;
 
@@ -690,6 +692,11 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
    * Update a sequence's name.
    */
   updateSequenceName: (sequenceId: string, newName: string | undefined) => Promise<void>;
+
+  /**
+   * Update a sequence's GDD stagger setting.
+   */
+  updateSequenceGddStagger: (sequenceId: string, useGddStagger: boolean) => Promise<void>;
 
   /**
    * Reorder sequence slots by reassigning slot numbers.
@@ -3583,6 +3590,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const sequence = createSequence({
         name: options.name,
         offsetDays: options.offsetDays,
+        useGddStagger: options.useGddStagger,
       });
 
       // Calculate dates for all plantings
@@ -3719,6 +3727,36 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             plan.metadata.lastModified = now;
           },
           `Update sequence name to "${newName ?? '(unnamed)'}"`
+        );
+
+        state.isDirty = true;
+      });
+    },
+
+    updateSequenceGddStagger: async (sequenceId, useGddStagger) => {
+      const { currentPlan } = get();
+      if (!currentPlan?.sequences) return;
+
+      const sequence = currentPlan.sequences[sequenceId];
+      if (!sequence) {
+        throw new Error(`Sequence not found: ${sequenceId}`);
+      }
+
+      set((state) => {
+        if (!state.currentPlan?.sequences) return;
+
+        mutateWithPatches(
+          state,
+          (plan) => {
+            const now = Date.now();
+
+            if (plan.sequences?.[sequenceId]) {
+              plan.sequences[sequenceId].useGddStagger = useGddStagger || undefined;
+            }
+
+            plan.metadata.lastModified = now;
+          },
+          `${useGddStagger ? 'Enable' : 'Disable'} GDD harvest stagger for sequence`
         );
 
         state.isDirty = true;

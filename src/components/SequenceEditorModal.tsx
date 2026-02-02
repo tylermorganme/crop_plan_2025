@@ -18,6 +18,7 @@ interface SequenceEditorModalProps {
   onClose: () => void;
   onUpdateOffset: (newOffsetDays: number) => void;
   onUpdateName: (newName: string | undefined) => void;
+  onUpdateGddStagger: (useGddStagger: boolean) => void;
   onUnlinkPlanting: (plantingId: string) => void;
   onReorderSlots: (newSlotAssignments: { plantingId: string; slot: number }[]) => void;
   onAddSlot: () => Promise<void>;
@@ -40,18 +41,23 @@ export default function SequenceEditorModal({
   onClose,
   onUpdateOffset,
   onUpdateName,
+  onUpdateGddStagger,
   onUnlinkPlanting,
   onReorderSlots,
   onAddSlot,
 }: SequenceEditorModalProps) {
   const [name, setName] = useState(sequence.name ?? '');
   const [offsetDays, setOffsetDays] = useState(sequence.offsetDays);
+  const [useGddStagger, setUseGddStagger] = useState(sequence.useGddStagger ?? false);
+  const [showGddHelp, setShowGddHelp] = useState(false);
 
   // Reset form when modal opens or sequence changes
   useEffect(() => {
     if (isOpen) {
       setName(sequence.name ?? '');
       setOffsetDays(sequence.offsetDays);
+      setUseGddStagger(sequence.useGddStagger ?? false);
+      setShowGddHelp(false);
     }
   }, [isOpen, sequence]);
 
@@ -103,10 +109,11 @@ export default function SequenceEditorModal({
     return slotList;
   }, [plantings, anchor, offsetDays, specs, beds]);
 
-  // Check if offset has changed
+  // Check if anything has changed
   const offsetChanged = offsetDays !== sequence.offsetDays;
   const nameChanged = (name.trim() || undefined) !== (sequence.name ?? undefined);
-  const hasChanges = offsetChanged || nameChanged;
+  const gddStaggerChanged = useGddStagger !== (sequence.useGddStagger ?? false);
+  const hasChanges = offsetChanged || nameChanged || gddStaggerChanged;
 
   const handleSave = () => {
     if (offsetChanged) {
@@ -114,6 +121,9 @@ export default function SequenceEditorModal({
     }
     if (nameChanged) {
       onUpdateName(name.trim() || undefined);
+    }
+    if (gddStaggerChanged) {
+      onUpdateGddStagger(useGddStagger);
     }
     onClose();
   };
@@ -231,7 +241,7 @@ export default function SequenceEditorModal({
           {/* Offset input */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Days between each planting
+              {useGddStagger ? 'Days between harvests' : 'Days between plantings'}
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -249,6 +259,52 @@ export default function SequenceEditorModal({
                 </span>
               )}
             </div>
+          </div>
+
+          {/* GDD-based harvest stagger */}
+          <div>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useGddStagger}
+                  onChange={(e) => setUseGddStagger(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">Use GDD-based harvest stagger</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowGddHelp(!showGddHelp)}
+                className="text-gray-400 hover:text-gray-600"
+                title="What is this?"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+              {gddStaggerChanged && (
+                <span className="text-xs text-amber-600 font-medium ml-2">
+                  (changed)
+                </span>
+              )}
+            </div>
+            {showGddHelp && (
+              <div className="mt-2 p-3 bg-blue-50 rounded-md text-xs text-blue-800">
+                <p className="font-medium mb-1">What is GDD-based staggering?</p>
+                <p className="mb-2">
+                  Normally, succession plantings are spaced by fixed planting dates (e.g., plant every 7 days).
+                  But crops grow faster in warm weather and slower in cool weather, so harvest dates end up unevenly spaced.
+                </p>
+                <p className="mb-2">
+                  With GDD staggering enabled, the system calculates variable planting offsets so your <strong>harvests</strong> are
+                  evenly spaced by your target interval. Early-season plantings may be closer together; late-season plantings may be further apart.
+                </p>
+                <p className="text-blue-600">
+                  Note: Requires location to be set in plan settings for temperature data.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Plantings list */}
@@ -371,7 +427,7 @@ export default function SequenceEditorModal({
           {/* Date preview - always visible */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Preview {offsetChanged && <span className="text-amber-600 font-normal">(with new offset)</span>}
+              {useGddStagger ? 'Planting dates' : 'Preview'} {(offsetChanged || gddStaggerChanged) && <span className="text-amber-600 font-normal">(will update)</span>}
             </label>
             <div className={`rounded-lg p-3 ${offsetChanged ? 'bg-amber-50 border border-amber-200' : 'bg-gray-50'}`}>
               <div className="flex flex-wrap gap-2">

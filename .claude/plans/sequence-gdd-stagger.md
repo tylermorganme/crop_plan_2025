@@ -162,21 +162,22 @@ Store in `useComputedCrops` or a new `useGddCache` hook:
 - Binary search gives O(log 366) ≈ 9 comparisons per lookup vs O(n) iteration
 - Trig functions (`Math.acos`, `Math.sin`) only called once per day in history
 
-### Phase 2: Data Model
-1. Add `useGddStagger?: boolean` to `PlantingSequence` interface
-2. Add migration (optional field, no migration needed)
-3. Update `computeSequenceDate` to use GDD stagger when enabled
+### Phase 2: Data Model ✅ COMPLETE
+1. ✅ Added `useGddStagger?: boolean` to `PlantingSequence` interface
+2. ✅ No migration needed (optional field with undefined default)
+3. ✅ Added `computeSequenceDateWithGddStagger()` for GDD-based date calculation
+4. ✅ Added `computeHarvestDate()` helper for preview displays
 
-### Phase 3: UI
-1. Add toggle to CreateSequenceModal
-2. Add toggle to SequenceEditorModal
-3. Update preview to show both plant and harvest dates when GDD stagger is ON
-4. Add help text explaining the feature
+### Phase 3: UI ✅ COMPLETE
+1. ✅ Added toggle to CreateSequenceModal with help text
+2. ✅ Added toggle to SequenceEditorModal with help text
+3. ✅ Updated labels to show "Days between harvests" vs "Days between plantings"
+4. ✅ Added expandable help panel explaining the feature
 
-### Phase 4: Store Actions
-1. Update `createSequenceFromPlanting` to accept `useGddStagger` option
-2. Update `updateSequenceOffset` to handle GDD stagger mode
-3. Add `updateSequenceGddStagger` action
+### Phase 4: Store Actions ✅ COMPLETE
+1. ✅ Updated `createSequenceFromPlanting` to accept `useGddStagger` option
+2. ✅ Added `updateSequenceGddStagger` action
+3. ✅ Wired up UI callbacks in `ConnectedPlantingInspector`
 
 ---
 
@@ -186,11 +187,11 @@ Store in `useComputedCrops` or a new `useGddCache` hook:
 |------|---------|--------|
 | `src/lib/gdd-cache.ts` | NEW - cumulative GDD table and lookups | ✅ Done |
 | `src/lib/gdd.ts` | Integrate caching, add reverse lookup | ✅ Done |
-| `src/lib/entities/planting-sequence.ts` | Add `useGddStagger` field |
-| `src/lib/plan-store.ts` | Update sequence actions |
-| `src/components/CreateSequenceModal.tsx` | Add toggle + help text |
-| `src/components/SequenceEditorModal.tsx` | Add toggle + help text, update preview |
-| `src/lib/use-computed-crops.ts` | Consider caching GDD table here |
+| `src/lib/entities/planting-sequence.ts` | Add `useGddStagger` field + GDD stagger functions | ✅ Done |
+| `src/lib/plan-store.ts` | Update sequence actions | ✅ Done |
+| `src/components/CreateSequenceModal.tsx` | Add toggle + help text | ✅ Done |
+| `src/components/SequenceEditorModal.tsx` | Add toggle + help text | ✅ Done |
+| `src/components/ConnectedPlantingInspector.tsx` | Wire up new callbacks | ✅ Done |
 
 ---
 

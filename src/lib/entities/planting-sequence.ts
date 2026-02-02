@@ -24,8 +24,23 @@ export interface PlantingSequence {
   /** Optional user-friendly name (e.g., "Spring Cilantro Succession") */
   name?: string;
 
-  /** Days between each planting's fieldStartDate */
+  /**
+   * Days between each planting.
+   * - When useGddStagger is OFF: days between planting dates (current behavior)
+   * - When useGddStagger is ON: days between harvest dates (goal)
+   */
   offsetDays: number;
+
+  /**
+   * Use GDD-based harvest staggering.
+   *
+   * When enabled, offsetDays represents the target days between harvests,
+   * and planting dates are calculated dynamically to achieve even harvest spacing.
+   *
+   * When disabled (default), offsetDays represents days between planting dates,
+   * which may result in uneven harvest spacing due to seasonal temperature variation.
+   */
+  useGddStagger?: boolean;
 }
 
 export interface CreateSequenceInput {
@@ -35,6 +50,8 @@ export interface CreateSequenceInput {
   name?: string;
   /** Days between each planting (required) */
   offsetDays: number;
+  /** Use GDD-based harvest staggering */
+  useGddStagger?: boolean;
 }
 
 // Simple counter for generating unique sequence IDs
@@ -71,6 +88,7 @@ export function createSequence(input: CreateSequenceInput): PlantingSequence {
     id: input.id ?? generateSequenceId(),
     name: input.name,
     offsetDays: input.offsetDays,
+    useGddStagger: input.useGddStagger,
   };
 }
 
@@ -86,6 +104,7 @@ export function cloneSequence(
     id: crypto.randomUUID(),
     name: source.name,
     offsetDays: source.offsetDays,
+    useGddStagger: source.useGddStagger,
     ...overrides,
   };
 }
@@ -110,4 +129,138 @@ export function computeSequenceDate(
   const anchorDate = parseISO(anchorFieldStartDate);
   const totalOffset = slot * offsetDays + additionalDaysInField;
   return format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
+}
+
+/**
+ * Parameters needed for GDD-based sequence date calculation.
+ */
+export interface GddStaggerParams {
+  /** GDD cache with pre-computed cumulative tables */
+  gddCache: import('../gdd-cache').GddCache;
+  /** Anchor planting's field start date (YYYY-MM-DD) */
+  anchorFieldStartDate: string;
+  /** Days from field start to harvest (DTM - greenhouse time) */
+  fieldDaysToHarvest: number;
+  /** Crop's base temperature for GDD calculation */
+  baseTemp: number;
+  /** Crop's ceiling temperature (optional) */
+  upperTemp?: number;
+  /** Structure offset for non-field growing (optional) */
+  structureOffset?: number;
+}
+
+/**
+ * Compute planting date for a sequence slot using GDD-based harvest staggering.
+ *
+ * Unlike computeSequenceDate which spaces PLANTING dates evenly,
+ * this function spaces HARVEST dates evenly and calculates what
+ * planting dates are needed to achieve that.
+ *
+ * Algorithm:
+ * 1. Calculate anchor's harvest date (anchor plant date + fieldDaysToHarvest GDD)
+ * 2. Calculate target harvest date for this slot (anchor harvest + slot * offsetDays)
+ * 3. Reverse lookup: what plant date achieves the target harvest date?
+ *
+ * @param params - GDD calculation parameters
+ * @param slot - The slot number (0 = anchor)
+ * @param harvestOffsetDays - Days between each slot's HARVEST (not planting)
+ * @param additionalDaysInField - Optional per-planting adjustment (default 0)
+ * @returns ISO date string for the calculated planting date, or null if calculation fails
+ */
+export function computeSequenceDateWithGddStagger(
+  params: GddStaggerParams,
+  slot: number,
+  harvestOffsetDays: number,
+  additionalDaysInField: number = 0
+): string | null {
+  // Dynamic import to avoid circular dependency
+  const { findHarvestDate, findPlantDate, makeCacheKey } = require('../gdd-cache');
+
+  const key = makeCacheKey(params.baseTemp, params.upperTemp, params.structureOffset ?? 0);
+
+  // Slot 0 is the anchor - its planting date is fixed
+  if (slot === 0) {
+    if (additionalDaysInField === 0) {
+      return params.anchorFieldStartDate;
+    }
+    // Apply additional days adjustment
+    const anchorDate = parseISO(params.anchorFieldStartDate);
+    return format(addDays(anchorDate, additionalDaysInField), 'yyyy-MM-dd');
+  }
+
+  // Step 1: Calculate anchor's harvest date using GDD
+  // We need to find when anchor reaches fieldDaysToHarvest worth of GDD
+  const anchorHarvestDate = findHarvestDate(
+    params.gddCache,
+    params.anchorFieldStartDate,
+    getGddForFieldDays(params, params.fieldDaysToHarvest),
+    key
+  );
+
+  if (!anchorHarvestDate) {
+    // Fallback to non-GDD calculation if GDD lookup fails
+    return computeSequenceDate(params.anchorFieldStartDate, slot, harvestOffsetDays, additionalDaysInField);
+  }
+
+  // Step 2: Calculate target harvest date for this slot
+  const anchorHarvest = parseISO(anchorHarvestDate);
+  const targetHarvestDays = slot * harvestOffsetDays + additionalDaysInField;
+  const targetHarvestDate = format(addDays(anchorHarvest, targetHarvestDays), 'yyyy-MM-dd');
+
+  // Step 3: Reverse lookup - what plant date achieves the target harvest?
+  const plantDate = findPlantDate(
+    params.gddCache,
+    targetHarvestDate,
+    getGddForFieldDays(params, params.fieldDaysToHarvest),
+    key
+  );
+
+  if (!plantDate) {
+    // Fallback to non-GDD calculation
+    return computeSequenceDate(params.anchorFieldStartDate, slot, harvestOffsetDays, additionalDaysInField);
+  }
+
+  return plantDate;
+}
+
+/**
+ * Calculate total GDD needed for a given number of field days.
+ * This is a helper that uses the GDD cache to get the GDD requirement.
+ */
+function getGddForFieldDays(params: GddStaggerParams, fieldDays: number): number {
+  const { getGddForDays, makeCacheKey } = require('../gdd-cache');
+  const key = makeCacheKey(params.baseTemp, params.upperTemp, params.structureOffset ?? 0);
+
+  const gdd = getGddForDays(params.gddCache, params.anchorFieldStartDate, fieldDays, key);
+  return gdd ?? fieldDays * 15; // Fallback: ~15 GDD per day average
+}
+
+/**
+ * Calculate harvest date for a planting given its field start date.
+ * Used for preview displays.
+ */
+export function computeHarvestDate(
+  fieldStartDate: string,
+  fieldDaysToHarvest: number,
+  gddParams?: GddStaggerParams
+): string {
+  if (gddParams) {
+    const { findHarvestDate, makeCacheKey } = require('../gdd-cache');
+    const key = makeCacheKey(gddParams.baseTemp, gddParams.upperTemp, gddParams.structureOffset ?? 0);
+
+    const harvestDate = findHarvestDate(
+      gddParams.gddCache,
+      fieldStartDate,
+      getGddForFieldDays(gddParams, fieldDaysToHarvest),
+      key
+    );
+
+    if (harvestDate) {
+      return harvestDate;
+    }
+  }
+
+  // Fallback to simple calendar calculation
+  const startDate = parseISO(fieldStartDate);
+  return format(addDays(startDate, fieldDaysToHarvest), 'yyyy-MM-dd');
 }
