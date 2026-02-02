@@ -621,6 +621,7 @@ function preparePlantingForCalc(
  * @param sequences - Sequence definitions for succession plantings
  * @param crops - Crop definitions (for GDD temps)
  * @param gddCalculator - Optional GDD calculator for adjusted timing
+ * @param planYear - Plan year for GDD reference date calculation
  */
 export function expandPlantingsToTimelineCrops(
   plantings: Planting[],
@@ -629,7 +630,8 @@ export function expandPlantingsToTimelineCrops(
   bedGroups?: Record<string, BedGroup>,
   sequences?: Record<string, PlantingSequence>,
   cropEntities?: Record<string, Crop>,
-  gddCalculator?: GddCalculator
+  gddCalculator?: GddCalculator,
+  planYear?: number
 ): TimelineCrop[] {
   // Build bed mappings for UUID <-> name conversion
   const mappings = bedGroups
@@ -658,6 +660,10 @@ export function expandPlantingsToTimelineCrops(
       continue;
     }
 
+    // Track whether this planting is in a GDD-staggered sequence
+    // If so, we skip per-planting GDD adjustment to avoid double adjustment
+    let isInGddStaggeredSequence = false;
+
     // Compute effective field start date for sequence followers
     let effectiveFieldStartDate = planting.fieldStartDate;
     if (planting.sequenceId && planting.sequenceSlot !== undefined && planting.sequenceSlot > 0) {
@@ -685,6 +691,9 @@ export function expandPlantingsToTimelineCrops(
               baseTemp,
               upperTemp: cropEntity?.gddUpperTemp ?? spec.gddUpperTemp,
               structureOffset: spec.growingStructure && spec.growingStructure !== 'field' ? 20 : 0,
+              // Use targetFieldDate for fixed GDD calculation (biological constant)
+              targetFieldDate: spec.targetFieldDate,
+              planYear,
             };
 
             gddStaggerDate = computeSequenceDateWithGddStagger(
@@ -693,6 +702,9 @@ export function expandPlantingsToTimelineCrops(
               sequence.offsetDays,
               additionalDaysInField
             );
+
+            // Mark as being in a GDD-staggered sequence
+            isInGddStaggeredSequence = true;
           }
         }
 
@@ -704,6 +716,18 @@ export function expandPlantingsToTimelineCrops(
           const anchorDate = parseISO(anchor.fieldStartDate);
           const totalOffset = planting.sequenceSlot * sequence.offsetDays + additionalDaysInField;
           effectiveFieldStartDate = format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
+        }
+      }
+    }
+
+    // Also check if anchor is in a GDD-staggered sequence
+    if (planting.sequenceId && planting.sequenceSlot === 0) {
+      const sequence = sequences?.[planting.sequenceId];
+      if (sequence?.useGddStagger && gddCalculator && spec.cropId) {
+        const cropEntity = cropEntities?.[spec.cropId];
+        const baseTemp = cropEntity?.gddBaseTemp ?? spec.gddBaseTemp;
+        if (baseTemp !== undefined) {
+          isInGddStaggeredSequence = true;
         }
       }
     }
@@ -722,13 +746,15 @@ export function expandPlantingsToTimelineCrops(
     }
 
     const slim = preparePlantingForCalc(planting, mappings.uuidToName, effectiveFieldStartDate);
+    // Skip per-planting GDD adjustment for plantings in GDD-staggered sequences
+    // because the sequence logic already handles GDD timing
     const expandedCrops = expandToTimelineCrops(
       slim,
       enrichedSpec,
       mappings.nameGroups,
       mappings.bedLengths,
       undefined, // getFollowedCropEndDate
-      gddCalculator
+      isInGddStaggeredSequence ? undefined : gddCalculator
     );
 
     // Add planting fields for inspector editing
@@ -797,7 +823,8 @@ export function getTimelineCropsFromPlan(
     plan.bedGroups,
     plan.sequences,
     plan.crops,
-    gddCalculator
+    gddCalculator,
+    plan.metadata?.year
   );
 
   // Add colors from plan.crops using cropId (stable linking)

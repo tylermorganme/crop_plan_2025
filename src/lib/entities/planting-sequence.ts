@@ -147,6 +147,15 @@ export interface GddStaggerParams {
   upperTemp?: number;
   /** Structure offset for non-field growing (optional) */
   structureOffset?: number;
+  /**
+   * Target/reference field date for GDD calculation (MM-DD format).
+   * This is used to calculate a FIXED GDD requirement based on the crop's
+   * typical planting date, ensuring consistent GDD across seasons.
+   * If not provided, falls back to using anchorFieldStartDate.
+   */
+  targetFieldDate?: string;
+  /** Plan year for converting targetFieldDate to full date */
+  planYear?: number;
 }
 
 /**
@@ -226,12 +235,23 @@ export function computeSequenceDateWithGddStagger(
 /**
  * Calculate total GDD needed for a given number of field days.
  * This is a helper that uses the GDD cache to get the GDD requirement.
+ *
+ * Uses targetFieldDate (if available) to calculate a FIXED GDD requirement
+ * based on the crop's typical planting date. This ensures consistent GDD
+ * across seasons - the biological constant for how much heat the crop needs.
  */
 function getGddForFieldDays(params: GddStaggerParams, fieldDays: number): number {
   const { getGddForDays, makeCacheKey } = require('../gdd-cache');
   const key = makeCacheKey(params.baseTemp, params.upperTemp, params.structureOffset ?? 0);
 
-  const gdd = getGddForDays(params.gddCache, params.anchorFieldStartDate, fieldDays, key);
+  // Use targetFieldDate for fixed GDD calculation if available
+  let referenceDate = params.anchorFieldStartDate;
+  if (params.targetFieldDate && params.planYear) {
+    const [month, day] = params.targetFieldDate.split('-').map(Number);
+    referenceDate = `${params.planYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  const gdd = getGddForDays(params.gddCache, referenceDate, fieldDays, key);
   return gdd ?? fieldDays * 15; // Fallback: ~15 GDD per day average
 }
 
