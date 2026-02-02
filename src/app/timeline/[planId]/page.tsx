@@ -9,9 +9,10 @@ import { PageLayout } from '@/components/PageLayout';
 import AppHeader from '@/components/AppHeader';
 import { type PlantingSpec } from '@/lib/entities/planting-specs';
 // useSnapshotScheduler removed - SQLite storage handles persistence directly
-import { calculateRowSpan, getTimelineCropsFromPlan, buildBedMappings } from '@/lib/timeline-data';
+import { calculateRowSpan, buildBedMappings } from '@/lib/timeline-data';
 import { getResources, getGroups } from '@/lib/plan-types';
 import { createPlanting } from '@/lib/entities/planting';
+import { useComputedCrops } from '@/lib/use-computed-crops';
 import {
   usePlanStore,
   loadPlanFromLibrary,
@@ -96,6 +97,9 @@ export default function TimelinePlanPage() {
     const mappings = buildBedMappings(currentPlan.beds, currentPlan.bedGroups);
     return { nameGroups: mappings.nameGroups, bedLengths: mappings.bedLengths };
   }, [currentPlan?.beds, currentPlan?.bedGroups]);
+
+  // Get computed crops from centralized hook (includes GDD adjustments)
+  const { crops: baseCrops, gddLoading, hasGddCalculator } = useComputedCrops();
 
   // Load the specific plan by ID
   useEffect(() => {
@@ -323,14 +327,10 @@ export default function TimelinePlanPage() {
     }
   }, [updatePlantingSpec, setToast]);
 
-  // Compute preview crops: just update resource/dates on 1:1 crop entries
+  // Compute preview crops: apply pending drag changes on top of computed base crops
   // Bed spanning is computed at render time in CropTimeline's cropsByResource
   const previewCrops = useMemo(() => {
-    if (!currentPlan) return [];
-
-    const baseCrops = getTimelineCropsFromPlan(currentPlan);
-
-    // No pending changes - return as-is
+    // No pending changes - return computed crops as-is
     if (pendingDragChanges.size === 0) {
       return baseCrops;
     }
@@ -349,7 +349,7 @@ export default function TimelinePlanPage() {
         // Update start/end dates if fieldStartDate changed
         ...(changes.fieldStartDate !== undefined ? (() => {
           // Find the planting to compute date delta
-          const planting = currentPlan.plantings?.find(p => p.id === crop.groupId);
+          const planting = currentPlan?.plantings?.find(p => p.id === crop.groupId);
           if (!planting) return {};
 
           const originalFieldDate = new Date(planting.fieldStartDate);
@@ -368,7 +368,7 @@ export default function TimelinePlanPage() {
         })() : {}),
       };
     });
-  }, [currentPlan, pendingDragChanges]);
+  }, [baseCrops, pendingDragChanges, currentPlan?.plantings]);
 
   if (loading) {
     return (

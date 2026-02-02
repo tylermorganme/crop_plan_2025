@@ -15,6 +15,8 @@
 import { format } from 'date-fns';
 import { calculateCropTiming, type CropTimingInputs } from './crop-timing-calculator';
 import type { TimelineCrop, Planting } from './plan-types';
+import type { GddCalculator } from './gdd';
+import { NON_FIELD_STRUCTURE_OFFSET } from './gdd';
 import {
   calculateDaysInCells,
   calculatePlantingMethod,
@@ -54,6 +56,9 @@ export interface PlantingWithDates {
 
   /** Fixed field start date (ISO string) - when crop enters field */
   fixedFieldStartDate?: string;
+
+  /** Use GDD-based timing instead of static DTM */
+  useGddTiming?: boolean;
 
   /** Overrides to default config values */
   overrides?: {
@@ -103,6 +108,17 @@ export interface PlantingConfigLookup {
 
   /** Seeds needed per 50ft bed (for ordering calculations) */
   seedsPerBed?: number;
+
+  // ---- GDD Fields ----
+
+  /** Target field date for GDD reference (MM-DD format) */
+  targetFieldDate?: string;
+
+  /** GDD base temperature (°F) - from Crop entity */
+  gddBaseTemp?: number;
+
+  /** GDD ceiling temperature (°F) - from Crop entity */
+  gddUpperTemp?: number;
 }
 
 /**
@@ -147,6 +163,9 @@ export function lookupConfigFromCatalog(
     harvestWindow,
     daysInCells,
     seedsPerBed: entry.seedsPerBed,
+    targetFieldDate: entry.targetFieldDate,
+    // Note: gddBaseTemp and gddUpperTemp come from Crop entity,
+    // must be enriched by caller with access to plan.crops
   };
 }
 
@@ -215,6 +234,7 @@ export function resolveEffectiveTiming(
  * @param _bedGroups - Unused (bed spanning moved to render time)
  * @param _bedLengths - Unused (bed spanning moved to render time)
  * @param getFollowedCropEndDate - Optional callback for succession lookups
+ * @param gddCalculator - Optional GDD calculator for adjusted timing
  * @returns Single TimelineCrop object
  */
 export function expandToTimelineCrops(
@@ -222,19 +242,75 @@ export function expandToTimelineCrops(
   config: PlantingConfigLookup,
   _bedGroups: Record<string, string[]>,
   _bedLengths: Record<string, number>,
-  getFollowedCropEndDate?: (identifier: string) => Date | null
+  getFollowedCropEndDate?: (identifier: string) => Date | null,
+  gddCalculator?: GddCalculator
 ): TimelineCrop[] {
-  // Resolve effective timing values with overrides and clamping
-  const effective = resolveEffectiveTiming(config, planting.overrides);
+  // ==========================================================================
+  // TIMING COALESCING ORDER:
+  // 1. Base field days from spec (no overrides)
+  // 2. Effective field date = actuals.fieldDate ?? plannedFieldDate
+  // 3. Coalesced field days = GDD-adjusted (if enabled) or base
+  // 4. Final values = coalesced + overrides (additionalDaysInField is additive)
+  // ==========================================================================
+
+  // Step 1: Get BASE timing from config (no overrides yet for GDD reference)
+  const baseDtm = config.dtm;
+  const baseDaysInCells = config.daysInCells;
+  const baseFieldDays = baseDtm - baseDaysInCells;
+  const baseHarvestWindow = config.harvestWindow;
+
+  // Step 2: Determine effective field date (actuals override planned)
+  const effectiveFieldDate = planting.actuals?.fieldDate ?? planting.fixedFieldStartDate;
+
+  // Step 3: Calculate coalesced field days (GDD-adjusted or static)
+  let coalescedFieldDays = baseFieldDays;
+
+  if (
+    planting.useGddTiming &&
+    gddCalculator &&
+    config.targetFieldDate &&
+    config.gddBaseTemp !== undefined &&
+    effectiveFieldDate
+  ) {
+    // Calculate structure offset for non-field structures
+    const structureOffset =
+      config.growingStructure && config.growingStructure !== 'field'
+        ? NON_FIELD_STRUCTURE_OFFSET
+        : 0;
+
+    // Get GDD-adjusted field days using effective (actual or planned) field date
+    const adjustedFieldDays = gddCalculator.getAdjustedFieldDays(
+      baseFieldDays,
+      config.targetFieldDate,
+      effectiveFieldDate.split('T')[0], // Extract date part
+      config.gddBaseTemp,
+      config.gddUpperTemp,
+      structureOffset
+    );
+
+    if (adjustedFieldDays !== null) {
+      coalescedFieldDays = Math.round(adjustedFieldDays);
+    }
+  }
+
+  // Step 4: Apply overrides ON TOP of coalesced result
+  const additionalDaysInField = planting.overrides?.additionalDaysInField ?? 0;
+  const additionalDaysInCells = planting.overrides?.additionalDaysInCells ?? 0;
+  const additionalDaysOfHarvest = planting.overrides?.additionalDaysOfHarvest ?? 0;
+
+  const finalDaysInCells = Math.max(0, baseDaysInCells + additionalDaysInCells);
+  const finalFieldDays = Math.max(1, coalescedFieldDays + additionalDaysInField);
+  const finalDtm = finalDaysInCells + finalFieldDays;
+  const finalHarvestWindow = Math.max(0, baseHarvestWindow + additionalDaysOfHarvest);
 
   const timingInputs: CropTimingInputs = {
-    dtm: effective.dtm,
-    harvestWindow: effective.harvestWindow,
-    daysInCells: effective.daysInCells,
-    fixedFieldStartDate: planting.fixedFieldStartDate
-      ? parseLocalDate(planting.fixedFieldStartDate)
+    dtm: finalDtm,
+    harvestWindow: finalHarvestWindow,
+    daysInCells: finalDaysInCells,
+    fixedFieldStartDate: effectiveFieldDate
+      ? parseLocalDate(effectiveFieldDate)
       : undefined,
-    additionalDaysOfHarvest: 0, // Already applied via resolveEffectiveTiming
+    additionalDaysOfHarvest: 0, // Already applied above
     // Use parseLocalDateOrNull for actuals since they come from user input
     // and may be incomplete (e.g., mid-entry "2025-01") or invalid
     actualGreenhouseDate: parseLocalDateOrNull(planting.actuals?.greenhouseDate) ?? undefined,

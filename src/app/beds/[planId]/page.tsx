@@ -33,7 +33,7 @@ import DeleteGroupModal from '@/components/beds/DeleteGroupModal';
 import ImportBedsModal from '@/components/beds/ImportBedsModal';
 import BedGroupTimelineModal from '@/components/beds/BedGroupTimelineModal';
 import AppHeader from '@/components/AppHeader';
-import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { useComputedCrops } from '@/lib/use-computed-crops';
 
 export default function BedsPage() {
   const params = useParams();
@@ -84,6 +84,9 @@ export default function BedsPage() {
   const [viewingGroup, setViewingGroup] = useState<BedGroup | null>(null);
 
   const [error, setError] = useState<string | null>(null);
+
+  // Get computed crops from centralized hook (includes GDD adjustments)
+  const { crops: timelineCrops } = useComputedCrops();
 
   // Load plan on mount
   useEffect(() => {
@@ -142,12 +145,6 @@ export default function BedsPage() {
   // Get all bed IDs for sortable context
   const allBedIds = useMemo(() => Object.keys(beds), [beds]);
   const allGroupIds = useMemo(() => Object.keys(bedGroups), [bedGroups]);
-
-  // Timeline crops for the group modal
-  const timelineCrops = useMemo(
-    () => (currentPlan ? getTimelineCropsFromPlan(currentPlan) : []),
-    [currentPlan]
-  );
 
   // Filter crops for the viewing group
   const cropsForViewingGroup = useMemo(() => {

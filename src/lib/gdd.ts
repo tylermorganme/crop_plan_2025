@@ -95,6 +95,35 @@ export interface GddAdjustedTiming {
   warning?: string;
 }
 
+/**
+ * GDD Calculator interface for timeline calculations.
+ *
+ * Provides a simple function to calculate GDD-adjusted field days.
+ * This interface allows the timeline display code to optionally use
+ * GDD-adjusted timing when a planting has useGddTiming enabled.
+ */
+export interface GddCalculator {
+  /**
+   * Calculate GDD-adjusted field days.
+   *
+   * @param baseFieldDays - Original field days (from DTM - greenhouse time)
+   * @param targetFieldDate - Reference field date from spec (MM-DD format)
+   * @param actualFieldDate - Actual field start date (YYYY-MM-DD format)
+   * @param baseTemp - Base temperature (°F)
+   * @param upperTemp - Optional ceiling temperature (°F)
+   * @param structureOffset - Temperature offset for non-field structures (°F)
+   * @returns Adjusted field days, or null if calculation failed
+   */
+  getAdjustedFieldDays(
+    baseFieldDays: number,
+    targetFieldDate: string,
+    actualFieldDate: string,
+    baseTemp: number,
+    upperTemp?: number,
+    structureOffset?: number
+  ): number | null;
+}
+
 // =============================================================================
 // CONSTANTS
 // =============================================================================
@@ -386,6 +415,50 @@ export function calculateGddAdjustedTiming(
     adjustedDtm,
     daysDifference: adjustedDtm - originalDtm,
     hasEnoughData: true,
+  };
+}
+
+// =============================================================================
+// GDD CALCULATOR FACTORY
+// =============================================================================
+
+/**
+ * Create a GddCalculator from temperature history data.
+ *
+ * @param tempData - Temperature history
+ * @param planYear - Year for date calculations
+ * @returns GddCalculator instance
+ */
+export function createGddCalculator(
+  tempData: TemperatureHistory,
+  planYear: number
+): GddCalculator {
+  return {
+    getAdjustedFieldDays(
+      baseFieldDays: number,
+      targetFieldDate: string,
+      actualFieldDate: string,
+      baseTemp: number,
+      upperTemp?: number,
+      structureOffset?: number
+    ): number | null {
+      const result = calculateGddAdjustedTiming(
+        tempData,
+        baseFieldDays,
+        targetFieldDate,
+        actualFieldDate,
+        baseTemp,
+        planYear,
+        upperTemp,
+        structureOffset ?? 0
+      );
+
+      if (!result.hasEnoughData) {
+        return null;
+      }
+
+      return result.adjustedDtm;
+    },
   };
 }
 

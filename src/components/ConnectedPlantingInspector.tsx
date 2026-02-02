@@ -3,7 +3,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { usePlanStore } from '@/lib/plan-store';
 import { useUIStore } from '@/lib/ui-store';
-import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { useComputedCrops } from '@/lib/use-computed-crops';
 import { PlantingInspectorPanel } from './PlantingInspectorPanel';
 import CreateSequenceModal, { CreateSequenceOptions } from './CreateSequenceModal';
 import SequenceEditorModal from './SequenceEditorModal';
@@ -77,11 +77,8 @@ export function ConnectedPlantingInspector({
   const [cloningForPlantingId, setCloningForPlantingId] = useState<string | null>(null);
   const [cloneSourceSpec, setCloneSourceSpec] = useState<PlantingSpec | null>(null);
 
-  // Convert selected IDs to TimelineCrop[]
-  const allTimelineCrops = useMemo(() => {
-    if (!currentPlan) return [];
-    return getTimelineCropsFromPlan(currentPlan);
-  }, [currentPlan]);
+  // Get computed crops from centralized hook (includes GDD adjustments)
+  const { crops: allTimelineCrops } = useComputedCrops();
 
   const selectedCrops = useMemo(() => {
     if (selectedPlantingIds.size === 0) return [];

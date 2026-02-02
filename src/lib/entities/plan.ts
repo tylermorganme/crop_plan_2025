@@ -165,6 +165,8 @@ export interface TimelineCrop {
   isLocked?: boolean;
   /** Market split for this planting (marketId -> percentage) */
   marketSplit?: import('./market').MarketSplit;
+  /** Whether this planting uses GDD-based timing */
+  useGddTiming?: boolean;
 }
 
 /**

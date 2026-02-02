@@ -27,7 +27,8 @@ import {
 import type { Plan, Planting, Bed, BedGroup } from './plan-types';
 import { getBedGroup, getBedNumber } from './plan-types';
 import { buildBedLengthsFromTemplate } from './entities/bed';
-import { getCropColorsById } from './entities/crop';
+import { getCropColorsById, type Crop } from './entities/crop';
+import type { GddCalculator } from './gdd';
 
 // Re-export for consumers
 export type { CropCatalogEntry };
@@ -602,6 +603,7 @@ function preparePlantingForCalc(
     bed: bedName,
     bedFeet: planting.bedFeet,
     fixedFieldStartDate: effectiveFieldStartDate ?? planting.fieldStartDate,
+    useGddTiming: planting.useGddTiming,
     overrides: planting.overrides,
     actuals: planting.actuals,
   };
@@ -615,13 +617,18 @@ function preparePlantingForCalc(
  * @param beds - Bed definitions keyed by UUID
  * @param catalog - Crop catalog for config lookup
  * @param bedGroups - Bed group definitions keyed by UUID
+ * @param sequences - Sequence definitions for succession plantings
+ * @param crops - Crop definitions (for GDD temps)
+ * @param gddCalculator - Optional GDD calculator for adjusted timing
  */
 export function expandPlantingsToTimelineCrops(
   plantings: Planting[],
   beds: Record<string, Bed>,
   catalog: Record<string, CropCatalogEntry>,
   bedGroups?: Record<string, BedGroup>,
-  sequences?: Record<string, { id: string; offsetDays: number }>
+  sequences?: Record<string, { id: string; offsetDays: number }>,
+  cropEntities?: Record<string, Crop>,
+  gddCalculator?: GddCalculator
 ): TimelineCrop[] {
   // Build bed mappings for UUID <-> name conversion
   const mappings = bedGroups
@@ -664,13 +671,33 @@ export function expandPlantingsToTimelineCrops(
       }
     }
 
+    // Enrich spec with GDD temps from Crop entity if available
+    let enrichedSpec = spec;
+    if (cropEntities && spec.cropId) {
+      const cropEntity = cropEntities[spec.cropId];
+      if (cropEntity) {
+        enrichedSpec = {
+          ...spec,
+          gddBaseTemp: cropEntity.gddBaseTemp,
+          gddUpperTemp: cropEntity.gddUpperTemp,
+        };
+      }
+    }
+
     const slim = preparePlantingForCalc(planting, mappings.uuidToName, effectiveFieldStartDate);
-    const crops = expandToTimelineCrops(slim, spec, mappings.nameGroups, mappings.bedLengths);
+    const expandedCrops = expandToTimelineCrops(
+      slim,
+      enrichedSpec,
+      mappings.nameGroups,
+      mappings.bedLengths,
+      undefined, // getFollowedCropEndDate
+      gddCalculator
+    );
 
     // Add planting fields for inspector editing
     // NOTE: crop.resource remains a bed NAME for display matching.
     // The store converts names to UUIDs when mutating.
-    for (const crop of crops) {
+    for (const crop of expandedCrops) {
       crop.lastModified = planting.lastModified;
       crop.overrides = planting.overrides;
       crop.notes = planting.notes;
@@ -692,6 +719,9 @@ export function expandPlantingsToTimelineCrops(
       // Add market split for revenue/production allocation
       crop.marketSplit = planting.marketSplit;
 
+      // Track GDD timing status
+      crop.useGddTiming = planting.useGddTiming;
+
       // Calculate seeds needed based on PlantingSpec.seedsPerBed
       if (spec.seedsPerBed && planting.bedFeet) {
         // seedsPerBed is per 50ft bed, scale to actual feet
@@ -700,7 +730,7 @@ export function expandPlantingsToTimelineCrops(
       }
     }
 
-    result.push(...crops);
+    result.push(...expandedCrops);
   }
 
   return result.sort((a, b) =>
@@ -711,8 +741,14 @@ export function expandPlantingsToTimelineCrops(
 /**
  * Get TimelineCrop[] from a Plan by expanding plantings.
  * This is the single entry point for getting displayable crops from a plan.
+ *
+ * @param plan - The plan to expand
+ * @param gddCalculator - Optional GDD calculator for adjusted timing
  */
-export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
+export function getTimelineCropsFromPlan(
+  plan: Plan,
+  gddCalculator?: GddCalculator
+): TimelineCrop[] {
   if (!plan.plantings || !plan.beds || !plan.specs) {
     return [];
   }
@@ -722,7 +758,9 @@ export function getTimelineCropsFromPlan(plan: Plan): TimelineCrop[] {
     plan.beds,
     plan.specs,
     plan.bedGroups,
-    plan.sequences
+    plan.sequences,
+    plan.crops,
+    gddCalculator
   );
 
   // Add colors from plan.crops using cropId (stable linking)

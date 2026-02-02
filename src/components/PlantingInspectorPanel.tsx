@@ -1010,11 +1010,27 @@ export function PlantingInspectorPanel({
             </div>
           )}
 
-          {/* GDD Preview */}
+          {/* GDD Timing Toggle & Preview */}
           {baseSpec && planYear && (
             <div className="pt-3 border-t">
-              <div className="text-xs font-semibold text-gray-600 mb-2">
-                GDD Timing Preview
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs font-semibold text-gray-600">
+                  GDD Timing Preview
+                </div>
+                {/* Use GDD Timing toggle - only show in edit mode when baseTemp is configured */}
+                {onUpdatePlanting && crop.cropId && crops?.[crop.cropId]?.gddBaseTemp !== undefined && (
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={crop.useGddTiming || false}
+                      onChange={(e) => {
+                        onUpdatePlanting(crop.groupId, { useGddTiming: e.target.checked });
+                      }}
+                      className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-xs text-gray-600">Use GDD</span>
+                  </label>
+                )}
               </div>
               <GddPreview
                 seedToHarvest={getPrimarySeedToHarvest(baseSpec)}
@@ -1028,6 +1044,12 @@ export function PlantingInspectorPanel({
                 location={location}
                 year={planYear}
               />
+              {/* Show indicator when GDD timing is active */}
+              {crop.useGddTiming && (
+                <div className="mt-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  ✓ GDD timing active - harvest dates will adjust based on temperature
+                </div>
+              )}
             </div>
           )}
 

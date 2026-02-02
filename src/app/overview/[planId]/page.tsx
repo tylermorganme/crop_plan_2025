@@ -8,7 +8,8 @@ import {
   usePlanStore,
   loadPlanFromLibrary,
 } from '@/lib/plan-store';
-import { getTimelineCropsFromPlan, buildBedMappings, expandCropsToBeds } from '@/lib/timeline-data';
+import { buildBedMappings, expandCropsToBeds } from '@/lib/timeline-data';
+import { useComputedCrops } from '@/lib/use-computed-crops';
 import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
 import { parseSearchQuery, matchesCropFilter } from '@/lib/search-dsl';
 import { SearchInput } from '@/components/SearchInput';
@@ -1406,6 +1407,9 @@ export default function OverviewPage() {
   const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
   const updatePlantingBoxDisplay = usePlanStore((state) => state.updatePlantingBoxDisplay);
 
+  // Centralized computed crops with GDD adjustments
+  const { crops: allComputedCrops } = useComputedCrops();
+
   // UI store - selection state (shared across views)
   const selectedPlantingIds = useUIStore((state) => state.selectedPlantingIds);
   const selectPlanting = useUIStore((state) => state.selectPlanting);
@@ -1458,12 +1462,10 @@ export default function OverviewPage() {
       return new Date().getFullYear();
     }
 
-    const crops = getTimelineCropsFromPlan(currentPlan);
-
     // Determine the year from actual crop data, not just plan metadata
     // Find the most common year in the crop dates
     const yearCounts = new Map<number, number>();
-    for (const crop of crops) {
+    for (const crop of allComputedCrops) {
       if (crop.startDate) {
         const year = parseISO(crop.startDate).getFullYear();
         yearCounts.set(year, (yearCounts.get(year) || 0) + 1);
@@ -1481,7 +1483,7 @@ export default function OverviewPage() {
     }
 
     return year;
-  }, [currentPlan]);
+  }, [currentPlan, allComputedCrops]);
 
   // Initialize selectedYear when baseYear is determined
   useEffect(() => {
@@ -1496,19 +1498,18 @@ export default function OverviewPage() {
       return [];
     }
 
-    const crops = getTimelineCropsFromPlan(currentPlan);
     const { nameGroups, bedLengths } = buildBedMappings(currentPlan.beds, currentPlan.bedGroups);
 
     return buildOverviewData(
       currentPlan.beds,
       currentPlan.bedGroups,
-      crops,
+      allComputedCrops,
       selectedYear,
       nameGroups,
       bedLengths,
       currentPlan.specs
     );
-  }, [currentPlan, selectedYear]);
+  }, [currentPlan, selectedYear, allComputedCrops]);
 
   // Year for display (use selectedYear or fall back to baseYear)
   const displayYear = selectedYear ?? baseYear;
@@ -1517,12 +1518,11 @@ export default function OverviewPage() {
   const unassignedPlantings = useMemo(() => {
     if (!currentPlan || selectedYear === null) return [];
 
-    const crops = getTimelineCropsFromPlan(currentPlan);
     const catalog = currentPlan.specs ?? {};
     const products = currentPlan.products ?? {};
 
     // Filter to unassigned crops that overlap with the selected year
-    return crops
+    return allComputedCrops
       .filter(crop => {
         if (crop.resource) return false; // Skip assigned crops
         if (!crop.startDate || !crop.endDate) return false;
@@ -1548,7 +1548,7 @@ export default function OverviewPage() {
           textColor: crop.textColor,
         };
       });
-  }, [currentPlan, selectedYear]);
+  }, [currentPlan, selectedYear, allComputedCrops]);
 
   // Resize handler for sidebar
   const handleSidebarResizeStart = useCallback((e: React.MouseEvent) => {
@@ -1614,29 +1614,23 @@ export default function OverviewPage() {
     }
   }, [togglePlanting, clearSelection, selectPlanting]);
 
-  // Get all timeline crops for computing selected crops data
-  const allTimelineCrops = useMemo(() => {
-    if (!currentPlan) return [];
-    return getTimelineCropsFromPlan(currentPlan);
-  }, [currentPlan]);
-
   // Convert selected planting IDs to TimelineCrop[] for the inspector panel
   const selectedCropsData = useMemo(() => {
     if (selectedPlantingIds.size === 0) return [];
-    return allTimelineCrops.filter(crop =>
+    return allComputedCrops.filter(crop =>
       crop.plantingId && selectedPlantingIds.has(crop.plantingId)
     );
-  }, [selectedPlantingIds, allTimelineCrops]);
+  }, [selectedPlantingIds, allComputedCrops]);
 
   // Build color palette for categories (auto-generate from unique values)
   const categoryColorPalette = useMemo(() => {
-    const uniqueCategories = [...new Set(allTimelineCrops.map(c => c.category).filter(Boolean))].sort();
+    const uniqueCategories = [...new Set(allComputedCrops.map(c => c.category).filter(Boolean))].sort();
     const palette: Record<string, string> = {};
     uniqueCategories.forEach((cat, i) => {
       palette[cat as string] = CATEGORY_COLORS[i % CATEGORY_COLORS.length];
     });
     return palette;
-  }, [allTimelineCrops]);
+  }, [allComputedCrops]);
 
   // Build dynamic palettes for irrigation and trellisType from specs
   // Only show values that actually exist in the data
@@ -1740,12 +1734,12 @@ export default function OverviewPage() {
 
     // Filter crops to only those assigned to this group's beds (no unassigned section)
     const bedNamesSet = new Set(resources);
-    const cropsForGroup = allTimelineCrops.filter(
+    const cropsForGroup = allComputedCrops.filter(
       crop => crop.resource && crop.resource !== 'Unassigned' && bedNamesSet.has(crop.resource)
     );
 
     return { group, beds: bedsInGroup, resources, groups, bedLengths, crops: cropsForGroup };
-  }, [viewingGroupId, currentPlan, allTimelineCrops]);
+  }, [viewingGroupId, currentPlan, allComputedCrops]);
 
   // Handler for clicking on a group header
   const handleGroupClick = useCallback((groupId: string) => {

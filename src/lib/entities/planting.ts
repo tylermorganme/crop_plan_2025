@@ -95,6 +95,13 @@ export interface Planting {
 
   // ---- Adjustments ----
 
+  /**
+   * When true, use GDD-based timing for field days instead of static DTM.
+   * GDD timing adjusts harvest dates based on accumulated heat units,
+   * accounting for seasonal temperature variations.
+   */
+  useGddTiming?: boolean;
+
   /** Overrides to default spec timing */
   overrides?: PlantingOverrides;
 
@@ -176,6 +183,8 @@ export interface CreatePlantingInput {
   useDefaultSeedSource?: boolean;
   /** Optional: market split for this planting (falls back to spec if not set) */
   marketSplit?: import('./market').MarketSplit;
+  /** Optional: use GDD-based timing instead of static DTM */
+  useGddTiming?: boolean;
   /** Optional: timing overrides */
   overrides?: PlantingOverrides;
   /** Optional: actual dates */
@@ -201,6 +210,7 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     seedSource: input.seedSource,
     useDefaultSeedSource: input.useDefaultSeedSource,
     marketSplit: input.marketSplit,
+    useGddTiming: input.useGddTiming,
     overrides: input.overrides,
     actuals: input.actuals,
     notes: input.notes,
@@ -229,6 +239,7 @@ export function clonePlanting(
     seedSource: source.seedSource,
     useDefaultSeedSource: source.useDefaultSeedSource,
     marketSplit: source.marketSplit,
+    useGddTiming: source.useGddTiming,
     overrides: source.overrides,
     actuals: source.actuals,
     notes: source.notes,

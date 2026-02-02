@@ -18,7 +18,7 @@ import {
   calculateFieldOccupationDays,
   calculateYieldPerWeek,
 } from '@/lib/entities/planting-specs';
-import { getTimelineCropsFromPlan } from '@/lib/timeline-data';
+import { useComputedCrops } from '@/lib/use-computed-crops';
 import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
 import { parseSearchQuery, matchesFilter } from '@/lib/search-dsl';
 import { enrichedPlantingSearchConfig } from '@/lib/search-configs';
@@ -812,11 +812,8 @@ export default function PlantingsPage() {
     return columnWidths[col] ?? DEFAULT_WIDTHS[col] ?? 100;
   }, [columnWidths]);
 
-  // Compute TimelineCrop[] once (shared with Timeline view logic)
-  const timelineCrops = useMemo(() => {
-    if (!currentPlan) return [];
-    return getTimelineCropsFromPlan(currentPlan);
-  }, [currentPlan]);
+  // Get computed crops from centralized hook (includes GDD adjustments)
+  const { crops: timelineCrops } = useComputedCrops();
 
   // Group TimelineCrop[] by planting ID (groupId)
   const cropsByPlanting = useMemo(() => {

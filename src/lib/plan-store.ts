@@ -493,7 +493,7 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk duplicate multiple plantings (single undo step) */
   bulkDuplicatePlantings: (plantingIds: string[]) => Promise<string[]>;
   /** Update a single planting. Returns error if validation fails (e.g., bedFeet exceeds bed capacity). */
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => Promise<MutationResult>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming'>>) => Promise<MutationResult>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
   recalculateSpecs: (specIdentifier: string, catalog: import('./entities/planting-specs').PlantingSpec[]) => Promise<number>;
@@ -1489,7 +1489,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlantings.map(p => p.id);
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>>) => {
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming'>>) => {
       // Pre-validate
       const { currentPlan } = get();
       if (!currentPlan?.plantings) {
@@ -1595,6 +1595,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             }
             if ('fieldStartDate' in updates && updates.fieldStartDate !== undefined) {
               p.fieldStartDate = updates.fieldStartDate;
+            }
+            if ('useGddTiming' in updates) {
+              p.useGddTiming = updates.useGddTiming || undefined; // Clear if false
             }
 
             p.lastModified = now;
