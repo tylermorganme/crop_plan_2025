@@ -75,6 +75,8 @@ const ALL_COLUMNS = [
   'addlDaysHarvest',
   'addlDaysField',
   'addlDaysCells',
+  'gddTiming',
+  'yieldFactor',
   'specId',
   'lastModified',
 ] as const;
@@ -131,6 +133,8 @@ const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
   addlDaysHarvest: 80,
   addlDaysField: 80,
   addlDaysCells: 80,
+  gddTiming: 70,
+  yieldFactor: 70,
   id: 80,
   specId: 200,
   lastModified: 140,
@@ -171,6 +175,8 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
   addlDaysHarvest: '+Harvest',
   addlDaysField: '+Field',
   addlDaysCells: '+Cells',
+  gddTiming: 'GDD',
+  yieldFactor: 'Yield %',
   id: 'ID',
   specId: 'Config ID',
   lastModified: 'Modified',
@@ -1087,6 +1093,22 @@ export default function PlantingsPage() {
     }
   }, [updatePlanting, currentPlan?.plantings]);
 
+  const handleGddTimingToggle = useCallback(async (plantingId: string, useGddTiming: boolean) => {
+    try {
+      await updatePlanting(plantingId, { useGddTiming });
+    } catch {
+      setToast({ message: 'Failed to update', type: 'error' });
+    }
+  }, [updatePlanting]);
+
+  const handleYieldFactorChange = useCallback(async (plantingId: string, yieldFactor: number) => {
+    try {
+      await updatePlanting(plantingId, { yieldFactor });
+    } catch {
+      setToast({ message: 'Failed to update', type: 'error' });
+    }
+  }, [updatePlanting]);
+
   const handleActualDateChange = useCallback(async (plantingId: string, field: 'greenhouseDate' | 'fieldDate', value: string) => {
     try {
       const planting = currentPlan?.plantings?.find(p => p.id === plantingId);
@@ -1509,6 +1531,31 @@ export default function PlantingsPage() {
         return <span className="font-mono text-xs text-gray-400 truncate">{planting.specId}</span>;
       case 'lastModified':
         return <span className="text-xs text-gray-500">{format(new Date(planting.lastModified), 'MMM d, HH:mm')}</span>;
+      case 'gddTiming':
+        return (
+          <input
+            type="checkbox"
+            checked={planting.useGddTiming ?? false}
+            onChange={(e) => handleGddTimingToggle(planting.id, e.target.checked)}
+            className="rounded border-gray-300 text-green-600"
+          />
+        );
+      case 'yieldFactor':
+        return (
+          <InlineCell
+            value={((planting.yieldFactor ?? 1) * 100).toFixed(0)}
+            onSave={(v) => {
+              const pct = parseFloat(v);
+              if (!isNaN(pct) && pct >= 0) {
+                handleYieldFactorChange(planting.id, pct / 100);
+              }
+            }}
+            type="number"
+            placeholder="100"
+            className="text-right"
+            inputClassName="text-right"
+          />
+        );
       default:
         return null;
     }

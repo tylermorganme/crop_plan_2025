@@ -9,15 +9,15 @@
  * Supports aggregation by crop, month, and total.
  */
 
-import { parseISO, addDays } from 'date-fns';
+import { parseISO } from 'date-fns';
 import type { Plan } from './plan-types';
 import type { Planting } from './entities/planting';
 import type { PlantingSpec, ProductYield } from './entities/planting-specs';
 import type { Product } from './entities/product';
 import type { Market, MarketSplit } from './entities/market';
 import { DEFAULT_MARKET_IDS, getDefaultMarket } from './entities/market';
-import { evaluateYieldFormula, buildYieldContext, calculateFieldOccupationDays } from './entities/planting-specs';
-import { formatDateOnly } from './date-utils';
+import { evaluateYieldFormula, buildYieldContext } from './entities/planting-specs';
+import type { PlanProductionReport, PlantingProductionResult } from './production';
 
 // =============================================================================
 // CONSTANTS
@@ -260,18 +260,21 @@ export function calculateSpecRevenue(
 }
 
 /**
- * Calculate total revenue for a planting across all its products.
- * Uses market splits to calculate proper revenue by market.
+ * Calculate revenue for a planting using production's yield data.
+ * This is the core function that derives revenue from production.
+ * Revenue = yield × price
  *
- * @param planting - The planting to calculate
- * @param spec - The PlantingSpec for this planting
- * @param products - All products (to look up pricing)
- * @param markets - All markets for the plan (for market split calculations)
- * @returns Revenue result for the planting with market breakdown
+ * @param planting - The planting entity (for market split)
+ * @param spec - The planting spec (for default market split)
+ * @param plantingProduction - Production result with yield data
+ * @param products - Product catalog for pricing
+ * @param markets - Markets catalog for market-aware pricing
+ * @returns Revenue result with market breakdown
  */
-export function calculatePlantingRevenue(
+export function calculatePlantingRevenueFromProduction(
   planting: Planting,
   spec: PlantingSpec,
+  plantingProduction: PlantingProductionResult,
   products: Record<string, Product>,
   markets: Record<string, Market> = {}
 ): PlantingRevenueResult {
@@ -281,106 +284,120 @@ export function calculatePlantingRevenue(
   // Get effective market split for this planting
   const marketSplit = getEffectiveMarketSplit(planting, spec);
 
-  // Calculate revenue for each ProductYield with market breakdown
-  for (const py of spec.productYields ?? []) {
-    const product = products[py.productId];
+  // Calculate revenue for each product using production's yield
+  for (const productProd of plantingProduction.products) {
+    const product = products[productProd.productId];
+    if (!product) continue;
 
-    // Use market-aware calculation if we have markets
-    if (Object.keys(markets).length > 0) {
-      const marketResult = calculateProductYieldRevenueByMarket(
-        py,
-        spec,
-        planting.bedFeet,
-        product,
-        marketSplit,
-        markets
-      );
-      if (marketResult) {
-        // Calculate weighted average price for display
-        const yieldContext = buildYieldContext(spec, planting.bedFeet);
-        yieldContext.harvests = py.numberOfHarvests ?? 1;
-        const yieldResult = evaluateYieldFormula(py.yieldFormula!, yieldContext);
-        const yieldAmount = yieldResult.value ?? 0;
-        const avgPrice = yieldAmount > 0 ? marketResult.total / yieldAmount : 0;
+    // Use yield directly from production (already includes yieldFactor)
+    const yieldAmount = productProd.totalYield;
 
-        productResults.push({
-          productId: py.productId,
-          productName: product?.product ?? 'Unknown',
-          unit: product?.unit ?? '',
-          yield: yieldAmount,
-          price: avgPrice,
-          revenue: marketResult.total,
-          revenueByMarket: marketResult.byMarket,
-        });
+    // Calculate revenue with market breakdown
+    if (Object.keys(markets).length > 0 && marketSplit && Object.keys(marketSplit).length > 0) {
+      // Apply market split with per-market pricing
+      let productRevenue = 0;
+      const productRevenueByMarket: Record<string, number> = {};
 
-        // Aggregate market revenue
-        for (const [marketId, revenue] of Object.entries(marketResult.byMarket)) {
-          revenueByMarket[marketId] = (revenueByMarket[marketId] ?? 0) + revenue;
-        }
+      for (const [marketId, percent] of Object.entries(marketSplit)) {
+        const market = markets[marketId];
+        if (!market || !market.active) continue;
+
+        const price = getPrice(product, marketId);
+        const marketYield = yieldAmount * (percent / 100);
+        const marketRevenue = marketYield * price;
+
+        productRevenueByMarket[marketId] = marketRevenue;
+        productRevenue += marketRevenue;
+
+        // Aggregate to planting-level market breakdown
+        revenueByMarket[marketId] = (revenueByMarket[marketId] ?? 0) + marketRevenue;
       }
+
+      // Calculate weighted average price for display
+      const avgPrice = yieldAmount > 0 ? productRevenue / yieldAmount : 0;
+
+      productResults.push({
+        productId: productProd.productId,
+        productName: product.product,
+        unit: product.unit,
+        yield: yieldAmount,
+        price: avgPrice,
+        revenue: productRevenue,
+        revenueByMarket: productRevenueByMarket,
+      });
     } else {
-      // Fallback to simple calculation (no markets defined)
-      const result = calculateProductYieldRevenue(py, spec, planting.bedFeet, product);
-      if (result) {
-        productResults.push(result);
+      // No market split - use default market price
+      const defaultMarket = getDefaultMarket(markets);
+      const price = defaultMarket ? getPrice(product, defaultMarket.id) : getDirectPrice(product);
+      const revenue = yieldAmount * price;
+
+      if (defaultMarket) {
+        revenueByMarket[defaultMarket.id] = (revenueByMarket[defaultMarket.id] ?? 0) + revenue;
       }
+
+      productResults.push({
+        productId: productProd.productId,
+        productName: product.product,
+        unit: product.unit,
+        yield: yieldAmount,
+        price,
+        revenue,
+      });
     }
   }
 
   const totalRevenue = productResults.reduce((sum, r) => sum + r.revenue, 0);
-
-  // Calculate days in field (bed occupation time, excludes greenhouse days)
-  const daysInField = calculateFieldOccupationDays(spec);
-
-  // Calculate harvest start date from field start + DTM
-  let harvestStartDate: string | null = null;
-  if (planting.fieldStartDate && spec.productYields?.length) {
-    // Use the earliest product's DTM
-    const minDtm = Math.min(...spec.productYields.map(py => py.dtm));
-    const fieldStart = parseISO(planting.fieldStartDate);
-    const harvestDate = addDays(fieldStart, minDtm);
-    harvestStartDate = formatDateOnly(harvestDate);
-  }
 
   return {
     plantingId: planting.id,
     specId: planting.specId,
     crop: spec.crop,
     bedFeet: planting.bedFeet,
-    daysInField,
+    daysInField: plantingProduction.daysInField,
     products: productResults,
     totalRevenue,
     revenueByMarket,
-    harvestStartDate,
+    harvestStartDate: plantingProduction.harvestStartDate,
   };
 }
 
 /**
  * Generate a complete revenue report for a plan.
- * Uses market splits to calculate revenue by market.
+ * Uses production report as the single source of yield truth.
+ * Revenue = yield × price (no independent yield calculation).
  *
- * @param plan - The plan to analyze
+ * @param plan - The plan with specs, products, markets
+ * @param productionReport - Production report with yield data (from calculatePlanProduction)
  * @returns Complete revenue breakdown including market breakdown
  */
-export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
+export function calculatePlanRevenue(plan: Plan, productionReport: PlanProductionReport): PlanRevenueReport {
   const plantingResults: PlantingRevenueResult[] = [];
   const cropTotals = new Map<string, { revenue: number; bedFeet: number; bedFootDays: number; count: number }>();
   const monthlyTotals = new Map<string, number>();
   const monthByCrop = new Map<string, Record<string, number>>();
   const revenueByMarket: Record<string, number> = {};
 
-  const plantings = plan.plantings ?? [];
   const specs = plan.specs ?? {};
   const products = plan.products ?? {};
   const markets = plan.markets ?? {};
+  const plantingsById = new Map((plan.plantings ?? []).map(p => [p.id, p]));
 
-  // Calculate revenue for each planting
-  for (const planting of plantings) {
+  // Calculate revenue for each planting using production's yield data
+  for (const plantingProduction of productionReport.plantings) {
+    const planting = plantingsById.get(plantingProduction.plantingId);
+    if (!planting) continue;
+
     const spec = specs[planting.specId];
     if (!spec) continue;
 
-    // Pass markets for market-split-aware calculation
-    const result = calculatePlantingRevenue(planting, spec, products, markets);
+    // Calculate revenue from production yields
+    const result = calculatePlantingRevenueFromProduction(
+      planting,
+      spec,
+      plantingProduction,
+      products,
+      markets
+    );
     plantingResults.push(result);
 
     // Aggregate market revenue
@@ -402,40 +419,33 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
     });
 
     // Distribute revenue across harvest windows for each product
-    if (planting.fieldStartDate) {
-      const fieldStart = parseISO(planting.fieldStartDate);
+    for (const productResult of result.products) {
+      if (productResult.revenue <= 0) continue;
 
-      // Use product revenues from our market-aware result
-      for (const productResult of result.products) {
-        if (productResult.revenue <= 0) continue;
+      // Find the matching production result for timing info
+      const productProd = plantingProduction.products.find(
+        p => p.productId === productResult.productId
+      );
+      if (!productProd || !productProd.harvestStartDate || !productProd.harvestEndDate) continue;
 
-        // Find the matching ProductYield for timing info
-        const py = spec.productYields?.find((p: { productId: string }) => p.productId === productResult.productId);
-        if (!py) continue;
+      const harvestStart = parseISO(productProd.harvestStartDate);
+      const harvestEnd = parseISO(productProd.harvestEndDate);
 
-        // Calculate harvest window for this product
-        const harvestStart = addDays(fieldStart, py.dtm);
+      // Distribute this product's revenue across the harvest window
+      const monthlyRevenue = distributeRevenueAcrossWindow(
+        productResult.revenue,
+        harvestStart,
+        harvestEnd
+      );
 
-        const numHarvests = py.numberOfHarvests ?? 1;
-        const daysBetween = py.daysBetweenHarvest ?? 7;
-        const harvestEnd = addDays(harvestStart, (numHarvests - 1) * daysBetween);
+      // Add to totals
+      for (const [month, revenue] of monthlyRevenue) {
+        monthlyTotals.set(month, (monthlyTotals.get(month) ?? 0) + revenue);
 
-        // Distribute this product's revenue across the harvest window
-        const monthlyRevenue = distributeRevenueAcrossWindow(
-          productResult.revenue,
-          harvestStart,
-          harvestEnd
-        );
-
-        // Add to totals
-        for (const [month, revenue] of monthlyRevenue) {
-          monthlyTotals.set(month, (monthlyTotals.get(month) ?? 0) + revenue);
-
-          // Track per-crop revenue by month for stacked chart
-          const cropMonthData = monthByCrop.get(month) ?? {};
-          cropMonthData[cropKey] = (cropMonthData[cropKey] ?? 0) + revenue;
-          monthByCrop.set(month, cropMonthData);
-        }
+        // Track per-crop revenue by month for stacked chart
+        const cropMonthData = monthByCrop.get(month) ?? {};
+        cropMonthData[cropKey] = (cropMonthData[cropKey] ?? 0) + revenue;
+        monthByCrop.set(month, cropMonthData);
       }
     }
   }
@@ -470,7 +480,7 @@ export function calculatePlanRevenue(plan: Plan): PlanRevenueReport {
   return {
     totalRevenue,
     revenueByMarket,
-    plantingCount: plantings.length,
+    plantingCount: plantingResults.length,
     byCrop,
     byMonth,
     plantings: plantingResults,
@@ -537,74 +547,4 @@ export interface MarketRevenueBreakdown {
   byMarket: Record<string, number>;
   /** Total revenue across all markets */
   total: number;
-}
-
-/**
- * Calculate revenue for a product yield, broken down by market.
- *
- * Uses the market split to allocate revenue across markets,
- * and applies the appropriate price for each market.
- *
- * @param py - The ProductYield to calculate
- * @param spec - The PlantingSpec (for spacing/rows context)
- * @param bedFeet - The planting's bed feet
- * @param product - The Product entity (for pricing)
- * @param marketSplit - The market split to apply
- * @param markets - All markets for the plan
- * @returns Revenue breakdown by market
- */
-export function calculateProductYieldRevenueByMarket(
-  py: ProductYield,
-  spec: PlantingSpec,
-  bedFeet: number,
-  product: Product | undefined,
-  marketSplit: MarketSplit | undefined,
-  markets: Record<string, Market>
-): MarketRevenueBreakdown | null {
-  if (!py.yieldFormula || !product) {
-    return null;
-  }
-
-  // Build context for formula evaluation
-  const context = buildYieldContext(spec, bedFeet);
-  context.harvests = py.numberOfHarvests ?? 1;
-  context.daysBetweenHarvest = py.daysBetweenHarvest ?? 7;
-
-  const result = evaluateYieldFormula(py.yieldFormula, context);
-  if (result.value === null) {
-    return null;
-  }
-
-  const yieldAmount = result.value;
-  const byMarket: Record<string, number> = {};
-  let total = 0;
-
-  // If no market split defined, all goes to first active market (usually Direct)
-  if (!marketSplit || Object.keys(marketSplit).length === 0) {
-    const defaultMarket = getDefaultMarket(markets);
-    const price = defaultMarket ? getPrice(product, defaultMarket.id) : getDirectPrice(product);
-    const revenue = yieldAmount * price;
-    if (defaultMarket) {
-      byMarket[defaultMarket.id] = revenue;
-    }
-    return { byMarket, total: revenue };
-  }
-
-  // Apply market split
-  for (const [marketId, percent] of Object.entries(marketSplit)) {
-    const market = markets[marketId];
-    if (!market || !market.active) continue;
-
-    // Get price for this market
-    const price = getPrice(product, marketId);
-
-    // Calculate revenue for this market's share
-    const marketYield = yieldAmount * (percent / 100);
-    const revenue = marketYield * price;
-
-    byMarket[marketId] = revenue;
-    total += revenue;
-  }
-
-  return { byMarket, total };
 }

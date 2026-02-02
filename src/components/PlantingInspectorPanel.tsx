@@ -1230,6 +1230,20 @@ export function PlantingInspectorPanel({
           )}
 
           {/* Seed Source - Editable */}
+          {/* DEBUG: Check why seed source picker might not show */}
+          {(() => {
+            console.log('[SeedSource Debug]', {
+              plantingId: crop.plantingId,
+              groupId: crop.groupId,
+              cropCrop: crop.crop,
+              specId: crop.specId,
+              hasOnUpdate: !!onUpdatePlanting,
+              hasVarieties: !!varieties,
+              hasSeedMixes: !!seedMixes,
+              showPicker: !!(onUpdatePlanting && varieties && seedMixes && crop.crop),
+            });
+            return null;
+          })()}
           {onUpdatePlanting && varieties && seedMixes && crop.crop && (
             <div className="pt-3 border-t">
               <div className="text-xs text-gray-600 mb-1">

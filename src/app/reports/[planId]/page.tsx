@@ -361,6 +361,7 @@ function getMarketColor(marketId: string, index: number): string {
 
 /** Planting info needed for weekly capacity calculation */
 interface PlantingForCapacity {
+  plantingId: string;
   harvestStartDate: string | null;
   harvestEndDate: string | null;
   maxYieldPerWeek: number;
@@ -493,8 +494,35 @@ function ProductionChart({
   // plantings whose harvest window overlaps that day.
   // This shows "production capacity" - what your peak weekly output could be
   // at any point based on which plantings are in their harvest window.
+  // Capacity is scaled by the fraction of each planting's yield going to selected markets.
   const chartDataWithCapacity = useMemo(() => {
-    if (chartData.length === 0) return chartData;
+    // Compute market fraction for each planting from harvest events
+    // This tells us what % of each planting's yield goes to selected markets
+    const plantingMarketFraction = new Map<string, number>();
+    const plantingTotalYield = new Map<string, number>();
+    const plantingSelectedYield = new Map<string, number>();
+
+    for (const event of harvestEvents) {
+      const totalYield = event.yield;
+      const selectedYield = Object.entries(event.yieldByMarket)
+        .filter(([marketId]) => effectiveSelectedMarkets.includes(marketId))
+        .reduce((sum, [, yield_]) => sum + yield_, 0);
+
+      plantingTotalYield.set(
+        event.plantingId,
+        (plantingTotalYield.get(event.plantingId) ?? 0) + totalYield
+      );
+      plantingSelectedYield.set(
+        event.plantingId,
+        (plantingSelectedYield.get(event.plantingId) ?? 0) + selectedYield
+      );
+    }
+
+    // Calculate fraction for each planting
+    for (const [plantingId, total] of plantingTotalYield.entries()) {
+      const selected = plantingSelectedYield.get(plantingId) ?? 0;
+      plantingMarketFraction.set(plantingId, total > 0 ? selected / total : 0);
+    }
 
     // Filter plantings to those with valid harvest windows in display year
     const validPlantings = plantings.filter(p => {
@@ -505,26 +533,106 @@ function ProductionChart({
     });
 
     // Pre-compute day-of-year ranges for each planting
-    const plantingRanges = validPlantings.map(p => ({
-      startDoy: getDayOfYear(p.harvestStartDate!),
-      // Add 1 to include the end day in the range
-      endDoy: getDayOfYear(p.harvestEndDate!) + 1,
-      maxYieldPerWeek: p.maxYieldPerWeek,
-    }));
+    // Handle year-spanning harvest windows by tracking which year each boundary is in
+    const plantingRanges = validPlantings.map(p => {
+      const startDate = new Date(p.harvestStartDate! + 'T00:00:00');
+      const endDate = new Date(p.harvestEndDate! + 'T00:00:00');
+      const startYear = startDate.getFullYear();
+      const endYear = endDate.getFullYear();
 
-    // For each chart data point, sum capacity from all active plantings
-    return chartData.map(entry => {
+      // Scale maxYieldPerWeek by the fraction going to selected markets
+      const marketFraction = plantingMarketFraction.get(p.plantingId) ?? 1;
+
+      return {
+        startDoy: getDayOfYear(p.harvestStartDate!),
+        // Add 1 to include the end day in the range
+        endDoy: getDayOfYear(p.harvestEndDate!) + 1,
+        startYear,
+        endYear,
+        maxYieldPerWeek: p.maxYieldPerWeek * marketFraction,
+      };
+    });
+
+    // Helper to compute capacity for a given day
+    const computeCapacity = (dayOfYear: number): number => {
       let weeklyCapacity = 0;
       for (const range of plantingRanges) {
-        // Check if this day falls within the planting's harvest window
-        if (entry.dayOfYear >= range.startDoy && entry.dayOfYear < range.endDoy) {
+        const spansYears = range.startYear !== range.endYear;
+
+        let isInWindow = false;
+        if (spansYears) {
+          if (displayYear === range.endYear) {
+            isInWindow = dayOfYear < range.endDoy;
+          } else if (displayYear === range.startYear) {
+            isInWindow = dayOfYear >= range.startDoy;
+          }
+        } else {
+          isInWindow = dayOfYear >= range.startDoy && dayOfYear < range.endDoy;
+        }
+
+        if (isInWindow) {
           weeklyCapacity += range.maxYieldPerWeek;
         }
       }
+      return weeklyCapacity;
+    };
 
-      return { ...entry, weeklyCapacity };
-    });
-  }, [chartData, plantings, displayYear, getDayOfYear]);
+    // Index harvest event data by dayOfYear for quick lookup
+    const chartDataByDay = new Map(chartData.map(entry => [entry.dayOfYear, entry]));
+
+    // Find the range of days that have any capacity
+    // This ensures we show the capacity line dropping to 0 between harvests
+    let minCapacityDay = Infinity;
+    let maxCapacityDay = -Infinity;
+    for (const range of plantingRanges) {
+      if (range.startYear === displayYear || (range.startYear !== range.endYear && range.endYear === displayYear)) {
+        const effectiveStartDoy = range.startYear === displayYear ? range.startDoy : 1;
+        const effectiveEndDoy = range.endYear === displayYear ? range.endDoy : 366;
+        minCapacityDay = Math.min(minCapacityDay, effectiveStartDoy);
+        maxCapacityDay = Math.max(maxCapacityDay, effectiveEndDoy);
+      }
+    }
+
+    // If no capacity ranges found, just return chartData with 0 capacity
+    if (minCapacityDay === Infinity) {
+      return chartData.map(entry => ({ ...entry, weeklyCapacity: 0 }));
+    }
+
+    // Generate data points for all days in the capacity range
+    // This ensures the line shows gaps (0 capacity) between harvest windows
+    const result: Array<{
+      date: string;
+      dayOfYear: number;
+      totalYield: number;
+      events: HarvestEvent[];
+      weeklyCapacity: number;
+      [key: string]: unknown;
+    }> = [];
+
+    for (let doy = minCapacityDay; doy <= maxCapacityDay; doy++) {
+      const existingEntry = chartDataByDay.get(doy);
+      const weeklyCapacity = computeCapacity(doy);
+
+      if (existingEntry) {
+        // Day has harvest events - include all data
+        result.push({ ...existingEntry, weeklyCapacity });
+      } else {
+        // No harvest events - create a capacity-only data point
+        // Calculate date from day of year
+        const dateObj = new Date(displayYear, 0, doy);
+        const dateStr = dateObj.toISOString().split('T')[0];
+        result.push({
+          date: dateStr,
+          dayOfYear: doy,
+          totalYield: 0,
+          events: [],
+          weeklyCapacity,
+        });
+      }
+    }
+
+    return result;
+  }, [chartData, harvestEvents, plantings, displayYear, getDayOfYear, effectiveSelectedMarkets]);
 
   // Calculate axis domain based on month range
   const axisDomain = useMemo(() => {
@@ -2404,6 +2512,7 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
                                   <th className="py-1 px-2 text-left font-medium">Planting ID</th>
                                   <th className="py-1 px-2 text-left font-medium">Bed</th>
                                   <th className="py-1 px-2 text-right font-medium">Yield</th>
+                                  <th className="py-1 px-2 text-right font-medium">Yield/wk</th>
                                   <th className="py-1 px-2 text-left font-medium">Field Date</th>
                                   <th className="py-1 px-2 text-left font-medium">Harvest Start</th>
                                   <th className="py-1 px-2 text-left font-medium">Harvest End</th>
@@ -2422,6 +2531,7 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
                                     <td className="py-1.5 px-2 font-medium text-gray-900">{p.plantingId}</td>
                                     <td className="py-1.5 px-2 text-gray-600">{p.bedName || '-'}</td>
                                     <td className="py-1.5 px-2 text-right text-gray-900">{formatYield(p.totalYield, row.original.unit)}</td>
+                                    <td className="py-1.5 px-2 text-right text-gray-600">{formatYield(p.maxYieldPerWeek, row.original.unit)}</td>
                                     <td className="py-1.5 px-2 text-gray-600">{formatDate(p.fieldStartDate)}</td>
                                     <td className="py-1.5 px-2 text-gray-600">{formatDate(p.harvestStartDate)}</td>
                                     <td className="py-1.5 px-2 text-gray-600">{formatDate(p.harvestEndDate)}</td>
@@ -2519,22 +2629,23 @@ export default function ReportsPage() {
   // Get GDD-adjusted timeline crops - single source of truth for dates
   const { crops: timelineCrops } = useComputedCrops();
 
-  // Calculate reports when plan is loaded
-  const revenueReport = useMemo(() => {
+  // Production uses TimelineCrop[] directly - dates are authoritative from timeline
+  // Production is the single source of truth for yield calculations
+  const productionReport = useMemo(() => {
     if (!currentPlan) return null;
-    return calculatePlanRevenue(currentPlan);
-  }, [currentPlan]);
+    return calculatePlanProduction(timelineCrops, currentPlan);
+  }, [timelineCrops, currentPlan]);
+
+  // Revenue derives from production (yield × price) - no independent yield calculation
+  const revenueReport = useMemo(() => {
+    if (!currentPlan || !productionReport) return null;
+    return calculatePlanRevenue(currentPlan, productionReport);
+  }, [currentPlan, productionReport]);
 
   const seedReport = useMemo(() => {
     if (!currentPlan) return null;
     return calculatePlanSeeds(currentPlan);
   }, [currentPlan]);
-
-  // Production uses TimelineCrop[] directly - dates are authoritative from timeline
-  const productionReport = useMemo(() => {
-    if (!currentPlan) return null;
-    return calculatePlanProduction(timelineCrops, currentPlan);
-  }, [timelineCrops, currentPlan]);
 
   if (loading) {
     return (

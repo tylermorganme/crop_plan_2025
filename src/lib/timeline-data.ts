@@ -605,6 +605,7 @@ function preparePlantingForCalc(
     bedFeet: planting.bedFeet,
     fixedFieldStartDate: effectiveFieldStartDate ?? planting.fieldStartDate,
     useGddTiming: planting.useGddTiming,
+    yieldFactor: planting.yieldFactor,
     overrides: planting.overrides,
     actuals: planting.actuals,
   };
@@ -770,6 +771,9 @@ export function expandPlantingsToTimelineCrops(
 
       // Track GDD timing status
       crop.useGddTiming = planting.useGddTiming;
+
+      // Track yield factor
+      crop.yieldFactor = planting.yieldFactor;
 
       // Calculate seeds needed based on PlantingSpec.seedsPerBed
       if (spec.seedsPerBed && planting.bedFeet) {

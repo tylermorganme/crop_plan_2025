@@ -488,12 +488,12 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk add multiple plantings (single undo step) */
   bulkAddPlantings: (plantings: Planting[]) => Promise<number>;
   /** Bulk update multiple plantings (single undo step). Returns error if validation fails. */
-  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>> }[]) => Promise<MutationResult & { count?: number }>;
+  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor'>> }[]) => Promise<MutationResult & { count?: number }>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
   /** Bulk duplicate multiple plantings (single undo step) */
   bulkDuplicatePlantings: (plantingIds: string[]) => Promise<string[]>;
   /** Update a single planting. Returns error if validation fails (e.g., bedFeet exceeds bed capacity). */
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming'>>) => Promise<MutationResult>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor'>>) => Promise<MutationResult>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
   recalculateSpecs: (specIdentifier: string, catalog: import('./entities/planting-specs').PlantingSpec[]) => Promise<number>;
@@ -1316,7 +1316,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return processedPlantings.length;
     },
 
-    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals'>> }[]) => {
+    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor'>> }[]) => {
       const state = get();
       if (!state.currentPlan?.plantings) {
         return { success: true, count: 0 };
@@ -1438,6 +1438,12 @@ export const usePlanStore = create<ExtendedPlanStore>()(
                 // If all values are cleared, set actuals to undefined
                 planting.actuals = Object.keys(newActuals).length > 0 ? newActuals : undefined;
               }
+              if ('useGddTiming' in changes) {
+                planting.useGddTiming = changes.useGddTiming;
+              }
+              if ('yieldFactor' in changes) {
+                planting.yieldFactor = changes.yieldFactor;
+              }
 
               planting.lastModified = now;
             }
@@ -1503,7 +1509,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlantings.map(p => p.id);
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming'>>) => {
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor'>>) => {
       // Pre-validate
       const { currentPlan } = get();
       if (!currentPlan?.plantings) {
@@ -1612,6 +1618,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             }
             if ('useGddTiming' in updates) {
               p.useGddTiming = updates.useGddTiming || undefined; // Clear if false
+            }
+            if ('yieldFactor' in updates) {
+              // Store yieldFactor, clearing if 1 (default) to save storage
+              p.yieldFactor = updates.yieldFactor === 1 ? undefined : updates.yieldFactor;
             }
 
             p.lastModified = now;

@@ -73,6 +73,9 @@ export interface PlantingWithDates {
     fieldDate?: string;
     failed?: boolean;
   };
+
+  /** Yield multiplier for this planting (default 1.0) */
+  yieldFactor?: number;
 }
 
 /**

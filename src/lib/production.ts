@@ -333,6 +333,7 @@ function calculatePeakOverlapYieldPerWeek(
  * @param product - Product entity
  * @param effectiveHarvestStartDate - Optional GDD-adjusted harvest start date.
  *        If provided, uses this instead of calculating from DTM.
+ * @param yieldFactor - Multiplier for yield (default 1.0)
  */
 function calculateProductProduction(
   py: ProductYield,
@@ -340,7 +341,8 @@ function calculateProductProduction(
   bedFeet: number,
   fieldStartDate: Date,
   product: Product | undefined,
-  effectiveHarvestStartDate?: Date
+  effectiveHarvestStartDate?: Date,
+  yieldFactor: number = 1
 ): ProductProductionResult | null {
   if (!py.yieldFormula || !product) {
     return null;
@@ -356,7 +358,8 @@ function calculateProductProduction(
     return null;
   }
 
-  const totalYield = result.value;
+  // Apply yield factor (planting-level multiplier)
+  const totalYield = result.value * yieldFactor;
 
   // Calculate harvest dates
   // Use effective harvest date if provided (from GDD-adjusted timeline crops),
@@ -428,6 +431,7 @@ export function calculatePlantingProduction(
     : undefined;
 
   // Calculate production for each product yield
+  const yieldFactor = timelineCrop.yieldFactor ?? 1;
   for (const py of spec.productYields ?? []) {
     const product = products[py.productId];
     const result = calculateProductProduction(
@@ -436,7 +440,8 @@ export function calculatePlantingProduction(
       timelineCrop.feetNeeded,
       fieldStartDate,
       product,
-      effectiveHarvestStartDate
+      effectiveHarvestStartDate,
+      yieldFactor
     );
 
     if (result) {

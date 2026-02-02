@@ -167,6 +167,8 @@ export interface TimelineCrop {
   marketSplit?: import('./market').MarketSplit;
   /** Whether this planting uses GDD-based timing */
   useGddTiming?: boolean;
+  /** Yield multiplier for this planting (default 1.0) */
+  yieldFactor?: number;
 }
 
 /**
