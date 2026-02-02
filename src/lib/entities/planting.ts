@@ -102,6 +102,14 @@ export interface Planting {
    */
   useGddTiming?: boolean;
 
+  /**
+   * Yield multiplier for this planting (default 1.0).
+   * Use to adjust expected yield up or down, e.g.:
+   * - 0.5 for u-pick beds where only half gets harvested
+   * - 1.2 for a particularly productive variety
+   */
+  yieldFactor?: number;
+
   /** Overrides to default spec timing */
   overrides?: PlantingOverrides;
 
@@ -236,12 +244,13 @@ export function clonePlanting(
     fieldStartDate: source.fieldStartDate,
     startBed: overrides?.startBed !== undefined ? overrides.startBed : source.startBed,
     bedFeet: source.bedFeet,
-    seedSource: source.seedSource,
+    // Deep-copy object fields to avoid shared references between original and clone
+    seedSource: source.seedSource ? { ...source.seedSource } : undefined,
     useDefaultSeedSource: source.useDefaultSeedSource,
-    marketSplit: source.marketSplit,
+    marketSplit: source.marketSplit ? { ...source.marketSplit } : undefined,
     useGddTiming: source.useGddTiming,
-    overrides: source.overrides,
-    actuals: source.actuals,
+    overrides: source.overrides ? { ...source.overrides } : undefined,
+    actuals: source.actuals ? { ...source.actuals } : undefined,
     notes: source.notes,
     // NOTE: Do NOT copy sequence fields by default - they must be explicitly provided
     // sequenceId and sequenceSlot are intentionally omitted

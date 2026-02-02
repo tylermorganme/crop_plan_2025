@@ -544,6 +544,112 @@ export function PlantingInspectorPanel({
                     })()}
                   </div>
                   <div>
+                    <div className="text-xs text-gray-600 mb-1">GDD Timing</div>
+                    {(() => {
+                      // Check GDD timing state across all plantings
+                      const gddStates = plantings.map(p => p.useGddTiming ?? false);
+                      const allOn = gddStates.every(g => g === true);
+                      const allOff = gddStates.every(g => g === false);
+                      const isMixed = !allOn && !allOff;
+
+                      return (
+                        <button
+                          onClick={async () => {
+                            // Toggle: if mixed or all off, turn all on; if all on, turn all off
+                            const newValue = !allOn;
+                            const updates = plantings
+                              .filter(p => p.plantingId)
+                              .map(p => ({
+                                id: p.plantingId!,
+                                changes: { useGddTiming: newValue },
+                              }));
+                            if (updates.length > 0) {
+                              await onBulkUpdatePlantings(updates);
+                            }
+                          }}
+                          className={`w-full px-2 py-1 text-sm border rounded transition-colors flex items-center justify-center gap-2 ${
+                            isMixed
+                              ? 'border-amber-400 bg-amber-50 text-amber-700'
+                              : allOn
+                              ? 'border-green-400 bg-green-50 text-green-700'
+                              : 'border-gray-300 bg-white text-gray-600'
+                          }`}
+                          title={isMixed ? 'Mixed - click to enable all' : allOn ? 'Click to disable all' : 'Click to enable all'}
+                        >
+                          <span className={`w-4 h-4 rounded border flex items-center justify-center ${
+                            isMixed
+                              ? 'border-amber-500 bg-amber-200'
+                              : allOn
+                              ? 'border-green-500 bg-green-500'
+                              : 'border-gray-400 bg-white'
+                          }`}>
+                            {allOn && (
+                              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                            {isMixed && (
+                              <svg className="w-3 h-3 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                              </svg>
+                            )}
+                          </span>
+                          <span className="text-xs">
+                            {isMixed ? 'Mixed' : allOn ? 'On' : 'Off'}
+                          </span>
+                        </button>
+                      );
+                    })()}
+                  </div>
+                </div>
+                {/* Row 2: Yield Factor */}
+                <div className="grid grid-cols-2 gap-2 text-center mt-2">
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">Yield Factor</div>
+                    {(() => {
+                      // Check if all plantings have the same yield factor
+                      const factors = plantings.map(p => p.yieldFactor ?? 1);
+                      const allSame = factors.every(f => f === factors[0]);
+                      const displayValue = allSame ? factors[0] : '';
+                      const isMixed = !allSame;
+
+                      return (
+                        <input
+                          key={`bulk-yield-factor-${plantings.map(p => p.groupId).join('-')}-${displayValue}`}
+                          type="number"
+                          min={0}
+                          max={10}
+                          step={0.1}
+                          defaultValue={displayValue}
+                          placeholder={isMixed ? '—' : '1.0'}
+                          onBlur={async (e) => {
+                            const val = parseFloat(e.target.value);
+                            if (!isNaN(val) && val >= 0) {
+                              const updates = plantings
+                                .filter(p => p.plantingId)
+                                .map(p => ({
+                                  id: p.plantingId!,
+                                  changes: { yieldFactor: val },
+                                }));
+                              if (updates.length > 0) {
+                                await onBulkUpdatePlantings(updates);
+                              }
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          className={`w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center ${
+                            isMixed ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                          }`}
+                          title="Yield multiplier (0.5 = 50%, 1.0 = 100%, 1.5 = 150%)"
+                        />
+                      );
+                    })()}
+                  </div>
+                  <div>
                     {/* Placeholder for future fields */}
                   </div>
                 </div>
@@ -1165,6 +1271,7 @@ export function PlantingInspectorPanel({
             <div className="pt-3 border-t">
               <div className="text-xs text-gray-600 mb-1">Notes</div>
               <textarea
+                key={`notes-${crop.groupId}-${crop.notes || ''}`}
                 defaultValue={crop.notes || ''}
                 placeholder="Add notes..."
                 rows={2}
