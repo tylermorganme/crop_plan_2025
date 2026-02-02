@@ -286,6 +286,13 @@ export function ConnectedPlantingInspector({
         }}
         onBulkDuplicatePlantings={handleBulkDuplicate}
         onBulkRefreshFromSpec={handleBulkRefreshFromSpec}
+        onBulkUpdatePlantings={async (updates) => {
+          const result = await bulkUpdatePlantings(updates);
+          if (!result.success) {
+            setToast({ message: result.error, type: 'error' });
+          }
+          return result;
+        }}
         onCropDateChange={(groupId, startDate, endDate) => {
           handleCropDateChange(groupId, startDate, endDate);
         }}

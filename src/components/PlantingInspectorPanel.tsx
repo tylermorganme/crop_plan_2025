@@ -342,6 +342,8 @@ export interface PlantingInspectorPanelProps {
   // Bulk actions (for multi-select)
   onBulkDuplicatePlantings?: (plantingIds: string[]) => Promise<string[]>;
   onBulkRefreshFromSpec?: (plantingIds: string[]) => Promise<void>;
+  /** Bulk update multiple plantings (single undo step) */
+  onBulkUpdatePlantings?: (updates: { id: string; changes: Partial<Planting> }[]) => Promise<MutationResult>;
 
   // Sequence actions
   onCreateSequence?: (plantingId: string, cropName: string, fieldStartDate: string) => void;
@@ -388,6 +390,7 @@ export function PlantingInspectorPanel({
   onDuplicateCrop,
   onBulkDuplicatePlantings,
   onBulkRefreshFromSpec,
+  onBulkUpdatePlantings,
   onCreateSequence,
   onEditSequence,
   onUnlinkFromSequence,
@@ -408,6 +411,7 @@ export function PlantingInspectorPanel({
   planYear,
 }: PlantingInspectorPanelProps) {
   const [showSequenceInfo, setShowSequenceInfo] = useState(false);
+  const [isPlantingsListExpanded, setIsPlantingsListExpanded] = useState(true);
 
   // No selection
   if (selectedCrops.length === 0) {
@@ -427,17 +431,14 @@ export function PlantingInspectorPanel({
 
     return (
       <div className={className}>
-        {/* Inspector Header */}
-        <div className="p-3 border-b bg-gray-50 flex items-center justify-between sticky top-0 z-10">
-          <h3 className="font-semibold text-sm min-w-0 flex-1">
-            {plantings.length} Plantings Selected
-          </h3>
+        {/* Inspector Header - Clear All button */}
+        <div className="p-3 border-b bg-gray-50 flex items-center justify-end sticky top-0 z-10">
           {onClearSelection && (
             <button
               onClick={onClearSelection}
-              className="text-gray-400 hover:text-gray-600 text-lg leading-none ml-2 shrink-0"
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors"
             >
-              &times;
+              Clear All
             </button>
           )}
         </div>
@@ -445,48 +446,117 @@ export function PlantingInspectorPanel({
         {/* Inspector Content */}
         <div className="flex-1 overflow-auto p-3">
           <div className="space-y-4">
-            {/* Summary */}
-            <div className="text-sm text-gray-600">
-              {plantings.length} planting{plantings.length > 1 ? 's' : ''} selected
-            </div>
-
-            {/* List of selected plantings */}
-            <div className="space-y-2 max-h-60 overflow-auto">
-              {plantings.map((crop) => {
-                // Colors come from plan.crops via timeline-data.ts
-                const colors = {
-                  bg: crop.bgColor || DEFAULT_COLOR.bg,
-                  text: crop.textColor || DEFAULT_COLOR.text,
-                };
-                return (
-                  <div
-                    key={crop.groupId}
-                    className="flex items-center gap-2 p-2 rounded border border-gray-100"
-                  >
-                    <div
-                      className="w-3 h-3 rounded-full shrink-0"
-                      style={{ backgroundColor: colors.bg }}
-                    />
-                    <span className="text-sm text-gray-900 truncate flex-1">{crop.name}</span>
-                    {onDeselect && (
-                      <button
-                        onClick={() => onDeselect(crop.groupId)}
-                        className="text-gray-400 hover:text-gray-600 text-xs"
-                        title="Remove from selection"
+            {/* Collapsible List of selected plantings */}
+            <div>
+              <button
+                onClick={() => setIsPlantingsListExpanded(!isPlantingsListExpanded)}
+                className="w-full flex items-center justify-between text-sm font-medium text-gray-700 hover:text-gray-900 mb-2"
+              >
+                <span>{plantings.length} planting{plantings.length > 1 ? 's' : ''} selected</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${isPlantingsListExpanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isPlantingsListExpanded && (
+                <div className="space-y-2 max-h-60 overflow-auto">
+                  {plantings.map((crop) => {
+                    // Colors come from plan.crops via timeline-data.ts
+                    const colors = {
+                      bg: crop.bgColor || DEFAULT_COLOR.bg,
+                      text: crop.textColor || DEFAULT_COLOR.text,
+                    };
+                    return (
+                      <div
+                        key={crop.groupId}
+                        className="flex items-center gap-2 p-2 rounded border border-gray-100"
                       >
-                        &times;
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
+                        <div
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: colors.bg }}
+                        />
+                        <span className="text-sm text-gray-900 truncate flex-1">{crop.name}</span>
+                        {onDeselect && (
+                          <button
+                            onClick={() => onDeselect(crop.groupId)}
+                            className="text-gray-400 hover:text-gray-600 text-xs"
+                            title="Remove from selection"
+                          >
+                            &times;
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {/* Bulk Actions */}
-            <div className="pt-3 border-t space-y-2">
-              <div className="text-xs text-gray-600 mb-2">
-                Tip: {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Click to add/remove from selection
+            {/* Bulk Edit Fields */}
+            {onBulkUpdatePlantings && (
+              <div className="pt-3 border-t">
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">Length</div>
+                    {(() => {
+                      // Check if all plantings have the same length
+                      const lengths = plantings.map(p => p.feetNeeded);
+                      const allSame = lengths.every(l => l === lengths[0]);
+                      const displayValue = allSame ? lengths[0] : '';
+                      const isMixed = !allSame;
+
+                      return (
+                        <input
+                          key={`bulk-length-${plantings.map(p => p.groupId).join('-')}-${displayValue}`}
+                          type="number"
+                          min={1}
+                          step={25}
+                          defaultValue={displayValue}
+                          placeholder={isMixed ? '—' : ''}
+                          onBlur={async (e) => {
+                            const val = parseInt(e.target.value, 10);
+                            if (!isNaN(val) && val > 0) {
+                              const updates = plantings
+                                .filter(p => p.plantingId)
+                                .map(p => ({
+                                  id: p.plantingId!,
+                                  changes: { bedFeet: val },
+                                }));
+                              if (updates.length > 0) {
+                                await onBulkUpdatePlantings(updates);
+                              }
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          className={`w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center ${
+                            isMixed ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                          }`}
+                        />
+                      );
+                    })()}
+                  </div>
+                  <div>
+                    {/* Placeholder for future fields */}
+                  </div>
+                </div>
               </div>
+            )}
+
+            {/* Tip */}
+            <div className="text-xs text-gray-500">
+              Tip: {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Click to add/remove from selection
+            </div>
+
+            {/* Bulk Actions - all on one row */}
+            <div className="pt-3 border-t flex gap-2">
               {onBulkDuplicatePlantings && (
                 <button
                   onClick={async () => {
@@ -495,9 +565,9 @@ export function PlantingInspectorPanel({
                       .filter((id): id is string => id !== undefined);
                     await onBulkDuplicatePlantings(plantingIds);
                   }}
-                  className="w-full px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                  className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition-colors"
                 >
-                  Duplicate {plantings.length} Planting{plantings.length > 1 ? 's' : ''}
+                  Duplicate
                 </button>
               )}
               {onBulkRefreshFromSpec && (
@@ -508,9 +578,9 @@ export function PlantingInspectorPanel({
                       .filter((id): id is string => id !== undefined);
                     await onBulkRefreshFromSpec(plantingIds);
                   }}
-                  className="w-full px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex-1 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 rounded hover:bg-gray-100 transition-colors"
                 >
-                  Refresh {plantings.length} from Spec
+                  Refresh
                 </button>
               )}
               {onDeleteCrop && (
@@ -519,9 +589,9 @@ export function PlantingInspectorPanel({
                     const groupIds = plantings.map((p) => p.groupId);
                     onDeleteCrop(groupIds);
                   }}
-                  className="w-full px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                  className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
                 >
-                  Delete {plantings.length} Planting{plantings.length > 1 ? 's' : ''}
+                  Delete
                 </button>
               )}
             </div>
