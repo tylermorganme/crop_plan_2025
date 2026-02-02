@@ -422,8 +422,20 @@ export function calculateGddAdjustedTiming(
 // GDD CALCULATOR FACTORY
 // =============================================================================
 
+import {
+  createGddCache,
+  getCumulativeTable,
+  getGddForDays,
+  makeCacheKey,
+  type GddCache,
+} from './gdd-cache';
+
 /**
  * Create a GddCalculator from temperature history data.
+ *
+ * This version uses caching for O(log n) lookups instead of O(n) iteration.
+ * The cache is built lazily - first call for each (baseTemp, upperTemp, structureOffset)
+ * combination builds the cumulative table, subsequent calls use it directly.
  *
  * @param tempData - Temperature history
  * @param planYear - Year for date calculations
@@ -433,6 +445,9 @@ export function createGddCalculator(
   tempData: TemperatureHistory,
   planYear: number
 ): GddCalculator {
+  // Create cache for this calculator instance
+  const cache = createGddCache(tempData);
+
   return {
     getAdjustedFieldDays(
       baseFieldDays: number,
@@ -442,24 +457,105 @@ export function createGddCalculator(
       upperTemp?: number,
       structureOffset?: number
     ): number | null {
-      const result = calculateGddAdjustedTiming(
-        tempData,
-        baseFieldDays,
-        targetFieldDate,
-        actualFieldDate,
-        baseTemp,
-        planYear,
-        upperTemp,
-        structureOffset ?? 0
-      );
+      const key = makeCacheKey(baseTemp, upperTemp, structureOffset ?? 0);
 
-      if (!result.hasEnoughData) {
+      // Parse target field date (MM-DD) to full date
+      const [month, day] = targetFieldDate.split('-').map(Number);
+      const referenceStartDate = `${planYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+      // Get reference GDD (how much heat the crop needs) using cached calculation
+      const referenceGdd = getGddForDays(cache, referenceStartDate, baseFieldDays, key);
+      if (referenceGdd === null) {
         return null;
       }
 
-      return result.adjustedDtm;
+      // Calculate adjusted days from actual planting date using cached lookup
+      const adjustedDtm = daysToAccumulateGddCached(cache, actualFieldDate, referenceGdd, key);
+      if (adjustedDtm === null) {
+        return null;
+      }
+
+      return adjustedDtm;
     },
   };
+}
+
+/**
+ * Calculate days to accumulate target GDD using cached cumulative table.
+ * This is O(log n) instead of the uncached O(n) version.
+ */
+function daysToAccumulateGddCached(
+  cache: GddCache,
+  startDate: string,
+  targetGdd: number,
+  key: ReturnType<typeof makeCacheKey>
+): number | null {
+  const start = new Date(startDate);
+  const year = start.getFullYear();
+  const startDoy = getDayOfYearInternal(start);
+
+  const table = getCumulativeTable(cache, year, key);
+
+  // GDD at start of period (day before startDoy)
+  const startGdd = startDoy > 1 ? table.cumulativeGdd[startDoy - 1] : 0;
+  const targetCumulativeGdd = startGdd + targetGdd;
+
+  // Binary search for day where cumulative GDD >= target
+  // First check if target is achievable within current year
+  if (targetCumulativeGdd <= table.cumulativeGdd[366]) {
+    // Search within current year
+    let low = startDoy;
+    let high = 366;
+
+    while (low < high) {
+      const mid = Math.floor((low + high) / 2);
+      if (table.cumulativeGdd[mid] < targetCumulativeGdd) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+    }
+
+    if (low <= 366 && table.cumulativeGdd[low] >= targetCumulativeGdd) {
+      return low - startDoy + 1;
+    }
+  }
+
+  // Need to extend into next year
+  const nextYearTable = getCumulativeTable(cache, year + 1, key);
+  const yearEndGdd = table.cumulativeGdd[366];
+  const remainingGdd = targetCumulativeGdd - yearEndGdd;
+
+  // Binary search in next year
+  let low = 1;
+  let high = 366;
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (nextYearTable.cumulativeGdd[mid] < remainingGdd) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  if (low <= 366 && nextYearTable.cumulativeGdd[low] >= remainingGdd) {
+    const daysInYear = 366 - startDoy + 1; // days remaining in start year
+    return daysInYear + low;
+  }
+
+  return null; // Couldn't reach target in available data
+}
+
+/**
+ * Get day of year (1-366) from a Date object.
+ * Internal version to avoid circular dependency with gdd-cache.
+ */
+function getDayOfYearInternal(date: Date): number {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  return Math.floor(diff / oneDay);
 }
 
 // =============================================================================
