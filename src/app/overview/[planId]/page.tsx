@@ -207,6 +207,7 @@ interface CropBlock {
   bgColor: string;
   textColor: string;
   feetNeeded: number; // Total bed-feet for this planting
+  feetUsed?: number; // Feet used in this specific bed (for multi-bed plantings)
   // Categorical fields for "Color by" feature
   growingStructure?: string;
   plantingMethod?: string;
@@ -307,6 +308,7 @@ function buildOverviewData(
           bgColor: crop.bgColor || DEFAULT_COLOR.bg,
           textColor: crop.textColor || DEFAULT_COLOR.text,
           feetNeeded: crop.feetNeeded,
+          feetUsed: crop.feetUsed,
           growingStructure: crop.growingStructure,
           plantingMethod: crop.plantingMethod,
           irrigation: spec?.irrigation,
@@ -563,7 +565,7 @@ function BedRowComponent({
                   style={{ color: crop.textColor }}
                 >
                   <span className="truncate">{crop.name}</span>
-                  <span className="flex-shrink-0 ml-1">{crop.feetNeeded}&apos;</span>
+                  <span className="flex-shrink-0 ml-1">{crop.feetUsed ?? crop.feetNeeded}&apos;</span>
                 </span>
               )}
             </div>

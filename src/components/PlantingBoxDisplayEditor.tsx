@@ -5,7 +5,7 @@ import type { PlantingBoxDisplayConfig } from '@/lib/entities/plan';
 import type { Product } from '@/lib/entities/product';
 import type { PlantingSpec, ProductYield } from '@/lib/entities/planting-specs';
 import { calculateSpecRevenue } from '@/lib/revenue';
-import { buildYieldContext, evaluateYieldFormula } from '@/lib/entities/planting-specs';
+import { buildYieldContext, evaluateYieldFormula, calculateYieldPerWeek } from '@/lib/entities/planting-specs';
 import { Z_INDEX } from '@/lib/z-index';
 
 // dnd-kit imports
@@ -42,6 +42,8 @@ export interface CropForDisplay {
   category?: string;
   /** Total bed-feet needed - derived from Planting.bedFeet */
   feetNeeded: number;
+  /** Feet used in this specific bed (for multi-bed plantings) */
+  feetUsed?: number;
   specId?: string;
   totalBeds: number;
   bedIndex: number;
@@ -249,6 +251,13 @@ const TOKENS: TokenDef[] = [
     resolve: (crop) => crop.feetNeeded ?? null,
   },
   {
+    key: 'bedFeet',
+    label: 'Bed Feet',
+    description: 'Feet in this bed (for multi-bed plantings)',
+    dataType: 'number',
+    resolve: (crop) => crop.feetUsed ?? crop.feetNeeded ?? null,
+  },
+  {
     key: 'revenue',
     label: 'Revenue',
     description: 'Calculated revenue ($)',
@@ -334,6 +343,20 @@ const TOKENS: TokenDef[] = [
         }
       }
       return totalYield > 0 ? totalYield : null;
+    },
+  },
+  {
+    key: 'yieldPerWeek',
+    label: 'Yield/Wk',
+    description: 'Yield per week (e.g., "2.5 lb")',
+    dataType: 'string',
+    resolve: (crop, ctx) => {
+      if (!ctx.specs || !ctx.products || !crop.specId) return null;
+      const spec = ctx.specs[crop.specId];
+      if (!spec?.productYields?.length) return null;
+
+      const result = calculateYieldPerWeek(spec, crop.feetNeeded, ctx.products);
+      return result.displayMax || null;
     },
   },
 ];
@@ -918,6 +941,7 @@ export default function PlantingBoxDisplayEditor({
                   <li><code className="text-blue-700">{'{name}'}</code> - Crop name</li>
                   <li><code className="text-blue-700">{'{startDate}'}</code>, <code className="text-blue-700">{'{endDate}'}</code>, <code className="text-blue-700">{'{harvestDate}'}</code> - Dates (MM/DD)</li>
                   <li><code className="text-blue-700">{'{feet}'}</code> - Total feet needed</li>
+                  <li><code className="text-blue-700">{'{bedFeet}'}</code> - Feet in this bed</li>
                   <li><code className="text-blue-700">{'{revenue}'}</code> - Calculated revenue</li>
                   <li><code className="text-blue-700">{'{method}'}</code> - DS/TP/PE</li>
                   <li><code className="text-blue-700">{'{bed}'}</code> - Current bed name</li>
