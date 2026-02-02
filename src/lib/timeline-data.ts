@@ -29,6 +29,7 @@ import { getBedGroup, getBedNumber } from './plan-types';
 import { buildBedLengthsFromTemplate } from './entities/bed';
 import { getCropColorsById, type Crop } from './entities/crop';
 import type { GddCalculator } from './gdd';
+import { computeSequenceDateWithGddStagger, type GddStaggerParams, type PlantingSequence } from './entities/planting-sequence';
 
 // Re-export for consumers
 export type { CropCatalogEntry };
@@ -626,7 +627,7 @@ export function expandPlantingsToTimelineCrops(
   beds: Record<string, Bed>,
   catalog: Record<string, CropCatalogEntry>,
   bedGroups?: Record<string, BedGroup>,
-  sequences?: Record<string, { id: string; offsetDays: number }>,
+  sequences?: Record<string, PlantingSequence>,
   cropEntities?: Record<string, Crop>,
   gddCalculator?: GddCalculator
 ): TimelineCrop[] {
@@ -663,11 +664,47 @@ export function expandPlantingsToTimelineCrops(
       const sequence = sequences?.[planting.sequenceId];
       const anchor = sequenceAnchors.get(planting.sequenceId);
       if (sequence && anchor) {
-        // Formula: anchor.fieldStartDate + (slot * offsetDays) + additionalDaysInField
-        const anchorDate = parseISO(anchor.fieldStartDate);
         const additionalDaysInField = planting.overrides?.additionalDaysInField ?? 0;
-        const totalOffset = planting.sequenceSlot * sequence.offsetDays + additionalDaysInField;
-        effectiveFieldStartDate = format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
+
+        // Try GDD-based stagger if enabled and we have a calculator
+        let gddStaggerDate: string | null = null;
+        if (sequence.useGddStagger && gddCalculator && spec.cropId) {
+          // Get GDD base temp from crop entity
+          const cropEntity = cropEntities?.[spec.cropId];
+          const baseTemp = cropEntity?.gddBaseTemp ?? spec.gddBaseTemp;
+
+          if (baseTemp !== undefined) {
+            // Calculate field days to harvest (DTM - greenhouse time)
+            const daysInCells = spec.daysInCells ?? 0;
+            const fieldDaysToHarvest = spec.dtm - daysInCells;
+
+            const gddParams: GddStaggerParams = {
+              gddCache: gddCalculator.getCache(),
+              anchorFieldStartDate: anchor.fieldStartDate,
+              fieldDaysToHarvest,
+              baseTemp,
+              upperTemp: cropEntity?.gddUpperTemp ?? spec.gddUpperTemp,
+              structureOffset: spec.growingStructure && spec.growingStructure !== 'field' ? 20 : 0,
+            };
+
+            gddStaggerDate = computeSequenceDateWithGddStagger(
+              gddParams,
+              planting.sequenceSlot,
+              sequence.offsetDays,
+              additionalDaysInField
+            );
+          }
+        }
+
+        // Use GDD stagger date if available, otherwise fall back to calendar offset
+        if (gddStaggerDate) {
+          effectiveFieldStartDate = gddStaggerDate;
+        } else {
+          // Formula: anchor.fieldStartDate + (slot * offsetDays) + additionalDaysInField
+          const anchorDate = parseISO(anchor.fieldStartDate);
+          const totalOffset = planting.sequenceSlot * sequence.offsetDays + additionalDaysInField;
+          effectiveFieldStartDate = format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
+        }
       }
     }
 

@@ -122,6 +122,17 @@ export interface GddCalculator {
     upperTemp?: number,
     structureOffset?: number
   ): number | null;
+
+  /**
+   * Get the underlying GDD cache for advanced calculations.
+   * Used for GDD-based sequence staggering calculations.
+   */
+  getCache(): import('./gdd-cache').GddCache;
+
+  /**
+   * Get the plan year this calculator was created for.
+   */
+  getPlanYear(): number;
 }
 
 // =============================================================================
@@ -476,6 +487,14 @@ export function createGddCalculator(
       }
 
       return adjustedDtm;
+    },
+
+    getCache() {
+      return cache;
+    },
+
+    getPlanYear() {
+      return planYear;
     },
   };
 }
