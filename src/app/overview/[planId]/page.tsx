@@ -206,6 +206,7 @@ interface CropBlock {
   widthPercent: number; // 0-100% of year
   bgColor: string;
   textColor: string;
+  feetNeeded: number; // Total bed-feet for this planting
   // Categorical fields for "Color by" feature
   growingStructure?: string;
   plantingMethod?: string;
@@ -305,6 +306,7 @@ function buildOverviewData(
           widthPercent: Math.max(0.5, endPercent - startPercent), // min width
           bgColor: crop.bgColor || DEFAULT_COLOR.bg,
           textColor: crop.textColor || DEFAULT_COLOR.text,
+          feetNeeded: crop.feetNeeded,
           growingStructure: crop.growingStructure,
           plantingMethod: crop.plantingMethod,
           irrigation: spec?.irrigation,
@@ -557,10 +559,11 @@ function BedRowComponent({
               {/* Only show text if there's enough height */}
               {cropHeight >= 12 && (
                 <span
-                  className="text-[9px] px-0.5 truncate block whitespace-nowrap flex items-center h-full pointer-events-none"
+                  className="text-[9px] px-0.5 flex items-center justify-between h-full pointer-events-none w-full"
                   style={{ color: crop.textColor }}
                 >
-                  {crop.name}
+                  <span className="truncate">{crop.name}</span>
+                  <span className="flex-shrink-0 ml-1">{crop.feetNeeded}&apos;</span>
                 </span>
               )}
             </div>

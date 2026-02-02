@@ -592,7 +592,7 @@ function ProductionChart({
       ticks.push(Math.round(t));
     }
     return ticks;
-  }, [chartDataWithAvg, effectiveSelectedMarkets, settings.showWeeklyAvg]);
+  }, [chartDataWithAvg, effectiveSelectedMarkets, settings.showBars, settings.showWeeklyAvg]);
 
   // Update settings and save to localStorage
   const updateSettings = useCallback((updates: Partial<ProductionChartSettings>) => {
@@ -2368,6 +2368,7 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
       {selectedProduct && (
         <div className="flex-shrink-0">
           <ProductionChart
+            key={`${selectedProduct.productId}-${selectedProduct.totalYield}-${selectedProduct.totalBedFeet}`}
             harvestEvents={selectedProduct.harvestEvents}
             unit={selectedProduct.unit}
             planYear={planYear}
