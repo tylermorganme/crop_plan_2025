@@ -12,10 +12,10 @@
 
 import { parseISO, addDays } from 'date-fns';
 import type { Plan } from './plan-types';
+import type { TimelineCrop } from './entities/plan';
 import type { Planting } from './entities/planting';
 import type { PlantingSpec, ProductYield } from './entities/planting-specs';
 import type { Product } from './entities/product';
-import type { MarketSplit } from './entities/market';
 import {
   evaluateYieldFormula,
   buildYieldContext,
@@ -325,13 +325,22 @@ function calculatePeakOverlapYieldPerWeek(
 
 /**
  * Calculate production metrics for a single product yield.
+ *
+ * @param py - Product yield configuration
+ * @param spec - Planting spec
+ * @param bedFeet - Bed feet for this planting
+ * @param fieldStartDate - Field start date (may be GDD-adjusted)
+ * @param product - Product entity
+ * @param effectiveHarvestStartDate - Optional GDD-adjusted harvest start date.
+ *        If provided, uses this instead of calculating from DTM.
  */
 function calculateProductProduction(
   py: ProductYield,
   spec: PlantingSpec,
   bedFeet: number,
   fieldStartDate: Date,
-  product: Product | undefined
+  product: Product | undefined,
+  effectiveHarvestStartDate?: Date
 ): ProductProductionResult | null {
   if (!py.yieldFormula || !product) {
     return null;
@@ -350,11 +359,21 @@ function calculateProductProduction(
   const totalYield = result.value;
 
   // Calculate harvest dates
-  const daysInCells = calculateDaysInCells(spec);
-  const seedToHarvest = calculateProductSeedToHarvest(py, spec, daysInCells);
+  // Use effective harvest date if provided (from GDD-adjusted timeline crops),
+  // otherwise calculate from static DTM
   const harvestWindowDays = calculateProductHarvestWindow(py);
+  let harvestStart: Date;
 
-  const harvestStart = addDays(fieldStartDate, seedToHarvest);
+  if (effectiveHarvestStartDate) {
+    // Use the GDD-adjusted harvest date directly
+    harvestStart = effectiveHarvestStartDate;
+  } else {
+    // Fall back to static DTM calculation
+    const daysInCells = calculateDaysInCells(spec);
+    const seedToHarvest = calculateProductSeedToHarvest(py, spec, daysInCells);
+    harvestStart = addDays(fieldStartDate, seedToHarvest);
+  }
+
   const harvestEnd = addDays(harvestStart, Math.max(0, harvestWindowDays - 1));
 
   // Calculate yield per week
@@ -381,32 +400,44 @@ function calculateProductProduction(
 }
 
 /**
- * Calculate production metrics for a single planting.
+ * Calculate production metrics for a single planting using dates from TimelineCrop.
  *
- * @param planting - The planting to calculate production for
+ * @param timelineCrop - Timeline crop with computed dates (field start, harvest start)
+ * @param planting - The planting entity (for marketSplit)
  * @param spec - The planting spec with yield info
  * @param products - Product catalog
- * @param effectiveFieldStartDate - Optional GDD-adjusted field start date (overrides planting.fieldStartDate)
  */
 export function calculatePlantingProduction(
+  timelineCrop: TimelineCrop,
   planting: Planting,
   spec: PlantingSpec,
-  products: Record<string, Product>,
-  effectiveFieldStartDate?: string
+  products: Record<string, Product>
 ): PlantingProductionResult {
   const productResults: ProductProductionResult[] = [];
   const totalYieldByUnit: Record<string, number> = {};
   let earliestHarvestStart: string | null = null;
   let latestHarvestEnd: string | null = null;
 
-  // Use effective date if provided (from GDD-adjusted timeline crops), otherwise use stored date
-  const fieldStartDateStr = effectiveFieldStartDate ?? planting.fieldStartDate;
+  // Get dates directly from TimelineCrop - single source of truth
+  const fieldStartDateStr = timelineCrop.startDate.split('T')[0];
   const fieldStartDate = parseISO(fieldStartDateStr);
+
+  // Get harvest date from TimelineCrop if available
+  const effectiveHarvestStartDate = timelineCrop.harvestStartDate
+    ? parseISO(timelineCrop.harvestStartDate.split('T')[0])
+    : undefined;
 
   // Calculate production for each product yield
   for (const py of spec.productYields ?? []) {
     const product = products[py.productId];
-    const result = calculateProductProduction(py, spec, planting.bedFeet, fieldStartDate, product);
+    const result = calculateProductProduction(
+      py,
+      spec,
+      timelineCrop.feetNeeded,
+      fieldStartDate,
+      product,
+      effectiveHarvestStartDate
+    );
 
     if (result) {
       productResults.push(result);
@@ -431,7 +462,7 @@ export function calculatePlantingProduction(
     specId: planting.specId,
     crop: spec.crop,
     identifier: spec.identifier,
-    bedFeet: planting.bedFeet,
+    bedFeet: timelineCrop.feetNeeded,
     daysInField: calculateFieldOccupationDays(spec),
     products: productResults,
     totalYieldByUnit,
@@ -445,14 +476,17 @@ export function calculatePlantingProduction(
 /**
  * Calculate complete production report for a plan.
  *
- * @param plan - The plan to calculate production for
- * @param effectiveDates - Optional map of planting ID to effective field start date.
- *                         Used to apply GDD-adjusted dates from timeline crops.
- *                         If not provided, uses the stored planting.fieldStartDate.
+ * IMPORTANT: This function requires TimelineCrop[] as input to ensure dates
+ * are always in sync with the timeline display. TimelineCrop includes GDD-adjusted
+ * dates, sequence stagger dates, and all other timing computations.
+ *
+ * @param timelineCrops - Computed timeline crops from useComputedCrops() or getTimelineCropsFromPlan().
+ *                        These contain the authoritative dates (field start, harvest start).
+ * @param plan - The plan with specs, products, markets, and plantings catalogs.
  */
 export function calculatePlanProduction(
-  plan: Plan,
-  effectiveDates?: Map<string, string>
+  timelineCrops: TimelineCrop[],
+  plan: Plan
 ): PlanProductionReport {
   const plantingResults: PlantingProductionResult[] = [];
   const totalYieldByUnit: Record<string, number> = {};
@@ -467,18 +501,28 @@ export function calculatePlanProduction(
   const specs = plan.specs ?? {};
   const products = plan.products ?? {};
   const markets = plan.markets ?? {};
+  const plantingsById = new Map((plan.plantings ?? []).map(p => [p.id, p]));
 
-  // Process each planting
-  for (const planting of plan.plantings ?? []) {
+  // Deduplicate timeline crops by plantingId (they may span multiple beds)
+  const seenPlantingIds = new Set<string>();
+
+  // Process each timeline crop
+  for (const timelineCrop of timelineCrops) {
+    // Skip if no plantingId or already processed
+    if (!timelineCrop.plantingId) continue;
+    if (seenPlantingIds.has(timelineCrop.plantingId)) continue;
+    seenPlantingIds.add(timelineCrop.plantingId);
+
+    const planting = plantingsById.get(timelineCrop.plantingId);
+    if (!planting) continue;
+
     const spec = specs[planting.specId];
     if (!spec) continue;
 
     // Skip failed plantings
     if (planting.actuals?.failed) continue;
 
-    // Get effective date from map if provided (for GDD-adjusted dates)
-    const effectiveDate = effectiveDates?.get(planting.id);
-    const plantingProduction = calculatePlantingProduction(planting, spec, products, effectiveDate);
+    const plantingProduction = calculatePlantingProduction(timelineCrop, planting, spec, products);
     plantingResults.push(plantingProduction);
 
     // Add to totals

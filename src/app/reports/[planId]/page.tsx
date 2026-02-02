@@ -2559,21 +2559,8 @@ export default function ReportsPage() {
     loadPlan();
   }, [planId, currentPlan?.id, loadPlanById]);
 
-  // Get GDD-adjusted timeline crops for production calculations
+  // Get GDD-adjusted timeline crops - single source of truth for dates
   const { crops: timelineCrops } = useComputedCrops();
-
-  // Build effective date map from timeline crops (for GDD-adjusted sequence dates)
-  const effectiveDates = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const crop of timelineCrops) {
-      if (crop.plantingId && crop.startDate) {
-        // Extract date from ISO string (e.g., "2026-07-20T00:00:00" -> "2026-07-20")
-        const dateStr = crop.startDate.split('T')[0];
-        map.set(crop.plantingId, dateStr);
-      }
-    }
-    return map;
-  }, [timelineCrops]);
 
   // Calculate reports when plan is loaded
   const revenueReport = useMemo(() => {
@@ -2586,11 +2573,11 @@ export default function ReportsPage() {
     return calculatePlanSeeds(currentPlan);
   }, [currentPlan]);
 
+  // Production uses TimelineCrop[] directly - dates are authoritative from timeline
   const productionReport = useMemo(() => {
     if (!currentPlan) return null;
-    // Pass effective dates to use GDD-adjusted timing for sequences
-    return calculatePlanProduction(currentPlan, effectiveDates);
-  }, [currentPlan, effectiveDates]);
+    return calculatePlanProduction(timelineCrops, currentPlan);
+  }, [timelineCrops, currentPlan]);
 
   if (loading) {
     return (
