@@ -5,7 +5,8 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Planting } from '@/lib/plan-types';
-import { createPlanting } from '@/lib/entities/planting';
+import { createPlanting, type SeedSource } from '@/lib/entities/planting';
+import { SeedSourceSelect, type VarietyOption, type SeedMixOption } from './SeedSourceSelect';
 import { usePlanStore, type PlanSummary } from '@/lib/plan-store';
 import { type PlantingSpec, calculatePlantingMethod, calculateYieldPerWeek, calculateYieldPerHarvest } from '@/lib/entities/planting-specs';
 import { calculateSpecRevenue, STANDARD_BED_LENGTH } from '@/lib/revenue';
@@ -393,16 +394,27 @@ function getColumnType(crops: PlantingSpec[], col: string): 'boolean' | 'number'
   return 'text';
 }
 
+// Special marker for empty/null/undefined values in filters
+const NONE_VALUE = '__none__';
+
 // Get unique values for categorical columns
 function getUniqueValuesForColumn(crops: PlantingSpec[], col: string): string[] {
   const values = new Set<string>();
+  let hasEmpty = false;
   crops.forEach(c => {
     const v = c[col as keyof PlantingSpec];
-    if (v !== null && v !== undefined && v !== '') {
+    if (v === null || v === undefined || v === '') {
+      hasEmpty = true;
+    } else {
       values.add(String(v));
     }
   });
-  return Array.from(values).sort();
+  const sorted = Array.from(values).sort();
+  // Add "(None)" option at the beginning if there are empty values
+  if (hasEmpty) {
+    sorted.unshift(NONE_VALUE);
+  }
+  return sorted;
 }
 
 // Get min/max for numeric columns
@@ -496,6 +508,8 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   const deletePlantingSpecs = usePlanStore((state) => state.deletePlantingSpecs);
   const toggleSpecFavorite = usePlanStore((state) => state.toggleSpecFavorite);
   const bulkUpdatePlantingSpecs = usePlanStore((state) => state.bulkUpdatePlantingSpecs);
+  const addSeedMix = usePlanStore((state) => state.addSeedMix);
+  const addVariety = usePlanStore((state) => state.addVariety);
   const activePlanId = usePlanStore((state) => state.activePlanId);
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
   const planList = usePlanStore((state) => state.planList);
@@ -538,6 +552,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     inUse?: boolean;
     yieldPerHarvestDisplay?: string;
     totalYieldDisplay?: string;
+    defaultSeedSourceDisplay?: string;
   };
 
   // Build set of specIds that are in use (have plantings)
@@ -557,8 +572,11 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         : { displayMax: '', displayMin: '', products: [] };
       // Calculate yield per harvest with unit (use calculated value to support yieldFormula-based specs)
       const computedYieldPerHarvest = calculateYieldPerHarvest(crop as PlantingSpec, STANDARD_BED_LENGTH);
+      // Get unit from primary product
+      const primaryProductId = crop.productYields?.[0]?.productId;
+      const primaryUnit = primaryProductId && products ? products[primaryProductId]?.unit ?? '' : '';
       const yieldPerHarvestDisplay = computedYieldPerHarvest !== null
-        ? `${computedYieldPerHarvest >= 10 ? Math.round(computedYieldPerHarvest) : computedYieldPerHarvest.toFixed(1)} ${crop.yieldUnit ?? ''}`.trim()
+        ? `${computedYieldPerHarvest >= 10 ? Math.round(computedYieldPerHarvest) : computedYieldPerHarvest.toFixed(1)} ${primaryUnit}`.trim()
         : undefined;
       // Calculate total yield display from yield formula results
       const totalYieldDisplay = yieldPerWeek.products.length > 0
@@ -567,6 +585,26 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
             return `${formatted} ${p.unit ?? ''}`.trim();
           }).join(', ')
         : undefined;
+      // Build comma-separated list of product names from productYields
+      const productsDisplay = crop.productYields?.length && products
+        ? crop.productYields
+            .map(py => products[py.productId]?.product)
+            .filter(Boolean)
+            .join(', ')
+        : undefined;
+      // Build default seed source display text
+      let defaultSeedSourceDisplay: string | undefined;
+      if (crop.defaultSeedSource) {
+        if (crop.defaultSeedSource.type === 'variety' && varieties) {
+          const v = varieties[crop.defaultSeedSource.id];
+          defaultSeedSourceDisplay = v
+            ? `${v.name}${v.supplier ? ` (${v.supplier})` : ''}`
+            : crop.defaultSeedSource.id;
+        } else if (crop.defaultSeedSource.type === 'mix' && seedMixes) {
+          const m = seedMixes[crop.defaultSeedSource.id];
+          defaultSeedSourceDisplay = m ? m.name : crop.defaultSeedSource.id;
+        }
+      }
       return {
         ...crop,
         revenuePerBed: revenue,
@@ -575,9 +613,11 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         inUse: specsInUse.has(crop.identifier),
         yieldPerHarvestDisplay,
         totalYieldDisplay,
+        productsDisplay,
+        defaultSeedSourceDisplay,
       };
     });
-  }, [baseCrops, products, specsInUse]);
+  }, [baseCrops, products, specsInUse, varieties, seedMixes]);
 
   // All columns come from the schema - single source of truth
   const allColumns = allHeaders && allHeaders.length > 0 ? allHeaders : DEFAULT_COLUMN_ORDER;
@@ -685,15 +725,6 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     return Array.from(names).sort();
   }, [displayCrops]);
 
-  const uniqueProductNames = useMemo(() => {
-    const names = new Set<string>();
-    displayCrops.forEach(c => {
-      const product = (c as unknown as Record<string, unknown>).product;
-      if (product && typeof product === 'string') names.add(product);
-    });
-    return Array.from(names).sort();
-  }, [displayCrops]);
-
   const uniqueIrrigationValues = useMemo(() => {
     const values = new Set<string>();
     displayCrops.forEach(c => {
@@ -737,13 +768,12 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   // Map of dynamic option keys to their values
   const dynamicOptionsMap: Record<DynamicOptionKey, string[]> = useMemo(() => ({
     crop: uniqueCropNames,
-    product: uniqueProductNames,
     irrigation: uniqueIrrigationValues,
     trellisType: uniqueTrellisTypes,
     category: uniqueCategories,
     growingStructure: uniqueGrowingStructures,
     rowCover: uniqueRowCoverValues,
-  }), [uniqueCropNames, uniqueProductNames, uniqueIrrigationValues, uniqueTrellisTypes, uniqueCategories, uniqueGrowingStructures, uniqueRowCoverValues]);
+  }), [uniqueCropNames, uniqueIrrigationValues, uniqueTrellisTypes, uniqueCategories, uniqueGrowingStructures, uniqueRowCoverValues]);
 
   // Columns to display (filtered by sidebar search if active)
   const displayColumns = useMemo(() => {
@@ -847,10 +877,19 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         } else if (meta.type === 'categorical') {
           // Multi-select: filterVal is string[] - spec must match one of the selected values
           if (Array.isArray(filterVal)) {
-            if (filterVal.length > 0 && !filterVal.includes(String(specVal))) return false;
+            if (filterVal.length > 0) {
+              const isEmpty = specVal === null || specVal === undefined || specVal === '';
+              const matchesNone = filterVal.includes(NONE_VALUE) && isEmpty;
+              const matchesValue = !isEmpty && filterVal.includes(String(specVal));
+              if (!matchesNone && !matchesValue) return false;
+            }
           } else {
             // Legacy single-select support
-            if (String(specVal) !== String(filterVal)) return false;
+            if (filterVal === NONE_VALUE) {
+              if (specVal !== null && specVal !== undefined && specVal !== '') return false;
+            } else if (String(specVal) !== String(filterVal)) {
+              return false;
+            }
           }
         } else if (meta.type === 'text') {
           if (!String(specVal ?? '').toLowerCase().includes(String(filterVal).toLowerCase())) return false;
@@ -2074,7 +2113,23 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                               </span>
                             )}
                             {/* Editable cell or display value */}
-                            {isEditable ? (
+                            {isEditable && editableConfig.type === 'seedSource' ? (
+                              <InlineSeedSourceSelect
+                                value={crop.defaultSeedSource}
+                                cropName={crop.crop}
+                                varieties={varieties ?? {}}
+                                seedMixes={seedMixes ?? {}}
+                                onChange={(value: SeedSource | undefined) => handleCellChange(crop.identifier, 'defaultSeedSource', value)}
+                                onFocus={() => {
+                                  setActiveEditColumn(col);
+                                  setActiveEditRow(virtualRow.index);
+                                }}
+                                onAddMix={addSeedMix}
+                                allVarieties={varieties}
+                                crops={crops}
+                                onAddVariety={addVariety}
+                              />
+                            ) : isEditable ? (
                               <EditableCell
                                 value={cellValue}
                                 config={editableConfig}
@@ -2418,6 +2473,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         seedMixes={seedMixes}
         products={products}
         markets={markets}
+        crops={crops}
         initialSourceSpec={copySourceSpec as PlantingSpec | null}
         lastFrostDate={lastFrostDate}
       />
@@ -2434,6 +2490,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         seedMixes={seedMixes}
         products={products}
         markets={markets}
+        crops={crops}
         lastFrostDate={lastFrostDate}
       />
 
@@ -2623,7 +2680,9 @@ function FilterInput({
                 onChange={() => toggleOption(opt)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
-              <span className="truncate text-gray-700">{opt}</span>
+              <span className={`truncate ${opt === NONE_VALUE ? 'text-gray-400 italic' : 'text-gray-700'}`}>
+                {opt === NONE_VALUE ? '(None)' : opt}
+              </span>
             </label>
           ))}
         </div>
@@ -2861,6 +2920,49 @@ function ComboBox({
   );
 }
 
+// Inline seed source selector for table cells
+function InlineSeedSourceSelect({
+  value,
+  cropName,
+  varieties,
+  seedMixes,
+  onChange,
+  onFocus,
+  onAddMix,
+  allVarieties,
+  crops,
+  onAddVariety,
+}: {
+  value: SeedSource | undefined;
+  cropName: string;
+  varieties: Record<string, VarietyOption>;
+  seedMixes: Record<string, SeedMixOption>;
+  onChange: (value: SeedSource | undefined) => void;
+  onFocus?: () => void;
+  onAddMix?: (mix: import('@/lib/entities/seed-mix').SeedMix) => void;
+  allVarieties?: Record<string, import('@/lib/entities/variety').Variety>;
+  crops?: Record<string, { id: string; name: string }>;
+  onAddVariety?: (variety: import('@/lib/entities/variety').Variety) => void;
+}) {
+  return (
+    <div className="w-full" onClick={(e) => e.stopPropagation()} onFocus={onFocus}>
+      <SeedSourceSelect
+        cropName={cropName}
+        value={value}
+        onChange={onChange}
+        varieties={varieties}
+        seedMixes={seedMixes}
+        placeholder="(None)"
+        compact
+        onAddMix={onAddMix}
+        allVarieties={allVarieties}
+        crops={crops}
+        onAddVariety={onAddVariety}
+      />
+    </div>
+  );
+}
+
 // EditableCell component for inline editing
 function EditableCell({
   value,
@@ -2871,7 +2973,7 @@ function EditableCell({
   onBlur,
 }: {
   value: unknown;
-  config: { type: 'select' | 'text' | 'number'; options?: string[] };
+  config: { type: 'select' | 'text' | 'number' | 'seedSource'; options?: string[] };
   onChange: (value: unknown) => void;
   hasChanges: boolean;
   onFocus?: () => void;

@@ -173,6 +173,10 @@ const COLOR_BY_PALETTES: Record<string, Record<string, string>> = {
     'florida-weave-2x': '#f59e0b', // amber (for trellised crops)
     // Other trellis types will get auto-generated colors
   },
+  gddTiming: {
+    On: '#22c55e',           // green (GDD enabled)
+    Off: '#9ca3af',          // gray (GDD disabled)
+  },
   // Category colors will be generated dynamically from unique values
 };
 
@@ -189,7 +193,7 @@ const CATEGORY_COLORS = [
   '#6b7280', // gray
 ];
 
-type ColorByField = 'none' | 'growingStructure' | 'plantingMethod' | 'category' | 'irrigation' | 'trellisType';
+type ColorByField = 'none' | 'growingStructure' | 'plantingMethod' | 'category' | 'irrigation' | 'trellisType' | 'gddTiming';
 type ColorByMode = 'border' | 'background';
 
 // =============================================================================
@@ -213,6 +217,7 @@ interface CropBlock {
   plantingMethod?: string;
   irrigation?: string;
   trellisType?: string;
+  useGddTiming?: boolean;
 }
 
 interface BedRow {
@@ -313,6 +318,7 @@ function buildOverviewData(
           plantingMethod: crop.plantingMethod,
           irrigation: spec?.irrigation,
           trellisType: spec?.trellisType,
+          useGddTiming: crop.useGddTiming,
         };
       });
 
@@ -423,6 +429,8 @@ function BedRowComponent({
       value = crop.irrigation;
     } else if (colorByField === 'trellisType') {
       value = crop.trellisType;
+    } else if (colorByField === 'gddTiming') {
+      value = crop.useGddTiming ? 'On' : 'Off';
     }
 
     if (!value) return '#9ca3af'; // gray for unknown/missing
@@ -1366,6 +1374,7 @@ export default function OverviewPage() {
   const params = useParams();
   const planId = params.planId as string;
 
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -1953,6 +1962,7 @@ export default function OverviewPage() {
                 <option value="category">Category</option>
                 <option value="irrigation">Irrigation</option>
                 <option value="trellisType">Trellis Type</option>
+                <option value="gddTiming">GDD Timing</option>
               </select>
             </div>
             {/* Style toggle (border vs background) - only show when color by is active */}

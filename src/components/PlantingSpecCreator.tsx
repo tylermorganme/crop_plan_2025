@@ -7,6 +7,7 @@ import type { Variety } from '@/lib/entities/variety';
 import type { SeedMix } from '@/lib/entities/seed-mix';
 import type { Product } from '@/lib/entities/product';
 import type { Market } from '@/lib/entities/market';
+import type { Crop } from '@/lib/entities/crop';
 import PlantingSpecEditor from './PlantingSpecEditor';
 import { Z_INDEX } from '@/lib/z-index';
 
@@ -26,6 +27,8 @@ interface PlantingSpecCreatorProps {
   products?: Record<string, Product>;
   /** Markets available for market split selection */
   markets?: Record<string, Market>;
+  /** Crop entities for linking crop name to cropId (for colors) */
+  crops?: Record<string, Crop>;
   /** Optional: Pre-select a spec to copy (skips the choose step) */
   initialSourceSpec?: PlantingSpec | null;
   /** Last frost date for weeks-from-frost calculation (ISO date string) */
@@ -53,6 +56,7 @@ export default function PlantingSpecCreator({
   seedMixes,
   products,
   markets,
+  crops,
   initialSourceSpec,
   lastFrostDate,
   timingSettings,
@@ -151,6 +155,7 @@ export default function PlantingSpecCreator({
         seedMixes={seedMixes}
         products={products}
         markets={markets}
+        crops={crops}
         lastFrostDate={lastFrostDate}
         timingSettings={timingSettings}
       />
@@ -230,7 +235,6 @@ export default function PlantingSpecCreator({
                     <div className="font-medium text-gray-900 text-sm">{spec.identifier}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
                       {[spec.category, spec.growingStructure, spec.dtmBasis].filter(Boolean).join(' · ')}
-                      {spec.dtm ? ` · ${spec.dtm} DTM` : ''}
                     </div>
                   </button>
                 ))

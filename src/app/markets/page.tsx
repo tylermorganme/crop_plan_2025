@@ -99,6 +99,7 @@ function MarketEditor({
 }
 
 export default function MarketsPage() {
+
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [editingMarket, setEditingMarket] = useState<Market | null>(null);

@@ -20,9 +20,11 @@ import type { Variety } from '@/lib/entities/variety';
 import type { SeedMix } from '@/lib/entities/seed-mix';
 import type { Product } from '@/lib/entities/product';
 import type { Market, MarketSplit } from '@/lib/entities/market';
+import type { Crop } from '@/lib/entities/crop';
 import { getMarketSplitTotal, validateMarketSplit, getActiveMarkets } from '@/lib/entities/market';
 import { weeksFromFrost, targetFromWeeks } from '@/lib/date-utils';
 import { Z_INDEX } from '@/lib/z-index';
+import { SeedSourceSelect } from './SeedSourceSelect';
 
 /** Standard tray sizes (cells per tray) */
 const TRAY_SIZES = [9, 18, 21, 50, 72, 128, 400] as const;
@@ -48,11 +50,14 @@ interface PlantingSpecEditorProps {
   products?: Record<string, Product>;
   /** Markets available for market split selection */
   markets?: Record<string, Market>;
+  /** Crop entities for linking crop name to cropId (for colors) */
+  crops?: Record<string, Crop>;
   /** Last frost date for weeks-from-frost calculation (MM-DD format, e.g., "04-01") */
   lastFrostDate?: string;
   /** Plan-level timing settings (optional, uses defaults if not provided) */
   timingSettings?: Partial<TimingSettings>;
 }
+
 
 /**
  * Derive the growing method from existing crop data.
@@ -251,6 +256,7 @@ export default function PlantingSpecEditor({
   seedMixes = {},
   products = {},
   markets = {},
+  crops = {},
   lastFrostDate,
   timingSettings,
 }: PlantingSpecEditorProps) {
@@ -413,6 +419,29 @@ export default function PlantingSpecEditor({
     updateField(field, num as PlantingSpec[typeof field]);
   };
 
+  // Look up cropId by name (case-insensitive) for color linking
+  const lookupCropId = (cropName: string): string | undefined => {
+    if (!cropName) return undefined;
+    const normalizedName = cropName.trim().toLowerCase();
+    for (const crop of Object.values(crops)) {
+      if (crop.name.toLowerCase() === normalizedName) {
+        return crop.id;
+      }
+    }
+    return undefined;
+  };
+
+  // Update crop name and auto-link to cropId
+  const updateCropName = (value: string) => {
+    const cropId = lookupCropId(value);
+    setFormData(prev => ({
+      ...prev,
+      crop: value,
+      cropName: value, // Keep both in sync
+      cropId: cropId,
+    }));
+  };
+
   const addTrayStage = () => {
     setTrayStages(prev => [...prev, { days: 14, cellsPerTray: 128 }]);
   };
@@ -558,10 +587,15 @@ export default function PlantingSpecEditor({
                   <input
                     type="text"
                     value={formData.crop || ''}
-                    onChange={(e) => updateField('crop', e.target.value)}
+                    onChange={(e) => updateCropName(e.target.value)}
                     className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
+                  {formData.crop && !formData.cropId && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      No matching crop entity found - colors won&apos;t be applied
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -710,65 +744,14 @@ export default function PlantingSpecEditor({
                   <label className="block text-xs font-medium text-gray-600 mb-1">
                     Default Variety/Mix for New Plantings
                   </label>
-                  <select
-                    value={
-                      formData.defaultSeedSource
-                        ? `${formData.defaultSeedSource.type}:${formData.defaultSeedSource.id}`
-                        : ''
-                    }
-                    onChange={(e) => {
-                      if (!e.target.value) {
-                        updateField('defaultSeedSource', undefined);
-                      } else {
-                        const [type, id] = e.target.value.split(':') as ['variety' | 'mix', string];
-                        updateField('defaultSeedSource', { type, id });
-                      }
-                    }}
-                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">None (assign manually)</option>
-                    {(() => {
-                      const cropName = formData.crop ?? '';
-                      const currentId = formData.defaultSeedSource?.id;
-                      // Hide deprecated unless currently selected
-                      const matchingVarieties = Object.values(varieties).filter(
-                        (v) => v.crop === cropName && (!v.deprecated || v.id === currentId)
-                      );
-                      const matchingMixes = Object.values(seedMixes).filter(
-                        (m) => m.crop === cropName && (!m.deprecated || m.id === currentId)
-                      );
-
-                      if (matchingVarieties.length === 0 && matchingMixes.length === 0) {
-                        return (
-                          <option disabled>No varieties or mixes for "{formData.crop}"</option>
-                        );
-                      }
-
-                      return (
-                        <>
-                          {matchingVarieties.length > 0 && (
-                            <optgroup label="Varieties">
-                              {matchingVarieties.map((v) => (
-                                <option key={v.id} value={`variety:${v.id}`}>
-                                  {v.name}
-                                  {v.supplier ? ` (${v.supplier})` : ''}
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
-                          {matchingMixes.length > 0 && (
-                            <optgroup label="Seed Mixes">
-                              {matchingMixes.map((m) => (
-                                <option key={m.id} value={`mix:${m.id}`}>
-                                  {m.name}
-                                </option>
-                              ))}
-                            </optgroup>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </select>
+                  <SeedSourceSelect
+                    cropName={formData.crop ?? ''}
+                    value={formData.defaultSeedSource}
+                    varieties={varieties}
+                    seedMixes={seedMixes}
+                    onChange={(source) => updateField('defaultSeedSource', source)}
+                    placeholder="None (assign manually)"
+                  />
                   <p className="text-xs text-gray-500 mt-1">
                     When set, new plantings of this crop will automatically use this variety/mix.
                   </p>
@@ -866,13 +849,45 @@ export default function PlantingSpecEditor({
                     const product = products[py.productId];
                     return (
                       <div key={py.productId} className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                        {/* Product header with remove button */}
+                        {/* Product header with selector and remove button */}
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-medium text-gray-500">#{index + 1}</span>
-                            <span className="font-medium text-sm text-gray-900">
-                              {product ? `${product.product} (${product.unit})` : py.productId}
-                            </span>
+                            {(() => {
+                              // Get all products for this crop (for the dropdown)
+                              const cropName = formData.crop?.toLowerCase().trim();
+                              const matchingProducts = Object.values(products).filter(
+                                (p) => p.crop.toLowerCase().trim() === cropName
+                              );
+
+                              if (matchingProducts.length <= 1) {
+                                // Only one product available, show as static text
+                                return (
+                                  <span className="font-medium text-sm text-gray-900">
+                                    {product ? `${product.product} (${product.unit})` : py.productId}
+                                  </span>
+                                );
+                              }
+
+                              // Multiple products available, show dropdown
+                              return (
+                                <select
+                                  value={py.productId}
+                                  onChange={(e) => {
+                                    const updated = [...(formData.productYields ?? [])];
+                                    updated[index] = { ...py, productId: e.target.value };
+                                    updateField('productYields', updated);
+                                  }}
+                                  className="px-2 py-1 text-sm font-medium text-gray-900 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  {matchingProducts.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.product} ({p.unit})
+                                    </option>
+                                  ))}
+                                </select>
+                              );
+                            })()}
                             {product && Object.values(product.prices)[0] != null && (
                               <span className="text-xs text-green-600">${Object.values(product.prices)[0]}</span>
                             )}
@@ -1049,7 +1064,7 @@ export default function PlantingSpecEditor({
                               );
                             }
                             if (result.value !== null) {
-                              const unit = product?.unit ?? formData.yieldUnit ?? 'units';
+                              const unit = product?.unit ?? 'units';
                               return (
                                 <p className="text-[10px] text-green-600 mt-1">
                                   = {result.value.toFixed(1)} {unit}/50ft

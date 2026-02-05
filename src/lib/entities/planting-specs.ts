@@ -136,21 +136,8 @@ export interface PlantingSpec {
 
   // ---- Timing Inputs ----
 
-  /**
-   * @deprecated Use productYields[].dtm instead.
-   * Days to maturity (meaning depends on dtmBasis).
-   * Legacy field kept for backwards compatibility with old saved plans.
-   */
-  dtm?: number;
-
   /** Days from seeding to germination (shared across all products) */
   daysToGermination?: number;
-
-  /**
-   * @deprecated Calculated from productYields now.
-   * Base harvest window in days (before adjustments).
-   */
-  harvestWindow?: number;
 
   /** Greenhouse tray stages (empty = direct seeded) */
   trayStages?: TrayStage[];
@@ -171,34 +158,9 @@ export interface PlantingSpec {
    */
   assumedTransplantDays?: number;
 
-  /**
-   * @deprecated Use productYields[].daysBetweenHarvest instead.
-   * Days between harvests (for multiple harvest crops).
-   */
-  daysBetweenHarvest?: number;
-
-  /**
-   * @deprecated Use productYields[].numberOfHarvests instead.
-   * Number of harvests over the production period.
-   */
-  numberOfHarvests?: number;
-
   // ---- Yield Model ----
   // Formula-based yield calculation with arbitrary expressions.
   // See docs/yield-calculation-design.md for full explanation.
-
-  /**
-   * @deprecated Use productYields[].yieldFormula instead.
-   * Yield formula as an expression string.
-   * Legacy field kept for backwards compatibility with old saved plans.
-   */
-  yieldFormula?: string;
-
-  /**
-   * @deprecated Unit now comes from Product entity.
-   * Unit of measure for yield (lb, bunch, head, etc.)
-   */
-  yieldUnit?: string;
 
   // ---- Seed-based yield (for shallots, etc.) ----
 
@@ -214,25 +176,6 @@ export interface PlantingSpec {
   /** Seeding factor for multi-seeding per cell (typically 1, sometimes 2) */
   seedingFactor?: number;
 
-  // ---- Legacy yield field (for backwards compatibility during migration) ----
-
-  /**
-   * @deprecated Use yieldFormula instead.
-   * Pre-calculated yield per harvest for a standard 50ft bed.
-   */
-  yieldPerHarvest?: number;
-
-  /**
-   * @deprecated Use productYields[].postHarvestFieldDays instead.
-   * Days crop occupies bed after last harvest (e.g., tuber curing).
-   */
-  postHarvestFieldDays?: number;
-
-  /**
-   * @deprecated Use productYields[].harvestBufferDays instead.
-   * Buffer days for initial harvest window.
-   */
-  harvestBufferDays?: number;
 
   // ---- Scheduling ----
 
@@ -364,41 +307,13 @@ export function calculateDaysInCells(crop: PlantingSpec): number {
 /**
  * Calculate Seed To Harvest based on dtmBasis.
  *
- * Converts the user-entered DTM into total time from seeding to harvest,
- * accounting for how DTM was measured vs how the crop is being grown.
+ * Uses the primary (earliest) product's DTM from productYields.
+ * Returns 0 if no productYields are defined.
+ *
+ * @deprecated Use getPrimarySeedToHarvest() instead for cleaner API.
  */
-export function calculateSeedToHarvest(crop: PlantingSpec, daysInCells: number): number {
-  const basis = crop.dtmBasis ?? 'tp-from-seeding-to-harvest';
-  const dtm = crop.dtm ?? 0;
-  const dtg = crop.daysToGermination ?? 0;
-  const isTransplant = daysInCells > 0;
-
-  switch (basis) {
-    case 'ds-from-germination-to-harvest':
-      // DTM is measured from emergence (germination) for direct seed
-      // direct: dtg + dtm
-      // transplant: dtg + dtm + shock
-      return dtg + dtm + (isTransplant ? PLANTING_METHOD_DELTA_DAYS : 0);
-
-    case 'tp-from-planting-to-harvest': {
-      // DTM is measured from transplant date (in-field time only)
-      // transplant: daysInCells + dtm
-      // direct: assumedDays + dtm - delta
-      const assumedDays = crop.assumedTransplantDays ?? DEFAULT_ASSUMED_TRANSPLANT_DAYS;
-      return isTransplant
-        ? daysInCells + dtm
-        : assumedDays + dtm - PLANTING_METHOD_DELTA_DAYS;
-    }
-
-    case 'tp-from-seeding-to-harvest':
-      // DTM is total time from seeding a transplant to harvest
-      // transplant: dtm (use as-is)
-      // direct: dtm - delta (no shock = faster)
-      return dtm - (isTransplant ? 0 : PLANTING_METHOD_DELTA_DAYS);
-
-    default:
-      return dtm;
-  }
+export function calculateSeedToHarvest(crop: PlantingSpec, _daysInCells: number): number {
+  return getPrimarySeedToHarvest(crop);
 }
 
 /**
@@ -680,6 +595,10 @@ export function evaluateYieldFormula(
 
 /**
  * Build a YieldFormulaContext from a PlantingSpec and bed length.
+ *
+ * Uses productYields for timing/harvest info. Callers evaluating per-product
+ * yield formulas should override harvests/daysBetweenHarvest with the
+ * specific ProductYield's values.
  */
 export function buildYieldContext(
   crop: PlantingSpec,
@@ -692,19 +611,22 @@ export function buildYieldContext(
   const spacing = spacingOverride ?? crop.spacing ?? 12;
   const plantingsPerBed = calculatePlantsPerBed(spacing, rows, bedFeet);
   const daysInCells = calculateDaysInCells(crop);
-  const seedToHarvest = calculateSeedToHarvest(crop, daysInCells);
-  const harvestWindow = calculateHarvestWindow(crop);
+  const seedToHarvest = getPrimarySeedToHarvest(crop);
+  const harvestWindow = calculateAggregateHarvestWindow(crop);
+
+  // Get primary product's harvest info as defaults
+  const primaryPy = crop.productYields?.[0];
 
   return {
     plantingsPerBed,
     bedFeet,
-    harvests: crop.numberOfHarvests ?? 1,
-    daysBetweenHarvest: crop.daysBetweenHarvest ?? 7,
+    harvests: primaryPy?.numberOfHarvests ?? 1,
+    daysBetweenHarvest: primaryPy?.daysBetweenHarvest ?? 7,
     rows,
     spacing,
     seeds: crop.seedsPerBed ?? 0,
     seedToHarvest,
-    daysToMaturity: crop.dtm ?? 0,
+    daysToMaturity: seedToHarvest, // DTM is now synonymous with seedToHarvest
     daysInCells,
     harvestWindow,
   };
@@ -713,10 +635,7 @@ export function buildYieldContext(
 /**
  * Calculate total yield for a planting spec at a given bed length.
  *
- * Priority order:
- * 1. yieldFormula - expression-based calculation
- * 2. yieldPerHarvest (legacy) - old per-harvest value × harvests
- *
+ * Sums yields across all productYields with yieldFormulas defined.
  * Returns null if no yield data is available.
  */
 export function calculateTotalYield(
@@ -725,28 +644,34 @@ export function calculateTotalYield(
   rows?: number,
   inRowSpacing?: number
 ): number | null {
-  // 1. Try formula-based yield
-  if (crop.yieldFormula) {
-    const context = buildYieldContext(crop, bedFeet, rows, inRowSpacing);
-    const result = evaluateYieldFormula(crop.yieldFormula, context);
-    if (result.value !== null) {
-      return result.value;
+  if (!crop.productYields?.length) {
+    return null;
+  }
+
+  let total = 0;
+  let hasYield = false;
+
+  for (const py of crop.productYields) {
+    if (py.yieldFormula) {
+      const context = buildYieldContext(crop, bedFeet, rows, inRowSpacing);
+      // Override with this product's harvest info
+      context.harvests = py.numberOfHarvests ?? 1;
+      context.daysBetweenHarvest = py.daysBetweenHarvest ?? 7;
+
+      const result = evaluateYieldFormula(py.yieldFormula, context);
+      if (result.value !== null) {
+        total += result.value;
+        hasYield = true;
+      }
     }
   }
 
-  // 2. Fall back to legacy yieldPerHarvest
-  // Legacy field is yield per harvest for 50ft bed, scale and multiply by harvests
-  if (crop.yieldPerHarvest !== undefined) {
-    const scaleFactor = bedFeet / STANDARD_BED_LENGTH;
-    const harvests = crop.numberOfHarvests ?? 1;
-    return crop.yieldPerHarvest * harvests * scaleFactor;
-  }
-
-  return null;
+  return hasYield ? total : null;
 }
 
 /**
  * Calculate yield per harvest for a planting spec at a given bed length.
+ * Uses the primary (first) product's harvest count.
  */
 export function calculateYieldPerHarvest(
   crop: PlantingSpec,
@@ -757,7 +682,7 @@ export function calculateYieldPerHarvest(
   const total = calculateTotalYield(crop, bedFeet, rows, inRowSpacing);
   if (total === null) return null;
 
-  const harvests = crop.numberOfHarvests ?? 1;
+  const harvests = crop.productYields?.[0]?.numberOfHarvests ?? 1;
   return total / harvests;
 }
 
@@ -776,6 +701,8 @@ export function calculateStandardYield(
 /**
  * Evaluate a yield formula and return detailed result for UI display.
  * Includes the calculated value, any errors, and warnings.
+ *
+ * Uses the primary (first) product's yield formula for display.
  */
 export function evaluateYieldForDisplay(
   crop: PlantingSpec,
@@ -789,20 +716,16 @@ export function evaluateYieldForDisplay(
     inRowSpacing
   );
 
-  if (!crop.yieldFormula) {
-    // Check for legacy field
-    if (crop.yieldPerHarvest !== undefined) {
-      const harvests = crop.numberOfHarvests ?? 1;
-      return {
-        value: crop.yieldPerHarvest * harvests,
-        warnings: ['Using legacy yieldPerHarvest field'],
-        context,
-      };
-    }
+  const primaryPy = crop.productYields?.[0];
+  if (!primaryPy?.yieldFormula) {
     return { value: null, warnings: [], context };
   }
 
-  const result = evaluateYieldFormula(crop.yieldFormula, context);
+  // Override context with primary product's harvest info
+  context.harvests = primaryPy.numberOfHarvests ?? 1;
+  context.daysBetweenHarvest = primaryPy.daysBetweenHarvest ?? 7;
+
+  const result = evaluateYieldFormula(primaryPy.yieldFormula, context);
   return { ...result, context };
 }
 
@@ -921,22 +844,12 @@ export function getYieldBasisLabel(basis: YieldBasis): string {
 }
 
 /**
- * Calculate Harvest Window from number of harvests and days between harvests.
+ * Calculate Harvest Window from productYields.
  *
- * Formula: (numberOfHarvests - 1) * daysBetweenHarvest + harvestBufferDays + postHarvestFieldDays
+ * @deprecated Use calculateAggregateHarvestWindow() instead.
  */
 export function calculateHarvestWindow(crop: PlantingSpec): number {
-  const harvests = crop.numberOfHarvests ?? 1;
-  const daysBetween = crop.daysBetweenHarvest ?? 0;
-  const buffer = crop.harvestBufferDays ?? 0;
-  const postHarvest = crop.postHarvestFieldDays ?? 0;
-
-  // Single harvest crops just get the buffer + post-harvest time
-  if (harvests <= 1 || daysBetween === 0) {
-    return buffer + postHarvest;
-  }
-
-  return (harvests - 1) * daysBetween + buffer + postHarvest;
+  return calculateAggregateHarvestWindow(crop);
 }
 
 // =============================================================================
@@ -1203,15 +1116,19 @@ export function createBlankConfig(): PlantingSpec {
     category: '',
     growingStructure: 'field',
     dtmBasis: 'ds-from-germination-to-harvest',
-    dtm: 60,
     daysToGermination: 7,
-    harvestWindow: 7,
-    harvestBufferDays: 7,
-    numberOfHarvests: 1,
-    daysBetweenHarvest: 0,
     trayStages: [],
     deprecated: false,
     perennial: false,
+    productYields: [
+      {
+        productId: '',
+        dtm: 60,
+        numberOfHarvests: 1,
+        daysBetweenHarvest: 0,
+        harvestBufferDays: 7,
+      },
+    ],
   };
 }
 

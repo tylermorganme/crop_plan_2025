@@ -218,10 +218,6 @@ export default function AddToBedPanel({
                       <span className="font-medium truncate max-w-[120px]" title={hoveredDetails.fieldStartDate}>{hoveredDetails.fieldStartDate}</span>
                     </div>
                     <div className="flex justify-between gap-2">
-                      <span className="text-gray-600 shrink-0">Days to Maturity</span>
-                      <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredSpec.dtm)}</span>
-                    </div>
-                    <div className="flex justify-between gap-2">
                       <span className="text-gray-600 shrink-0">Seed to Harvest</span>
                       <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredDetails.seedToHarvest)} days</span>
                     </div>
@@ -265,36 +261,6 @@ export default function AddToBedPanel({
                   </div>
                 </div>
 
-                {/* Harvest section */}
-                {(hoveredSpec.numberOfHarvests || hoveredSpec.yieldPerHarvest) && (
-                  <div>
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                      Harvest
-                    </div>
-                    <div className="bg-white rounded-lg border p-3 space-y-2 text-sm">
-                      {hoveredSpec.numberOfHarvests && (
-                        <div className="flex justify-between gap-2">
-                          <span className="text-gray-600 shrink-0"># of Harvests</span>
-                          <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredSpec.numberOfHarvests)}</span>
-                        </div>
-                      )}
-                      {hoveredSpec.daysBetweenHarvest && (
-                        <div className="flex justify-between gap-2">
-                          <span className="text-gray-600 shrink-0">Days Between</span>
-                          <span className="font-medium truncate max-w-[120px]">{formatNum(hoveredSpec.daysBetweenHarvest)}</span>
-                        </div>
-                      )}
-                      {hoveredSpec.yieldPerHarvest && (
-                        <div className="flex justify-between gap-2">
-                          <span className="text-gray-600 shrink-0">Yield/Harvest</span>
-                          <span className="font-medium truncate max-w-[120px]" title={`${hoveredSpec.yieldPerHarvest} ${hoveredSpec.yieldUnit || ''}`}>
-                            {formatNum(hoveredSpec.yieldPerHarvest)} {hoveredSpec.yieldUnit || ''}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 

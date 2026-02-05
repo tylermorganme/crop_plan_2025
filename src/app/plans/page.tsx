@@ -58,6 +58,7 @@ function formatDate(timestamp: number): string {
 export default function PlansPage() {
   const router = useRouter();
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
+
   const [copyModalPlan, setCopyModalPlan] = useState<{ id: string; name: string } | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState('');

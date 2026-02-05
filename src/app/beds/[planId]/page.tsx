@@ -39,6 +39,7 @@ export default function BedsPage() {
   const params = useParams();
   const planId = params.planId as string;
 
+
   const {
     currentPlan,
     loadPlanById,

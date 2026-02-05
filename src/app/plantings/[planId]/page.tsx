@@ -707,6 +707,7 @@ export default function PlantingsPage() {
   const params = useParams();
   const planId = params.planId as string;
 
+
   const {
     currentPlan,
     loadPlanById,

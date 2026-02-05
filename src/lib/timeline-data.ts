@@ -667,52 +667,57 @@ export function expandPlantingsToTimelineCrops(
       const sequence = sequences?.[planting.sequenceId];
       const anchor = sequenceAnchors.get(planting.sequenceId);
       if (sequence && anchor) {
-        const additionalDaysInField = planting.overrides?.additionalDaysInField ?? 0;
+        try {
+          const additionalDaysInField = planting.overrides?.additionalDaysInField ?? 0;
 
-        // Try GDD-based stagger if enabled and we have a calculator
-        let gddStaggerDate: string | null = null;
-        if (sequence.useGddStagger && gddCalculator && spec.cropId) {
-          // Get GDD base temp from crop entity
-          const cropEntity = cropEntities?.[spec.cropId];
-          const baseTemp = cropEntity?.gddBaseTemp ?? spec.gddBaseTemp;
+          // Try GDD-based stagger if enabled and we have a calculator
+          let gddStaggerDate: string | null = null;
+          if (sequence.useGddStagger && gddCalculator && spec.cropId) {
+            // Get GDD base temp from crop entity
+            const cropEntity = cropEntities?.[spec.cropId];
+            const baseTemp = cropEntity?.gddBaseTemp ?? spec.gddBaseTemp;
 
-          if (baseTemp !== undefined) {
-            // Calculate field days to harvest
-            // Note: spec is PlantingConfigLookup which already has product-aware values:
-            // - spec.dtm = seedToHarvest (computed via getPrimarySeedToHarvest in lookupConfigFromCatalog)
-            // - spec.daysInCells = daysInCells (computed via calculateDaysInCells in lookupConfigFromCatalog)
-            const daysInCells = spec.daysInCells ?? 0;
-            const fieldDaysToHarvest = spec.dtm - daysInCells;
+            if (baseTemp !== undefined) {
+              // Calculate field days to harvest
+              // Note: spec is PlantingConfigLookup which already has product-aware values:
+              // - spec.dtm = seedToHarvest (computed via getPrimarySeedToHarvest in lookupConfigFromCatalog)
+              // - spec.daysInCells = daysInCells (computed via calculateDaysInCells in lookupConfigFromCatalog)
+              const daysInCells = spec.daysInCells ?? 0;
+              const fieldDaysToHarvest = spec.dtm - daysInCells;
 
-            const gddParams: GddStaggerParams = {
-              gddCache: gddCalculator.getCache(),
-              anchorFieldStartDate: anchor.fieldStartDate,
-              fieldDaysToHarvest,
-              baseTemp,
-              upperTemp: cropEntity?.gddUpperTemp ?? spec.gddUpperTemp,
-              structureOffset: spec.growingStructure && spec.growingStructure !== 'field' ? 20 : 0,
-              // Use targetFieldDate for fixed GDD calculation (biological constant)
-              targetFieldDate: spec.targetFieldDate,
-              planYear,
-            };
+              const gddParams: GddStaggerParams = {
+                gddCache: gddCalculator.getCache(),
+                anchorFieldStartDate: anchor.fieldStartDate,
+                fieldDaysToHarvest,
+                baseTemp,
+                upperTemp: cropEntity?.gddUpperTemp ?? spec.gddUpperTemp,
+                structureOffset: spec.growingStructure && spec.growingStructure !== 'field' ? 20 : 0,
+                // Use targetFieldDate for fixed GDD calculation (biological constant)
+                targetFieldDate: spec.targetFieldDate,
+                planYear,
+              };
 
-            gddStaggerDate = computeSequenceDateWithGddStagger(
-              gddParams,
-              planting.sequenceSlot,
-              sequence.offsetDays,
-              additionalDaysInField
-            );
+              gddStaggerDate = computeSequenceDateWithGddStagger(
+                gddParams,
+                planting.sequenceSlot,
+                sequence.offsetDays,
+                additionalDaysInField
+              );
+            }
           }
-        }
 
-        // Use GDD stagger date if available, otherwise fall back to calendar offset
-        if (gddStaggerDate) {
-          effectiveFieldStartDate = gddStaggerDate;
-        } else {
-          // Formula: anchor.fieldStartDate + (slot * offsetDays) + additionalDaysInField
-          const anchorDate = parseISO(anchor.fieldStartDate);
-          const totalOffset = planting.sequenceSlot * sequence.offsetDays + additionalDaysInField;
-          effectiveFieldStartDate = format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
+          // Use GDD stagger date if available, otherwise fall back to calendar offset
+          if (gddStaggerDate) {
+            effectiveFieldStartDate = gddStaggerDate;
+          } else {
+            // Formula: anchor.fieldStartDate + (slot * offsetDays) + additionalDaysInField
+            const anchorDate = parseISO(anchor.fieldStartDate);
+            const totalOffset = planting.sequenceSlot * sequence.offsetDays + additionalDaysInField;
+            effectiveFieldStartDate = format(addDays(anchorDate, totalOffset), 'yyyy-MM-dd');
+          }
+        } catch (err) {
+          // Date calculation failed - keep original fieldStartDate
+          console.warn(`[expandPlantings] Date calculation failed for sequence member ${planting.id}:`, err);
         }
       }
     }
@@ -730,60 +735,66 @@ export function expandPlantingsToTimelineCrops(
       }
     }
 
-    const slim = preparePlantingForCalc(planting, mappings.uuidToName, effectiveFieldStartDate);
-    // For GDD-staggered sequences:
-    // - Plant dates are calculated by sequence logic (computeSequenceDateWithGddStagger)
-    // - But harvest date DISPLAY still needs GDD adjustment to show correct bar width
-    // The gddCalculator adjusts field days for display, which is independent of plant date calculation
-    const expandedCrops = expandToTimelineCrops(
-      slim,
-      enrichedSpec,
-      mappings.nameGroups,
-      mappings.bedLengths,
-      undefined, // getFollowedCropEndDate
-      gddCalculator // Always pass gddCalculator for correct harvest date display
-    );
+    try {
+      const slim = preparePlantingForCalc(planting, mappings.uuidToName, effectiveFieldStartDate);
+      // For GDD-staggered sequences:
+      // - Plant dates are calculated by sequence logic (computeSequenceDateWithGddStagger)
+      // - But harvest date DISPLAY still needs GDD adjustment to show correct bar width
+      // The gddCalculator adjusts field days for display, which is independent of plant date calculation
+      const expandedCrops = expandToTimelineCrops(
+        slim,
+        enrichedSpec,
+        mappings.nameGroups,
+        mappings.bedLengths,
+        undefined, // getFollowedCropEndDate
+        gddCalculator // Always pass gddCalculator for correct harvest date display
+      );
 
-    // Add planting fields for inspector editing
-    // NOTE: crop.resource remains a bed NAME for display matching.
-    // The store converts names to UUIDs when mutating.
-    for (const crop of expandedCrops) {
-      crop.lastModified = planting.lastModified;
-      crop.overrides = planting.overrides;
-      crop.notes = planting.notes;
-      crop.seedSource = planting.seedSource;
-      crop.useDefaultSeedSource = planting.useDefaultSeedSource;
-      // Store crop name and ID for filtering and color lookup
-      crop.crop = spec.crop;
-      crop.cropId = spec.cropId;
+      // Add planting fields for inspector editing
+      // NOTE: crop.resource remains a bed NAME for display matching.
+      // The store converts names to UUIDs when mutating.
+      for (const crop of expandedCrops) {
+        crop.lastModified = planting.lastModified;
+        crop.overrides = planting.overrides;
+        crop.notes = planting.notes;
+        crop.seedSource = planting.seedSource;
+        crop.useDefaultSeedSource = planting.useDefaultSeedSource;
+        // Store crop name and ID for filtering and color lookup
+        crop.crop = spec.crop;
+        crop.cropId = spec.cropId;
 
-      // Add sequence membership info
-      crop.sequenceId = planting.sequenceId;
-      crop.sequenceSlot = planting.sequenceSlot;
+        // Add sequence membership info
+        crop.sequenceId = planting.sequenceId;
+        crop.sequenceSlot = planting.sequenceSlot;
 
-      // Add actuals tracking and compute lock status
-      crop.actuals = planting.actuals;
-      // A planting is locked if it has actual greenhouse OR field date set
-      crop.isLocked = !!(planting.actuals?.greenhouseDate || planting.actuals?.fieldDate);
+        // Add actuals tracking and compute lock status
+        crop.actuals = planting.actuals;
+        // A planting is locked if it has actual greenhouse OR field date set
+        crop.isLocked = !!(planting.actuals?.greenhouseDate || planting.actuals?.fieldDate);
 
-      // Add market split for revenue/production allocation
-      crop.marketSplit = planting.marketSplit;
+        // Add market split for revenue/production allocation
+        crop.marketSplit = planting.marketSplit;
 
-      // Track GDD timing status
-      crop.useGddTiming = planting.useGddTiming;
+        // Track GDD timing status
+        crop.useGddTiming = planting.useGddTiming;
 
-      // Track yield factor
-      crop.yieldFactor = planting.yieldFactor;
+        // Track yield factor
+        crop.yieldFactor = planting.yieldFactor;
 
-      // Calculate seeds needed based on PlantingSpec.seedsPerBed
-      if (spec.seedsPerBed && planting.bedFeet) {
-        // seedsPerBed is per 50ft bed, scale to actual feet
-        const bedsEquivalent = planting.bedFeet / 50;
-        crop.seedsNeeded = Math.ceil(spec.seedsPerBed * bedsEquivalent);
+        // Calculate seeds needed based on PlantingSpec.seedsPerBed
+        if (spec.seedsPerBed && planting.bedFeet) {
+          // seedsPerBed is per 50ft bed, scale to actual feet
+          const bedsEquivalent = planting.bedFeet / 50;
+          crop.seedsNeeded = Math.ceil(spec.seedsPerBed * bedsEquivalent);
+        }
       }
-    }
 
-    result.push(...expandedCrops);
+      result.push(...expandedCrops);
+    } catch (err) {
+      // Skip plantings that fail to expand (e.g., invalid dates)
+      // This allows the plan to load even with some bad data
+      console.error(`[expandPlantings] Failed to expand planting ${planting.id} (specId: ${planting.specId}):`, err);
+    }
   }
 
   return result.sort((a, b) =>

@@ -95,7 +95,9 @@ export function createTestPlantingSpec(overrides: Partial<PlantingSpec> = {}): P
     category: 'Green',
     rows: 4,
     spacing: 6,
-    dtm: 60,
+    productYields: overrides.productYields ?? [
+      { productId: 'test-product', dtm: 60, numberOfHarvests: 1 },
+    ],
     ...overrides,
   } as PlantingSpec;
 }

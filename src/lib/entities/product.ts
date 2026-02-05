@@ -36,6 +36,9 @@ export interface Product {
 
   /** How long (in days) this product can be held post-harvest before sale */
   holdingWindow?: number;
+
+  /** Typical portion size for CSA shares (in the product's unit) */
+  portionSize?: number;
 }
 
 /**
@@ -47,6 +50,7 @@ export interface CreateProductInput {
   unit: string;
   prices?: Record<string, number>;
   holdingWindow?: number;
+  portionSize?: number;
 }
 
 // =============================================================================
@@ -94,6 +98,7 @@ export function createProduct(input: CreateProductInput): Product {
     unit: input.unit.trim(),
     prices: input.prices ?? {},
     holdingWindow: input.holdingWindow,
+    portionSize: input.portionSize,
   };
 }
 
@@ -102,7 +107,7 @@ export function createProduct(input: CreateProductInput): Product {
  * Products are immutable so this just returns a shallow copy.
  */
 export function cloneProduct(product: Product): Product {
-  return { ...product, prices: { ...product.prices } };
+  return { ...product, prices: { ...product.prices }, portionSize: product.portionSize };
 }
 
 /**

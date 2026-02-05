@@ -21,10 +21,10 @@ import columnAnalysis from '@/data/column-analysis.json';
 
 export type ColumnSourceType = 'static' | 'calculated' | 'mixed' | 'empty' | 'unknown';
 
-export type EditType = 'select' | 'text' | 'number';
+export type EditType = 'select' | 'text' | 'number' | 'seedSource';
 
 /** Dynamic option key - options are derived from existing values in the data */
-export type DynamicOptionKey = 'crop' | 'product' | 'irrigation' | 'trellisType' | 'category' | 'growingStructure' | 'rowCover';
+export type DynamicOptionKey = 'crop' | 'irrigation' | 'trellisType' | 'category' | 'growingStructure' | 'rowCover';
 
 export interface EditConfig {
   type: EditType;
@@ -59,6 +59,8 @@ export type CropWithRevenue = PlantingSpec & {
   inUse?: boolean;
   yieldPerHarvestDisplay?: string;
   totalYieldDisplay?: string;
+  productsDisplay?: string;
+  defaultSeedSourceDisplay?: string;
 };
 
 // =============================================================================
@@ -142,27 +144,27 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     sourceType: getSourceType('crop'),
     sortable: true,
   },
-  variant: {
-    displayName: 'Variant',
-    defaultWidth: 120,
-    defaultVisible: true,
-    sourceType: getSourceType('variant'),
-    sortable: true,
-  },
-  product: {
-    displayName: 'Product',
-    defaultWidth: 120,
-    defaultVisible: true,
-    edit: { type: 'select', dynamicOptions: 'product' },
-    sourceType: getSourceType('product'),
-    sortable: true,
-  },
   category: {
     displayName: 'Category',
     defaultWidth: 120,
     defaultVisible: true,
     edit: { type: 'select', dynamicOptions: 'category' },
     sourceType: getSourceType('category'),
+    sortable: true,
+  },
+  productsDisplay: {
+    displayName: 'Products',
+    defaultWidth: 200,
+    defaultVisible: true,
+    sourceType: 'calculated',
+    sortable: true,
+  },
+  defaultSeedSourceDisplay: {
+    displayName: 'Default Seed',
+    defaultWidth: 180,
+    defaultVisible: false,
+    edit: { type: 'seedSource' },
+    sourceType: 'calculated',
     sortable: true,
   },
   growingStructure: {
@@ -182,13 +184,6 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
   },
 
   // Timing fields
-  dtm: {
-    displayName: 'DTM',
-    defaultWidth: 80,
-    defaultVisible: true,
-    sourceType: getSourceType('dtm'),
-    sortable: true,
-  },
   daysToGermination: {
     displayName: 'Days to Germ',
     defaultWidth: 100,
@@ -196,36 +191,7 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     sourceType: getSourceType('daysToGermination'),
     sortable: true,
   },
-  daysBetweenHarvest: {
-    displayName: 'Days Btn Harvest',
-    defaultWidth: 120,
-    defaultVisible: true,
-    sourceType: getSourceType('daysBetweenHarvest'),
-    sortable: true,
-  },
-  numberOfHarvests: {
-    displayName: '# Harvests',
-    defaultWidth: 90,
-    defaultVisible: true,
-    sourceType: getSourceType('numberOfHarvests'),
-    sortable: true,
-  },
-  harvestBufferDays: {
-    displayName: 'Harvest Buffer',
-    defaultWidth: 100,
-    defaultVisible: true,
-    sourceType: getSourceType('harvestBufferDays'),
-    sortable: true,
-  },
-
-  // Yield fields
-  yieldPerHarvest: {
-    displayName: 'Yield/Harvest',
-    defaultWidth: 100,
-    defaultVisible: true,
-    sourceType: getSourceType('yieldPerHarvest'),
-    sortable: true,
-  },
+  // Yield fields (calculated)
   totalYield: {
     displayName: 'Total Yield',
     defaultWidth: 120,
@@ -233,14 +199,6 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     sourceType: 'calculated',
     sortable: true,
   },
-  yieldUnit: {
-    displayName: 'Yield Unit',
-    defaultWidth: 90,
-    defaultVisible: false,
-    sourceType: getSourceType('yieldUnit'),
-    sortable: true,
-  },
-
   // Growing parameters (editable)
   rows: {
     displayName: 'Rows',

@@ -650,23 +650,23 @@ describe('planting spec mutations', () => {
       const specId = Object.keys(store.currentPlan!.specs!)[0];
       const spec = store.currentPlan!.specs![specId];
 
-      await store.updatePlantingSpec({ ...spec, dtm: 90 });
+      await store.updatePlantingSpec({ ...spec, rows: 6 });
 
       const state = usePlanStore.getState();
-      expect(state.currentPlan!.specs![specId].dtm).toBe(90);
+      expect(state.currentPlan!.specs![specId].rows).toBe(6);
     });
 
     it('can be undone', async () => {
       const store = usePlanStore.getState();
       const specId = Object.keys(store.currentPlan!.specs!)[0];
       const spec = store.currentPlan!.specs![specId];
-      const originalDtm = spec.dtm;
+      const originalRows = spec.rows;
 
-      await store.updatePlantingSpec({ ...spec, dtm: 90 });
-      expect(usePlanStore.getState().currentPlan!.specs![specId].dtm).toBe(90);
+      await store.updatePlantingSpec({ ...spec, rows: 6 });
+      expect(usePlanStore.getState().currentPlan!.specs![specId].rows).toBe(6);
 
       await store.undo();
-      expect(usePlanStore.getState().currentPlan!.specs![specId].dtm).toBe(originalDtm);
+      expect(usePlanStore.getState().currentPlan!.specs![specId].rows).toBe(originalRows);
     });
   });
 });

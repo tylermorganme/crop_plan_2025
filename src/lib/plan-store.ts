@@ -376,10 +376,11 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     ? clonePlantingCatalog(Object.values(state.currentPlan.specs))
     : {};
 
-  // Copy varieties, seed mixes, and products (shallow copy - IDs are preserved)
+  // Copy varieties, seed mixes, products, and crops (shallow copy - IDs are preserved)
   const varieties = state.currentPlan.varieties ? { ...state.currentPlan.varieties } : undefined;
   const seedMixes = state.currentPlan.seedMixes ? { ...state.currentPlan.seedMixes } : undefined;
   const products = state.currentPlan.products ? { ...state.currentPlan.products } : undefined;
+  const crops = state.currentPlan.crops ? { ...state.currentPlan.crops } : undefined;
 
   const newPlan: Plan = {
     id: newId,
@@ -398,6 +399,7 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     beds,
     bedGroups,
     specs,
+    crops,
     varieties,
     seedMixes,
     products,

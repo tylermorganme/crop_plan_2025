@@ -46,6 +46,7 @@ export default function TimelinePlanPage() {
   const searchParams = useSearchParams();
   const planId = params.planId as string;
 
+
   // Check for filter param (e.g., ?filter=no-variety)
   const filterParam = searchParams.get('filter');
   const initialNoVarietyFilter = filterParam === 'no-variety';
@@ -687,6 +688,7 @@ export default function TimelinePlanPage() {
         seedMixes={currentPlan?.seedMixes}
         products={currentPlan?.products}
         markets={currentPlan?.markets}
+        crops={currentPlan?.crops}
         lastFrostDate={currentPlan?.metadata.lastFrostDate}
         timingSettings={{
           transplantShockDays: currentPlan?.metadata.transplantShockDays,

@@ -54,6 +54,7 @@ import { createSeedOrder, type SeedOrder, type ProductUnit } from '@/lib/entitie
 import type { Variety, DensityUnit } from '@/lib/entities/variety';
 import type { Market } from '@/lib/entities/market';
 import { getActiveMarkets } from '@/lib/entities/market';
+import type { Planting } from '@/lib/entities/planting';
 import { Z_INDEX } from '@/lib/z-index';
 import { useUIStore } from '@/lib/ui-store';
 import AppHeader from '@/components/AppHeader';
@@ -68,12 +69,16 @@ import {
   type HarvestEvent,
 } from '@/lib/production';
 import { useComputedCrops } from '@/lib/use-computed-crops';
+import { calculatePortionReport, type PortionReport, type PortionData } from '@/lib/portion-report';
+import type { Product } from '@/lib/entities/product';
+import { PortionChart } from '@/components/PortionChart';
+import { VirtualizedChartGrid } from '@/components/VirtualizedChartGrid';
 
 // =============================================================================
 // TAB TYPES
 // =============================================================================
 
-type ReportTab = 'revenue' | 'seeds' | 'production';
+type ReportTab = 'revenue' | 'seeds' | 'production' | 'portions';
 
 // =============================================================================
 // SEED ORDER DEFAULTS
@@ -343,6 +348,47 @@ function saveChartSettings(settings: ProductionChartSettings): void {
   localStorage.setItem(PRODUCTION_CHART_STORAGE_KEY, JSON.stringify(settings));
 }
 
+// =============================================================================
+// PORTION REPORT SETTINGS
+// =============================================================================
+
+/** LocalStorage key for portion report settings */
+const PORTION_SETTINGS_STORAGE_KEY = 'crop-plan-portion-settings';
+
+interface PortionSettings {
+  targetPortions: number;        // Target portions per week (horizontal line)
+  selectedMarkets: string[];     // Filter by market channels (empty = all)
+  sortBy: 'crop' | 'portions';   // Sort order for charts
+  sortDir: 'asc' | 'desc';
+  includeUnassigned: boolean;    // Include plantings without bed assignment
+}
+
+const DEFAULT_PORTION_SETTINGS: PortionSettings = {
+  targetPortions: 50,
+  selectedMarkets: [],
+  sortBy: 'crop',
+  sortDir: 'asc',
+  includeUnassigned: false,
+};
+
+function loadPortionSettings(): PortionSettings {
+  if (typeof window === 'undefined') return DEFAULT_PORTION_SETTINGS;
+  try {
+    const stored = localStorage.getItem(PORTION_SETTINGS_STORAGE_KEY);
+    if (stored) {
+      return { ...DEFAULT_PORTION_SETTINGS, ...JSON.parse(stored) };
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return DEFAULT_PORTION_SETTINGS;
+}
+
+function savePortionSettings(settings: PortionSettings): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(PORTION_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+}
+
 /** Colors for market bars in stacked chart */
 const MARKET_COLORS: Record<string, string> = {
   'market-direct': '#22c55e', // green - Direct sales
@@ -378,6 +424,9 @@ function ProductionChart({
   cropName,
   markets,
   onReset,
+  targetPortions,
+  portionSize,
+  onTargetPortionsChange,
 }: {
   harvestEvents: HarvestEvent[];
   plantings: PlantingForCapacity[];
@@ -388,6 +437,12 @@ function ProductionChart({
   cropName: string;
   markets: Record<string, Market>;
   onReset?: () => void;
+  /** Target portions per week (shown as reference line when portionSize provided) */
+  targetPortions?: number;
+  /** Portion size for this product (to convert target portions to yield) */
+  portionSize?: number;
+  /** Callback when target portions changes */
+  onTargetPortionsChange?: (value: number) => void;
 }) {
   const [settings, setSettings] = useState<ProductionChartSettings>(loadChartSettings);
 
@@ -642,12 +697,17 @@ function ProductionChart({
     return [getDayOfYear(startDate.toISOString().split('T')[0]), getDayOfYear(endDate.toISOString().split('T')[0])];
   }, [displayYear, settings.startMonth, settings.endMonth, getDayOfYear]);
 
+  // Calculate the target yield value (targetPortions * portionSize)
+  const targetYield = (targetPortions && portionSize && targetPortions > 0 && portionSize > 0)
+    ? targetPortions * portionSize
+    : 0;
+
   // Calculate nice Y-axis tick values for consistent grid lines and center labels
   const yAxisTicks = useMemo(() => {
-    if (chartDataWithCapacity.length === 0) return [0];
+    if (chartDataWithCapacity.length === 0 && targetYield === 0) return [0];
 
-    // Find max value across all bars and the weekly capacity line
-    let maxVal = 0;
+    // Find max value across all bars, the weekly capacity line, and target line
+    let maxVal = targetYield; // Start with target so it's always visible
     for (const entry of chartDataWithCapacity) {
       const entryRecord = entry as Record<string, unknown>;
 
@@ -679,13 +739,13 @@ function ProductionChart({
     else if (normalized <= 5) niceInterval = 5 * magnitude;
     else niceInterval = 10 * magnitude;
 
-    // Generate ticks from 0 to just above max
+    // Generate ticks from 0 to at least one interval above max
     const ticks: number[] = [];
-    for (let t = 0; t <= maxVal + niceInterval * 0.1; t += niceInterval) {
+    for (let t = 0; t <= maxVal + niceInterval; t += niceInterval) {
       ticks.push(Math.round(t));
     }
     return ticks;
-  }, [chartDataWithCapacity, effectiveSelectedMarkets, settings.showBars, settings.showWeeklyAvg]);
+  }, [chartDataWithCapacity, effectiveSelectedMarkets, settings.showBars, settings.showWeeklyAvg, targetYield]);
 
   // Update settings and save to localStorage
   const updateSettings = useCallback((updates: Partial<ProductionChartSettings>) => {
@@ -840,6 +900,25 @@ function ProductionChart({
             />
             <span className="text-gray-700">Max/wk</span>
           </label>
+
+          {/* Target portions input */}
+          {onTargetPortionsChange && (
+            <div className="flex items-center gap-1.5 text-sm">
+              <label className="text-gray-600">Target:</label>
+              <input
+                type="number"
+                value={targetPortions ?? ''}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 0;
+                  onTargetPortionsChange(val);
+                }}
+                className="w-14 px-1.5 py-0.5 text-sm border border-gray-300 rounded text-center"
+                min={0}
+                placeholder="0"
+              />
+              <span className="text-gray-500">portions/wk</span>
+            </div>
+          )}
 
           {/* Reset button */}
           <button
@@ -1149,6 +1228,23 @@ function ProductionChart({
                     }}
                   />
                 </Line>
+              )}
+              {/* Target portions line - converts portions to yield using portionSize */}
+              {targetPortions !== undefined && targetPortions > 0 && portionSize !== undefined && portionSize > 0 && (
+                <ReferenceLine
+                  y={targetPortions * portionSize}
+                  yAxisId="left"
+                  stroke="#ef4444"
+                  strokeDasharray="6 3"
+                  strokeWidth={2}
+                  label={{
+                    value: `Target: ${(targetPortions * portionSize) % 1 === 0 ? targetPortions * portionSize : (targetPortions * portionSize).toFixed(1)} ${unit}/wk`,
+                    position: 'right',
+                    fill: '#ef4444',
+                    fontSize: 11,
+                    fontWeight: 500,
+                  }}
+                />
               )}
             </ComposedChart>
           </ResponsiveContainer>
@@ -2316,6 +2412,501 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
 }
 
 // =============================================================================
+// PRODUCTS MEETING TARGET CHART
+// =============================================================================
+
+interface ProductsMeetingTargetChartProps {
+  items: PortionData[];
+  targetPortions: number;
+  planYear: number;
+}
+
+/** Get day of year (1-365) from ISO date string */
+function getDayOfYear(dateStr: string): number {
+  const date = new Date(dateStr + 'T00:00:00');
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date.getTime() - start.getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
+
+/** Format day of year as "Mon D" */
+function formatDoyAsDate(doy: number, year: number): string {
+  const date = new Date(year, 0, doy);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[date.getMonth()]} ${date.getDate()}`;
+}
+
+function ProductsMeetingTargetChart({ items, targetPortions, planYear }: ProductsMeetingTargetChartProps) {
+  const chartData = useMemo(() => {
+    if (items.length === 0 || targetPortions <= 0) return [];
+
+    // For each product, build a map of doy -> portions/wk capacity
+    // We need to track when each product's harvest window is active and its capacity
+    interface ProductCapacity {
+      productId: string;
+      crop: string;
+      productName: string;
+      // Map of day of year -> portions per week capacity on that day
+      capacityByDay: Map<number, number>;
+    }
+
+    const productCapacities: ProductCapacity[] = [];
+
+    for (const item of items) {
+      if (item.harvestEvents.length === 0) continue;
+
+      // Group events by day and calculate daily portions (then convert to weekly rate)
+      const byDay = new Map<number, number>();
+
+      // First, figure out the harvest range for this product
+      const allDoys = item.harvestEvents.map(e => getDayOfYear(e.date));
+      const minDoy = Math.min(...allDoys);
+      const maxDoy = Math.max(...allDoys);
+
+      // Group harvest events by planting to calculate per-planting ranges
+      const byPlanting = new Map<string, { dates: number[]; totalPortions: number }>();
+      for (const event of item.harvestEvents) {
+        const doy = getDayOfYear(event.date);
+        const existing = byPlanting.get(event.plantingId);
+        if (existing) {
+          existing.dates.push(doy);
+          existing.totalPortions += event.portions;
+        } else {
+          byPlanting.set(event.plantingId, {
+            dates: [doy],
+            totalPortions: event.portions,
+          });
+        }
+      }
+
+      // For each day in the range, calculate total capacity from active plantings
+      for (let doy = minDoy; doy <= maxDoy; doy++) {
+        let capacity = 0;
+        for (const [, data] of byPlanting) {
+          const sortedDates = [...data.dates].sort((a, b) => a - b);
+          const pMinDoy = sortedDates[0];
+          const pMaxDoy = sortedDates[sortedDates.length - 1];
+          if (doy >= pMinDoy && doy <= pMaxDoy) {
+            const daysSpan = Math.max(1, pMaxDoy - pMinDoy + 1);
+            const portionsPerWeek = (data.totalPortions / daysSpan) * 7;
+            capacity += portionsPerWeek;
+          }
+        }
+        if (capacity > 0) {
+          byDay.set(doy, capacity);
+        }
+      }
+
+      productCapacities.push({
+        productId: item.productId,
+        crop: item.crop,
+        productName: item.productName,
+        capacityByDay: byDay,
+      });
+    }
+
+    if (productCapacities.length === 0) return [];
+
+    // Find overall date range
+    let globalMinDoy = Infinity;
+    let globalMaxDoy = -Infinity;
+    for (const pc of productCapacities) {
+      for (const doy of pc.capacityByDay.keys()) {
+        if (doy < globalMinDoy) globalMinDoy = doy;
+        if (doy > globalMaxDoy) globalMaxDoy = doy;
+      }
+    }
+
+    if (globalMinDoy === Infinity) return [];
+
+    // Build chart data - for each day, count products meeting target and sum total portions
+    const data: { doy: number; date: string; count: number; total: number; totalPortions: number }[] = [];
+    for (let doy = globalMinDoy; doy <= globalMaxDoy; doy++) {
+      let meetingTarget = 0;
+      let activeProducts = 0;
+      let sumPortions = 0;
+      for (const pc of productCapacities) {
+        const capacity = pc.capacityByDay.get(doy);
+        if (capacity !== undefined && capacity > 0) {
+          activeProducts++;
+          sumPortions += capacity;
+          if (capacity >= targetPortions) {
+            meetingTarget++;
+          }
+        }
+      }
+      data.push({
+        doy,
+        date: formatDoyAsDate(doy, planYear),
+        count: meetingTarget,
+        total: activeProducts,
+        totalPortions: Math.round(sumPortions),
+      });
+    }
+
+    // Sample weekly to reduce data points
+    const sampled: typeof data = [];
+    for (let i = 0; i < data.length; i += 7) {
+      sampled.push(data[i]);
+    }
+    // Always include last point
+    if (data.length > 0 && (sampled.length === 0 || sampled[sampled.length - 1].doy !== data[data.length - 1].doy)) {
+      sampled.push(data[data.length - 1]);
+    }
+
+    return sampled;
+  }, [items, targetPortions, planYear]);
+
+  if (chartData.length === 0 || targetPortions <= 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-4 h-48 flex items-center justify-center text-gray-400">
+        Set a target portions/wk to see crops meeting target over time
+      </div>
+    );
+  }
+
+  const maxCount = Math.max(...chartData.map(d => Math.max(d.count, d.total)));
+  const maxPortions = Math.max(...chartData.map(d => d.totalPortions));
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-4">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium text-gray-700">
+          Products Meeting Target ({targetPortions}+ portions/wk)
+        </h3>
+        <div className="flex items-center gap-4 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-green-500 rounded-sm opacity-70"></span>
+            Meeting target
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-3 bg-gray-300 rounded-sm"></span>
+            Active products
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-3 h-0.5 bg-blue-500"></span>
+            Total portions
+          </span>
+        </div>
+      </div>
+      <div className="h-40">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={chartData} margin={{ top: 5, right: 45, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 10, fill: '#9ca3af' }}
+              tickLine={false}
+              axisLine={{ stroke: '#e5e7eb' }}
+              interval="preserveStartEnd"
+            />
+            <YAxis
+              yAxisId="left"
+              domain={[0, Math.ceil(maxCount * 1.1)]}
+              tick={{ fontSize: 10, fill: '#9ca3af' }}
+              tickLine={false}
+              axisLine={false}
+              width={30}
+              allowDecimals={false}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              domain={[0, Math.ceil(maxPortions * 1.1)]}
+              tick={{ fontSize: 10, fill: '#3b82f6' }}
+              tickLine={false}
+              axisLine={false}
+              width={40}
+              allowDecimals={false}
+            />
+            <Tooltip
+              formatter={(value, name) => {
+                if (name === 'count') return [value ?? 0, 'Meeting target'];
+                if (name === 'total') return [value ?? 0, 'Active products'];
+                if (name === 'totalPortions') return [`${value ?? 0}/wk`, 'Total portions'];
+                return [value, name];
+              }}
+              labelFormatter={(label) => label}
+              contentStyle={{ fontSize: 11, padding: '4px 8px' }}
+            />
+            {/* Background area showing total active products */}
+            <Area
+              yAxisId="left"
+              type="stepAfter"
+              dataKey="total"
+              fill="#e5e7eb"
+              stroke="#d1d5db"
+              strokeWidth={1}
+              fillOpacity={0.5}
+            />
+            {/* Foreground area showing products meeting target */}
+            <Area
+              yAxisId="left"
+              type="stepAfter"
+              dataKey="count"
+              fill="#22c55e"
+              stroke="#16a34a"
+              strokeWidth={2}
+              fillOpacity={0.7}
+            />
+            {/* Line showing total portions available */}
+            <Line
+              yAxisId="right"
+              type="stepAfter"
+              dataKey="totalPortions"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              dot={false}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// PORTIONS TAB
+// =============================================================================
+
+interface PortionTabProps {
+  portionReport: PortionReport;
+  markets: Record<string, Market>;
+  planYear: number;
+  planId: string;
+  plantings: Planting[];
+}
+
+function PortionTab({ portionReport, markets, planYear, planId, plantings }: PortionTabProps) {
+  const [settings, setSettings] = useState<PortionSettings>(loadPortionSettings);
+
+  // Update settings and persist
+  const updateSettings = useCallback((updates: Partial<PortionSettings>) => {
+    setSettings((prev) => {
+      const next = { ...prev, ...updates };
+      savePortionSettings(next);
+      return next;
+    });
+  }, []);
+
+  // Handle diving into production report for a specific product
+  const handleDiveInto = useCallback((productId: string) => {
+    // Navigate to production tab with product selected
+    window.location.href = `/reports/${planId}?tab=production&product=${encodeURIComponent(productId)}`;
+  }, [planId]);
+
+  // Get active markets for the filter
+  const activeMarkets = useMemo(() => getActiveMarkets(markets), [markets]);
+
+  // Build a set of planting IDs that have bed assignments
+  const plantingsWithBedAssignment = useMemo(() => {
+    const assigned = new Set<string>();
+    for (const planting of plantings) {
+      if (planting.startBed !== null) {
+        assigned.add(planting.id);
+      }
+    }
+    return assigned;
+  }, [plantings]);
+
+  // Filter and sort portion data
+  const filteredItems = useMemo(() => {
+    let items = portionReport.items;
+
+    // Filter out products with no harvest events or no production (no plantings producing them)
+    items = items.filter((item) => item.harvestEvents.length > 0 && item.maxPortionsPerWeek > 0);
+
+    // Filter out plantings without bed assignment if toggle is off
+    if (!settings.includeUnassigned) {
+      items = items.filter((item) => {
+        // Check if any harvest events come from plantings with bed assignment
+        return item.harvestEvents.some(event => plantingsWithBedAssignment.has(event.plantingId));
+      });
+    }
+
+    // Filter by selected markets
+    if (settings.selectedMarkets.length > 0) {
+      items = items.filter((item) => {
+        // Include if any selected market has portions allocated
+        return settings.selectedMarkets.some((marketId) => (item.marketBreakdown[marketId] ?? 0) > 0);
+      });
+    }
+
+    // Sort
+    items = [...items].sort((a, b) => {
+      let cmp = 0;
+      if (settings.sortBy === 'crop') {
+        cmp = a.crop.localeCompare(b.crop) || a.productName.localeCompare(b.productName);
+      } else {
+        cmp = a.maxPortionsPerWeek - b.maxPortionsPerWeek;
+      }
+      return settings.sortDir === 'asc' ? cmp : -cmp;
+    });
+
+    return items;
+  }, [portionReport.items, settings.selectedMarkets, settings.sortBy, settings.sortDir, settings.includeUnassigned, plantingsWithBedAssignment]);
+
+  // Handle market toggle
+  const toggleMarket = useCallback((marketId: string) => {
+    setSettings((prev) => {
+      const selected = prev.selectedMarkets.includes(marketId)
+        ? prev.selectedMarkets.filter((id) => id !== marketId)
+        : [...prev.selectedMarkets, marketId];
+      const next = { ...prev, selectedMarkets: selected };
+      savePortionSettings(next);
+      return next;
+    });
+  }, []);
+
+  return (
+    <div className="flex flex-col h-full gap-4">
+      {/* Settings bar */}
+      <div className="bg-white rounded-lg shadow-sm p-4 flex flex-wrap items-center gap-4">
+        {/* Target portions input */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="targetPortions" className="text-sm font-medium text-gray-700">
+            Target portions/wk:
+          </label>
+          <input
+            id="targetPortions"
+            type="number"
+            min={0}
+            value={settings.targetPortions}
+            onChange={(e) => updateSettings({ targetPortions: parseInt(e.target.value, 10) || 0 })}
+            className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+
+        {/* Market filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">Markets:</span>
+          <div className="flex gap-1">
+            {activeMarkets.map((market) => (
+              <button
+                key={market.id}
+                onClick={() => toggleMarket(market.id)}
+                className={`px-2 py-1 text-xs rounded border ${
+                  settings.selectedMarkets.length === 0 || settings.selectedMarkets.includes(market.id)
+                    ? 'bg-blue-100 border-blue-300 text-blue-700'
+                    : 'bg-gray-100 border-gray-300 text-gray-500'
+                }`}
+              >
+                {market.name}
+              </button>
+            ))}
+            {settings.selectedMarkets.length > 0 && (
+              <button
+                onClick={() => updateSettings({ selectedMarkets: [] })}
+                className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Include plantings without bed assignment toggle */}
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={settings.includeUnassigned}
+            onChange={(e) => updateSettings({ includeUnassigned: e.target.checked })}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <span className="text-gray-600">Include plantings without bed</span>
+        </label>
+
+        {/* Sort controls */}
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-sm text-gray-600">Sort:</span>
+          <select
+            value={settings.sortBy}
+            onChange={(e) => updateSettings({ sortBy: e.target.value as 'crop' | 'portions' })}
+            className="px-2 py-1 text-sm border border-gray-300 rounded"
+          >
+            <option value="crop">Crop</option>
+            <option value="portions">Portions</option>
+          </select>
+          <button
+            onClick={() => updateSettings({ sortDir: settings.sortDir === 'asc' ? 'desc' : 'asc' })}
+            className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+          >
+            {settings.sortDir === 'asc' ? '↑' : '↓'}
+          </button>
+        </div>
+      </div>
+
+      {/* Summary stats */}
+      <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="flex gap-8 text-sm">
+          <div>
+            <span className="text-gray-500">Products: </span>
+            <span className="font-medium">{filteredItems.length}</span>
+          </div>
+          <div>
+            <span className="text-gray-500">Total max portions/wk: </span>
+            <span className="font-medium">{Math.round(filteredItems.reduce((sum, i) => sum + i.maxPortionsPerWeek, 0))}</span>
+          </div>
+          {portionReport.productsWithoutPortionSize.length > 0 && (
+            <div className="text-amber-600 flex items-center gap-2">
+              <span
+                className="cursor-pointer hover:underline"
+                title={portionReport.productsWithoutPortionSize.join('\n')}
+              >
+                {portionReport.productsWithoutPortionSize.length} products missing portion size: {portionReport.productsWithoutPortionSize.join(', ')}
+              </span>
+              <Link
+                href="/products"
+                className="text-blue-600 hover:underline text-xs whitespace-nowrap"
+              >
+                Fix in Products →
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Products meeting target chart */}
+      <ProductsMeetingTargetChart
+        items={filteredItems}
+        targetPortions={settings.targetPortions}
+        planYear={planYear}
+      />
+
+      {/* Chart grid */}
+      <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
+        <VirtualizedChartGrid
+          items={filteredItems}
+          itemWidth={220}
+          itemHeight={160}
+          gap={12}
+          className="h-full p-4"
+          renderItem={(item) => (
+            <PortionChart
+              key={item.productId}
+              crop={item.crop}
+              productName={item.productName}
+              unit={item.unit}
+              maxPortionsPerWeek={item.maxPortionsPerWeek}
+              targetPortions={settings.targetPortions}
+              portionSize={item.portionSize}
+              harvestEvents={item.harvestEvents}
+              harvestStartDate={item.harvestStartDate}
+              harvestEndDate={item.harvestEndDate}
+              planYear={planYear}
+              width={200}
+              height={140}
+              productId={item.productId}
+              onDiveInto={handleDiveInto}
+            />
+          )}
+        />
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // PRODUCTION TAB
 // =============================================================================
 
@@ -2326,9 +2917,10 @@ interface ProductionTabProps {
   planYear: number;
   planId: string;
   markets: Record<string, Market>;
+  products: Record<string, Product>;
 }
 
-function ProductionTab({ report, initialProduct, globalFilter, planYear, planId, markets }: ProductionTabProps) {
+function ProductionTab({ report, initialProduct, globalFilter, planYear, planId, markets, products }: ProductionTabProps) {
   const [expandedProductId, setExpandedProductId] = useState<string | null>(() => {
     // Initialize from URL param if it matches a valid product
     if (initialProduct && report.byProduct.some(p => p.productId === initialProduct)) {
@@ -2340,9 +2932,42 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
     { id: 'totalYield', desc: true },
   ]);
 
+  // Shared portion settings (for target portions line)
+  const [portionSettings, setPortionSettings] = useState<PortionSettings>(loadPortionSettings);
+
+  const updatePortionSettings = useCallback((updates: Partial<PortionSettings>) => {
+    setPortionSettings(prev => {
+      const next = { ...prev, ...updates };
+      savePortionSettings(next);
+      return next;
+    });
+  }, []);
+
   // Planting selection for inspector panel
   const selectedPlantingIds = useUIStore((state) => state.selectedPlantingIds);
   const selectPlanting = useUIStore((state) => state.selectPlanting);
+  const clearSelection = useUIStore((state) => state.clearSelection);
+
+  // Ref for scrolling to selected product
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map());
+
+  // Scroll to selected product when initialProduct is set
+  useEffect(() => {
+    if (initialProduct && rowRefs.current.has(initialProduct)) {
+      // Small delay to ensure the table is rendered
+      setTimeout(() => {
+        const row = rowRefs.current.get(initialProduct);
+        if (row && tableContainerRef.current) {
+          // Scroll the row to the top of the table container
+          const containerRect = tableContainerRef.current.getBoundingClientRect();
+          const rowRect = row.getBoundingClientRect();
+          const scrollOffset = rowRect.top - containerRect.top - 60; // 60px offset for header
+          tableContainerRef.current.scrollTop += scrollOffset;
+        }
+      }, 100);
+    }
+  }, [initialProduct]);
 
   // Table columns - each row is a product (crop + product type)
   const columns = useMemo<ColumnDef<ProductProductionSummary>[]>(
@@ -2442,13 +3067,16 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
             productName={selectedProduct.productName}
             cropName={selectedProduct.crop}
             markets={markets}
+            targetPortions={portionSettings.targetPortions}
+            portionSize={products[selectedProduct.productId]?.portionSize}
+            onTargetPortionsChange={(val) => updatePortionSettings({ targetPortions: val })}
           />
         </div>
       )}
 
       {/* Products Table */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 flex-1 min-h-0 flex flex-col">
-        <div className="overflow-auto flex-1 min-h-0">
+        <div ref={tableContainerRef} className="overflow-auto flex-1 min-h-0">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-white z-10">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -2484,6 +3112,9 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
                   <Fragment key={row.id}>
                     {/* Product row */}
                     <tr
+                      ref={(el) => {
+                        if (el) rowRefs.current.set(row.original.productId, el);
+                      }}
                       onClick={() => setExpandedProductId(isExpanded ? null : row.original.productId)}
                       className={`border-b border-gray-100 cursor-pointer ${
                         isExpanded ? 'bg-blue-50' : 'hover:bg-gray-50'
@@ -2526,7 +3157,16 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
                                     className={`border-t border-gray-200 cursor-pointer hover:bg-blue-50 ${
                                       selectedPlantingIds.has(p.plantingId) ? 'bg-blue-100' : ''
                                     }`}
-                                    onClick={() => selectPlanting(p.plantingId)}
+                                    onClick={(e) => {
+                                      if (e.ctrlKey || e.metaKey) {
+                                        // Ctrl/Cmd+click: add to selection
+                                        selectPlanting(p.plantingId);
+                                      } else {
+                                        // Regular click: replace selection
+                                        clearSelection();
+                                        selectPlanting(p.plantingId);
+                                      }
+                                    }}
                                   >
                                     <td className="py-1.5 px-2 font-medium text-gray-900">{p.plantingId}</td>
                                     <td className="py-1.5 px-2 text-gray-600">{p.bedName || '-'}</td>
@@ -2567,11 +3207,12 @@ export default function ReportsPage() {
   const searchParams = useSearchParams();
   const planId = params.planId as string;
 
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ReportTab>(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'seeds' || tabParam === 'production') return tabParam;
+    if (tabParam === 'seeds' || tabParam === 'production' || tabParam === 'portions') return tabParam;
     return 'revenue';
   });
   const [productionFilter, setProductionFilter] = useState('');
@@ -2579,7 +3220,7 @@ export default function ReportsPage() {
   // Update tab when URL changes
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'seeds' || tabParam === 'revenue' || tabParam === 'production') {
+    if (tabParam === 'seeds' || tabParam === 'revenue' || tabParam === 'production' || tabParam === 'portions') {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -2647,6 +3288,12 @@ export default function ReportsPage() {
     return calculatePlanSeeds(currentPlan);
   }, [currentPlan]);
 
+  // Portion report derives from production (maxYieldPerWeek / portionSize)
+  const portionReport = useMemo(() => {
+    if (!currentPlan || !productionReport) return null;
+    return calculatePortionReport(productionReport, currentPlan.products ?? {});
+  }, [currentPlan, productionReport]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -2709,6 +3356,16 @@ export default function ReportsPage() {
             >
               Production
             </button>
+            <button
+              onClick={() => setActiveTab('portions')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'portions'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Portions
+            </button>
           </div>
           {/* Filter (production tab only) */}
           {activeTab === 'production' && (
@@ -2754,6 +3411,16 @@ export default function ReportsPage() {
             planYear={currentPlan.metadata.year}
             planId={planId}
             markets={currentPlan.markets ?? {}}
+            products={currentPlan.products ?? {}}
+          />
+        )}
+        {activeTab === 'portions' && portionReport && productionReport && (
+          <PortionTab
+            portionReport={portionReport}
+            markets={currentPlan.markets ?? {}}
+            planYear={currentPlan.metadata.year}
+            planId={planId}
+            plantings={currentPlan.plantings ?? []}
           />
         )}
       </div>

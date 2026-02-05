@@ -49,7 +49,6 @@ const FIELD_GROUPS: FieldGroup[] = [
     name: 'Timing',
     fields: [
       { key: 'dtmBasis', label: 'DTM Basis' },
-      { key: 'dtm', label: 'DTM (legacy)' },
       { key: 'daysToGermination', label: 'Days to Germination' },
       { key: 'assumedTransplantDays', label: 'Assumed TP Days' },
       {
@@ -82,10 +81,6 @@ const FIELD_GROUPS: FieldGroup[] = [
           }).join(' | ');
         },
       },
-      { key: 'harvestWindow', label: 'Harvest Window (legacy)' },
-      { key: 'numberOfHarvests', label: '# Harvests (legacy)' },
-      { key: 'daysBetweenHarvest', label: 'Days Between (legacy)' },
-      { key: 'yieldFormula', label: 'Yield Formula (legacy)' },
     ],
   },
   {

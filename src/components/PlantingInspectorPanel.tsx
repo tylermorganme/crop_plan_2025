@@ -14,12 +14,16 @@ import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
 import type { Planting, PlantingSpec } from '@/lib/plan-types';
 import type { Product } from '@/lib/entities/product';
 import type { TimelineCrop } from '@/lib/entities/plan';
-import type { SeedSource } from '@/lib/entities/planting';
 import type { MutationResult } from '@/lib/plan-store';
 import type { Market, MarketSplit } from '@/lib/entities/market';
 import { getActiveMarkets, getMarketSplitTotal } from '@/lib/entities/market';
 import { GddPreview } from './GddPreview';
 import { getPrimarySeedToHarvest } from '@/lib/entities/planting-specs';
+import {
+  SeedSourceSelectWithDefault,
+  type VarietyOption,
+  type SeedMixOption,
+} from './SeedSourceSelect';
 
 // =============================================================================
 // Constants
@@ -56,139 +60,6 @@ function resolveEffectiveTiming(
   };
 }
 
-// =============================================================================
-// Seed Source Picker (inline component)
-// =============================================================================
-
-interface SeedSourcePickerProps {
-  crop: string;
-  currentSource?: SeedSource;
-  useDefault?: boolean;
-  defaultSource?: SeedSource;
-  varieties: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
-  seedMixes: Record<string, { id: string; crop: string; name: string }>;
-  usedVarietyIds?: Set<string>;
-  usedMixIds?: Set<string>;
-  onChange: (source?: SeedSource) => void;
-  onToggleDefault: (useDefault: boolean) => void;
-}
-
-function SeedSourcePicker({
-  crop,
-  currentSource,
-  useDefault,
-  defaultSource,
-  varieties,
-  seedMixes,
-  usedVarietyIds,
-  usedMixIds,
-  onChange,
-  onToggleDefault,
-}: SeedSourcePickerProps) {
-  // Filter varieties and mixes for this crop
-  const cropVarieties = Object.values(varieties).filter((v) => v.crop === crop);
-  const cropMixes = Object.values(seedMixes).filter((m) => m.crop === crop);
-
-  const hasOptions = cropVarieties.length > 0 || cropMixes.length > 0;
-
-  // Current effective source (default or override)
-  const effectiveSource = useDefault ? defaultSource : currentSource;
-
-  // Format display text
-  const getSourceDisplay = (source?: SeedSource): string => {
-    if (!source) return 'None';
-    if (source.type === 'variety') {
-      const v = varieties[source.id];
-      return v ? `${v.name}${v.supplier ? ` (${v.supplier})` : ''}` : 'Unknown';
-    }
-    if (source.type === 'mix') {
-      const m = seedMixes[source.id];
-      return m ? `Mix: ${m.name}` : 'Unknown';
-    }
-    return 'None';
-  };
-
-  return (
-    <div className="space-y-2">
-      {/* Use Default Checkbox */}
-      {defaultSource && (
-        <label className="flex items-center gap-2 text-xs cursor-pointer">
-          <input
-            type="checkbox"
-            checked={useDefault || false}
-            onChange={(e) => onToggleDefault(e.target.checked)}
-            className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <span className="text-gray-700">
-            Use default: <span className="font-medium">{getSourceDisplay(defaultSource)}</span>
-          </span>
-        </label>
-      )}
-
-      {/* Source Picker */}
-      {!useDefault && hasOptions && (
-        <select
-          value={
-            effectiveSource
-              ? `${effectiveSource.type}:${effectiveSource.id}`
-              : 'none'
-          }
-          onChange={(e) => {
-            const val = e.target.value;
-            if (val === 'none') {
-              onChange(undefined);
-            } else {
-              const [type, id] = val.split(':');
-              onChange({ type: type as 'variety' | 'mix', id });
-            }
-          }}
-          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="none">None</option>
-          {cropVarieties.length > 0 && (
-            <optgroup label="Varieties">
-              {cropVarieties.map((v) => {
-                const isUsed = usedVarietyIds?.has(v.id);
-                return (
-                  <option key={v.id} value={`variety:${v.id}`}>
-                    {v.name}
-                    {v.supplier ? ` (${v.supplier})` : ''}
-                    {isUsed ? ' ✓' : ''}
-                  </option>
-                );
-              })}
-            </optgroup>
-          )}
-          {cropMixes.length > 0 && (
-            <optgroup label="Seed Mixes">
-              {cropMixes.map((m) => {
-                const isUsed = usedMixIds?.has(m.id);
-                return (
-                  <option key={m.id} value={`mix:${m.id}`}>
-                    {m.name}
-                    {isUsed ? ' ✓' : ''}
-                  </option>
-                );
-              })}
-            </optgroup>
-          )}
-        </select>
-      )}
-
-      {/* No options message */}
-      {!useDefault && !hasOptions && (
-        <div className="text-xs text-gray-500">
-          No varieties or seed mixes available for {crop}
-        </div>
-      )}
-
-      {/* Current display (read-only) */}
-      {useDefault && (
-        <div className="text-sm text-gray-700">{getSourceDisplay(effectiveSource)}</div>
-      )}
-    </div>
-  );
-}
 
 // =============================================================================
 // Market Split Editor (inline component)
@@ -361,8 +232,8 @@ export interface PlantingInspectorPanelProps {
   specs?: Record<string, PlantingSpec>;
   /** Crop entities for color and GDD temp lookup */
   crops?: Record<string, { id: string; name: string; gddBaseTemp?: number; gddUpperTemp?: number }>;
-  varieties?: Record<string, { id: string; crop: string; name: string; supplier?: string }>;
-  seedMixes?: Record<string, { id: string; crop: string; name: string }>;
+  varieties?: Record<string, VarietyOption>;
+  seedMixes?: Record<string, SeedMixOption>;
   usedVarietyIds?: Set<string>;
   usedMixIds?: Set<string>;
   products?: Record<string, Product>;
@@ -1230,39 +1101,26 @@ export function PlantingInspectorPanel({
           )}
 
           {/* Seed Source - Editable */}
-          {/* DEBUG: Check why seed source picker might not show */}
-          {(() => {
-            console.log('[SeedSource Debug]', {
-              plantingId: crop.plantingId,
-              groupId: crop.groupId,
-              cropCrop: crop.crop,
-              specId: crop.specId,
-              hasOnUpdate: !!onUpdatePlanting,
-              hasVarieties: !!varieties,
-              hasSeedMixes: !!seedMixes,
-              showPicker: !!(onUpdatePlanting && varieties && seedMixes && crop.crop),
-            });
-            return null;
-          })()}
           {onUpdatePlanting && varieties && seedMixes && crop.crop && (
             <div className="pt-3 border-t">
               <div className="text-xs text-gray-600 mb-1">
                 Seed Source
                 {!crop.seedSource && !crop.useDefaultSeedSource && <span className="text-amber-500 ml-1">⚠</span>}
               </div>
-              <SeedSourcePicker
-                crop={crop.crop}
-                currentSource={crop.seedSource}
-                useDefault={crop.useDefaultSeedSource}
+              <SeedSourceSelectWithDefault
+                cropName={crop.crop}
+                customSource={crop.seedSource}
+                useDefault={crop.useDefaultSeedSource ?? false}
                 defaultSource={baseSpec?.defaultSeedSource}
                 varieties={varieties}
                 seedMixes={seedMixes}
                 usedVarietyIds={usedVarietyIds}
                 usedMixIds={usedMixIds}
-                onChange={(source) => onUpdatePlanting(crop.groupId, { seedSource: source })}
+                onSourceChange={(source) => onUpdatePlanting(crop.groupId, { seedSource: source })}
                 onToggleDefault={(useDefault) =>
                   onUpdatePlanting(crop.groupId, { useDefaultSeedSource: useDefault })
                 }
+                compact
               />
             </div>
           )}

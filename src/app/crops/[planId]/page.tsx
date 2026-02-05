@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import { usePlanStore } from '@/lib/plan-store';
 import { DEFAULT_CROP_COLOR, getCropId } from '@/lib/entities/crop';
 import type { Crop } from '@/lib/entities/crop';
 import AppHeader from '@/components/AppHeader';
 import { FastEditTable, ColumnDef } from '@/components/FastEditTable';
+import { Z_INDEX } from '@/lib/z-index';
 
 /**
  * Calculate relative luminance for a color (0-1 scale).
@@ -80,6 +82,8 @@ function CropColorPicker({
 }) {
   const [copyFromOpen, setCopyFromOpen] = useState(false);
   const [copyFromSearch, setCopyFromSearch] = useState('');
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const filteredCrops = crops
     .filter(c => !excludeId || c.id !== excludeId)
@@ -113,6 +117,19 @@ function CropColorPicker({
     setCopyFromOpen(false);
   };
 
+  const handleToggleDropdown = () => {
+    if (!copyFromOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      // Position dropdown below button, aligned to right edge
+      setDropdownPos({
+        top: rect.bottom + 4,
+        left: rect.right - 224, // 224px = min-w-56 (14rem)
+      });
+    }
+    setCopyFromOpen(!copyFromOpen);
+    setCopyFromSearch('');
+  };
+
   return (
     <div className="flex items-center gap-2">
       <input
@@ -140,24 +157,30 @@ function CropColorPicker({
       {/* Copy from dropdown */}
       <div className="relative">
         <button
-          onClick={() => {
-            setCopyFromOpen(!copyFromOpen);
-            setCopyFromSearch('');
-          }}
+          ref={buttonRef}
+          onClick={handleToggleDropdown}
           className="text-xs border border-gray-300 rounded px-2 py-1 text-gray-600 bg-white cursor-pointer hover:border-gray-400 hover:bg-gray-50"
           title="Copy colors from another crop"
         >
           Copy from...
         </button>
-        {copyFromOpen && (
+        {copyFromOpen && typeof document !== 'undefined' && createPortal(
           <>
             {/* Backdrop to close dropdown */}
             <div
-              className="fixed inset-0 z-10"
+              className="fixed inset-0"
+              style={{ zIndex: Z_INDEX.DROPDOWN - 1 }}
               onClick={() => setCopyFromOpen(false)}
             />
-            {/* Dropdown menu */}
-            <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-56">
+            {/* Dropdown menu - portaled to body */}
+            <div
+              className="fixed bg-white border border-gray-200 rounded-lg shadow-lg min-w-56"
+              style={{
+                zIndex: Z_INDEX.DROPDOWN,
+                top: dropdownPos.top,
+                left: dropdownPos.left,
+              }}
+            >
               {/* Search input */}
               <div className="p-2 border-b border-gray-100">
                 <input
@@ -191,7 +214,8 @@ function CropColorPicker({
                 )}
               </div>
             </div>
-          </>
+          </>,
+          document.body
         )}
       </div>
     </div>
@@ -201,6 +225,7 @@ function CropColorPicker({
 export default function CropsPage() {
   const params = useParams();
   const planId = params.planId as string;
+
 
   const {
     currentPlan,

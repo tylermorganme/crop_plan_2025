@@ -189,6 +189,12 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                     >
                       Production
                     </Link>
+                    <Link
+                      href={`${reportsHref}?tab=portions`}
+                      className="block px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Portions
+                    </Link>
                   </div>
                 </div>
               </div>

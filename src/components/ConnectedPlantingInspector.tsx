@@ -367,6 +367,7 @@ export function ConnectedPlantingInspector({
           seedMixes={currentPlan.seedMixes}
           products={currentPlan.products}
           markets={currentPlan.markets}
+          crops={currentPlan.crops}
           timingSettings={{
             transplantShockDays: currentPlan.metadata?.transplantShockDays,
             defaultTransplantAge: currentPlan.metadata?.defaultTransplantAge,
@@ -390,6 +391,7 @@ export function ConnectedPlantingInspector({
           seedMixes={currentPlan.seedMixes}
           products={currentPlan.products}
           markets={currentPlan.markets}
+          crops={currentPlan.crops}
           timingSettings={{
             transplantShockDays: currentPlan.metadata?.transplantShockDays,
             defaultTransplantAge: currentPlan.metadata?.defaultTransplantAge,

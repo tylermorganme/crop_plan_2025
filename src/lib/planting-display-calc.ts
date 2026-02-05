@@ -275,24 +275,29 @@ export function expandToTimelineCrops(
     config.gddBaseTemp !== undefined &&
     effectiveFieldDate
   ) {
-    // Calculate structure offset for non-field structures
-    const structureOffset =
-      config.growingStructure && config.growingStructure !== 'field'
-        ? NON_FIELD_STRUCTURE_OFFSET
-        : 0;
+    try {
+      // Calculate structure offset for non-field structures
+      const structureOffset =
+        config.growingStructure && config.growingStructure !== 'field'
+          ? NON_FIELD_STRUCTURE_OFFSET
+          : 0;
 
-    // Get GDD-adjusted field days using effective (actual or planned) field date
-    const adjustedFieldDays = gddCalculator.getAdjustedFieldDays(
-      baseFieldDays,
-      config.targetFieldDate,
-      effectiveFieldDate.split('T')[0], // Extract date part
-      config.gddBaseTemp,
-      config.gddUpperTemp,
-      structureOffset
-    );
+      // Get GDD-adjusted field days using effective (actual or planned) field date
+      const adjustedFieldDays = gddCalculator.getAdjustedFieldDays(
+        baseFieldDays,
+        config.targetFieldDate,
+        effectiveFieldDate.split('T')[0], // Extract date part
+        config.gddBaseTemp,
+        config.gddUpperTemp,
+        structureOffset
+      );
 
-    if (adjustedFieldDays !== null) {
-      coalescedFieldDays = Math.round(adjustedFieldDays);
+      if (adjustedFieldDays !== null) {
+        coalescedFieldDays = Math.round(adjustedFieldDays);
+      }
+    } catch (err) {
+      // GDD calculation failed (likely invalid date) - fall back to base field days
+      console.warn(`[expandToTimelineCrops] GDD calculation failed for planting ${planting.id}:`, err);
     }
   }
 

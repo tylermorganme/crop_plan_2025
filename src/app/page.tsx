@@ -1,5 +1,10 @@
+import type { Metadata } from 'next';
 import SpecExplorer from '@/components/SpecExplorer';
 import AppHeader from '@/components/AppHeader';
+
+export const metadata: Metadata = {
+  title: 'Crop Planner | Specs',
+};
 
 export default function Home() {
   return (
