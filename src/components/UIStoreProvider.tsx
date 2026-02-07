@@ -18,7 +18,6 @@ export default function UIStoreProvider({ children }: UIStoreProviderProps) {
     // Only run in browser
     if (typeof window === 'undefined') return;
 
-
     // Listen for sync messages from other tabs
     const unsubscribe = onUIStoreSyncMessage((message) => {
       // Ignore messages from this tab (echo prevention)

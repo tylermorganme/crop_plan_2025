@@ -14,8 +14,10 @@ import { getMarketSplitTotal, getActiveMarkets, type Market, type MarketSplit } 
 import PlantingSpecCreator from './PlantingSpecCreator';
 import PlantingSpecEditor from './PlantingSpecEditor';
 import CompareSpecsModal from './CompareSpecsModal';
+import { TagInput } from './TagInput';
 import GddExplorerModal from './GddExplorerModal';
 import { useGdd } from '@/lib/gdd-client';
+import { useUIStore } from '@/lib/ui-store';
 import { Z_INDEX } from '@/lib/z-index';
 import {
   DEFAULT_VISIBLE_COLUMNS,
@@ -27,6 +29,7 @@ import {
   getColumnBgClass,
   getHeaderTextClass,
   type DynamicOptionKey,
+  type EditType,
 } from '@/lib/spec-explorer-columns';
 import { moveFocusVerticalDirect } from '@/lib/table-navigation';
 import { parseSearchQuery, matchesFilter, type ParsedSearchQuery } from '@/lib/search-dsl';
@@ -52,8 +55,8 @@ function validatePlantingSpec(crop: PlantingSpec): SpecValidation {
   const issues: string[] = [];
 
   // Errors - missing required data
-  if (!crop.identifier?.trim()) {
-    issues.push('Missing identifier');
+  if (!crop.name?.trim()) {
+    issues.push('Missing name');
   }
   if (!crop.crop?.trim()) {
     issues.push('Missing crop name');
@@ -156,26 +159,33 @@ interface BulkSpecEditorModalProps {
   isOpen: boolean;
   markets: Record<string, Market>;
   selectedCount: number;
+  allTags: string[];
+  /** Tag → count of how many selected specs have it */
+  selectedTagCounts: Record<string, number>;
   onClose: () => void;
   onSave: (changes: Partial<PlantingSpec>) => void;
+  onTagChanges?: (add: string[], remove: string[]) => void;
 }
 
 function BulkSpecEditorModal({
   isOpen,
   markets,
   selectedCount,
+  allTags,
+  selectedTagCounts,
   onClose,
   onSave,
+  onTagChanges,
 }: BulkSpecEditorModalProps) {
   // ---- Market Split State ----
   const [enableMarketSplit, setEnableMarketSplit] = useState(true); // Default enabled since it's why they opened this
   const [marketSplit, setMarketSplit] = useState<MarketSplit>({});
   const activeMarkets = getActiveMarkets(markets);
 
-  // ---- Future Field States ----
-  // Add new field states here following the pattern:
-  // const [enableFieldName, setEnableFieldName] = useState(false);
-  // const [fieldName, setFieldName] = useState<FieldType>(defaultValue);
+  // ---- Tags State ----
+  const [tagsToAdd, setTagsToAdd] = useState<string[]>([]);
+  const [tagsToRemove, setTagsToRemove] = useState<string[]>([]);
+  const existingTags = Object.entries(selectedTagCounts).sort(([a], [b]) => a.localeCompare(b));
 
   // Initialize market split with 100% to first market
   useEffect(() => {
@@ -189,7 +199,8 @@ function BulkSpecEditorModal({
     if (!isOpen) {
       setEnableMarketSplit(true);
       setMarketSplit({});
-      // Reset other fields here when added
+      setTagsToAdd([]);
+      setTagsToRemove([]);
     }
   }, [isOpen]);
 
@@ -209,30 +220,18 @@ function BulkSpecEditorModal({
     });
   };
 
-  // Build the changes object from enabled fields
-  const buildChanges = (): Partial<PlantingSpec> => {
-    const changes: Partial<PlantingSpec> = {};
-
-    if (enableMarketSplit && Object.keys(marketSplit).length > 0) {
-      changes.defaultMarketSplit = marketSplit;
-    }
-
-    // Add other fields here:
-    // if (enableFieldName && fieldName !== undefined) {
-    //   changes.fieldName = fieldName;
-    // }
-
-    return changes;
-  };
-
   // Check if any changes are enabled
-  const hasChanges = enableMarketSplit && Object.keys(marketSplit).length > 0;
-  // Extend: const hasChanges = (enableMarketSplit && ...) || (enableOtherField && ...);
+  const hasMarketChanges = enableMarketSplit && Object.keys(marketSplit).length > 0;
+  const hasTagChanges = tagsToAdd.length > 0 || tagsToRemove.length > 0;
+  const hasChanges = hasMarketChanges || hasTagChanges;
 
   const handleSave = () => {
-    const changes = buildChanges();
-    if (Object.keys(changes).length === 0) return;
-    onSave(changes);
+    if (hasMarketChanges) {
+      onSave({ defaultMarketSplit: marketSplit });
+    }
+    if (hasTagChanges) {
+      onTagChanges?.(tagsToAdd, tagsToRemove);
+    }
   };
 
   if (!isOpen) return null;
@@ -291,19 +290,57 @@ function BulkSpecEditorModal({
               </div>
             </FieldSection>
 
-            {/* ---- Future Field Sections ---- */}
-            {/* Add new FieldSection components here for additional bulk-editable fields */}
-            {/* Example:
-            <FieldSection
-              title="Category"
-              enabled={enableCategory}
-              onToggle={setEnableCategory}
-            >
-              <select value={category} onChange={(e) => setCategory(e.target.value)}>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </FieldSection>
-            */}
+            {/* ---- Tags Section ---- */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="px-3 py-2 bg-gray-50">
+                <span className="text-sm font-medium text-gray-700">Tags</span>
+              </div>
+              <div className="px-3 py-3 border-t border-gray-200 bg-white space-y-3">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-1">Add tags</label>
+                  <TagInput
+                    tags={tagsToAdd}
+                    onChange={setTagsToAdd}
+                    suggestions={allTags}
+                    placeholder="Add tags…"
+                  />
+                </div>
+                {existingTags.length > 0 && (
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-1">Current tags <span className="text-gray-400">(click to remove)</span></label>
+                    <div className="flex flex-wrap gap-1">
+                      {existingTags.map(([tag, count]) => {
+                        const removing = tagsToRemove.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => {
+                              if (removing) {
+                                setTagsToRemove(prev => prev.filter(t => t !== tag));
+                              } else {
+                                setTagsToRemove(prev => [...prev, tag]);
+                              }
+                            }}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full transition-colors ${
+                              removing
+                                ? 'bg-red-100 text-red-600 line-through'
+                                : 'bg-blue-100 text-blue-800 hover:bg-red-100 hover:text-red-600'
+                            }`}
+                            title={removing ? 'Click to keep' : `Click to remove (${count}/${selectedCount} specs)`}
+                          >
+                            {tag}
+                            <span className={`text-[10px] ${removing ? 'text-red-400' : 'text-blue-500'}`}>
+                              {count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -380,6 +417,9 @@ const DEFAULT_FILTER_PANE_WIDTH = 280;
 
 // Determine the type of a column based on its values
 function getColumnType(crops: PlantingSpec[], col: string): 'boolean' | 'number' | 'categorical' | 'text' {
+  // Tags column is always categorical (individual tags as options)
+  if (col === 'tagsDisplay') return 'categorical';
+
   const values = crops.map(c => c[col as keyof PlantingSpec]).filter(v => v !== null && v !== undefined);
   if (values.length === 0) return 'text';
 
@@ -401,14 +441,28 @@ const NONE_VALUE = '__none__';
 function getUniqueValuesForColumn(crops: PlantingSpec[], col: string): string[] {
   const values = new Set<string>();
   let hasEmpty = false;
-  crops.forEach(c => {
-    const v = c[col as keyof PlantingSpec];
-    if (v === null || v === undefined || v === '') {
-      hasEmpty = true;
-    } else {
-      values.add(String(v));
-    }
-  });
+
+  // Tags: explode arrays into individual values
+  if (col === 'tagsDisplay') {
+    crops.forEach(c => {
+      const tags = c.tags;
+      if (!tags || tags.length === 0) {
+        hasEmpty = true;
+      } else {
+        tags.forEach(t => values.add(t));
+      }
+    });
+  } else {
+    crops.forEach(c => {
+      const v = c[col as keyof PlantingSpec];
+      if (v === null || v === undefined || v === '') {
+        hasEmpty = true;
+      } else {
+        values.add(String(v));
+      }
+    });
+  }
+
   const sorted = Array.from(values).sort();
   // Add "(None)" option at the beginning if there are empty values
   if (hasEmpty) {
@@ -438,7 +492,7 @@ function createPlantingFromSpec(crop: PlantingSpec, planYear: number): Planting 
     : `${planYear}-06-01`;
 
   return createPlanting({
-    specId: crop.identifier,
+    specId: crop.id,
     fieldStartDate,
     startBed: null, // Unassigned
     bedFeet: 50, // Default 1 bed
@@ -514,6 +568,10 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   const setActivePlanId = usePlanStore((state) => state.setActivePlanId);
   const planList = usePlanStore((state) => state.planList);
 
+  // UI store - select new plantings after adding
+  const clearSelection = useUIStore((state) => state.clearSelection);
+  const selectMultiple = useUIStore((state) => state.selectMultiple);
+
   // Find active plan info from list
   const activePlan = useMemo(() => {
     if (!activePlanId) return null;
@@ -553,6 +611,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     yieldPerHarvestDisplay?: string;
     totalYieldDisplay?: string;
     defaultSeedSourceDisplay?: string;
+    tagsDisplay?: string;
   };
 
   // Build set of specIds that are in use (have plantings)
@@ -610,11 +669,12 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         revenuePerBed: revenue,
         maxYieldPerWeek: yieldPerWeek.displayMax,
         minYieldPerWeek: yieldPerWeek.displayMin,
-        inUse: specsInUse.has(crop.identifier),
+        inUse: specsInUse.has(crop.id),
         yieldPerHarvestDisplay,
         totalYieldDisplay,
         productsDisplay,
         defaultSeedSourceDisplay,
+        tagsDisplay: crop.tags?.join(', ') || undefined,
       };
     });
   }, [baseCrops, products, specsInUse, varieties, seedMixes]);
@@ -626,7 +686,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set(DEFAULT_VISIBLE_COLUMNS));
   const [columnOrder, setColumnOrder] = useState<string[]>(allColumns);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-  const [sortColumn, setSortColumn] = useState<string | null>('identifier');
+  const [sortColumn, setSortColumn] = useState<string | null>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filterPaneOpen, setFilterPaneOpen] = useState(true);
   const [filterPaneWidth, setFilterPaneWidth] = useState(DEFAULT_FILTER_PANE_WIDTH);
@@ -639,16 +699,28 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   useEffect(() => {
     const persisted = loadPersistedState();
     if (persisted) {
-      setVisibleColumns(new Set(persisted.visibleColumns ?? DEFAULT_VISIBLE_COLUMNS));
+      // Filter persisted visible columns against current schema, adding
+      // any default-visible columns that are new (e.g. 'name' replacing 'identifier')
+      const existing = new Set(allColumns);
+      if (persisted.visibleColumns) {
+        const validVisible = persisted.visibleColumns.filter(c => existing.has(c));
+        // Add any default-visible columns missing from persisted state (new columns)
+        for (const col of DEFAULT_VISIBLE_COLUMNS) {
+          if (!validVisible.includes(col)) validVisible.push(col);
+        }
+        setVisibleColumns(new Set(validVisible));
+      } else {
+        setVisibleColumns(new Set(DEFAULT_VISIBLE_COLUMNS));
+      }
       if (persisted.columnOrder) {
-        const existing = new Set(allColumns);
         const order = persisted.columnOrder.filter(c => existing.has(c));
         allColumns.forEach(c => { if (!order.includes(c)) order.push(c); });
         setColumnOrder(order);
       }
       setColumnWidths(persisted.columnWidths ?? {});
       setColumnFilters(persisted.columnFilters ?? {});
-      setSortColumn(persisted.sortColumn ?? 'identifier');
+      const sortCol = persisted.sortColumn && existing.has(persisted.sortColumn) ? persisted.sortColumn : 'name';
+      setSortColumn(sortCol);
       setSortDirection(persisted.sortDirection ?? 'asc');
       setFilterPaneOpen(persisted.filterPaneOpen ?? true);
       setFilterPaneWidth(persisted.filterPaneWidth ?? DEFAULT_FILTER_PANE_WIDTH);
@@ -773,7 +845,8 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     category: uniqueCategories,
     growingStructure: uniqueGrowingStructures,
     rowCover: uniqueRowCoverValues,
-  }), [uniqueCropNames, uniqueIrrigationValues, uniqueTrellisTypes, uniqueCategories, uniqueGrowingStructures, uniqueRowCoverValues]);
+    tags: [...new Set(displayCrops.flatMap(s => s.tags ?? []))].sort(),
+  }), [uniqueCropNames, uniqueIrrigationValues, uniqueTrellisTypes, uniqueCategories, uniqueGrowingStructures, uniqueRowCoverValues, displayCrops]);
 
   // Columns to display (filtered by sidebar search if active)
   const displayColumns = useMemo(() => {
@@ -865,6 +938,17 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         const meta = columnMeta[col];
 
         if (!meta) continue;
+
+        // Tags column: match against the tags array, not the display string
+        if (col === 'tagsDisplay' && Array.isArray(filterVal)) {
+          const specTags = spec.tags ?? [];
+          if (filterVal.length > 0) {
+            const matchesNone = filterVal.includes(NONE_VALUE) && specTags.length === 0;
+            const matchesTag = specTags.some(t => filterVal.includes(t));
+            if (!matchesNone && !matchesTag) return false;
+          }
+          continue;
+        }
 
         if (meta.type === 'boolean') {
           if (filterVal === 'true' && specVal !== true) return false;
@@ -1231,6 +1315,11 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
       const newPlantings = cropsToAddNow.map(crop => createPlantingFromSpec(crop, loadedPlanYear));
       const addedCount = await bulkAddPlantings(newPlantings);
 
+      // Select the newly created plantings
+      const newIds = newPlantings.map(p => p.id);
+      clearSelection();
+      selectMultiple(newIds);
+
       setAddToPlanMessage({
         type: 'success',
         text: addedCount === 1
@@ -1247,7 +1336,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [activePlanId, activePlan?.name, currentPlanId, loadPlanById, bulkAddPlantings]);
+  }, [activePlanId, activePlan?.name, currentPlanId, loadPlanById, bulkAddPlantings, clearSelection, selectMultiple]);
 
   // Quick add single crop to plan (from row button)
   const handleQuickAdd = useCallback((crop: PlantingSpec, event: React.MouseEvent) => {
@@ -1296,6 +1385,10 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
       const newPlantings = cropsToAdd.map(crop => createPlantingFromSpec(crop, loadedPlanYear));
       const addedCount = await bulkAddPlantings(newPlantings);
 
+      // Select the newly created plantings
+      clearSelection();
+      selectMultiple(newPlantings.map(p => p.id));
+
       // Set this as the active plan for future adds (store handles localStorage sync)
       setActivePlanId(planId);
 
@@ -1321,7 +1414,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     } finally {
       setAddingToPlan(false);
     }
-  }, [cropsToAdd, planList, currentPlanId, loadPlanById, bulkAddPlantings, setActivePlanId]);
+  }, [cropsToAdd, planList, currentPlanId, loadPlanById, bulkAddPlantings, setActivePlanId, clearSelection, selectMultiple]);
 
   // Clear message after a timeout
   useEffect(() => {
@@ -1331,10 +1424,10 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     }
   }, [addToPlanMessage]);
 
-  // Get existing identifiers from active plan's catalog
-  const existingIdentifiers = useMemo(() => {
+  // Get existing names from active plan's catalog
+  const existingNames = useMemo(() => {
     if (!activePlanId || planCatalog.length === 0) return [];
-    return planCatalog.map(c => c.identifier);
+    return planCatalog.map(c => c.name);
   }, [activePlanId, planCatalog]);
 
   // Handle opening the edit spec modal
@@ -1367,12 +1460,11 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
       }
 
       // Update the spec via the store (supports undo/redo)
-      // Pass original identifier to handle renames correctly
-      await updatePlantingSpec(spec, specToEdit?.identifier);
+      await updatePlantingSpec(spec);
 
       setAddToPlanMessage({
         type: 'success',
-        text: `Updated spec "${spec.identifier}"`,
+        text: `Updated spec "${spec.name}"`,
         planId: activePlanId,
       });
       setShowEditSpec(false);
@@ -1406,7 +1498,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
 
       setAddToPlanMessage({
         type: 'success',
-        text: `Created spec "${spec.identifier}"`,
+        text: `Created spec "${spec.name}"`,
         planId: activePlanId,
       });
       setShowCreateSpec(false);
@@ -1436,9 +1528,9 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
   // =============================================================================
 
   // Auto-save changes immediately when value changes
-  const handleCellChange = useCallback(async (identifier: string, field: string, value: unknown) => {
+  const handleCellChange = useCallback(async (specId: string, field: string, value: unknown) => {
     try {
-      await bulkUpdatePlantingSpecs([{ identifier, changes: { [field]: value } }]);
+      await bulkUpdatePlantingSpecs([{ specId, changes: { [field]: value } }]);
     } catch (err) {
       setAddToPlanMessage({
         type: 'error',
@@ -1473,10 +1565,14 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         await loadPlanById(activePlanId);
       }
 
-      const identifiers = specsToDelete.map(c => c.identifier);
-      const deletedCount = await deletePlantingSpecs(identifiers);
+      const specIds = specsToDelete.map(c => c.id);
+      const result = await deletePlantingSpecs(specIds);
 
-      if (deletedCount === 0) {
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      if (result.deletedCount === 0) {
         throw new Error('No specs were found to delete');
       }
 
@@ -1484,9 +1580,9 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
 
       setAddToPlanMessage({
         type: 'success',
-        text: deletedCount === 1
-          ? `Deleted "${identifiers[0]}"`
-          : `Deleted ${deletedCount} specs`,
+        text: result.deletedCount === 1
+          ? `Deleted "${specsToDelete[0]?.name ?? specIds[0]}"`
+          : `Deleted ${result.deletedCount} specs`,
         planId: activePlanId,
       });
 
@@ -1546,7 +1642,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
       return;
     }
     const selectedSpecs = sortedCrops.filter(c => selectedCropIds.has(c.id));
-    const updates = selectedSpecs.map(c => ({ identifier: c.identifier, changes: { isFavorite: true } }));
+    const updates = selectedSpecs.map(c => ({ specId: c.id, changes: { isFavorite: true } }));
 
     const updatedCount = await bulkUpdatePlantingSpecs(updates);
 
@@ -1564,7 +1660,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     deselectAll();
   }, [activePlanId, selectedCropIds, sortedCrops, bulkUpdatePlantingSpecs, deselectAll]);
 
-  // Handle bulk spec editor save
+  // Handle bulk spec editor save (uniform changes applied to all selected)
   const handleBulkEditorSave = useCallback(async (changes: Partial<PlantingSpec>) => {
     if (!activePlanId) {
       setAddToPlanMessage({
@@ -1575,7 +1671,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     }
     const selectedSpecs = sortedCrops.filter(c => selectedCropIds.has(c.id));
     const updates = selectedSpecs.map(c => ({
-      identifier: c.identifier,
+      specId: c.id,
       changes,
     }));
 
@@ -1587,16 +1683,48 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         text: 'No specs were updated',
       });
     } else {
-      // Build description of what changed
       const changedFields = Object.keys(changes);
       const fieldNames = changedFields.map(f => {
         if (f === 'defaultMarketSplit') return 'market split';
-        // Add friendly names for future fields here
         return f;
       }).join(', ');
       setAddToPlanMessage({
         type: 'success',
         text: `Updated ${fieldNames} on ${updatedCount} spec${updatedCount !== 1 ? 's' : ''}`,
+      });
+    }
+    setShowBulkEditor(false);
+    deselectAll();
+  }, [activePlanId, selectedCropIds, sortedCrops, bulkUpdatePlantingSpecs, deselectAll]);
+
+  // Handle bulk tag add/remove (per-spec merge in parent, modal just emits intent)
+  const handleBulkTagChanges = useCallback(async (add: string[], remove: string[]) => {
+    if (!activePlanId) return;
+    const selectedSpecs = sortedCrops.filter(c => selectedCropIds.has(c.id));
+    const removeSet = new Set(remove.map(t => t.toLowerCase()));
+
+    const updates = selectedSpecs.map(spec => {
+      let tags = [...(spec.tags ?? [])];
+      if (remove.length > 0) {
+        tags = tags.filter(t => !removeSet.has(t.toLowerCase()));
+      }
+      if (add.length > 0) {
+        const existing = new Set(tags.map(t => t.toLowerCase()));
+        for (const tag of add) {
+          if (!existing.has(tag.toLowerCase())) {
+            tags.push(tag);
+            existing.add(tag.toLowerCase());
+          }
+        }
+      }
+      return { specId: spec.id, changes: { tags } };
+    });
+
+    const updatedCount = await bulkUpdatePlantingSpecs(updates);
+    if (updatedCount > 0) {
+      setAddToPlanMessage({
+        type: 'success',
+        text: `Updated tags on ${updatedCount} spec${updatedCount !== 1 ? 's' : ''}`,
       });
     }
     setShowBulkEditor(false);
@@ -1973,8 +2101,8 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                   const crop = sortedCrops[virtualRow.index];
                   const isSelected = selectedCropIds.has(crop.id);
-                  // Use identifier as key since it's guaranteed unique within a plan's catalog
-                  const rowKey = crop.identifier || `row-${virtualRow.index}`;
+                  // Use name as key since it's guaranteed unique within a plan's catalog
+                  const rowKey = crop.name || `row-${virtualRow.index}`;
                   return (
                     <div
                       key={rowKey}
@@ -2028,9 +2156,9 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                         const leftOffset = getFrozenLeftOffset(col, colIndex);
                         const isLastFrozen = isFrozen && colIndex === frozenColumnCount - 1;
 
-                        // For identifier column, add validation status indicator
-                        const isIdentifierCol = col === 'identifier';
-                        const validation = isIdentifierCol ? validatePlantingSpec(crop as PlantingSpec) : null;
+                        // For name column, add validation status indicator
+                        const isNameCol = col === 'name';
+                        const validation = isNameCol ? validatePlantingSpec(crop as PlantingSpec) : null;
                         const hasIssues = validation && validation.status !== 'ok';
 
                         // Check if this column is editable (always editable, no edit mode toggle needed)
@@ -2074,12 +2202,12 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                             }`}
                             title={hasIssues ? `${crop[col as keyof PlantingSpec]}\n\nIssues:\n• ${validation.issues.join('\n• ')}` : String(crop[col as keyof PlantingSpec] ?? '')}
                           >
-                            {/* Favorite star for identifier column */}
-                            {isIdentifierCol && (
+                            {/* Favorite star for name column */}
+                            {isNameCol && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  toggleSpecFavorite(crop.identifier);
+                                  toggleSpecFavorite(crop.id);
                                 }}
                                 className={`shrink-0 transition-colors ${
                                   crop.isFavorite
@@ -2091,8 +2219,8 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                                 ★
                               </button>
                             )}
-                            {/* Validation indicator for identifier column */}
-                            {isIdentifierCol && hasIssues && (
+                            {/* Validation indicator for name column */}
+                            {isNameCol && hasIssues && (
                               <span
                                 className={`shrink-0 ${
                                   validation.status === 'error'
@@ -2119,7 +2247,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                                 cropName={crop.crop}
                                 varieties={varieties ?? {}}
                                 seedMixes={seedMixes ?? {}}
-                                onChange={(value: SeedSource | undefined) => handleCellChange(crop.identifier, 'defaultSeedSource', value)}
+                                onChange={(value: SeedSource | undefined) => handleCellChange(crop.id, 'defaultSeedSource', value)}
                                 onFocus={() => {
                                   setActiveEditColumn(col);
                                   setActiveEditRow(virtualRow.index);
@@ -2129,11 +2257,20 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                                 crops={crops}
                                 onAddVariety={addVariety}
                               />
+                            ) : isEditable && editableConfig.type === 'tags' ? (
+                              <div className="w-full" onClick={(e) => e.stopPropagation()}>
+                                <TagInput
+                                  tags={crop.tags ?? []}
+                                  onChange={(tags) => handleCellChange(crop.id, 'tags', tags)}
+                                  suggestions={dynamicOptionsMap.tags}
+                                  compact
+                                />
+                              </div>
                             ) : isEditable ? (
                               <EditableCell
                                 value={cellValue}
                                 config={editableConfig}
-                                onChange={(value) => handleCellChange(crop.identifier, col, value)}
+                                onChange={(value) => handleCellChange(crop.id, col, value)}
                                 hasChanges={false}
                                 onFocus={() => {
                                   setActiveEditColumn(col);
@@ -2468,7 +2605,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         onClose={() => { setShowCreateSpec(false); setCopySourceSpec(null); }}
         onSave={handleSaveCustomSpec}
         availableSpecs={displayCrops as PlantingSpec[]}
-        existingIdentifiers={existingIdentifiers}
+        existingNames={existingNames}
         varieties={varieties}
         seedMixes={seedMixes}
         products={products}
@@ -2485,7 +2622,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         onClose={() => { setShowEditSpec(false); setSpecToEdit(null); }}
         onSave={handleSaveEditedSpec}
         mode="edit"
-        existingIdentifiers={existingIdentifiers}
+        existingNames={existingNames}
         varieties={varieties}
         seedMixes={seedMixes}
         products={products}
@@ -2530,7 +2667,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
             <div className="p-4">
               {specsToDelete.length === 1 ? (
                 <p className="text-sm text-gray-600 mb-4">
-                  Are you sure you want to delete <strong>{specsToDelete[0].identifier}</strong>?
+                  Are you sure you want to delete <strong>{specsToDelete[0].name}</strong>?
                   This cannot be undone.
                 </p>
               ) : (
@@ -2540,7 +2677,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
                     This cannot be undone.
                   </p>
                   <div className="max-h-32 overflow-y-auto text-xs text-gray-600 bg-gray-50 rounded p-2 border border-gray-200">
-                    {specsToDelete.map(c => c.identifier).join(', ')}
+                    {specsToDelete.map(c => c.name).join(', ')}
                   </div>
                 </div>
               )}
@@ -2582,8 +2719,17 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
           isOpen={true}
           markets={markets}
           selectedCount={selectedCropIds.size}
+          allTags={dynamicOptionsMap.tags}
+          selectedTagCounts={(() => {
+            const counts: Record<string, number> = {};
+            sortedCrops.filter(c => selectedCropIds.has(c.id)).forEach(spec => {
+              (spec.tags ?? []).forEach(tag => { counts[tag] = (counts[tag] ?? 0) + 1; });
+            });
+            return counts;
+          })()}
           onClose={() => setShowBulkEditor(false)}
           onSave={handleBulkEditorSave}
+          onTagChanges={handleBulkTagChanges}
         />
       )}
 
@@ -2973,7 +3119,7 @@ function EditableCell({
   onBlur,
 }: {
   value: unknown;
-  config: { type: 'select' | 'text' | 'number' | 'seedSource'; options?: string[] };
+  config: { type: EditType; options?: string[] };
   onChange: (value: unknown) => void;
   hasChanges: boolean;
   onFocus?: () => void;

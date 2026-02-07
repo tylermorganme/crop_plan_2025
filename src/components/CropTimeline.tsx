@@ -72,7 +72,7 @@ interface TimelineCrop {
   bedCapacityFt?: number;
   /** Short planting ID from bed plan (e.g., "PEP004") */
   plantingId?: string;
-  /** Planting spec identifier matching the plan's crop catalog */
+  /** Planting spec ID matching the plan's crop catalog */
   specId?: string;
   /** Harvest start date (ISO date) - when harvest window begins */
   harvestStartDate?: string;
@@ -472,6 +472,10 @@ export default function CropTimeline({
       case 'category':
         aVal = a.category?.toLowerCase() || '';
         bVal = b.category?.toLowerCase() || '';
+        break;
+      case 'method':
+        aVal = a.plantingMethod?.toLowerCase() || '';
+        bVal = b.plantingMethod?.toLowerCase() || '';
         break;
       case 'feet':
       case 'size':
@@ -1348,7 +1352,7 @@ export default function CropTimeline({
       tooltip += `\n${methodNames[crop.plantingMethod] || crop.plantingMethod}`;
     }
     if (crop.sequenceId !== undefined && crop.sequenceSlot !== undefined) {
-      tooltip += `\nSequence #${crop.sequenceSlot + 1}`;
+      tooltip += `\nSequence #${crop.sequenceSlot}`;
     }
 
     return (
@@ -1520,9 +1524,9 @@ export default function CropTimeline({
                           backgroundColor: '#7c3aed', // Purple for sequences
                           color: '#ffffff',
                         }}
-                        title={`Sequence ${crop.sequenceSlot + 1}`}
+                        title={`Sequence ${crop.sequenceSlot}`}
                       >
-                        S{crop.sequenceSlot + 1}
+                        S{crop.sequenceSlot}
                       </div>
                     )}
                     {/* Lock indicator for plantings with actual dates */}
@@ -1732,7 +1736,7 @@ export default function CropTimeline({
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Filter crops..."
-          sortFields={['revenue', 'date', 'end', 'name', 'bed', 'category', 'feet', 'size']}
+          sortFields={['revenue', 'start', 'date', 'end', 'name', 'bed', 'category', 'method', 'feet', 'size']}
           filterFields={['bed', 'group', 'bedGroup', 'category', 'method', 'crop', 'notes', 'structure']}
         />
 

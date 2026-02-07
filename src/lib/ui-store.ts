@@ -5,7 +5,6 @@ import { create } from 'zustand';
 // ============================================
 
 const SYNC_CHANNEL_NAME = 'ui-store-sync';
-const TAB_ID_KEY = 'ui-store-tab-id';
 const SEARCH_QUERY_KEY = 'ui-store-search-query';
 const EDIT_MODE_KEY = 'ui-store-edit-mode';
 
@@ -59,22 +58,13 @@ function saveEditMode(isEditMode: boolean): void {
 
 /**
  * Unique ID for this tab (to filter out own broadcasts).
- * Persisted in sessionStorage to survive Fast Refresh during development.
+ * Generated fresh on every page load — NOT persisted in sessionStorage.
+ * sessionStorage is copied when duplicating tabs or opening new windows,
+ * which would give both windows the same ID and break echo filtering.
  */
-export const TAB_ID = (() => {
-  if (typeof window === 'undefined') return null;
-
-  // Try to get existing tab ID from sessionStorage
-  let tabId = sessionStorage.getItem(TAB_ID_KEY);
-
-  // Generate new one if it doesn't exist
-  if (!tabId) {
-    tabId = `${Date.now()}-${Math.random()}`;
-    sessionStorage.setItem(TAB_ID_KEY, tabId);
-  }
-
-  return tabId;
-})();
+export const TAB_ID = typeof window === 'undefined'
+  ? null
+  : `${Date.now()}-${Math.random()}`;
 
 /** Message types for cross-tab UI state sync */
 export type UIStoreSyncMessage =
@@ -83,46 +73,59 @@ export type UIStoreSyncMessage =
   | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null; tabId: string }
   | { type: 'edit-mode-changed'; isEditMode: boolean; tabId: string };
 
-/** BroadcastChannel for cross-tab sync */
-let syncChannel: BroadcastChannel | null = null;
+/** BroadcastChannel for cross-tab sync — separate channels for send vs receive */
+let sendChannel: BroadcastChannel | null = null;
+let receiveChannel: BroadcastChannel | null = null;
+let currentHandler: ((event: MessageEvent<UIStoreSyncMessage>) => void) | null = null;
 
-/** Track if we already have a listener registered (prevent duplicates from Fast Refresh) */
-let listenerRegistered = false;
-
-/** Get or create the sync channel */
-function getSyncChannel(): BroadcastChannel | null {
+/** Get or create the send channel */
+function getSendChannel(): BroadcastChannel | null {
   if (typeof window === 'undefined') return null;
-  if (!syncChannel) {
+  if (!sendChannel) {
     try {
-      syncChannel = new BroadcastChannel(SYNC_CHANNEL_NAME);
+      sendChannel = new BroadcastChannel(SYNC_CHANNEL_NAME);
     } catch {
       console.warn('BroadcastChannel not supported, cross-tab UI sync disabled');
     }
   }
-  return syncChannel;
+  return sendChannel;
 }
 
 /** Broadcast a sync message to other tabs (includes tab ID) */
 function broadcastUISync(message: { type: 'selection-changed'; selectedIds: string[] } | { type: 'search-changed'; query: string } | { type: 'toast-changed'; toast: { message: string; type: 'error' | 'success' | 'info' } | null } | { type: 'edit-mode-changed'; isEditMode: boolean }): void {
   if (!TAB_ID) return;
   const fullMessage = { ...message, tabId: TAB_ID } as UIStoreSyncMessage;
-  getSyncChannel()?.postMessage(fullMessage);
+  getSendChannel()?.postMessage(fullMessage);
 }
 
 /** Subscribe to sync messages from other tabs */
 export function onUIStoreSyncMessage(callback: (message: UIStoreSyncMessage) => void): () => void {
-  const channel = getSyncChannel();
-  if (!channel || listenerRegistered) {
-    return () => {};
+  if (typeof window === 'undefined') return () => {};
+
+  // Clean up any previous listener (handles HMR re-registration)
+  if (receiveChannel && currentHandler) {
+    receiveChannel.removeEventListener('message', currentHandler);
+    currentHandler = null;
   }
 
-  listenerRegistered = true;
+  // Create a dedicated receive channel (separate from send to ensure delivery)
+  if (!receiveChannel) {
+    try {
+      receiveChannel = new BroadcastChannel(SYNC_CHANNEL_NAME);
+    } catch {
+      return () => {};
+    }
+  }
+
   const handler = (event: MessageEvent<UIStoreSyncMessage>) => callback(event.data);
-  channel.addEventListener('message', handler);
+  currentHandler = handler;
+  receiveChannel.addEventListener('message', handler);
 
   return () => {
-    listenerRegistered = false;
-    channel.removeEventListener('message', handler);
+    if (receiveChannel && currentHandler === handler) {
+      receiveChannel.removeEventListener('message', handler);
+      currentHandler = null;
+    }
   };
 }
 
