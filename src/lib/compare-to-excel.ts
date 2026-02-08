@@ -31,8 +31,8 @@ const ourCrops = JSON.parse(fs.readFileSync(path.join(dataDir, 'crop-config-temp
 // Load fresh Excel export
 const excelCrops = JSON.parse(fs.readFileSync(excelExportPath, 'utf8')).crops;
 
-// Build lookup by Identifier (more stable than generated IDs)
-const excelByIdentifier = new Map<string, Record<string, unknown>>(
+// Build lookup by Name (more stable than generated IDs)
+const excelByName = new Map<string, Record<string, unknown>>(
   excelCrops.map((c: Record<string, unknown>) => [c.Identifier as string, c])
 );
 
@@ -41,7 +41,7 @@ interface TestResult {
   total: number;
   matches: number;
   mismatches: Array<{
-    identifier: string;
+    name: string;
     expected: unknown;
     actual: unknown;
   }>;
@@ -60,7 +60,7 @@ function testField(
   };
 
   for (const crop of ourCrops) {
-    const excel = excelByIdentifier.get(crop.identifier);
+    const excel = excelByName.get(crop.name);
     if (!excel) {
       // Crop not in Excel export (might have been removed)
       continue;
@@ -74,7 +74,7 @@ function testField(
       result.matches++;
     } else {
       result.mismatches.push({
-        identifier: crop.identifier,
+        name: crop.name,
         expected,
         actual,
       });
@@ -93,7 +93,7 @@ function printResult(result: TestResult, showMismatches = 5): void {
   if (result.mismatches.length > 0 && showMismatches > 0) {
     console.log('  Mismatches:');
     result.mismatches.slice(0, showMismatches).forEach((m) => {
-      console.log(`    ${m.identifier}`);
+      console.log(`    ${m.name}`);
       console.log(`      Excel: ${JSON.stringify(m.expected)}`);
       console.log(`      Calc:  ${JSON.stringify(m.actual)}`);
     });

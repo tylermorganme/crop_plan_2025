@@ -85,7 +85,7 @@ function daysDiff(date1: string, date2: string): number {
 }
 
 interface TestResult {
-  identifier: string;
+  name: string;
   passed: boolean;
   startDateMatch: boolean;
   endDateMatch: boolean;
@@ -105,7 +105,7 @@ interface TestResult {
 }
 
 function runParityTests() {
-  const data = bedPlanData as BedPlanData;
+  const data = bedPlanData as unknown as BedPlanData;
   const { assignments, bedGroups, beds } = data;
 
   // Build bed lengths from template
@@ -146,7 +146,7 @@ function runParityTests() {
 
       if (timelineCrops.length === 0) {
         results.push({
-          identifier: assignment.identifier,
+          name: assignment.identifier,
           passed: false,
           startDateMatch: false,
           endDateMatch: false,
@@ -170,7 +170,7 @@ function runParityTests() {
       const allMatch = startMatch && endMatch && harvestStartMatch;
 
       results.push({
-        identifier: assignment.identifier,
+        name: assignment.identifier,
         passed: allMatch,
         startDateMatch: startMatch,
         endDateMatch: endMatch,
@@ -198,7 +198,7 @@ function runParityTests() {
       }
     } catch (error) {
       results.push({
-        identifier: assignment.identifier,
+        name: assignment.identifier,
         passed: false,
         startDateMatch: false,
         endDateMatch: false,
@@ -236,7 +236,7 @@ function runParityTests() {
 
     for (const fail of failures.slice(0, 10)) {
       // Show first 10
-      console.log(`  ${fail.identifier}:`);
+      console.log(`  ${fail.name}:`);
       if (fail.error) {
         console.log(`    ERROR: ${fail.error}`);
       } else if (fail.details) {

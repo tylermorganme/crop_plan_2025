@@ -24,6 +24,35 @@ html, body {
   overflow: hidden;
 }
 
+/* Print styles - allow content to flow across multiple pages */
+@media print {
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Remove height constraints from layout containers */
+  .h-screen {
+    height: auto !important;
+  }
+
+  /* Allow overflow during print */
+  .overflow-hidden, .overflow-auto {
+    overflow: visible !important;
+  }
+
+  /* Remove min-height constraints */
+  .min-h-0 {
+    min-height: auto !important;
+  }
+
+  /* Allow page breaks inside grid items */
+  .grid > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

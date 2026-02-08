@@ -27,6 +27,7 @@ import {
 } from '../sqlite-storage';
 import { migratePatch, getDeclarativeOperationsForRange } from '../migrations/dsl';
 import type { MigrationOp } from '../migrations/dsl';
+import { CURRENT_SCHEMA_VERSION } from '../migrations';
 import type { Plan } from '../entities/plan';
 import type { Patch } from 'immer';
 
@@ -308,6 +309,172 @@ describe('full migration flow', () => {
   });
 });
 
+describe('v17→v18: spec id re-keying migration', () => {
+  it('migrates v17→v18: re-keys specs by id and updates planting.specId', () => {
+    // 1. Create a v17 plan with specs keyed by identifier
+    const oldPlan = {
+      id: TEST_PLAN_ID,
+      schemaVersion: 17,
+      metadata: {
+        id: TEST_PLAN_ID,
+        name: 'V17 Spec Key Test',
+        createdAt: Date.now(),
+        lastModified: Date.now(),
+        year: 2025,
+      },
+      plantings: [
+        {
+          id: 'planting-1',
+          specId: 'tomato-beefsteak', // references identifier (old)
+          fieldStartDate: '2025-04-01',
+          startBed: 'bed-1',
+          bedFeet: 100,
+          lastModified: Date.now(),
+        },
+        {
+          id: 'planting-2',
+          specId: 'lettuce-romaine', // references identifier (old)
+          fieldStartDate: '2025-05-01',
+          startBed: 'bed-2',
+          bedFeet: 50,
+          lastModified: Date.now(),
+        },
+        {
+          id: 'planting-3',
+          specId: 'orphan-spec', // no matching spec — should be preserved as-is
+          fieldStartDate: '2025-06-01',
+          startBed: 'bed-3',
+          bedFeet: 25,
+          lastModified: Date.now(),
+        },
+      ],
+      beds: {},
+      bedGroups: {},
+      specs: {
+        // Keyed by identifier (old v17 format)
+        'tomato-beefsteak': {
+          id: 'crop_aaa11111',
+          identifier: 'tomato-beefsteak',
+          crop: 'Tomato',
+          category: 'Fruiting',
+        },
+        'lettuce-romaine': {
+          id: 'crop_bbb22222',
+          identifier: 'lettuce-romaine',
+          crop: 'Lettuce',
+          category: 'Green',
+        },
+      },
+      products: {},
+      varieties: {},
+      seedMixes: {},
+      seedOrders: {},
+      changeLog: [],
+    };
+
+    savePlan(TEST_PLAN_ID, oldPlan as unknown as Plan);
+
+    // 2. Hydrate (triggers migration)
+    const hydratedPlan = hydratePlan(TEST_PLAN_ID);
+
+    expect(hydratedPlan.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+
+    // 3. Verify specs are now keyed by spec.id
+    const specKeys = Object.keys(hydratedPlan.specs!);
+    expect(specKeys).toContain('crop_aaa11111');
+    expect(specKeys).toContain('crop_bbb22222');
+    expect(specKeys).not.toContain('tomato-beefsteak');
+    expect(specKeys).not.toContain('lettuce-romaine');
+
+    // Verify spec data is preserved (identifier renamed to name by v18→v19 migration)
+    expect((hydratedPlan.specs!['crop_aaa11111'] as { name: string }).name).toBe('tomato-beefsteak');
+    expect((hydratedPlan.specs!['crop_bbb22222'] as { name: string }).name).toBe('lettuce-romaine');
+
+    // 4. Verify planting.specId updated to spec.id
+    expect(hydratedPlan.plantings![0].specId).toBe('crop_aaa11111');
+    expect(hydratedPlan.plantings![1].specId).toBe('crop_bbb22222');
+
+    // 5. Verify orphaned reference preserved as-is
+    expect(hydratedPlan.plantings![2].specId).toBe('orphan-spec');
+  });
+
+  it('v17→v18 migration is idempotent', () => {
+    // Create a plan that's already in v18 format (specs keyed by id)
+    const alreadyMigrated = {
+      id: TEST_PLAN_ID,
+      schemaVersion: 17, // Claims v17 but data already in v18 format
+      metadata: {
+        id: TEST_PLAN_ID,
+        name: 'Already Migrated',
+        createdAt: Date.now(),
+        lastModified: Date.now(),
+        year: 2025,
+      },
+      plantings: [
+        {
+          id: 'planting-1',
+          specId: 'crop_aaa11111',
+          fieldStartDate: '2025-04-01',
+          startBed: 'bed-1',
+          bedFeet: 50,
+          lastModified: Date.now(),
+        },
+      ],
+      beds: {},
+      bedGroups: {},
+      specs: {
+        'crop_aaa11111': {
+          id: 'crop_aaa11111',
+          identifier: 'tomato-beefsteak',
+          crop: 'Tomato',
+        },
+      },
+      products: {},
+      varieties: {},
+      seedMixes: {},
+      seedOrders: {},
+      changeLog: [],
+    };
+
+    savePlan(TEST_PLAN_ID, alreadyMigrated as unknown as Plan);
+    const hydratedPlan = hydratePlan(TEST_PLAN_ID);
+
+    // Should pass through unchanged
+    expect(Object.keys(hydratedPlan.specs!)).toContain('crop_aaa11111');
+    expect(hydratedPlan.plantings![0].specId).toBe('crop_aaa11111');
+    expect((hydratedPlan.specs!['crop_aaa11111'] as { name: string }).name).toBe('tomato-beefsteak');
+  });
+
+  it('v17→v18 migration handles empty specs', () => {
+    const emptySpecs = {
+      id: TEST_PLAN_ID,
+      schemaVersion: 17,
+      metadata: {
+        id: TEST_PLAN_ID,
+        name: 'Empty Specs',
+        createdAt: Date.now(),
+        lastModified: Date.now(),
+        year: 2025,
+      },
+      plantings: [],
+      beds: {},
+      bedGroups: {},
+      specs: {},
+      products: {},
+      varieties: {},
+      seedMixes: {},
+      seedOrders: {},
+      changeLog: [],
+    };
+
+    savePlan(TEST_PLAN_ID, emptySpecs as unknown as Plan);
+    const hydratedPlan = hydratePlan(TEST_PLAN_ID);
+
+    expect(hydratedPlan.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(Object.keys(hydratedPlan.specs!)).toHaveLength(0);
+  });
+});
+
 // =============================================================================
 // END-TO-END: Full hydration flow
 // =============================================================================
@@ -362,8 +529,8 @@ describe('end-to-end hydration with migration', () => {
     // 3. Hydrate the plan (triggers migration)
     const hydratedPlan = hydratePlan(TEST_PLAN_ID);
 
-    // 4. Verify plan was migrated
-    expect(hydratedPlan.schemaVersion).toBe(6);
+    // 4. Verify plan was migrated to current version
+    expect(hydratedPlan.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     // The planting should have bedFeet, not bedsCount
     const planting = hydratedPlan.plantings![0] as unknown as Record<string, unknown>;
     expect(planting.bedFeet).toBe(150); // 3 * 50 (patch applied, then value preserved)
@@ -375,7 +542,7 @@ describe('end-to-end hydration with migration', () => {
     expect(patches[0].patches[0].value).toBe(150); // 3 * 50
     expect(patches[0].inversePatches[0].path).toEqual(['plantings', 0, 'bedFeet']);
     expect(patches[0].inversePatches[0].value).toBe(100); // 2 * 50
-    expect(patches[0].currentSchemaVersion).toBe(6);
+    expect(patches[0].currentSchemaVersion).toBe(CURRENT_SCHEMA_VERSION);
 
     // 6. Verify undo returns correct migrated inverse patch
     const undoResult = undoPatch(TEST_PLAN_ID);
@@ -498,7 +665,7 @@ describe('realistic plan with template data', () => {
       plantings,
       beds: beds as Plan['beds'],
       bedGroups: bedGroupsRecord as Plan['bedGroups'],
-      specs: cropCatalog as Plan['specs'],
+      specs: cropCatalog as unknown as Plan['specs'],
       products: {},
       varieties: {},
       seedMixes: {},
@@ -620,7 +787,7 @@ describe('realistic plan with template data', () => {
 
   it('verifies crop catalog has expected crop types', async () => {
     const cropsData = await import('@/data/planting-spec-template.json');
-    const crops = (cropsData as { crops: Array<{ id: string; identifier: string; crop: string; category?: string }> }).crops;
+    const crops = (cropsData as unknown as { crops: Array<{ id: string; name: string; crop: string; category?: string }> }).crops;
 
     // Count by category
     const byCategory: Record<string, number> = {};

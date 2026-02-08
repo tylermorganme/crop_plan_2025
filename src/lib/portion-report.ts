@@ -23,6 +23,21 @@ export interface PortionHarvestEvent {
   plantingId: string;
 }
 
+/**
+ * Per-planting portion rate data.
+ * Used for drawing capacity lines using harvest window method (smoothed rates).
+ */
+export interface PortionPlantingRate {
+  /** Planting ID */
+  plantingId: string;
+  /** Harvest start date (ISO string) */
+  harvestStartDate: string | null;
+  /** Harvest end date (ISO string) */
+  harvestEndDate: string | null;
+  /** Smoothed portions per week (from harvest window method) */
+  maxPortionsPerWeek: number;
+}
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -54,6 +69,8 @@ export interface PortionData {
   marketBreakdown: Record<string, number>;
   /** Harvest events converted to portions (for time-series charts) */
   harvestEvents: PortionHarvestEvent[];
+  /** Per-planting rate data for capacity line (harvest window method) */
+  plantings: PortionPlantingRate[];
   /** First harvest date (ISO string) */
   harvestStartDate: string | null;
   /** Last harvest date (ISO string) */
@@ -116,6 +133,14 @@ export function calculatePortionReport(
     // Convert harvest events to portion events
     const harvestEvents = convertHarvestEventsToPortions(summary.harvestEvents, portionSize);
 
+    // Convert per-planting yield rates to portion rates (for capacity line)
+    const plantings: PortionPlantingRate[] = summary.plantings.map((p) => ({
+      plantingId: p.plantingId,
+      harvestStartDate: p.harvestStartDate,
+      harvestEndDate: p.harvestEndDate,
+      maxPortionsPerWeek: p.maxYieldPerWeek / portionSize,
+    }));
+
     // Get harvest date range
     const harvestStartDate = summary.plantings.length > 0
       ? summary.plantings.reduce((earliest, p) => {
@@ -144,6 +169,7 @@ export function calculatePortionReport(
       plantingCount: summary.plantingCount,
       marketBreakdown,
       harvestEvents,
+      plantings,
       harvestStartDate,
       harvestEndDate,
     };

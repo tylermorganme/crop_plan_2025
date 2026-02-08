@@ -355,3 +355,4 @@ Remember the two-tier system:
 - Use `sqlite3 data/plans/{id}.db` for direct inspection
 - Use the app's UI for normal edits
 - Write a migration for schema changes
+- Never directly manipulate plan database data unless there is an incredibly important reason not to just run modifications through the API.

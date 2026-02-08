@@ -32,7 +32,6 @@ import {
 } from 'recharts';
 import {
   usePlanStore,
-  loadPlanFromLibrary,
 } from '@/lib/plan-store';
 import {
   calculatePlanRevenue,
@@ -72,7 +71,6 @@ import { useComputedCrops } from '@/lib/use-computed-crops';
 import { calculatePortionReport, type PortionReport, type PortionData } from '@/lib/portion-report';
 import type { Product } from '@/lib/entities/product';
 import { PortionChart } from '@/components/PortionChart';
-import { VirtualizedChartGrid } from '@/components/VirtualizedChartGrid';
 
 // =============================================================================
 // TAB TYPES
@@ -357,18 +355,24 @@ const PORTION_SETTINGS_STORAGE_KEY = 'crop-plan-portion-settings';
 
 interface PortionSettings {
   targetPortions: number;        // Target portions per week (horizontal line)
+  targetItems: number;           // Target items per share (reference line on summary chart)
   selectedMarkets: string[];     // Filter by market channels (empty = all)
   sortBy: 'crop' | 'portions';   // Sort order for charts
   sortDir: 'asc' | 'desc';
   includeUnassigned: boolean;    // Include plantings without bed assignment
+  startMonth: number;            // X-axis start month (1-12)
+  endMonth: number;              // X-axis end month (1-12)
 }
 
 const DEFAULT_PORTION_SETTINGS: PortionSettings = {
   targetPortions: 50,
+  targetItems: 10,
   selectedMarkets: [],
   sortBy: 'crop',
   sortDir: 'asc',
   includeUnassigned: false,
+  startMonth: 1,
+  endMonth: 12,
 };
 
 function loadPortionSettings(): PortionSettings {
@@ -2418,7 +2422,10 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
 interface ProductsMeetingTargetChartProps {
   items: PortionData[];
   targetPortions: number;
+  targetItems: number;
   planYear: number;
+  startMonth: number;
+  endMonth: number;
 }
 
 /** Get day of year (1-365) from ISO date string */
@@ -2436,7 +2443,8 @@ function formatDoyAsDate(doy: number, year: number): string {
   return `${months[date.getMonth()]} ${date.getDate()}`;
 }
 
-function ProductsMeetingTargetChart({ items, targetPortions, planYear }: ProductsMeetingTargetChartProps) {
+function ProductsMeetingTargetChart({ items, targetPortions, targetItems, planYear, startMonth, endMonth }: ProductsMeetingTargetChartProps) {
+  const [showMetricsInfo, setShowMetricsInfo] = useState(false);
   const chartData = useMemo(() => {
     if (items.length === 0 || targetPortions <= 0) return [];
 
@@ -2520,7 +2528,7 @@ function ProductsMeetingTargetChart({ items, targetPortions, planYear }: Product
     if (globalMinDoy === Infinity) return [];
 
     // Build chart data - for each day, count products meeting target and sum total portions
-    const data: { doy: number; date: string; count: number; total: number; totalPortions: number }[] = [];
+    const data: { doy: number; date: string; count: number; total: number; perTarget: number }[] = [];
     for (let doy = globalMinDoy; doy <= globalMaxDoy; doy++) {
       let meetingTarget = 0;
       let activeProducts = 0;
@@ -2540,22 +2548,31 @@ function ProductsMeetingTargetChart({ items, targetPortions, planYear }: Product
         date: formatDoyAsDate(doy, planYear),
         count: meetingTarget,
         total: activeProducts,
-        totalPortions: Math.round(sumPortions),
+        perTarget: sumPortions / targetPortions,
       });
     }
 
+    // Calculate date range from month settings
+    const startDate = new Date(planYear, startMonth - 1, 1);
+    const endDate = new Date(planYear, endMonth, 0); // Last day of end month
+    const rangeStartDoy = getDayOfYear(startDate.toISOString().split('T')[0]);
+    const rangeEndDoy = getDayOfYear(endDate.toISOString().split('T')[0]);
+
+    // Filter data to month range
+    const filteredData = data.filter(d => d.doy >= rangeStartDoy && d.doy <= rangeEndDoy);
+
     // Sample weekly to reduce data points
-    const sampled: typeof data = [];
-    for (let i = 0; i < data.length; i += 7) {
-      sampled.push(data[i]);
+    const sampled: typeof filteredData = [];
+    for (let i = 0; i < filteredData.length; i += 7) {
+      sampled.push(filteredData[i]);
     }
     // Always include last point
-    if (data.length > 0 && (sampled.length === 0 || sampled[sampled.length - 1].doy !== data[data.length - 1].doy)) {
-      sampled.push(data[data.length - 1]);
+    if (filteredData.length > 0 && (sampled.length === 0 || sampled[sampled.length - 1].doy !== filteredData[filteredData.length - 1].doy)) {
+      sampled.push(filteredData[filteredData.length - 1]);
     }
 
     return sampled;
-  }, [items, targetPortions, planYear]);
+  }, [items, targetPortions, planYear, startMonth, endMonth]);
 
   if (chartData.length === 0 || targetPortions <= 0) {
     return (
@@ -2566,7 +2583,29 @@ function ProductsMeetingTargetChart({ items, targetPortions, planYear }: Product
   }
 
   const maxCount = Math.max(...chartData.map(d => Math.max(d.count, d.total)));
-  const maxPortions = Math.max(...chartData.map(d => d.totalPortions));
+  const maxPerTarget = Math.max(...chartData.map(d => d.perTarget));
+
+  // X-axis domain from month settings
+  const xAxisStartDoy = getDayOfYear(new Date(planYear, startMonth - 1, 1).toISOString().split('T')[0]);
+  const xAxisEndDoy = getDayOfYear(new Date(planYear, endMonth, 0).toISOString().split('T')[0]);
+
+  // Generate monthly tick values for consistent intervals
+  const monthTicks: number[] = [];
+  for (let m = startMonth; m <= endMonth; m++) {
+    const firstOfMonth = new Date(planYear, m - 1, 1);
+    monthTicks.push(getDayOfYear(firstOfMonth.toISOString().split('T')[0]));
+  }
+
+  // Metric descriptions for tooltips and modal
+  const metricDescriptions = {
+    meetingTarget: 'Number of products with portions/wk ≥ target. These are products you can reliably include in shares.',
+    activeProducts: 'Total number of products being harvested that week, regardless of volume.',
+    perTarget: `Portions per target (total portions ÷ ${targetPortions}). Shows how many items you could give each target customer on average.`,
+    targetItems: `Your goal for items per share (${targetItems}). All metrics should ideally reach or exceed this line.`,
+  };
+
+  // Single Y-axis domain: max of all metrics and targetItems
+  const yAxisMax = Math.ceil(Math.max(maxCount, maxPerTarget, targetItems) * 1.2);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
@@ -2575,63 +2614,137 @@ function ProductsMeetingTargetChart({ items, targetPortions, planYear }: Product
           Products Meeting Target ({targetPortions}+ portions/wk)
         </h3>
         <div className="flex items-center gap-4 text-xs text-gray-500">
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 cursor-help" title={metricDescriptions.meetingTarget}>
             <span className="w-3 h-3 bg-green-500 rounded-sm opacity-70"></span>
             Meeting target
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 cursor-help" title={metricDescriptions.activeProducts}>
             <span className="w-3 h-3 bg-gray-300 rounded-sm"></span>
             Active products
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 cursor-help" title={metricDescriptions.perTarget}>
             <span className="w-3 h-0.5 bg-blue-500"></span>
-            Total portions
+            Per target
           </span>
+          <span className="flex items-center gap-1 cursor-help" title={metricDescriptions.targetItems}>
+            <span className="w-3 h-0 border-t-2 border-dashed border-red-500"></span>
+            Goal ({targetItems})
+          </span>
+          <button
+            onClick={() => setShowMetricsInfo(true)}
+            className="ml-1 text-gray-400 hover:text-gray-600"
+            title="Learn about these metrics"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
         </div>
       </div>
+
+      {/* Metrics Info Modal */}
+      {showMetricsInfo && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
+          <div className="absolute inset-0 bg-black/30" onClick={() => setShowMetricsInfo(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div className="px-6 py-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Chart Metrics</h2>
+              <button
+                onClick={() => setShowMetricsInfo(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl leading-none p-1"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-3 h-3 bg-green-500 rounded-sm opacity-70"></span>
+                  <span className="font-medium text-gray-900">Meeting Target</span>
+                </div>
+                <p className="text-sm text-gray-600 ml-5">{metricDescriptions.meetingTarget}</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-3 h-3 bg-gray-300 rounded-sm"></span>
+                  <span className="font-medium text-gray-900">Active Products</span>
+                </div>
+                <p className="text-sm text-gray-600 ml-5">{metricDescriptions.activeProducts}</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-3 h-0.5 bg-blue-500"></span>
+                  <span className="font-medium text-gray-900">Per Target</span>
+                </div>
+                <p className="text-sm text-gray-600 ml-5">{metricDescriptions.perTarget}</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-3 h-0 border-t-2 border-dashed border-red-500"></span>
+                  <span className="font-medium text-gray-900">Goal Line ({targetItems})</span>
+                </div>
+                <p className="text-sm text-gray-600 ml-5">{metricDescriptions.targetItems}</p>
+              </div>
+              <div className="pt-2 border-t text-sm text-gray-500">
+                <p><strong>Tip:</strong> With {targetPortions} target customers and a goal of {targetItems} items per share, aim for all three metrics to reach or exceed the red goal line.</p>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end rounded-b-lg">
+              <button
+                onClick={() => setShowMetricsInfo(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData} margin={{ top: 5, right: 45, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis
-              dataKey="date"
+              dataKey="doy"
+              type="number"
+              domain={[xAxisStartDoy, xAxisEndDoy]}
+              ticks={monthTicks}
+              tickFormatter={(doy) => {
+                const date = new Date(planYear, 0, doy);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return months[date.getMonth()];
+              }}
               tick={{ fontSize: 10, fill: '#9ca3af' }}
               tickLine={false}
               axisLine={{ stroke: '#e5e7eb' }}
-              interval="preserveStartEnd"
             />
             <YAxis
-              yAxisId="left"
-              domain={[0, Math.ceil(maxCount * 1.1)]}
+              domain={[0, yAxisMax]}
               tick={{ fontSize: 10, fill: '#9ca3af' }}
               tickLine={false}
               axisLine={false}
               width={30}
               allowDecimals={false}
             />
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              domain={[0, Math.ceil(maxPortions * 1.1)]}
-              tick={{ fontSize: 10, fill: '#3b82f6' }}
-              tickLine={false}
-              axisLine={false}
-              width={40}
-              allowDecimals={false}
-            />
             <Tooltip
               formatter={(value, name) => {
                 if (name === 'count') return [value ?? 0, 'Meeting target'];
                 if (name === 'total') return [value ?? 0, 'Active products'];
-                if (name === 'totalPortions') return [`${value ?? 0}/wk`, 'Total portions'];
+                if (name === 'perTarget') return [(value as number).toFixed(1), 'Per target'];
                 return [value, name];
               }}
-              labelFormatter={(label) => label}
+              labelFormatter={(doy) => formatDoyAsDate(doy as number, planYear)}
               contentStyle={{ fontSize: 11, padding: '4px 8px' }}
+            />
+            {/* Target items reference line */}
+            <ReferenceLine
+              y={targetItems}
+              stroke="#ef4444"
+              strokeDasharray="6 3"
+              strokeWidth={2}
             />
             {/* Background area showing total active products */}
             <Area
-              yAxisId="left"
               type="stepAfter"
               dataKey="total"
               fill="#e5e7eb"
@@ -2641,7 +2754,6 @@ function ProductsMeetingTargetChart({ items, targetPortions, planYear }: Product
             />
             {/* Foreground area showing products meeting target */}
             <Area
-              yAxisId="left"
               type="stepAfter"
               dataKey="count"
               fill="#22c55e"
@@ -2649,11 +2761,10 @@ function ProductsMeetingTargetChart({ items, targetPortions, planYear }: Product
               strokeWidth={2}
               fillOpacity={0.7}
             />
-            {/* Line showing total portions available */}
+            {/* Line showing portions per target */}
             <Line
-              yAxisId="right"
               type="stepAfter"
-              dataKey="totalPortions"
+              dataKey="perTarget"
               stroke="#3b82f6"
               strokeWidth={2}
               dot={false}
@@ -2759,129 +2870,177 @@ function PortionTab({ portionReport, markets, planYear, planId, plantings }: Por
   }, []);
 
   return (
-    <div className="flex flex-col h-full gap-4">
-      {/* Settings bar */}
-      <div className="bg-white rounded-lg shadow-sm p-4 flex flex-wrap items-center gap-4">
-        {/* Target portions input */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="targetPortions" className="text-sm font-medium text-gray-700">
-            Target portions/wk:
+    <div className="flex flex-col">
+      {/* Sticky header section - settings, stats, and summary chart */}
+      <div className="sticky top-0 z-10 bg-gray-50 pb-4 space-y-4 print:static print:pb-2">
+        {/* Settings bar */}
+        <div className="bg-white rounded-lg shadow-sm p-4 flex flex-wrap items-center gap-4 print:hidden">
+          {/* Target portions input */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="targetPortions" className="text-sm font-medium text-gray-700" title="Number of customers/shares. Products meeting this threshold can reliably go in every share.">
+              Target:
+            </label>
+            <input
+              id="targetPortions"
+              type="number"
+              min={1}
+              value={settings.targetPortions}
+              onChange={(e) => updateSettings({ targetPortions: parseInt(e.target.value, 10) || 1 })}
+              className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              title="Number of customers/shares"
+            />
+          </div>
+
+          {/* Target items input */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="targetItems" className="text-sm font-medium text-gray-700" title="Goal for items per share. This draws the red reference line on the chart.">
+              Items/share:
+            </label>
+            <input
+              id="targetItems"
+              type="number"
+              min={1}
+              value={settings.targetItems}
+              onChange={(e) => updateSettings({ targetItems: parseInt(e.target.value, 10) || 1 })}
+              className="w-14 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              title="Goal for items per share"
+            />
+          </div>
+
+          {/* Month range */}
+          <div className="flex items-center gap-2 text-sm">
+            <select
+              value={settings.startMonth}
+              onChange={(e) => updateSettings({ startMonth: parseInt(e.target.value) })}
+              className="px-2 py-1 border border-gray-300 rounded text-sm"
+            >
+              {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((name, i) => (
+                <option key={i + 1} value={i + 1}>{name}</option>
+              ))}
+            </select>
+            <span className="text-gray-400">to</span>
+            <select
+              value={settings.endMonth}
+              onChange={(e) => updateSettings({ endMonth: parseInt(e.target.value) })}
+              className="px-2 py-1 border border-gray-300 rounded text-sm"
+            >
+              {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((name, i) => (
+                <option key={i + 1} value={i + 1}>{name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Market filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">Markets:</span>
+            <div className="flex gap-1">
+              {activeMarkets.map((market) => (
+                <button
+                  key={market.id}
+                  onClick={() => toggleMarket(market.id)}
+                  className={`px-2 py-1 text-xs rounded border ${
+                    settings.selectedMarkets.length === 0 || settings.selectedMarkets.includes(market.id)
+                      ? 'bg-blue-100 border-blue-300 text-blue-700'
+                      : 'bg-gray-100 border-gray-300 text-gray-500'
+                  }`}
+                >
+                  {market.name}
+                </button>
+              ))}
+              {settings.selectedMarkets.length > 0 && (
+                <button
+                  onClick={() => updateSettings({ selectedMarkets: [] })}
+                  className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Include plantings without bed assignment toggle */}
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.includeUnassigned}
+              onChange={(e) => updateSettings({ includeUnassigned: e.target.checked })}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-600">Include plantings without bed</span>
           </label>
-          <input
-            id="targetPortions"
-            type="number"
-            min={0}
-            value={settings.targetPortions}
-            onChange={(e) => updateSettings({ targetPortions: parseInt(e.target.value, 10) || 0 })}
-            className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+
+          {/* Sort controls */}
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-sm text-gray-600">Sort:</span>
+            <select
+              value={settings.sortBy}
+              onChange={(e) => updateSettings({ sortBy: e.target.value as 'crop' | 'portions' })}
+              className="px-2 py-1 text-sm border border-gray-300 rounded"
+            >
+              <option value="crop">Crop</option>
+              <option value="portions">Portions</option>
+            </select>
+            <button
+              onClick={() => updateSettings({ sortDir: settings.sortDir === 'asc' ? 'desc' : 'asc' })}
+              className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+            >
+              {settings.sortDir === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
         </div>
 
-        {/* Market filter */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Markets:</span>
-          <div className="flex gap-1">
-            {activeMarkets.map((market) => (
-              <button
-                key={market.id}
-                onClick={() => toggleMarket(market.id)}
-                className={`px-2 py-1 text-xs rounded border ${
-                  settings.selectedMarkets.length === 0 || settings.selectedMarkets.includes(market.id)
-                    ? 'bg-blue-100 border-blue-300 text-blue-700'
-                    : 'bg-gray-100 border-gray-300 text-gray-500'
-                }`}
-              >
-                {market.name}
-              </button>
-            ))}
-            {settings.selectedMarkets.length > 0 && (
-              <button
-                onClick={() => updateSettings({ selectedMarkets: [] })}
-                className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
-              >
-                Clear
-              </button>
+        {/* Summary stats */}
+        <div className="bg-white rounded-lg shadow-sm p-4 print:p-2 print:shadow-none">
+          <div className="flex gap-8 text-sm print:text-xs">
+            <div>
+              <span className="text-gray-500">Products: </span>
+              <span className="font-medium">{filteredItems.length}</span>
+            </div>
+            <div>
+              <span className="text-gray-500">Total max portions/wk: </span>
+              <span className="font-medium">{Math.round(filteredItems.reduce((sum, i) => sum + i.maxPortionsPerWeek, 0))}</span>
+            </div>
+            {portionReport.productsWithoutPortionSize.length > 0 && (
+              <div className="text-amber-600 flex items-center gap-2 print:hidden">
+                <span
+                  className="cursor-pointer hover:underline"
+                  title={portionReport.productsWithoutPortionSize.join('\n')}
+                >
+                  {portionReport.productsWithoutPortionSize.length} products missing portion size: {portionReport.productsWithoutPortionSize.join(', ')}
+                </span>
+                <Link
+                  href="/products"
+                  className="text-blue-600 hover:underline text-xs whitespace-nowrap"
+                >
+                  Fix in Products →
+                </Link>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Include plantings without bed assignment toggle */}
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={settings.includeUnassigned}
-            onChange={(e) => updateSettings({ includeUnassigned: e.target.checked })}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        {/* Products meeting target chart */}
+        <div className="print:break-after-page">
+          <ProductsMeetingTargetChart
+            items={filteredItems}
+            targetPortions={settings.targetPortions}
+            targetItems={settings.targetItems}
+            planYear={planYear}
+            startMonth={settings.startMonth}
+            endMonth={settings.endMonth}
           />
-          <span className="text-gray-600">Include plantings without bed</span>
-        </label>
-
-        {/* Sort controls */}
-        <div className="flex items-center gap-2 ml-auto">
-          <span className="text-sm text-gray-600">Sort:</span>
-          <select
-            value={settings.sortBy}
-            onChange={(e) => updateSettings({ sortBy: e.target.value as 'crop' | 'portions' })}
-            className="px-2 py-1 text-sm border border-gray-300 rounded"
-          >
-            <option value="crop">Crop</option>
-            <option value="portions">Portions</option>
-          </select>
-          <button
-            onClick={() => updateSettings({ sortDir: settings.sortDir === 'asc' ? 'desc' : 'asc' })}
-            className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
-          >
-            {settings.sortDir === 'asc' ? '↑' : '↓'}
-          </button>
         </div>
       </div>
 
-      {/* Summary stats */}
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <div className="flex gap-8 text-sm">
-          <div>
-            <span className="text-gray-500">Products: </span>
-            <span className="font-medium">{filteredItems.length}</span>
-          </div>
-          <div>
-            <span className="text-gray-500">Total max portions/wk: </span>
-            <span className="font-medium">{Math.round(filteredItems.reduce((sum, i) => sum + i.maxPortionsPerWeek, 0))}</span>
-          </div>
-          {portionReport.productsWithoutPortionSize.length > 0 && (
-            <div className="text-amber-600 flex items-center gap-2">
-              <span
-                className="cursor-pointer hover:underline"
-                title={portionReport.productsWithoutPortionSize.join('\n')}
-              >
-                {portionReport.productsWithoutPortionSize.length} products missing portion size: {portionReport.productsWithoutPortionSize.join(', ')}
-              </span>
-              <Link
-                href="/products"
-                className="text-blue-600 hover:underline text-xs whitespace-nowrap"
-              >
-                Fix in Products →
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Products meeting target chart */}
-      <ProductsMeetingTargetChart
-        items={filteredItems}
-        targetPortions={settings.targetPortions}
-        planYear={planYear}
-      />
-
-      {/* Chart grid */}
-      <div className="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
-        <VirtualizedChartGrid
-          items={filteredItems}
-          itemWidth={220}
-          itemHeight={160}
-          gap={12}
-          className="h-full p-4"
-          renderItem={(item) => (
+      {/* Chart grid - renders all charts for proper printing */}
+      <div className="bg-white rounded-lg shadow-sm p-4 print:p-2 print:shadow-none">
+        <div
+          className="grid gap-3 print:gap-2"
+          style={{
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          }}
+        >
+          {filteredItems.map((item) => (
             <PortionChart
               key={item.productId}
               crop={item.crop}
@@ -2890,17 +3049,17 @@ function PortionTab({ portionReport, markets, planYear, planId, plantings }: Por
               maxPortionsPerWeek={item.maxPortionsPerWeek}
               targetPortions={settings.targetPortions}
               portionSize={item.portionSize}
-              harvestEvents={item.harvestEvents}
-              harvestStartDate={item.harvestStartDate}
-              harvestEndDate={item.harvestEndDate}
+              plantings={item.plantings}
               planYear={planYear}
+              startMonth={settings.startMonth}
+              endMonth={settings.endMonth}
               width={200}
               height={140}
               productId={item.productId}
               onDiveInto={handleDiveInto}
             />
-          )}
-        />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -2929,7 +3088,8 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
     return null;
   });
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'totalYield', desc: true },
+    { id: 'crop', desc: false },
+    { id: 'productName', desc: false },
   ]);
 
   // Shared portion settings (for target portions line)
@@ -3021,6 +3181,40 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
         meta: { align: 'right' },
       },
       {
+        id: 'portionsPerWeek',
+        header: 'Portions/Wk',
+        cell: ({ row }) => {
+          const portionSize = products[row.original.productId]?.portionSize;
+          if (!portionSize || portionSize <= 0) {
+            return <span className="text-gray-300">-</span>;
+          }
+          const maxPortionsPerWeek = row.original.maxYieldPerWeek / portionSize;
+          return maxPortionsPerWeek.toFixed(1);
+        },
+        meta: { align: 'right' },
+      },
+      {
+        id: 'portionStatus',
+        header: 'Target',
+        cell: ({ row }) => {
+          const portionSize = products[row.original.productId]?.portionSize;
+          const targetPortions = portionSettings.targetPortions;
+          if (!portionSize || portionSize <= 0 || !targetPortions || targetPortions <= 0) {
+            return <span className="text-gray-300">-</span>;
+          }
+          const maxPortionsPerWeek = row.original.maxYieldPerWeek / portionSize;
+          const meetsTarget = maxPortionsPerWeek >= targetPortions;
+          return (
+            <span
+              className={`inline-block w-3 h-3 rounded-full ${meetsTarget ? 'bg-green-500' : 'bg-amber-500'}`}
+              title={`${maxPortionsPerWeek.toFixed(1)} portions/wk (target: ${targetPortions})`}
+            />
+          );
+        },
+        meta: { align: 'center' },
+        size: 60,
+      },
+      {
         accessorKey: 'totalBedFeet',
         header: 'Bed Feet',
         cell: info => (info.getValue() as number).toLocaleString(),
@@ -3032,7 +3226,7 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
         meta: { align: 'right' },
       },
     ],
-    [expandedProductId]
+    [expandedProductId, portionSettings.targetPortions, products]
   );
 
   const table = useReactTable({
@@ -3054,9 +3248,9 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
 
   return (
     <div className="flex flex-col gap-4 h-full min-h-0">
-      {/* Harvest Chart - shows when a product is selected */}
-      {selectedProduct && (
-        <div className="flex-shrink-0">
+      {/* Harvest Chart - always show container to avoid layout shift */}
+      <div className="flex-shrink-0">
+        {selectedProduct ? (
           <ProductionChart
             key={`${selectedProduct.productId}-${selectedProduct.totalYield}-${selectedProduct.totalBedFeet}`}
             harvestEvents={selectedProduct.harvestEvents}
@@ -3071,8 +3265,12 @@ function ProductionTab({ report, initialProduct, globalFilter, planYear, planId,
             portionSize={products[selectedProduct.productId]?.portionSize}
             onTargetPortionsChange={(val) => updatePortionSettings({ targetPortions: val })}
           />
-        </div>
-      )}
+        ) : (
+          <div className="bg-white rounded-lg border border-gray-200 p-4 h-[280px] flex items-center justify-center">
+            <span className="text-gray-400 text-sm">Select a product to view harvest chart</span>
+          </div>
+        )}
+      </div>
 
       {/* Products Table */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 flex-1 min-h-0 flex flex-col">
@@ -3234,38 +3432,20 @@ export default function ReportsPage() {
 
   // Load the specific plan by ID
   useEffect(() => {
-    async function loadPlan() {
-      if (!planId) {
-        setError('No plan ID provided');
-        setLoading(false);
-        return;
-      }
+    if (!planId) {
+      setError('No plan ID provided');
+      setLoading(false);
+      return;
+    }
 
-      try {
-        // Check if plan is already loaded in store
-        if (currentPlan?.id === planId) {
-          setLoading(false);
-          return;
-        }
-
-        // Try to load from library
-        const loaded = await loadPlanFromLibrary(planId);
-        if (loaded) {
-          loadPlanById(planId);
-          setLoading(false);
-        } else {
-          setError(`Plan "${planId}" not found`);
-          setLoading(false);
-        }
-      } catch (err) {
+    loadPlanById(planId)
+      .then(() => setLoading(false))
+      .catch((err) => {
         console.error('Error loading plan:', err);
         setError('Failed to load plan');
         setLoading(false);
-      }
-    }
-
-    loadPlan();
-  }, [planId, currentPlan?.id, loadPlanById]);
+      });
+  }, [planId, loadPlanById]);
 
   // Get GDD-adjusted timeline crops - single source of truth for dates
   const { crops: timelineCrops } = useComputedCrops();

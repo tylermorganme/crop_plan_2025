@@ -119,48 +119,58 @@ function ProductEditor({
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <input
-              type="text"
-              value={form.crop}
-              onChange={(e) => setForm({ ...form, crop: e.target.value })}
-              className="px-2 py-1.5 border rounded text-sm"
-              placeholder="Crop *"
-              required
-              autoFocus
-            />
-            <input
-              type="text"
-              value={form.product}
-              onChange={(e) => setForm({ ...form, product: e.target.value })}
-              className="px-2 py-1.5 border rounded text-sm"
-              placeholder="Product *"
-              required
-            />
-            <input
-              type="text"
-              value={form.unit}
-              onChange={(e) => setForm({ ...form, unit: e.target.value })}
-              className="px-2 py-1.5 border rounded text-sm"
-              placeholder="Unit *"
-              required
-            />
-            <input
-              type="number"
-              min="0"
-              value={form.holdingWindow}
-              onChange={(e) => setForm({ ...form, holdingWindow: e.target.value })}
-              className="px-2 py-1.5 border rounded text-sm w-full"
-              placeholder="Hold (days)"
-            />
-            <input
-              type="number"
-              min="0"
-              step="0.1"
-              value={form.portionSize}
-              onChange={(e) => setForm({ ...form, portionSize: e.target.value })}
-              className="px-2 py-1.5 border rounded text-sm w-full"
-              placeholder="CSA Portion"
-            />
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Crop *</label>
+              <input
+                type="text"
+                value={form.crop}
+                onChange={(e) => setForm({ ...form, crop: e.target.value })}
+                className="px-2 py-1.5 border rounded text-sm w-full"
+                required
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Product *</label>
+              <input
+                type="text"
+                value={form.product}
+                onChange={(e) => setForm({ ...form, product: e.target.value })}
+                className="px-2 py-1.5 border rounded text-sm w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Unit *</label>
+              <input
+                type="text"
+                value={form.unit}
+                onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                className="px-2 py-1.5 border rounded text-sm w-full"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Hold (days)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.holdingWindow}
+                onChange={(e) => setForm({ ...form, holdingWindow: e.target.value })}
+                className="px-2 py-1.5 border rounded text-sm w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">CSA Portion Size</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={form.portionSize}
+                onChange={(e) => setForm({ ...form, portionSize: e.target.value })}
+                className="px-2 py-1.5 border rounded text-sm w-full"
+              />
+            </div>
           </div>
           <div className="border-t pt-3">
             <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Prices by Market</h3>

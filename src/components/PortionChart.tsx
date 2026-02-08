@@ -10,7 +10,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
-import type { PortionHarvestEvent } from '@/lib/portion-report';
+import type { PortionPlantingRate } from '@/lib/portion-report';
 
 export interface PortionChartProps {
   crop: string;
@@ -19,10 +19,13 @@ export interface PortionChartProps {
   maxPortionsPerWeek: number;
   targetPortions?: number;
   portionSize: number;
-  harvestEvents: PortionHarvestEvent[];
-  harvestStartDate: string | null;
-  harvestEndDate: string | null;
+  /** Per-planting rate data (harvest window method) for drawing capacity line */
+  plantings: PortionPlantingRate[];
   planYear: number;
+  /** X-axis start month (1-12) */
+  startMonth?: number;
+  /** X-axis end month (1-12) */
+  endMonth?: number;
   width?: number;
   height?: number;
   /** Product ID for deep linking */
@@ -60,46 +63,38 @@ export function PortionChart({
   maxPortionsPerWeek,
   targetPortions,
   portionSize,
-  harvestEvents,
+  plantings,
+  planYear,
+  startMonth = 1,
+  endMonth = 12,
   unit,
   width = 200,
   height = 140,
   productId,
   onDiveInto,
 }: PortionChartProps) {
-  // Group events by planting to calculate per-planting ranges
+  // Convert per-planting rate data to ranges for chart rendering
+  // Uses pre-calculated rates from harvest window method (smoothed, not derived from events)
   const plantingRanges = useMemo((): PlantingRange[] => {
-    if (harvestEvents.length === 0) return [];
+    if (plantings.length === 0) return [];
 
-    // Group events by planting
-    const byPlanting = new Map<string, { dates: string[]; totalPortions: number }>();
-    for (const event of harvestEvents) {
-      const existing = byPlanting.get(event.plantingId);
-      if (existing) {
-        existing.dates.push(event.date);
-        existing.totalPortions += event.portions;
-      } else {
-        byPlanting.set(event.plantingId, {
-          dates: [event.date],
-          totalPortions: event.portions,
-        });
-      }
-    }
-
-    // Convert to ranges with portions per week
     const ranges: PlantingRange[] = [];
-    for (const [plantingId, data] of byPlanting) {
-      const sortedDates = data.dates.sort();
-      const startDoy = getDayOfYear(sortedDates[0]);
-      const endDoy = getDayOfYear(sortedDates[sortedDates.length - 1]);
-      const daysSpan = Math.max(1, endDoy - startDoy + 1);
-      const portionsPerWeek = (data.totalPortions / daysSpan) * 7;
+    for (const p of plantings) {
+      if (!p.harvestStartDate || !p.harvestEndDate || p.maxPortionsPerWeek <= 0) continue;
 
-      ranges.push({ plantingId, startDoy, endDoy, portionsPerWeek });
+      const startDoy = getDayOfYear(p.harvestStartDate);
+      const endDoy = getDayOfYear(p.harvestEndDate);
+
+      ranges.push({
+        plantingId: p.plantingId,
+        startDoy,
+        endDoy,
+        portionsPerWeek: p.maxPortionsPerWeek,
+      });
     }
 
     return ranges;
-  }, [harvestEvents]);
+  }, [plantings]);
 
   // Calculate weekly capacity at each day of year (stepped line data)
   const chartData = useMemo(() => {
@@ -138,6 +133,8 @@ export function PortionChart({
   }, [plantingRanges]);
 
   // Determine color based on max vs target
+  // Use the pre-calculated maxPortionsPerWeek from production (spec-based smoothing + overlap stacking)
+  // NOT the chart's visual capacity which is derived from harvest event dates
   const meetsTarget = !targetPortions || maxPortionsPerWeek >= targetPortions;
   const lineColor = meetsTarget ? '#22c55e' : '#f59e0b';
 
@@ -161,11 +158,20 @@ export function PortionChart({
     );
   }
 
-  const maxCapacity = Math.max(...chartData.map(d => d.capacity));
-  // Y-axis is 2x the target (if target exists), otherwise 1.2x the max capacity
+  // Y-axis scaling uses the higher of chart visual peak or calculated max
+  // This ensures the line fits and the target line is visible
+  const chartVisualPeak = Math.max(...chartData.map(d => d.capacity));
+  const effectiveMax = Math.max(chartVisualPeak, maxPortionsPerWeek);
+
+  // X-axis domain: convert month range to day-of-year range
+  const xAxisDomain = useMemo(() => {
+    const startDate = new Date(planYear, startMonth - 1, 1);
+    const endDate = new Date(planYear, endMonth, 0); // Last day of end month
+    return [getDayOfYear(startDate.toISOString().split('T')[0]), getDayOfYear(endDate.toISOString().split('T')[0])];
+  }, [planYear, startMonth, endMonth]);
   const yAxisMax = targetPortions && targetPortions > 0
-    ? Math.ceil(targetPortions * 2)
-    : Math.ceil(maxCapacity * 1.2);
+    ? Math.ceil(Math.max(targetPortions * 2, effectiveMax * 1.2))
+    : Math.ceil(effectiveMax * 1.2);
 
   return (
     <div
@@ -199,11 +205,13 @@ export function PortionChart({
           >
             <XAxis
               dataKey="doy"
+              domain={xAxisDomain}
               tick={{ fontSize: 9, fill: '#9ca3af' }}
               tickFormatter={formatDoy}
               tickLine={false}
               axisLine={{ stroke: '#e5e7eb' }}
               interval="preserveStartEnd"
+              type="number"
             />
             <YAxis
               domain={[0, yAxisMax]}

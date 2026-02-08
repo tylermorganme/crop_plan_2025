@@ -46,7 +46,7 @@ export default function AddToBedPanel({
     return visibleSpecs.filter(c =>
       // Use searchText if available (materialized), otherwise fall back to fields
       c.searchText?.toLowerCase().includes(q) ||
-      c.identifier?.toLowerCase().includes(q) ||
+      c.name?.toLowerCase().includes(q) ||
       c.crop?.toLowerCase().includes(q) ||
       c.category?.toLowerCase().includes(q)
     );
@@ -100,7 +100,7 @@ export default function AddToBedPanel({
 
   const handleSelectSpec = useCallback((spec: PlantingSpec) => {
     const fieldStartDate = getFieldStartDate(spec);
-    onAddPlanting(spec.identifier, fieldStartDate, bedId);
+    onAddPlanting(spec.id, fieldStartDate, bedId);
   }, [bedId, getFieldStartDate, onAddPlanting]);
 
   // Calculate timing details for hovered spec
@@ -165,9 +165,9 @@ export default function AddToBedPanel({
                   </div>
                   {groupedSpecs[category].map((spec) => (
                     <div
-                      key={spec.identifier}
+                      key={spec.name}
                       className={`px-3 py-2 cursor-pointer transition-colors border-b border-gray-100 ${
-                        hoveredSpec?.identifier === spec.identifier
+                        hoveredSpec?.name === spec.name
                           ? 'bg-blue-50'
                           : 'hover:bg-gray-50'
                       } ${spec.deprecated ? 'opacity-60' : ''}`}
@@ -176,7 +176,7 @@ export default function AddToBedPanel({
                       onMouseLeave={() => setHoveredSpec(null)}
                     >
                       <div className="text-sm font-medium text-gray-900 truncate">
-                        {spec.identifier}
+                        {spec.name}
                       </div>
                       <div className="text-xs text-gray-500 truncate">
                         {spec.category} · {spec.growingStructure} · {calculatePlantingMethod(spec)}
@@ -197,7 +197,7 @@ export default function AddToBedPanel({
             {/* Spec header */}
             <div className="p-4 border-b bg-white">
               <div className="font-semibold text-gray-900">
-                {hoveredSpec.identifier}
+                {hoveredSpec.name}
               </div>
               <div className="text-sm text-gray-600 mt-1">
                 {hoveredSpec.category}

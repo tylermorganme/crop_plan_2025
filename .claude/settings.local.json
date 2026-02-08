@@ -82,11 +82,22 @@
       "Bash(wc:*)",
       "Bash(for db in /home/tyler/Projects/crop_plan_2025/data/plans/*.db)",
       "Bash(do echo \"=== $db ===\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(npm test:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(tar:*)",
+      "Bash(git stash:*)",
+      "Bash(git stash pop:*)",
+      "Bash(# Let me search across ALL plan data for \"\"U-Pick\"\" or \"\"U Pick\"\" to find the right field db=\"\"/home/tyler/Projects/crop_plan_2025/data/plans/1768953321488-g4nkw18r8.db\"\" sqlite3 \"\"$db\"\" \"\"SELECT data FROM plan WHERE id=''main''\"\" | python3 -c \"\" import json, sys, re data = json.loads\\(sys.stdin.read\\(\\)\\) blob = json.dumps\\(data\\) # Find ''U-Pick'' NOT in a pricing context for m in re.finditer\\(r''[Uu].?[Pp]ick'', blob\\): start = max\\(0, m.start\\(\\)-150\\) end = min\\(len\\(blob\\), m.end\\(\\)+50\\) context = blob[start:end] if ''market-upick'' not in context and ''market_upick'' not in context: print\\(f''...{context}...''\\) print\\(''---''\\) \"\" 2>&1)",
+      "Bash(npx vitest:*)",
+      "Bash(git status:*)",
+      "Bash(ss:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []
   },
+  "model": "claude-opus-4-6",
   "hooks": {
     "Notification": [
       {

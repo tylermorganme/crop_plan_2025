@@ -28,7 +28,11 @@ export interface TimelineCropFilterable {
   crop?: string;
   name?: string;
   notes?: string;
+  tags?: string[];
+  specTags?: string[];
   growingStructure?: string;
+  irrigation?: string;
+  rowCover?: string;
   // Fields needed for buildCropSearchText
   specId?: string;
   groupId?: string;
@@ -45,6 +49,8 @@ export interface TimelineCropFilterable {
  * - crop:value - matches crop name or display name
  * - notes:value - matches notes field
  * - structure:value - matches growing structure (field, gh, ht)
+ * - tag:value - matches planting tags
+ * - spectag:value - matches spec tags
  */
 export const timelineCropSearchConfig: SearchConfig<TimelineCropFilterable> = {
   fields: [
@@ -77,6 +83,27 @@ export const timelineCropSearchConfig: SearchConfig<TimelineCropFilterable> = {
       name: 'structure',
       getValue: (c) => c.growingStructure,
     },
+    {
+      name: 'irrigation',
+      getValue: (c) => c.irrigation,
+    },
+    {
+      name: 'rowcover',
+      aliases: ['rowCover'],
+      getValue: (c) => c.rowCover,
+    },
+    {
+      name: 'tag',
+      aliases: ['tags'],
+      matchType: 'array-includes',
+      getValue: (c) => c.tags,
+    },
+    {
+      name: 'spectag',
+      aliases: ['spectags'],
+      matchType: 'array-includes',
+      getValue: (c) => c.specTags,
+    },
   ],
   buildSearchText: buildCropSearchText,
 };
@@ -94,8 +121,10 @@ export interface EnrichedPlantingFilterable {
   category?: string;
   method?: string;
   cropName?: string;
-  identifier?: string;
+  name?: string;
   notes?: string;
+  tags?: string[];
+  specTags?: string[];
   growingStructure?: string;
   // Additional fields for search text
   id?: string;
@@ -128,7 +157,7 @@ export const enrichedPlantingSearchConfig: SearchConfig<EnrichedPlantingFilterab
     },
     {
       name: 'crop',
-      getValue: (p) => p.cropName ?? p.identifier,
+      getValue: (p) => p.cropName ?? p.name,
     },
     {
       name: 'notes',
@@ -138,17 +167,31 @@ export const enrichedPlantingSearchConfig: SearchConfig<EnrichedPlantingFilterab
       name: 'structure',
       getValue: (p) => p.growingStructure,
     },
+    {
+      name: 'tag',
+      aliases: ['tags'],
+      matchType: 'array-includes',
+      getValue: (p) => p.tags,
+    },
+    {
+      name: 'spectag',
+      aliases: ['spectags'],
+      matchType: 'array-includes',
+      getValue: (p) => p.specTags,
+    },
   ],
   buildSearchText: (p) => [
     p.cropName,
     p.category,
-    p.identifier,
+    p.name,
     p.bedName,
     p.id,
     p.notes,
     p.method,
     p.sequenceDisplay,
     p.growingStructure,
+    ...(p.tags ?? []),
+    ...(p.specTags ?? []),
   ].filter(Boolean).join(' ').toLowerCase(),
 };
 
@@ -162,7 +205,7 @@ export const enrichedPlantingSearchConfig: SearchConfig<EnrichedPlantingFilterab
  */
 export function buildSpecSearchText(spec: PlantingSpec): string {
   const fields = [
-    spec.identifier,
+    spec.name,
     spec.crop,
     spec.category,
     spec.growingStructure,
@@ -174,6 +217,11 @@ export function buildSpecSearchText(spec: PlantingSpec): string {
     spec.productYields.forEach(py => {
       if (py.productId) fields.push(py.productId);
     });
+  }
+
+  // Add tags
+  if (spec.tags) {
+    spec.tags.forEach(t => fields.push(t));
   }
 
   return fields.join(' ').toLowerCase();
@@ -235,6 +283,12 @@ export const plantingSpecSearchConfig: SearchConfig<PlantingSpec> = {
       name: 'favorite',
       matchType: 'equals',
       getValue: (s) => !!s.isFavorite,
+    },
+    {
+      name: 'tag',
+      aliases: ['tags'],
+      matchType: 'array-includes',
+      getValue: (s) => s.tags ?? [],
     },
   ],
   buildSearchText: buildSpecSearchText,

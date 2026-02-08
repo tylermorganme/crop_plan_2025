@@ -58,7 +58,7 @@ export interface Planting {
   /** Unique planting identifier (e.g., "ARU001", "P1") */
   id: string;
 
-  /** Reference to PlantingSpec.identifier in plan's specs */
+  /** Reference to PlantingSpec.id in plan's specs */
   specId: string;
 
   // ---- Scheduling ----
@@ -119,6 +119,9 @@ export interface Planting {
   /** User notes about this planting */
   notes?: string;
 
+  /** Arbitrary user tags for grouping/filtering */
+  tags?: string[];
+
   // ---- Sequence Membership ----
 
   /**
@@ -177,7 +180,7 @@ export function initializePlantingIdCounter(existingIds: string[]): void {
 export interface CreatePlantingInput {
   /** Optional ID (generated if not provided) */
   id?: string;
-  /** Reference to planting spec identifier */
+  /** Reference to planting spec ID */
   specId: string;
   /** When crop enters field (ISO date string) */
   fieldStartDate: string;
@@ -193,12 +196,16 @@ export interface CreatePlantingInput {
   marketSplit?: import('./market').MarketSplit;
   /** Optional: use GDD-based timing instead of static DTM */
   useGddTiming?: boolean;
+  /** Optional: yield multiplier (default 1.0) */
+  yieldFactor?: number;
   /** Optional: timing overrides */
   overrides?: PlantingOverrides;
   /** Optional: actual dates */
   actuals?: PlantingActuals;
   /** Optional: user notes */
   notes?: string;
+  /** Optional: user tags for grouping/filtering */
+  tags?: string[];
   /** Optional: sequence ID (for succession plantings) */
   sequenceId?: string;
   /** Optional: slot number in sequence (0 = anchor, sparse allowed) */
@@ -218,10 +225,12 @@ export function createPlanting(input: CreatePlantingInput): Planting {
     seedSource: input.seedSource,
     useDefaultSeedSource: input.useDefaultSeedSource,
     marketSplit: input.marketSplit,
-    useGddTiming: input.useGddTiming,
+    useGddTiming: input.useGddTiming ?? true,
+    yieldFactor: input.yieldFactor,
     overrides: input.overrides,
     actuals: input.actuals,
     notes: input.notes,
+    tags: input.tags,
     sequenceId: input.sequenceId,
     sequenceSlot: input.sequenceSlot,
     lastModified: Date.now(),
@@ -249,9 +258,11 @@ export function clonePlanting(
     useDefaultSeedSource: source.useDefaultSeedSource,
     marketSplit: source.marketSplit ? { ...source.marketSplit } : undefined,
     useGddTiming: source.useGddTiming,
+    yieldFactor: source.yieldFactor,
     overrides: source.overrides ? { ...source.overrides } : undefined,
     actuals: source.actuals ? { ...source.actuals } : undefined,
     notes: source.notes,
+    tags: source.tags ? [...source.tags] : undefined,
     // NOTE: Do NOT copy sequence fields by default - they must be explicitly provided
     // sequenceId and sequenceSlot are intentionally omitted
     ...overrides,

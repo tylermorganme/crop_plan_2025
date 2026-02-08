@@ -89,7 +89,7 @@ export default function SequenceEditorModal({
       let cropName = '';
       if (planting) {
         const spec = specs[planting.specId];
-        cropName = spec?.identifier ?? spec?.crop ?? planting.specId;
+        cropName = spec?.name ?? spec?.crop ?? planting.specId;
       }
 
       let bedName: string | null = null;
@@ -330,7 +330,7 @@ export default function SequenceEditorModal({
                         : 'bg-gray-200 text-gray-500'
                     }`}
                   >
-                    #{slotInfo.slot + 1}
+                    #{slotInfo.slot}
                   </div>
 
                   {/* Planting info */}
@@ -442,7 +442,7 @@ export default function SequenceEditorModal({
                         : 'bg-gray-200 text-gray-700'
                     }`}
                   >
-                    #{s.slot + 1}: {format(parseISO(s.computedDate), 'MMM d')}
+                    #{s.slot}: {format(parseISO(s.computedDate), 'MMM d')}
                   </span>
                 ))}
                 {slots.filter(s => s.planting).length > 10 && (

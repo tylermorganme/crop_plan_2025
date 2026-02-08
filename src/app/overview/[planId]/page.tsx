@@ -1,21 +1,23 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { parseISO } from 'date-fns';
 import {
   usePlanStore,
-  loadPlanFromLibrary,
 } from '@/lib/plan-store';
 import { buildBedMappings, expandCropsToBeds } from '@/lib/timeline-data';
 import { useComputedCrops } from '@/lib/use-computed-crops';
 import { calculateSpecRevenue, formatCurrency } from '@/lib/revenue';
-import { parseSearchQuery, matchesCropFilter } from '@/lib/search-dsl';
+import { parseSearchQuery, matchesFilter } from '@/lib/search-dsl';
+import { timelineCropSearchConfig } from '@/lib/search-configs';
 import { SearchInput } from '@/components/SearchInput';
 import { ConnectedPlantingInspector } from '@/components/ConnectedPlantingInspector';
 import { useUIStore } from '@/lib/ui-store';
 import type { TimelineCrop, Planting } from '@/lib/plan-types';
+import type { PlantingSpec } from '@/lib/entities/planting-specs';
+import { createPlanting } from '@/lib/entities/planting';
 import type { BedGroup, Bed, ResourceGroup } from '@/lib/entities/bed';
 import AppHeader from '@/components/AppHeader';
 import { calculateStacking as sharedCalculateStacking, type StackableItem } from '@/lib/timeline-stacking';
@@ -389,6 +391,7 @@ function BedRowComponent({
   isEven,
   onAssignPlanting,
   onCropClick,
+  onBedNameClick,
   selectedPlantingIds,
   filterTerms,
   filterMode,
@@ -400,6 +403,7 @@ function BedRowComponent({
   isEven: boolean;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
   onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  onBedNameClick?: (bedId: string, bedName: string, e: React.MouseEvent) => void;
   selectedPlantingIds?: Set<string>;
   /** Current filter terms for highlighting */
   filterTerms?: string[];
@@ -442,7 +446,7 @@ function BedRowComponent({
     if (!filterTerms || filterTerms.length === 0 || filterMode !== 'filter') {
       return row.crops;
     }
-    return row.crops.filter(crop => matchesCropFilter(crop, filterTerms));
+    return row.crops.filter(crop => matchesFilter(crop, filterTerms, timelineCropSearchConfig));
   }, [row.crops, filterTerms, filterMode]);
 
   // Calculate stacking for overlapping crops
@@ -501,8 +505,15 @@ function BedRowComponent({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Bed label */}
-      <div className="w-12 flex-shrink-0 text-xs font-medium text-gray-600 pr-2 text-right flex items-center justify-end">
+      {/* Bed label - clickable for quick-add */}
+      <div
+        className="w-12 flex-shrink-0 text-xs font-medium text-gray-600 pr-2 text-right flex items-center justify-end cursor-pointer hover:text-blue-600 hover:bg-blue-50 transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          onBedNameClick?.(row.bedId, row.bedName, e);
+        }}
+        title={`Quick-add planting to ${row.bedName}`}
+      >
         {row.bedName}
       </div>
 
@@ -523,7 +534,7 @@ function BedRowComponent({
           // Highlight matching crops when in highlight mode with active filter
           // De-emphasize non-matching crops when highlight mode is active
           const shouldFade = filterMode === 'highlight' && filterTerms && filterTerms.length > 0
-            && !matchesCropFilter(crop, filterTerms);
+            && !matchesFilter(crop, filterTerms, timelineCropSearchConfig);
           const categoryColor = getCategoryColor(crop);
           const useBorder = colorByMode === 'border' && categoryColor;
           const useBackground = colorByMode === 'background' && categoryColor;
@@ -622,6 +633,7 @@ function BedGroupComponent({
   section,
   onAssignPlanting,
   onCropClick,
+  onBedNameClick,
   onGroupClick,
   selectedPlantingIds,
   filterTerms,
@@ -634,6 +646,7 @@ function BedGroupComponent({
   section: BedGroupSection;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
   onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  onBedNameClick?: (bedId: string, bedName: string, e: React.MouseEvent) => void;
   onGroupClick?: (groupId: string) => void;
   selectedPlantingIds?: Set<string>;
   filterTerms?: string[];
@@ -669,6 +682,7 @@ function BedGroupComponent({
             isEven={index % 2 === 0}
             onAssignPlanting={onAssignPlanting}
             onCropClick={onCropClick}
+            onBedNameClick={onBedNameClick}
             selectedPlantingIds={selectedPlantingIds}
             filterTerms={filterTerms}
             filterMode={filterMode}
@@ -697,7 +711,7 @@ interface EnrichedUnassignedCrop {
   name: string;
   cropName: string;
   category: string;
-  identifier: string;
+  specName: string;
   startDate: string;
   endDate: string;
   feetNeeded: number;
@@ -710,7 +724,12 @@ interface EnrichedUnassignedCrop {
   notes?: string;
   plantingMethod?: string;
   growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
+  sequenceId?: string;
+  sequenceSlot?: number;
 }
+
+// Unassigned plantings use the same search config as the map/timeline.
+// The enriched objects spread from TimelineCrop, so all fields are available.
 
 /**
  * Format a date string (YYYY-MM-DD) to a shorter display format (MM/DD)
@@ -725,19 +744,23 @@ function formatShortDate(dateStr: string): string {
  * Simple table panel showing unassigned plantings.
  * Supports search filtering and drag-to-assign functionality.
  */
-type UnassignedSortColumn = 'crop' | 'category' | 'start' | 'end' | 'config' | 'revenue';
+type UnassignedSortColumn = 'crop' | 'category' | 'method' | 'start' | 'end' | 'config' | 'feet' | 'revenue' | 'sequence' | 'sequenceSlot';
 
 function UnassignedPlantingsPanel({
   plantings,
   searchQuery,
   onDelete,
+  onCropClick,
+  selectedPlantingIds,
 }: {
   plantings: EnrichedUnassignedCrop[];
   searchQuery: string;
   onDelete?: (plantingId: string) => void;
+  onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  selectedPlantingIds?: Set<string>;
 }) {
   // Parse search query: extract filter terms and sort override (matches CropTimeline DSL)
-  const validSortColumns = useMemo(() => new Set<UnassignedSortColumn>(['crop', 'category', 'start', 'end', 'config', 'revenue']), []);
+  const validSortColumns = useMemo(() => new Set<UnassignedSortColumn>(['crop', 'category', 'method', 'start', 'end', 'config', 'feet', 'revenue', 'sequence', 'sequenceSlot']), []);
   const { filterTerms, sortOverride } = useMemo(() => {
     const parsed = parseSearchQuery<UnassignedSortColumn>(searchQuery, validSortColumns);
     const sortOverride = parsed.sortField
@@ -749,7 +772,7 @@ function UnassignedPlantingsPanel({
   // Filter plantings using shared filter logic
   const filteredPlantings = useMemo(() => {
     if (filterTerms.length === 0) return plantings;
-    return plantings.filter(p => matchesCropFilter(p, filterTerms));
+    return plantings.filter(p => matchesFilter(p, filterTerms, timelineCropSearchConfig));
   }, [plantings, filterTerms]);
 
   // Sort plantings (default: start date ascending)
@@ -762,10 +785,24 @@ function UnassignedPlantingsPanel({
       switch (col) {
         case 'crop': cmp = a.cropName.localeCompare(b.cropName); break;
         case 'category': cmp = a.category.localeCompare(b.category); break;
+        case 'method': cmp = (a.plantingMethod ?? '').localeCompare(b.plantingMethod ?? ''); break;
         case 'start': cmp = a.startDate.localeCompare(b.startDate); break;
         case 'end': cmp = a.endDate.localeCompare(b.endDate); break;
-        case 'config': cmp = a.identifier.localeCompare(b.identifier); break;
+        case 'config': cmp = a.specName.localeCompare(b.specName); break;
+        case 'feet': cmp = a.feetNeeded - b.feetNeeded; break;
         case 'revenue': cmp = (a.revenue ?? 0) - (b.revenue ?? 0); break;
+        case 'sequence': {
+          // Sort by sequenceId (non-sequence plantings sort last), then by slot
+          const seqA = a.sequenceId ?? '\uffff';
+          const seqB = b.sequenceId ?? '\uffff';
+          cmp = seqA.localeCompare(seqB);
+          if (cmp === 0) cmp = (a.sequenceSlot ?? 999) - (b.sequenceSlot ?? 999);
+          break;
+        }
+        case 'sequenceSlot': {
+          cmp = (a.sequenceSlot ?? 999) - (b.sequenceSlot ?? 999);
+          break;
+        }
       }
       return dir === 'asc' ? cmp : -cmp;
     });
@@ -787,6 +824,9 @@ function UnassignedPlantingsPanel({
           <th className="px-2 py-1.5 text-left font-medium text-gray-600">Planting</th>
           <th className="px-2 py-1.5 text-left font-medium text-gray-600">Config</th>
           <th className="px-2 py-1.5 text-left font-medium text-gray-600">Crop</th>
+          <th className="px-2 py-1.5 text-right font-medium text-gray-600">Feet</th>
+          <th className="px-2 py-1.5 text-left font-medium text-gray-600">Sequence</th>
+          <th className="px-2 py-1.5 text-right font-medium text-gray-600">Slot</th>
           <th className="px-2 py-1.5 text-left font-medium text-gray-600">Start</th>
           <th className="px-2 py-1.5 text-left font-medium text-gray-600">End</th>
           <th className="px-2 py-1.5 text-right font-medium text-gray-600">Revenue</th>
@@ -800,12 +840,17 @@ function UnassignedPlantingsPanel({
           };
           const isEven = index % 2 === 0;
           const plantingId = planting.plantingId || planting.id;
+          const isSelected = selectedPlantingIds?.has(plantingId);
 
           return (
             <tr
               key={planting.id}
-              className={`border-b border-gray-100 cursor-grab hover:bg-blue-50 ${isEven ? 'bg-gray-50' : 'bg-white'}`}
+              className={`border-b border-gray-100 cursor-grab hover:bg-blue-50 ${isSelected ? 'bg-blue-100' : isEven ? 'bg-gray-50' : 'bg-white'}`}
               draggable
+              onClick={(e) => {
+                e.stopPropagation();
+                onCropClick?.(plantingId, e);
+              }}
               onDragStart={(e) => {
                 const jsonStr = JSON.stringify({
                   type: 'unassigned-planting',
@@ -831,7 +876,7 @@ function UnassignedPlantingsPanel({
                 </td>
               )}
               <td className="px-2 py-1.5 text-gray-400 font-mono text-[10px]" title={plantingId}>{plantingId.slice(0, 8)}</td>
-              <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px]">{planting.identifier}</td>
+              <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px]">{planting.specName}</td>
               <td className="px-2 py-1.5">
                 <span
                   className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium"
@@ -840,6 +885,13 @@ function UnassignedPlantingsPanel({
                 >
                   {planting.cropName}
                 </span>
+              </td>
+              <td className="px-2 py-1.5 text-right text-gray-600 text-[10px]">{planting.feetNeeded}'</td>
+              <td className="px-2 py-1.5 text-gray-500 font-mono text-[10px]">
+                {planting.sequenceId ?? '—'}
+              </td>
+              <td className="px-2 py-1.5 text-right text-gray-500 font-mono text-[10px]">
+                {planting.sequenceId != null ? (planting.sequenceSlot ?? '?') : '—'}
               </td>
               <td className="px-2 py-1.5 text-gray-600">{formatShortDate(planting.startDate)}</td>
               <td className="px-2 py-1.5 text-gray-600">{formatShortDate(planting.endDate)}</td>
@@ -851,6 +903,150 @@ function UnassignedPlantingsPanel({
         })}
       </tbody>
     </table>
+  );
+}
+
+/**
+ * Quick-add spec picker: positioned combobox that appears when clicking a bed name.
+ * Shows favorites first, then remaining specs grouped by category.
+ */
+function QuickAddSpecPicker({
+  specs,
+  position,
+  onSelect,
+  onClose,
+}: {
+  specs: Record<string, PlantingSpec>;
+  position: { x: number; y: number };
+  onSelect: (specId: string) => void;
+  onClose: () => void;
+}) {
+  const [searchText, setSearchText] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus search input on mount
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  // Close on click outside
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [onClose]);
+
+  // Filter and group specs: favorites first, then by category
+  const { favorites, grouped, sortedCategories } = useMemo(() => {
+    const all = Object.values(specs).filter(s => !s.deprecated);
+    const query = searchText.toLowerCase().trim();
+    const filtered = query
+      ? all.filter(s =>
+          s.name?.toLowerCase().includes(query) ||
+          (s.category ?? '').toLowerCase().includes(query) ||
+          (s.crop ?? '').toLowerCase().includes(query)
+        )
+      : all;
+
+    const favs = filtered.filter(s => s.isFavorite).sort(
+      (a, b) => (a.category ?? '').localeCompare(b.category ?? '') || (a.name ?? '').localeCompare(b.name ?? '')
+    );
+    const nonFavs = filtered.filter(s => !s.isFavorite);
+
+    const groups: Record<string, PlantingSpec[]> = {};
+    for (const spec of nonFavs) {
+      const cat = spec.category || 'Other';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(spec);
+    }
+    for (const cat of Object.keys(groups)) {
+      groups[cat].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+    }
+    const cats = Object.keys(groups).sort((a, b) => {
+      if (a === 'Other') return 1;
+      if (b === 'Other') return -1;
+      return a.localeCompare(b);
+    });
+
+    return { favorites: favs, grouped: groups, sortedCategories: cats };
+  }, [specs, searchText]);
+
+  // Clamp position to viewport
+  const style = useMemo(() => {
+    const width = 280;
+    const maxHeight = 360;
+    let top = position.y;
+    let left = position.x;
+    if (left + width > window.innerWidth - 16) left = window.innerWidth - width - 16;
+    if (top + maxHeight > window.innerHeight - 16) top = window.innerHeight - maxHeight - 16;
+    if (left < 16) left = 16;
+    if (top < 16) top = 16;
+    return { position: 'fixed' as const, top, left, width, zIndex: 9999 };
+  }, [position]);
+
+  return (
+    <div ref={panelRef} style={style} className="bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col overflow-hidden">
+      <div className="p-2 border-b border-gray-100">
+        <input
+          ref={inputRef}
+          type="text"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="Search specs..."
+          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') onClose();
+          }}
+        />
+      </div>
+      <div className="overflow-auto" style={{ maxHeight: 300 }}>
+        {favorites.length === 0 && sortedCategories.length === 0 ? (
+          <div className="px-3 py-4 text-xs text-gray-400 text-center">No matching specs</div>
+        ) : (
+          <>
+            {favorites.length > 0 && (
+              <>
+                <div className="px-2 py-1 text-[10px] font-semibold text-amber-600 uppercase tracking-wider bg-amber-50 sticky top-0 z-10">
+                  ★ Favorites
+                </div>
+                {favorites.map(spec => (
+                  <button
+                    key={spec.id}
+                    onClick={() => onSelect(spec.id)}
+                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 transition-colors text-gray-700 truncate"
+                    title={spec.name}
+                  >
+                    {spec.name}
+                  </button>
+                ))}
+              </>
+            )}
+            {sortedCategories.map(cat => (
+              <div key={cat}>
+                <div className="px-2 py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 sticky top-0 z-10">
+                  {cat}
+                </div>
+                {grouped[cat].map(spec => (
+                  <button
+                    key={spec.id}
+                    onClick={() => onSelect(spec.id)}
+                    className="w-full text-left px-3 py-1.5 text-sm hover:bg-blue-50 transition-colors text-gray-700 truncate"
+                    title={spec.name}
+                  >
+                    {spec.name}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1182,6 +1378,7 @@ function FarmGrid({
   onYearChange,
   onAssignPlanting,
   onCropClick,
+  onBedNameClick,
   onGroupClick,
   selectedPlantingIds,
   filterTerms,
@@ -1196,6 +1393,7 @@ function FarmGrid({
   onYearChange: (year: number) => void;
   onAssignPlanting?: (plantingId: string, bedId: string) => void;
   onCropClick?: (plantingId: string, e: React.MouseEvent) => void;
+  onBedNameClick?: (bedId: string, bedName: string, e: React.MouseEvent) => void;
   onGroupClick?: (groupId: string) => void;
   selectedPlantingIds?: Set<string>;
   filterTerms?: string[];
@@ -1331,6 +1529,7 @@ function FarmGrid({
                     section={section}
                     onAssignPlanting={onAssignPlanting}
                     onCropClick={onCropClick}
+                    onBedNameClick={onBedNameClick}
                     onGroupClick={onGroupClick}
                     selectedPlantingIds={selectedPlantingIds}
                     filterTerms={filterTerms}
@@ -1385,6 +1584,8 @@ export default function OverviewPage() {
   const [viewingGroupId, setViewingGroupId] = useState<string | null>(null);
   // Filter mode for map view: 'highlight' shows all crops but highlights matches, 'filter' hides non-matches
   const [mapFilterMode, setMapFilterMode] = useState<'highlight' | 'filter'>('highlight');
+  // Filter scope: which panels the search filter applies to
+  const [filterScope, setFilterScope] = useState<'both' | 'unassigned' | 'map'>('both');
   // Color by categorical field for map view (persisted to localStorage)
   const [colorByField, setColorByFieldState] = useState<ColorByField>('none');
   const [colorByMode, setColorByModeState] = useState<ColorByMode>('border');
@@ -1407,11 +1608,15 @@ export default function OverviewPage() {
     saveColorByModeToStorage(value);
   }, []);
 
-  // Parse filter terms from search query for map view
+  // Parse filter terms from search query for map view (respects filterScope)
   const mapFilterTerms = useMemo(() => {
+    if (filterScope === 'unassigned') return [];
     const { filterTerms } = parseSearchQuery(searchQuery);
     return filterTerms;
-  }, [searchQuery]);
+  }, [searchQuery, filterScope]);
+
+  // Search query passed to unassigned panel (respects filterScope)
+  const unassignedSearchQuery = filterScope === 'map' ? '' : searchQuery;
 
   // Plan store state
   const currentPlan = usePlanStore((state) => state.currentPlan);
@@ -1419,6 +1624,7 @@ export default function OverviewPage() {
   const updatePlanting = usePlanStore((state) => state.updatePlanting);
   const bulkUpdatePlantings = usePlanStore((state) => state.bulkUpdatePlantings);
   const bulkDeletePlantings = usePlanStore((state) => state.bulkDeletePlantings);
+  const addPlanting = usePlanStore((state) => state.addPlanting);
   const updatePlantingBoxDisplay = usePlanStore((state) => state.updatePlantingBoxDisplay);
 
   // Centralized computed crops with GDD adjustments
@@ -1437,38 +1643,20 @@ export default function OverviewPage() {
 
   // Load the specific plan by ID
   useEffect(() => {
-    async function loadPlan() {
-      if (!planId) {
-        setError('No plan ID provided');
-        setLoading(false);
-        return;
-      }
+    if (!planId) {
+      setError('No plan ID provided');
+      setLoading(false);
+      return;
+    }
 
-      try {
-        // Check if plan is already loaded in store
-        if (currentPlan?.id === planId) {
-          setLoading(false);
-          return;
-        }
-
-        // Try to load from library
-        const loaded = await loadPlanFromLibrary(planId);
-        if (loaded) {
-          loadPlanById(planId);
-          setLoading(false);
-        } else {
-          setError(`Plan "${planId}" not found`);
-          setLoading(false);
-        }
-      } catch (err) {
+    loadPlanById(planId)
+      .then(() => setLoading(false))
+      .catch((err) => {
         console.error('Error loading plan:', err);
         setError('Failed to load plan');
         setLoading(false);
-      }
-    }
-
-    loadPlan();
-  }, [planId, currentPlan?.id, loadPlanById]);
+      });
+  }, [planId, loadPlanById]);
 
   // Determine base year from plan data
   const baseYear = useMemo(() => {
@@ -1556,7 +1744,7 @@ export default function OverviewPage() {
           ...crop,
           cropName: spec?.crop ?? crop.name,
           category: spec?.category ?? crop.category ?? '',
-          identifier: spec?.identifier ?? crop.specId,
+          specName: spec?.name ?? crop.specId,
           revenue,
           bgColor: crop.bgColor,
           textColor: crop.textColor,
@@ -1627,6 +1815,57 @@ export default function OverviewPage() {
       selectPlanting(plantingId);
     }
   }, [togglePlanting, clearSelection, selectPlanting]);
+
+  // Quick-add: state for bed name click → spec picker
+  const [quickAddBedId, setQuickAddBedId] = useState<string | null>(null);
+  const [quickAddBedName, setQuickAddBedName] = useState<string | null>(null);
+  const [quickAddPosition, setQuickAddPosition] = useState<{ x: number; y: number } | null>(null);
+
+  const handleBedNameClick = useCallback((bedId: string, bedName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQuickAddBedId(bedId);
+    setQuickAddBedName(bedName);
+    setQuickAddPosition({ x: e.clientX, y: e.clientY });
+    clearSelection();
+  }, [clearSelection]);
+
+  const handleQuickAddSpec = useCallback(async (specId: string) => {
+    if (!currentPlan?.specs || !quickAddBedName) return;
+    const spec = currentPlan.specs[specId];
+    if (!spec) return;
+
+    const planYear = currentPlan.metadata?.year ?? new Date().getFullYear();
+    const fieldStartDate = spec.targetFieldDate
+      ? `${planYear}-${spec.targetFieldDate}`
+      : new Date().toISOString().slice(0, 10);
+
+    // Look up bed length
+    const beds = currentPlan.beds ? Object.values(currentPlan.beds) : [];
+    const bed = beds.find(b => b.name === quickAddBedName);
+    const bedFeet = bed?.lengthFt ?? 50;
+
+    const planting = createPlanting({
+      specId,
+      fieldStartDate,
+      startBed: quickAddBedName,
+      bedFeet,
+    });
+    await addPlanting(planting);
+
+    // Select the new planting to open inspector
+    clearSelection();
+    selectPlanting(planting.id);
+
+    setQuickAddBedId(null);
+    setQuickAddBedName(null);
+    setQuickAddPosition(null);
+  }, [currentPlan, quickAddBedName, addPlanting, clearSelection, selectPlanting]);
+
+  const handleQuickAddClose = useCallback(() => {
+    setQuickAddBedId(null);
+    setQuickAddBedName(null);
+    setQuickAddPosition(null);
+  }, []);
 
   // Convert selected planting IDs to TimelineCrop[] for the inspector panel
   const selectedCropsData = useMemo(() => {
@@ -1925,29 +2164,66 @@ export default function OverviewPage() {
               value={searchQuery}
               onChange={setSearchQuery}
               placeholder="Search crops..."
-              sortFields={['crop', 'category', 'start', 'end', 'config', 'revenue']}
+              sortFields={['crop', 'category', 'method', 'start', 'end', 'config', 'feet', 'revenue', 'sequence', 'sequenceSlot']}
+              filterFields={['crop', 'category', 'method', 'structure', 'notes', 'sequence', 'seq', 'slot', 'sequenceslot']}
               width="w-full"
             />
-            {/* Map filter mode toggle */}
-            {mapFilterTerms.length > 0 && (
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-xs text-gray-500">Map:</span>
-                <button
-                  onClick={() => setMapFilterMode(mapFilterMode === 'highlight' ? 'filter' : 'highlight')}
-                  className={`px-2 py-0.5 text-xs rounded border transition-colors ${
-                    mapFilterMode === 'highlight'
-                      ? 'bg-blue-100 border-blue-400 text-blue-800'
-                      : 'bg-yellow-100 border-yellow-400 text-yellow-800'
-                  }`}
-                  title={mapFilterMode === 'highlight'
-                    ? 'Fading non-matches. Click to hide them instead.'
-                    : 'Hiding non-matches. Click to show all (faded).'
-                  }
-                >
-                  {mapFilterMode === 'filter' ? 'Filtering' : 'Highlight on map'}
-                </button>
-              </div>
-            )}
+            {/* Filter scope & map mode toggles — shown when search has filter terms */}
+            {(() => {
+              const { filterTerms: activeTerms } = parseSearchQuery(searchQuery);
+              if (activeTerms.length === 0) return null;
+              return (
+                <div className="mt-2 space-y-1.5">
+                  {/* Filter scope toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Apply to:</span>
+                    <div className="flex gap-0.5 bg-gray-100 p-0.5 rounded">
+                      {(['both', 'unassigned', 'map'] as const).map((scope) => (
+                        <button
+                          key={scope}
+                          onClick={() => setFilterScope(scope)}
+                          className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                            filterScope === scope
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          {scope === 'both' ? 'Both' : scope === 'unassigned' ? 'Unassigned' : 'Map'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Map filter mode toggle — only when filter applies to map */}
+                  {filterScope !== 'unassigned' && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500">Map mode:</span>
+                      <div className="flex gap-0.5 bg-gray-100 p-0.5 rounded">
+                        <button
+                          onClick={() => setMapFilterMode('highlight')}
+                          className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                            mapFilterMode === 'highlight'
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          Highlight
+                        </button>
+                        <button
+                          onClick={() => setMapFilterMode('filter')}
+                          className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                            mapFilterMode === 'filter'
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          Filter
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             {/* Color by categorical field */}
             <div className="mt-2 flex items-center gap-2">
               <label className="text-xs text-gray-500">Color by:</label>
@@ -2013,8 +2289,10 @@ export default function OverviewPage() {
           <div className="flex-1 overflow-auto">
             <UnassignedPlantingsPanel
               plantings={unassignedPlantings}
-              searchQuery={searchQuery}
+              searchQuery={unassignedSearchQuery}
               onDelete={(plantingId) => bulkDeletePlantings([plantingId])}
+              onCropClick={handleCropClick}
+              selectedPlantingIds={selectedPlantingIds}
             />
           </div>
         </aside>
@@ -2095,6 +2373,7 @@ export default function OverviewPage() {
                 onYearChange={setSelectedYear}
                 onAssignPlanting={handleAssignPlanting}
                 onCropClick={handleCropClick}
+                onBedNameClick={handleBedNameClick}
                 onGroupClick={handleGroupClick}
                 selectedPlantingIds={selectedPlantingIds}
                 filterTerms={mapFilterTerms}
@@ -2105,6 +2384,16 @@ export default function OverviewPage() {
               />
             )}
           </main>
+        )}
+
+        {/* Quick-add spec picker overlay */}
+        {quickAddBedId && quickAddPosition && currentPlan?.specs && (
+          <QuickAddSpecPicker
+            specs={currentPlan.specs}
+            position={quickAddPosition}
+            onSelect={handleQuickAddSpec}
+            onClose={handleQuickAddClose}
+          />
         )}
 
         {/* Right panel - Planting Inspector (shown when crops selected) */}

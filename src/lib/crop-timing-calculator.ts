@@ -35,7 +35,7 @@ export interface CropTimingInputs {
   actualTpOrDsDate?: Date;
 
   // For succession planting - lookup function (legacy, unused)
-  getFollowedCropEndDate?: (identifier: string) => Date | null;
+  getFollowedCropEndDate?: (name: string) => Date | null;
 }
 
 export interface CropTimingOutput {
@@ -166,7 +166,7 @@ export function calculateCropTiming(inputs: CropTimingInputs): CropTimingOutput 
  * Calculate timing from a bed plan assignment with all the raw data.
  */
 export interface BedPlanAssignment {
-  identifier: string;
+  name: string;
   crop: string;
   bed: string;
 

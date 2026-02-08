@@ -21,7 +21,10 @@ interface SpecsData {
   crops: PlantingSpec[];
 }
 
-const data = specsData as SpecsData;
+// Template JSON still uses `identifier` (pre-migration field name).
+// At runtime, the migration renames it to `name` when loading plans.
+// Stock template data is used as-is for new plan creation where migration runs on load.
+const data = specsData as unknown as SpecsData;
 
 /**
  * Get all stock planting specs.
@@ -52,17 +55,17 @@ export function getCropById(id: string): PlantingSpec | undefined {
 }
 
 /**
- * Find a spec by its human-readable identifier.
+ * Find a spec by its human-readable name.
  */
-export function getSpecByIdentifier(identifier: string): PlantingSpec | undefined {
-  return data.crops.find(c => c.identifier === identifier);
+export function getSpecByName(name: string): PlantingSpec | undefined {
+  return data.crops.find(c => c.name === name);
 }
 
 /**
- * @deprecated Use getSpecByIdentifier instead
+ * @deprecated Use getSpecByName instead
  */
-export function getCropByIdentifier(identifier: string): PlantingSpec | undefined {
-  return getSpecByIdentifier(identifier);
+export function getCropByName(name: string): PlantingSpec | undefined {
+  return getSpecByName(name);
 }
 
 export function getMetadata() {
@@ -95,7 +98,7 @@ export function searchSpecs(query: string): PlantingSpec[] {
   return data.crops.filter(spec =>
     // Use searchText if available (materialized), otherwise fall back to fields
     spec.searchText?.toLowerCase().includes(q) ||
-    spec.identifier?.toLowerCase().includes(q) ||
+    spec.name?.toLowerCase().includes(q) ||
     spec.crop?.toLowerCase().includes(q) ||
     spec.category?.toLowerCase().includes(q)
   );

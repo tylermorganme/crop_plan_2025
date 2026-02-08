@@ -17,8 +17,8 @@ interface PlantingSpecCreatorProps {
   onSave: (spec: PlantingSpec) => void;
   /** All available specs to copy from */
   availableSpecs: PlantingSpec[];
-  /** Existing identifiers in the plan's catalog (for uniqueness validation) */
-  existingIdentifiers: string[];
+  /** Existing names in the plan's catalog (for uniqueness validation) */
+  existingNames: string[];
   /** Varieties available for default seed source selection */
   varieties?: Record<string, Variety>;
   /** Seed mixes available for default seed source selection */
@@ -51,7 +51,7 @@ export default function PlantingSpecCreator({
   onClose,
   onSave,
   availableSpecs,
-  existingIdentifiers,
+  existingNames,
   varieties,
   seedMixes,
   products,
@@ -91,7 +91,7 @@ export default function PlantingSpecCreator({
       .filter((s: PlantingSpec) =>
         // Use searchText if available, otherwise fall back to key fields
         s.searchText?.toLowerCase().includes(query) ||
-        s.identifier.toLowerCase().includes(query) ||
+        s.name.toLowerCase().includes(query) ||
         s.crop.toLowerCase().includes(query) ||
         s.category?.toLowerCase().includes(query)
       )
@@ -150,7 +150,7 @@ export default function PlantingSpecCreator({
         onClose={handleBack}
         onSave={handleSave}
         mode="create"
-        existingIdentifiers={existingIdentifiers}
+        existingNames={existingNames}
         varieties={varieties}
         seedMixes={seedMixes}
         products={products}
@@ -232,7 +232,7 @@ export default function PlantingSpecCreator({
                     onClick={() => handleSelectSpec(spec)}
                     className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
                   >
-                    <div className="font-medium text-gray-900 text-sm">{spec.identifier}</div>
+                    <div className="font-medium text-gray-900 text-sm">{spec.name}</div>
                     <div className="text-xs text-gray-500 mt-0.5">
                       {[spec.category, spec.growingStructure, spec.dtmBasis].filter(Boolean).join(' · ')}
                     </div>

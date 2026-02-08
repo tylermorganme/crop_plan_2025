@@ -125,11 +125,21 @@ export function ConnectedPlantingInspector({
   // Save edited planting spec
   const handleSaveSpec = useCallback(
     async (spec: PlantingSpec) => {
-      // Pass original identifier to handle renames correctly
-      await updatePlantingSpec(spec, editingSpecId ?? undefined);
+      await updatePlantingSpec(spec);
       setEditingSpecId(null);
     },
-    [updatePlantingSpec, editingSpecId]
+    [updatePlantingSpec]
+  );
+
+  // Reassign spec handler - changes which spec a planting uses
+  const handleReassignSpec = useCallback(
+    async (plantingId: string, newSpecId: string) => {
+      const result = await updatePlanting(plantingId, { specId: newSpecId });
+      if (!result.success) {
+        setToast({ message: result.error, type: 'error' });
+      }
+    },
+    [updatePlanting, setToast]
   );
 
   // Clone spec handler - opens PlantingSpecCreator
@@ -150,7 +160,7 @@ export function ConnectedPlantingInspector({
       // Add the new spec to the catalog
       await addPlantingSpec(spec);
       // Update the planting to use the new spec
-      const result = await updatePlanting(cloningForPlantingId, { specId: spec.identifier });
+      const result = await updatePlanting(cloningForPlantingId, { specId: spec.id });
       if (!result.success) {
         setToast({ message: result.error, type: 'error' });
       }
@@ -257,6 +267,18 @@ export function ConnectedPlantingInspector({
     ? getSequencePlantings(editingSequenceId)
     : [];
 
+  // Compute tag suggestions from all plantings in the plan
+  const tagSuggestions = useMemo(() => {
+    if (!currentPlan?.plantings) return [];
+    const tagSet = new Set<string>();
+    for (const p of currentPlan.plantings) {
+      if (p.tags) {
+        for (const t of p.tags) tagSet.add(t);
+      }
+    }
+    return [...tagSet].sort();
+  }, [currentPlan?.plantings]);
+
   // Don't render if nothing selected or no plan
   if (!currentPlan || selectedCrops.length === 0) {
     return null;
@@ -302,6 +324,7 @@ export function ConnectedPlantingInspector({
         onUnlinkFromSequence={handleUnlinkFromSequence}
         onEditPlantingSpec={handleEditPlantingSpec}
         onCloneSpec={handleCloneSpec}
+        onReassignSpec={handleReassignSpec}
         onRefreshFromSpec={handleRefreshFromSpec}
         specs={currentPlan.specs}
         crops={currentPlan.crops}
@@ -309,10 +332,13 @@ export function ConnectedPlantingInspector({
         seedMixes={currentPlan.seedMixes}
         products={currentPlan.products}
         markets={currentPlan.markets}
+        beds={currentPlan.beds}
+        bedGroups={currentPlan.bedGroups}
         showTimingEdits={showTimingEdits}
         className={className}
         location={currentPlan.metadata.location}
         planYear={currentPlan.metadata.year}
+        tagSuggestions={tagSuggestions}
       />
 
       {/* Create Sequence Modal */}
@@ -385,7 +411,7 @@ export function ConnectedPlantingInspector({
           }}
           onSave={handleCloneSave}
           availableSpecs={Object.values(currentPlan.specs)}
-          existingIdentifiers={Object.keys(currentPlan.specs)}
+          existingNames={Object.keys(currentPlan.specs)}
           initialSourceSpec={cloneSourceSpec}
           varieties={currentPlan.varieties}
           seedMixes={currentPlan.seedMixes}

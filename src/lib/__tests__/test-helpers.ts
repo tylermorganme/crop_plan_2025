@@ -90,7 +90,7 @@ export function createTestPlantingSpec(overrides: Partial<PlantingSpec> = {}): P
   const id = overrides.id ?? `config-${Date.now()}`;
   return {
     id,
-    identifier: overrides.identifier ?? id,
+    name: overrides.name ?? id,
     crop: overrides.crop ?? 'Test Crop',
     category: 'Green',
     rows: 4,
@@ -122,10 +122,10 @@ export function createTestPlanWithBeds(): Plan {
  * Create a test plan with a planting spec in the catalog.
  */
 export function createTestPlanWithSpec(): Plan {
-  const spec = createTestPlantingSpec({ identifier: 'tomato-beefsteak' });
+  const spec = createTestPlantingSpec({ name: 'tomato-beefsteak' });
   return createTestPlan({
     specs: {
-      [spec.identifier]: spec,
+      [spec.id]: spec,
     },
   });
 }

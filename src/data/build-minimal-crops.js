@@ -138,7 +138,7 @@ const cleanCrops = crops.map((c) => {
 
   const crop = {
     id,
-    identifier: c.Identifier,
+    name: c.Identifier,
     crop: c.Crop,
     // Category should eventually be product-level
     category: c.Category || undefined,

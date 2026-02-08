@@ -35,7 +35,8 @@ import { computeSequenceDateWithGddStagger, type GddStaggerParams, type Planting
 export type { CropCatalogEntry };
 
 // Default catalog from static import (for backwards compatibility)
-const defaultCatalog = (cropsData as { crops: CropCatalogEntry[] }).crops;
+// Template JSON still uses `identifier` (pre-migration field name); cast through unknown.
+const defaultCatalog = (cropsData as unknown as { crops: CropCatalogEntry[] }).crops;
 
 
 interface BedAssignment {
@@ -320,7 +321,7 @@ export function calculateRowSpan(
  *   Pass dynamically fetched crops to get live updates after editing configs.
  */
 export function getTimelineCrops(specs?: CropCatalogEntry[]): TimelineCrop[] {
-  const bedPlan = bedPlanData as BedPlanData;
+  const bedPlan = bedPlanData as unknown as BedPlanData;
   const catalogCrops = specs || defaultCatalog;
 
   // Build bed lengths from template data (import-only, not runtime)
@@ -329,7 +330,7 @@ export function getTimelineCrops(specs?: CropCatalogEntry[]): TimelineCrop[] {
   const timelineCrops: TimelineCrop[] = [];
   const seenIdentifiers = new Set<string>();
 
-  // Group assignments by crop identifier to detect succession plantings
+  // Group assignments by crop name to detect succession plantings
   const assignmentsByCrop = new Map<string, BedAssignment[]>();
   for (const assignment of bedPlan.assignments) {
     const cropId = assignment.crop;
@@ -349,14 +350,14 @@ export function getTimelineCrops(specs?: CropCatalogEntry[]): TimelineCrop[] {
     // Look up config from catalog
     const baseConfig = lookupConfigFromCatalog(assignment.crop, catalogCrops);
 
-    // Build display name from config or parse from identifier
+    // Build display name from config or parse from spec name
     let name: string;
     if (baseConfig) {
       name = baseConfig.product && baseConfig.product !== 'General'
         ? `${baseConfig.crop} (${baseConfig.product})`
         : baseConfig.crop;
     } else {
-      // Fallback: parse from identifier "Crop - Product X | ..."
+      // Fallback: parse from name "Crop - Product X | ..."
       const parts = assignment.crop.split(' | ')[0].split(' - ');
       const cropName = parts[0];
       const product = parts[1]?.replace(/ \dX$/, '');
@@ -464,7 +465,7 @@ export function getTimelineCrops(specs?: CropCatalogEntry[]): TimelineCrop[] {
  * Get resources (beds/locations) grouped by row/section from bed plan
  */
 export function getResources(): { resources: string[]; groups: ResourceGroup[] } {
-  const bedPlan = bedPlanData as BedPlanData;
+  const bedPlan = bedPlanData as unknown as BedPlanData;
 
   const groups: ResourceGroup[] = [];
   const allResources: string[] = [];
@@ -757,6 +758,10 @@ export function expandPlantingsToTimelineCrops(
         crop.lastModified = planting.lastModified;
         crop.overrides = planting.overrides;
         crop.notes = planting.notes;
+        crop.tags = planting.tags;
+        crop.specTags = catalog[planting.specId]?.tags;
+        crop.irrigation = catalog[planting.specId]?.irrigation;
+        crop.rowCover = catalog[planting.specId]?.rowCover;
         crop.seedSource = planting.seedSource;
         crop.useDefaultSeedSource = planting.useDefaultSeedSource;
         // Store crop name and ID for filtering and color lookup

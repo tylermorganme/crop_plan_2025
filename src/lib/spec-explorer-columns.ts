@@ -21,10 +21,10 @@ import columnAnalysis from '@/data/column-analysis.json';
 
 export type ColumnSourceType = 'static' | 'calculated' | 'mixed' | 'empty' | 'unknown';
 
-export type EditType = 'select' | 'text' | 'number' | 'seedSource';
+export type EditType = 'select' | 'text' | 'number' | 'seedSource' | 'tags';
 
 /** Dynamic option key - options are derived from existing values in the data */
-export type DynamicOptionKey = 'crop' | 'irrigation' | 'trellisType' | 'category' | 'growingStructure' | 'rowCover';
+export type DynamicOptionKey = 'crop' | 'irrigation' | 'trellisType' | 'category' | 'growingStructure' | 'rowCover' | 'tags';
 
 export interface EditConfig {
   type: EditType;
@@ -61,6 +61,7 @@ export type CropWithRevenue = PlantingSpec & {
   totalYieldDisplay?: string;
   productsDisplay?: string;
   defaultSeedSourceDisplay?: string;
+  tagsDisplay?: string;
 };
 
 // =============================================================================
@@ -120,11 +121,11 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     sourceType: getSourceType('id'),
     sortable: true,
   },
-  identifier: {
-    displayName: 'Identifier',
+  name: {
+    displayName: 'Name',
     defaultWidth: 300,
     defaultVisible: true,
-    sourceType: getSourceType('identifier'),
+    sourceType: getSourceType('name'),
     sortable: true,
   },
   cropId: {
@@ -255,6 +256,14 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     defaultWidth: 80,
     defaultVisible: false,
     format: formatBoolean,
+    sourceType: 'static',
+    sortable: true,
+  },
+  tagsDisplay: {
+    displayName: 'Tags',
+    defaultWidth: 180,
+    defaultVisible: false,
+    edit: { type: 'tags', dynamicOptions: 'tags' },
     sourceType: 'static',
     sortable: true,
   },

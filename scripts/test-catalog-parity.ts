@@ -46,7 +46,7 @@ interface MismatchDetail {
 }
 
 interface TestResult {
-  identifier: string;
+  name: string;
   cropId: string;
   found: boolean;
   matches: boolean;
@@ -54,7 +54,7 @@ interface TestResult {
 }
 
 function runCatalogParityTest() {
-  const bedPlan = bedPlanData as BedPlanData;
+  const bedPlan = bedPlanData as unknown as BedPlanData;
   const catalog = (cropsData as CropsData).crops;
 
   console.log('='.repeat(80));
@@ -73,7 +73,7 @@ function runCatalogParityTest() {
 
     if (!config) {
       results.push({
-        identifier: assignment.identifier,
+        name: assignment.identifier,
         cropId: assignment.crop,
         found: false,
         matches: false,
@@ -133,7 +133,7 @@ function runCatalogParityTest() {
 
     const allMatch = mismatches.length === 0;
     results.push({
-      identifier: assignment.identifier,
+      name: assignment.identifier,
       cropId: assignment.crop,
       found: true,
       matches: allMatch,
@@ -172,7 +172,7 @@ function runCatalogParityTest() {
     console.log('NOT FOUND IN CATALOG:');
     console.log('-'.repeat(40));
     for (const r of notFoundResults.slice(0, 10)) {
-      console.log(`  ${r.identifier}: "${r.cropId}"`);
+      console.log(`  ${r.name}: "${r.cropId}"`);
     }
     if (notFoundResults.length > 10) {
       console.log(`  ... and ${notFoundResults.length - 10} more`);
@@ -186,7 +186,7 @@ function runCatalogParityTest() {
     console.log('MISMATCHES:');
     console.log('-'.repeat(40));
     for (const r of mismatchedResults.slice(0, 15)) {
-      console.log(`  ${r.identifier}:`);
+      console.log(`  ${r.name}:`);
       for (const m of r.mismatches) {
         console.log(`    ${m.field}: bedPlan=${JSON.stringify(m.bedPlan)}, catalog=${JSON.stringify(m.catalog)}`);
       }
@@ -200,16 +200,16 @@ function runCatalogParityTest() {
   // Categorize known per-planting adjustments
   const knownAdjustments = ['GAR533', 'GAR534', 'GAR535', 'SCA633'];
   const knownAdjustmentResults = mismatchedResults.filter(r =>
-    knownAdjustments.includes(r.identifier)
+    knownAdjustments.includes(r.name)
   );
   const unexpectedMismatches = mismatchedResults.filter(r =>
-    !knownAdjustments.includes(r.identifier)
+    !knownAdjustments.includes(r.name)
   );
 
   if (knownAdjustmentResults.length > 0) {
     console.log('KNOWN PER-PLANTING ADJUSTMENTS:');
     console.log('-'.repeat(40));
-    console.log(`  ${knownAdjustmentResults.map(r => r.identifier).join(', ')}`);
+    console.log(`  ${knownAdjustmentResults.map(r => r.name).join(', ')}`);
     console.log('  (These have manually adjusted values in bed-plan)');
     console.log();
   }

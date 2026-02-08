@@ -100,6 +100,10 @@ interface TimelineCrop {
   isLocked?: boolean;
   /** Growing structure: field, greenhouse, or high-tunnel */
   growingStructure?: 'field' | 'greenhouse' | 'high-tunnel';
+  /** Irrigation type from spec */
+  irrigation?: string;
+  /** Row cover type from spec */
+  rowCover?: string;
 }
 
 interface ResourceGroup {
@@ -481,6 +485,14 @@ export default function CropTimeline({
       case 'size':
         aVal = a.feetNeeded;
         bVal = b.feetNeeded;
+        break;
+      case 'irrigation':
+        aVal = a.irrigation?.toLowerCase() || '';
+        bVal = b.irrigation?.toLowerCase() || '';
+        break;
+      case 'rowcover':
+        aVal = a.rowCover?.toLowerCase() || '';
+        bVal = b.rowCover?.toLowerCase() || '';
         break;
     }
 
@@ -1736,7 +1748,7 @@ export default function CropTimeline({
           value={searchQuery}
           onChange={setSearchQuery}
           placeholder="Filter crops..."
-          sortFields={['revenue', 'start', 'date', 'end', 'name', 'bed', 'category', 'method', 'feet', 'size']}
+          sortFields={['revenue', 'start', 'date', 'end', 'name', 'bed', 'category', 'method', 'feet', 'size', 'irrigation', 'rowcover']}
           filterFields={['bed', 'group', 'bedGroup', 'category', 'method', 'crop', 'notes', 'structure']}
         />
 

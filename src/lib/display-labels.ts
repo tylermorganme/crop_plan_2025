@@ -66,7 +66,7 @@ export const FORMULA_VARIABLE_LABELS: Record<string, string> = {
 /** Display labels for common field names */
 export const FIELD_LABELS: Record<string, string> = {
   // Core identifiers
-  identifier: 'Identifier',
+  name: 'Name',
   crop: 'Crop',
   variant: 'Variant',
   product: 'Product',

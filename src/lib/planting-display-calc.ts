@@ -131,9 +131,9 @@ export interface PlantingConfigLookup {
 export type CropCatalogEntry = PlantingSpec;
 
 /**
- * Look up planting config from the crops catalog by identifier.
+ * Look up planting config from the crops catalog by name.
  *
- * @param cropIdentifier - The crop identifier (e.g., "Arugula - Baby Leaf 1X | Field DS Sp")
+ * @param cropIdentifier - The crop name/ID (e.g., "Arugula - Baby Leaf 1X | Field DS Sp")
  * @param catalog - Array of crop entries from the crop catalog
  * @param products - Optional product lookup map for deriving product name
  * @returns PlantingConfigLookup or null if not found
@@ -145,7 +145,7 @@ export function lookupConfigFromCatalog(
 ): PlantingConfigLookup | null {
   // Trim both to handle trailing whitespace in legacy data
   const trimmedId = cropIdentifier.trim();
-  const entry = catalog.find(c => c.identifier.trim() === trimmedId);
+  const entry = catalog.find(c => c.id === trimmedId || c.name.trim() === trimmedId);
   if (!entry) return null;
 
   // Calculate derived fields from the minimal planting spec
@@ -245,7 +245,7 @@ export function expandToTimelineCrops(
   config: PlantingConfigLookup,
   _bedGroups: Record<string, string[]>,
   _bedLengths: Record<string, number>,
-  getFollowedCropEndDate?: (identifier: string) => Date | null,
+  getFollowedCropEndDate?: (specName: string) => Date | null,
   gddCalculator?: GddCalculator
 ): TimelineCrop[] {
   // ==========================================================================
@@ -374,7 +374,7 @@ export function expandToTimelineCrops(
  * Used after saving a planting spec to update existing timeline entries.
  *
  * @param crops - Current timeline crops
- * @param specIdentifier - The planting spec identifier that was updated
+ * @param specIdentifier - The planting spec name that was updated
  * @param catalog - Fresh crop catalog with updated config
  * @param bedGroups - Bed groupings for span calculation
  * @param bedLengths - Bed lengths mapping (bed name -> feet)
@@ -489,7 +489,7 @@ export function extractPlantingFromImport(assignment: {
 }): PlantingWithDates {
   return {
     id: assignment.identifier,
-    specId: assignment.crop, // For now, use the full crop identifier as the config ID
+    specId: assignment.crop, // For now, use the full crop name as the config ID
     bed: assignment.bed || null,
     bedFeet: assignment.bedFeet ?? 50,
     fixedFieldStartDate: assignment.fixedFieldStartDate ?? undefined,
@@ -524,7 +524,7 @@ export function extractConfigLookup(assignment: {
   daysInCells?: number | null;
   additionalDaysOfHarvest?: number | string | null;
 }, useTrueHarvestWindow = false): PlantingConfigLookup {
-  // Parse crop name and product from the identifier string
+  // Parse crop name and product from the spec name string
   // Format: "Crop - Product X | Structure Method Season"
   const parts = assignment.crop.split(' | ')[0].split(' - ');
   const cropName = parts[0];

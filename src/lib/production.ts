@@ -39,8 +39,8 @@ export interface HarvestEvent {
   yieldByMarket: Record<string, number>;
   /** Planting ID this harvest belongs to */
   plantingId: string;
-  /** Spec identifier for display */
-  identifier: string;
+  /** Spec name for display */
+  name: string;
   /** Bed name for tooltip */
   bedName: string | null;
 }
@@ -72,7 +72,7 @@ export interface PlantingProductionResult {
   plantingId: string;
   specId: string;
   crop: string;
-  identifier: string;
+  name: string;
   bedFeet: number;
   daysInField: number;
   products: ProductProductionResult[];
@@ -146,7 +146,7 @@ export interface ProductProductionSummary {
   /** Individual planting details for this product */
   plantings: Array<{
     plantingId: string;
-    identifier: string;
+    name: string;
     bedFeet: number;
     totalYield: number;
     harvestStartDate: string | null;
@@ -466,7 +466,7 @@ export function calculatePlantingProduction(
     plantingId: planting.id,
     specId: planting.specId,
     crop: spec.crop,
-    identifier: spec.identifier,
+    name: spec.name,
     bedFeet: timelineCrop.feetNeeded,
     daysInField: calculateFieldOccupationDays(spec),
     products: productResults,
@@ -600,7 +600,7 @@ export function calculatePlanProduction(
 
       productSummary.plantings.push({
         plantingId: planting.id,
-        identifier: spec.identifier,
+        name: spec.name,
         bedFeet: planting.bedFeet,
         totalYield: productResult.totalYield,
         harvestStartDate: productResult.harvestStartDate,
@@ -645,7 +645,7 @@ export function calculatePlanProduction(
             yield: yieldPerHarvest,
             yieldByMarket,
             plantingId: planting.id,
-            identifier: spec.identifier,
+            name: spec.name,
             bedName,
           });
         }

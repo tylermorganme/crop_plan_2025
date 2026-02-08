@@ -11,6 +11,8 @@ import {
   calculateSeedToHarvest,
   calculatePlantingMethod,
   calculateHarvestWindow,
+  calculateProductSeedToHarvest,
+  calculateProductHarvestWindow,
   createBlankConfig,
   evaluateYieldForDisplay,
   DEFAULT_TRANSPLANT_SHOCK_DAYS,
@@ -40,8 +42,8 @@ interface PlantingSpecEditorProps {
   onSave: (updated: PlantingSpec) => void;
   /** Mode: 'edit' for editing existing spec, 'create' for creating new one */
   mode?: 'edit' | 'create';
-  /** Optional validation: check if identifier already exists */
-  existingIdentifiers?: string[];
+  /** Optional validation: check if name already exists */
+  existingNames?: string[];
   /** Varieties available for default seed source selection */
   varieties?: Record<string, Variety>;
   /** Seed mixes available for default seed source selection */
@@ -251,7 +253,7 @@ export default function PlantingSpecEditor({
   onClose,
   onSave,
   mode = 'edit',
-  existingIdentifiers = [],
+  existingNames = [],
   varieties = {},
   seedMixes = {},
   products = {},
@@ -271,12 +273,12 @@ export default function PlantingSpecEditor({
   const [growingMethod, setGrowingMethod] = useState<GrowingMethod>('direct-seed');
   const [showRemovalConfirm, setShowRemovalConfirm] = useState(false);
   const [pendingRemovalInfo, setPendingRemovalInfo] = useState<DataRemovalInfo | null>(null);
-  const [identifierError, setIdentifierError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [productError, setProductError] = useState<string | null>(null);
   const [errorsExpanded, setErrorsExpanded] = useState(false);
   const [errorsClickedOpen, setErrorsClickedOpen] = useState(false);
   const [showDtmHelp, setShowDtmHelp] = useState(false);
-  const identifierInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when spec changes or modal opens
   useEffect(() => {
@@ -290,18 +292,18 @@ export default function PlantingSpecEditor({
         setGrowingMethod(deriveGrowingMethod(sourceSpec, stages));
         setShowRemovalConfirm(false);
         setPendingRemovalInfo(null);
-        setIdentifierError(null);
+        setNameError(null);
         setProductError(null);
         setErrorsExpanded(false);
         setErrorsClickedOpen(false);
-        setTimeout(() => identifierInputRef.current?.focus(), 0);
+        setTimeout(() => nameInputRef.current?.focus(), 0);
       }
     }
   }, [spec, isOpen, mode]);
 
   // Auto-collapse errors panel when issues are fixed (drop to 1 or 0)
   const currentErrorCount =
-    (!formData.identifier?.trim() ? 1 : 0) +
+    (!formData.name?.trim() ? 1 : 0) +
     (!formData.crop?.trim() ? 1 : 0) +
     (!formData.productYields || formData.productYields.length === 0 ? 1 : 0);
   useEffect(() => {
@@ -359,7 +361,7 @@ export default function PlantingSpecEditor({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.identifier?.trim() || !formData.crop?.trim()) return;
+    if (!formData.name?.trim() || !formData.crop?.trim()) return;
 
     // Require at least one product
     if (!formData.productYields || formData.productYields.length === 0) {
@@ -368,17 +370,17 @@ export default function PlantingSpecEditor({
     }
     setProductError(null);
 
-    // In create mode (or when identifier changed), check for duplicates
-    const identifierToCheck = formData.identifier.trim();
-    const originalIdentifier = spec?.identifier;
-    const isNewIdentifier = mode === 'create' || identifierToCheck !== originalIdentifier;
+    // In create mode (or when name changed), check for duplicates
+    const nameToCheck = formData.name.trim();
+    const originalName = spec?.name;
+    const isNewName = mode === 'create' || nameToCheck !== originalName;
 
-    if (isNewIdentifier && existingIdentifiers.includes(identifierToCheck)) {
-      setIdentifierError(`A spec with identifier "${identifierToCheck}" already exists`);
-      identifierInputRef.current?.focus();
+    if (isNewName && existingNames.includes(nameToCheck)) {
+      setNameError(`A spec with name "${nameToCheck}" already exists`);
+      nameInputRef.current?.focus();
       return;
     }
-    setIdentifierError(null);
+    setNameError(null);
 
     // Check if any data will be removed
     const removalInfo = getDataRemovalInfo(growingMethod, trayStages, formData);
@@ -478,7 +480,7 @@ export default function PlantingSpecEditor({
           <h2 className="text-lg font-semibold text-gray-900">
             {mode === 'create'
               ? 'Create Planting Spec'
-              : `Edit Planting Spec${formData.identifier ? ` for ${formData.identifier}` : ''}`}
+              : `Edit Planting Spec${formData.name ? ` for ${formData.name}` : ''}`}
           </h2>
           <button
             onClick={onClose}
@@ -562,24 +564,24 @@ export default function PlantingSpecEditor({
               <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Identity</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Identifier *</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Name *</label>
                   <input
-                    ref={identifierInputRef}
+                    ref={nameInputRef}
                     type="text"
-                    value={formData.identifier || ''}
+                    value={formData.name || ''}
                     onChange={(e) => {
-                      updateField('identifier', e.target.value);
-                      if (identifierError) setIdentifierError(null);
+                      updateField('name', e.target.value);
+                      if (nameError) setNameError(null);
                     }}
                     className={`w-full px-3 py-2 text-sm text-gray-900 border rounded-md focus:outline-none focus:ring-2 ${
-                      identifierError
+                      nameError
                         ? 'border-red-500 focus:ring-red-500'
                         : 'border-gray-300 focus:ring-blue-500'
                     }`}
                     required
                   />
-                  {identifierError && (
-                    <p className="text-xs text-red-600 mt-1">{identifierError}</p>
+                  {nameError && (
+                    <p className="text-xs text-red-600 mt-1">{nameError}</p>
                   )}
                 </div>
                 <div>
@@ -979,6 +981,25 @@ export default function PlantingSpecEditor({
                             />
                           </div>
                         </div>
+                        {/* Harvest date preview based on target field date */}
+                        {formData.targetFieldDate && py.dtm > 0 && storeMetadata?.year && (() => {
+                          const year = storeMetadata.year;
+                          const fieldDate = new Date(`${year}-${formData.targetFieldDate}T00:00:00`);
+                          if (isNaN(fieldDate.getTime())) return null;
+                          const daysInCells = calculateDaysInCells(formData as PlantingSpec);
+                          const seedToHarvest = calculateProductSeedToHarvest(py, formData as PlantingSpec, daysInCells);
+                          const harvestWindow = calculateProductHarvestWindow(py);
+                          const harvestStart = new Date(fieldDate);
+                          harvestStart.setDate(harvestStart.getDate() + seedToHarvest - daysInCells);
+                          const harvestEnd = new Date(harvestStart);
+                          harvestEnd.setDate(harvestEnd.getDate() + Math.max(0, harvestWindow - 1));
+                          const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                          return (
+                            <p className="text-[10px] text-gray-500 mt-1">
+                              Harvest: {fmt(harvestStart)} – {fmt(harvestEnd)} ({seedToHarvest - daysInCells}d field + {harvestWindow}d window)
+                            </p>
+                          );
+                        })()}
                         {/* Yield Formula with templates and variables */}
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <div className="flex items-center justify-between mb-2">
@@ -1315,7 +1336,7 @@ export default function PlantingSpecEditor({
           {(() => {
             // Build validation errors
             const validationErrors: string[] = [];
-            if (!formData.identifier?.trim()) validationErrors.push('Identifier is required');
+            if (!formData.name?.trim()) validationErrors.push('Name is required');
             if (!formData.crop?.trim()) validationErrors.push('Crop name is required');
             if (!formData.productYields || formData.productYields.length === 0) {
               validationErrors.push('At least one product is required');

@@ -2,7 +2,6 @@
   "crops": [
     {
       "id": "crop_e804ff77",
-      "identifier": "Alexanders - Mature X | Field DS Ow",
       "crop": "Alexanders",
       "searchText": "alexanders - mature x | field ds ow alexanders mature",
       "growingStructure": "field",
@@ -26,11 +25,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Alexanders - Mature X | Field DS Ow"
     },
     {
       "id": "crop_e8f1434d",
-      "identifier": "Amaranth - Mature Leaf 3X | Field DS Su",
       "crop": "Amaranth",
       "category": "Flower",
       "searchText": "amaranth - mature leaf 3x | field ds su amaranth mature leaf flower",
@@ -64,11 +63,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Amaranth - Mature Leaf 3X | Field DS Su"
     },
     {
       "id": "crop_2f8a988c",
-      "identifier": "Amaranth - Mature Stem 2X | Field TP ",
       "crop": "Amaranth",
       "category": "Flower",
       "searchText": "amaranth - mature stem 2x | field tp  amaranth mature stem flower",
@@ -108,11 +107,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Amaranth - Mature Stem 2X | Field TP "
     },
     {
       "id": "crop_fdc62dd1",
-      "identifier": "Anise Hysopp - Mature Stem 2X | Field TP Su",
       "crop": "Anise Hysopp",
       "category": "Herb",
       "searchText": "anise hysopp - mature stem 2x | field tp su anise hysopp mature stem herb",
@@ -150,11 +149,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Anise Hysopp - Mature Stem 2X | Field TP Su"
     },
     {
       "id": "crop_29a973f9",
-      "identifier": "Artichoke - Mature Flower 3X | Field DS ",
       "crop": "Artichoke",
       "searchText": "artichoke - mature flower 3x | field ds  artichoke mature flower",
       "growingStructure": "field",
@@ -182,11 +181,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Artichoke - Mature Flower 3X | Field DS "
     },
     {
       "id": "crop_2fd7e6d1",
-      "identifier": "Arugula - Baby Leaf 1X | Field DS Sp",
       "crop": "Arugula",
       "category": "Green",
       "searchText": "arugula - baby leaf 1x | field ds sp arugula baby leaf green",
@@ -220,11 +219,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Arugula - Baby Leaf 1X | Field DS Sp"
     },
     {
       "id": "crop_4871569f",
-      "identifier": "Arugula - Baby Leaf 1X | Field DS SpSuFa",
       "crop": "Arugula",
       "category": "Green",
       "searchText": "arugula - baby leaf 1x | field ds spsufa arugula baby leaf green",
@@ -258,11 +257,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Arugula - Baby Leaf 1X | Field DS SpSuFa"
     },
     {
       "id": "crop_8f58946e",
-      "identifier": "Arugula - Mature Leaf 3X | Field DS Fa",
       "crop": "Arugula",
       "category": "Green",
       "searchText": "arugula - mature leaf 3x | field ds fa arugula mature leaf green",
@@ -296,11 +295,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Arugula - Mature Leaf 3X | Field DS Fa"
     },
     {
       "id": "crop_fbf3e21f",
-      "identifier": "Arugula - Mature Leaf 3X | Greenhouse TP Wi",
       "crop": "Arugula",
       "category": "Green",
       "searchText": "arugula - mature leaf 3x | greenhouse tp wi arugula mature leaf green",
@@ -340,11 +339,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Arugula - Mature Leaf 3X | Greenhouse TP Wi"
     },
     {
       "id": "crop_9d9cf8a1",
-      "identifier": "Asian Greens - Mature Head 1X | Field TP ",
       "crop": "Asian Greens",
       "searchText": "asian greens - mature head 1x | field tp  asian greens mature head",
       "growingStructure": "field",
@@ -380,11 +379,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Asian Greens - Mature Head 1X | Field TP "
     },
     {
       "id": "crop_203447ea",
-      "identifier": "Asian Greens - Young Leaf 1X | Field DS ",
       "crop": "Asian Greens",
       "searchText": "asian greens - young leaf 1x | field ds  asian greens young leaf",
       "growingStructure": "field",
@@ -414,11 +413,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Asian Greens - Young Leaf 1X | Field DS "
     },
     {
       "id": "crop_17b53e63",
-      "identifier": "Asian Greens (Mixed) - Loose Leaf 1.5X | Field TP Ow",
       "crop": "Asian Greens",
       "category": "Green",
       "searchText": "asian greens (mixed) - loose leaf 1.5x | field tp ow asian greens mixed loose leaf green",
@@ -455,11 +454,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Asian Greens (Mixed) - Loose Leaf 1.5X | Field TP Ow"
     },
     {
       "id": "crop_888ed40f",
-      "identifier": "Atriplex - Mature Stem 1X | Field DS SpSu",
       "crop": "Atriplex",
       "category": "Flower",
       "searchText": "atriplex - mature stem 1x | field ds spsu atriplex mature stem flower",
@@ -491,11 +490,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Atriplex - Mature Stem 1X | Field DS SpSu"
     },
     {
       "id": "crop_dcaf4fa9",
-      "identifier": "Atriplex - Mature Stem 1X | Field TP SpSu",
       "crop": "Atriplex",
       "category": "Flower",
       "searchText": "atriplex - mature stem 1x | field tp spsu atriplex mature stem flower",
@@ -533,11 +532,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Atriplex - Mature Stem 1X | Field TP SpSu"
     },
     {
       "id": "crop_8acbde47",
-      "identifier": "Bachellor's Button - Mature Stem 2X | Field DS ",
       "crop": "Bachellor's Button",
       "category": "Flower",
       "searchText": "bachellor's button - mature stem 2x | field ds  bachellor's button mature stem flower",
@@ -571,11 +570,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Bachellor's Button - Mature Stem 2X | Field DS "
     },
     {
       "id": "crop_d65948e6",
-      "identifier": "Basil (Interplant) - Mature Leaf 1X | Tunnel TP SpSuOw",
       "crop": "Basil",
       "category": "Herb",
       "searchText": "basil (interplant) - mature leaf 1x | tunnel tp spsuow basil interplant mature leaf herb",
@@ -614,11 +613,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Basil (Interplant) - Mature Leaf 1X | Tunnel TP SpSuOw"
     },
     {
       "id": "crop_aacaa31a",
-      "identifier": "Basil (Italian) - Mature Leaf 1X | Tunnel TP SpSuOw",
       "crop": "Basil",
       "category": "Herb",
       "searchText": "basil (italian) - mature leaf 1x | tunnel tp spsuow basil italian mature leaf herb",
@@ -657,11 +656,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Basil (Italian) - Mature Leaf 1X | Tunnel TP SpSuOw"
     },
     {
       "id": "crop_775f8e97",
-      "identifier": "Basil (Purple Basil) - Mature Stem 1X | Field TP ",
       "crop": "Basil",
       "category": "Herb",
       "searchText": "basil (purple basil) - mature stem 1x | field tp  basil purple basil mature stem herb",
@@ -700,11 +699,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Basil (Purple Basil) - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_68fe2d95",
-      "identifier": "Basil (Tulsi Reseed) - Mature Leaf 1X | Field DS SpSu",
       "crop": "Basil",
       "category": "Herb",
       "searchText": "basil (tulsi reseed) - mature leaf 1x | field ds spsu basil tulsi reseed mature leaf herb",
@@ -732,11 +731,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Basil (Tulsi Reseed) - Mature Leaf 1X | Field DS SpSu"
     },
     {
       "id": "crop_b6dbde4b",
-      "identifier": "Basil (Tulsi) - Mature Leaf 1X | Field TP ",
       "crop": "Basil",
       "category": "Herb",
       "searchText": "basil (tulsi) - mature leaf 1x | field tp  basil tulsi mature leaf herb",
@@ -775,11 +774,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Basil (Tulsi) - Mature Leaf 1X | Field TP "
     },
     {
       "id": "crop_0a6fd892",
-      "identifier": "Basil (Tulsi) - Mature Stem 1X | Field TP ",
       "crop": "Basil",
       "category": "Herb",
       "searchText": "basil (tulsi) - mature stem 1x | field tp  basil tulsi mature stem herb",
@@ -818,11 +817,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Basil (Tulsi) - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_75e39574",
-      "identifier": "Bean (Bush) - Young Pod 1X | Field TP SpSu",
       "crop": "Bean",
       "category": "Beans",
       "searchText": "bean (bush) - young pod 1x | field tp spsu bean bush young pod beans",
@@ -861,11 +860,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Bean (Bush) - Young Pod 1X | Field TP SpSu"
     },
     {
       "id": "crop_ff0bd136",
-      "identifier": "Bean (Pole) - Young Pod 3X | Field TP SuFa",
       "crop": "Bean",
       "category": "Beans",
       "searchText": "bean (pole) - young pod 3x | field tp sufa bean pole young pod beans",
@@ -903,11 +902,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Bean (Pole) - Young Pod 3X | Field TP SuFa"
     },
     {
       "id": "crop_f071a5c9",
-      "identifier": "Bean (Ruby Moon Beans) - Flowering Tendril 1X | Field TP ",
       "crop": "Bean",
       "category": "Flower",
       "searchText": "bean (ruby moon beans) - flowering tendril 1x | field tp  bean ruby moon beans flowering tendril flower",
@@ -947,11 +946,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Bean (Ruby Moon Beans) - Flowering Tendril 1X | Field TP "
     },
     {
       "id": "crop_b5bae14f",
-      "identifier": "Bean (Runner Bean) - Flowering Tendril 1X | Field TP ",
       "crop": "Bean",
       "category": "Beans",
       "searchText": "bean (runner bean) - flowering tendril 1x | field tp  bean runner bean flowering tendril beans",
@@ -991,11 +990,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Bean (Runner Bean) - Flowering Tendril 1X | Field TP "
     },
     {
       "id": "crop_8048d763",
-      "identifier": "Bean (Runner Bean) - Flowering Tendril 3X | Field DS ",
       "crop": "Bean",
       "category": "Flower",
       "searchText": "bean (runner bean) - flowering tendril 3x | field ds  bean runner bean flowering tendril flower",
@@ -1029,11 +1028,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Bean (Runner Bean) - Flowering Tendril 3X | Field DS "
     },
     {
       "id": "crop_06c06fa0",
-      "identifier": "Bean (Winged) - Flowering Tendril 1X | Field TP ",
       "crop": "Bean",
       "category": "Flower",
       "searchText": "bean (winged) - flowering tendril 1x | field tp  bean winged flowering tendril flower",
@@ -1073,11 +1072,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Bean (Winged) - Flowering Tendril 1X | Field TP "
     },
     {
       "id": "crop_1e2370c7",
-      "identifier": "Beet - Baby Root 1X | Field TP Sp",
       "crop": "Beet",
       "searchText": "beet - baby root 1x | field tp sp beet baby root",
       "growingStructure": "field",
@@ -1113,11 +1112,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Beet - Baby Root 1X | Field TP Sp"
     },
     {
       "id": "crop_c0976d40",
-      "identifier": "Beet - Mature Root 1X | Field DS Sp",
       "crop": "Beet",
       "searchText": "beet - mature root 1x | field ds sp beet mature root",
       "growingStructure": "field",
@@ -1147,11 +1146,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Beet - Mature Root 1X | Field DS Sp"
     },
     {
       "id": "crop_7a457780",
-      "identifier": "Beet - Mature Root 1X | Field TP Sp",
       "crop": "Beet",
       "searchText": "beet - mature root 1x | field tp sp beet mature root",
       "growingStructure": "field",
@@ -1188,11 +1187,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Beet - Mature Root 1X | Field TP Sp"
     },
     {
       "id": "crop_0a37fd9a",
-      "identifier": "Beet - Mature Root 1X | Field TP SuFa",
       "crop": "Beet",
       "searchText": "beet - mature root 1x | field tp sufa beet mature root",
       "growingStructure": "field",
@@ -1229,11 +1228,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Beet - Mature Root 1X | Field TP SuFa"
     },
     {
       "id": "crop_fd6058ff",
-      "identifier": "Beet - Mature Root 3X | Field TP Sp",
       "crop": "Beet",
       "category": "Root",
       "searchText": "beet - mature root 3x | field tp sp beet mature root root",
@@ -1271,11 +1270,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Beet - Mature Root 3X | Field TP Sp"
     },
     {
       "id": "crop_0c6bd7b0",
-      "identifier": "Beet - Mature Root 3X | Field TP SuFa",
       "crop": "Beet",
       "category": "Root",
       "searchText": "beet - mature root 3x | field tp sufa beet mature root root",
@@ -1313,11 +1312,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Beet - Mature Root 3X | Field TP SuFa"
     },
     {
       "id": "crop_0e5c7933",
-      "identifier": "Beet - Mature Root 3X | Tunnel TP Ow",
       "crop": "Beet",
       "category": "Root",
       "searchText": "beet - mature root 3x | tunnel tp ow beet mature root root",
@@ -1355,11 +1354,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Beet - Mature Root 3X | Tunnel TP Ow"
     },
     {
       "id": "crop_41b79704",
-      "identifier": "Bok Choy - Mature Head 1X | Field TP SpFaWiOw",
       "crop": "Bok Choy",
       "searchText": "bok choy - mature head 1x | field tp spfawiow bok choy mature head",
       "growingStructure": "field",
@@ -1395,11 +1394,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Bok Choy - Mature Head 1X | Field TP SpFaWiOw"
     },
     {
       "id": "crop_0c7a3677",
-      "identifier": "Borage (1r) - Edible Bloom 1X | Field DS ",
       "crop": "Borage",
       "category": "Flower",
       "searchText": "borage (1r) - edible bloom 1x | field ds  borage 1r edible bloom flower",
@@ -1432,11 +1431,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Borage (1r) - Edible Bloom 1X | Field DS "
     },
     {
       "id": "crop_d6bb688d",
-      "identifier": "Borage (1r) - Mature Stem 1X | Field DS ",
       "crop": "Borage",
       "category": "Flower",
       "searchText": "borage (1r) - mature stem 1x | field ds  borage 1r mature stem flower",
@@ -1469,11 +1468,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Borage (1r) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_df87f1f4",
-      "identifier": "Borage (2r) - Edible Bloom 1X | Field DS ",
       "crop": "Borage",
       "category": "Flower",
       "searchText": "borage (2r) - edible bloom 1x | field ds  borage 2r edible bloom flower",
@@ -1507,11 +1506,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Borage (2r) - Edible Bloom 1X | Field DS "
     },
     {
       "id": "crop_6d57e330",
-      "identifier": "Borage (2r) - Mature Stem 1X | Field DS ",
       "crop": "Borage",
       "category": "Flower",
       "searchText": "borage (2r) - mature stem 1x | field ds  borage 2r mature stem flower",
@@ -1545,11 +1544,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Borage (2r) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_0692f601",
-      "identifier": "Broccoli - Mature Head 1X | Field DS SpFaWiOw",
       "crop": "Broccoli",
       "searchText": "broccoli - mature head 1x | field ds spfawiow broccoli mature head",
       "growingStructure": "field",
@@ -1579,11 +1578,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Broccoli - Mature Head 1X | Field DS SpFaWiOw"
     },
     {
       "id": "crop_f742baa0",
-      "identifier": "Broccoli (Sprouting) - Loose Florets 1X | Field TP SuFa",
       "crop": "Broccoli",
       "category": "Brassica",
       "searchText": "broccoli (sprouting) - loose florets 1x | field tp sufa broccoli sprouting loose florets brassica",
@@ -1621,11 +1620,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Broccoli (Sprouting) - Loose Florets 1X | Field TP SuFa"
     },
     {
       "id": "crop_e269c885",
-      "identifier": "Brussel Sprouts (Early) - Mature Sprouts 1X | Field TP Wi",
       "crop": "Brussel Sprouts",
       "searchText": "brussel sprouts (early) - mature sprouts 1x | field tp wi brussel sprouts early mature sprouts",
       "growingStructure": "field",
@@ -1669,11 +1668,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Brussel Sprouts (Early) - Mature Sprouts 1X | Field TP Wi"
     },
     {
       "id": "crop_90c5073d",
-      "identifier": "Brussel Sprouts (Late) - Mature Sprouts 1X | Field TP Wi",
       "crop": "Brussel Sprouts",
       "searchText": "brussel sprouts (late) - mature sprouts 1x | field tp wi brussel sprouts late mature sprouts",
       "growingStructure": "field",
@@ -1717,11 +1716,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Brussel Sprouts (Late) - Mature Sprouts 1X | Field TP Wi"
     },
     {
       "id": "crop_9933a70b",
-      "identifier": "Buckwheat (Floral) - Flowering Stem 1X | Field DS Su",
       "crop": "Buckwheat",
       "category": "Flower",
       "searchText": "buckwheat (floral) - flowering stem 1x | field ds su buckwheat floral flowering stem flower",
@@ -1752,11 +1751,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Buckwheat (Floral) - Flowering Stem 1X | Field DS Su"
     },
     {
       "id": "crop_126c379e",
-      "identifier": "Bupleurum - Mature Stem 1X | Field DS Sp",
       "crop": "Bupleurum",
       "category": "Flower",
       "searchText": "bupleurum - mature stem 1x | field ds sp bupleurum mature stem flower",
@@ -1788,11 +1787,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Bupleurum - Mature Stem 1X | Field DS Sp"
     },
     {
       "id": "crop_71c46b45",
-      "identifier": "Butterfly Flowers - Flowering Tendril 1X | Field TP ",
       "crop": "Butterfly Flowers",
       "category": "Flower",
       "searchText": "butterfly flowers - flowering tendril 1x | field tp  butterfly flowers flowering tendril flower",
@@ -1832,11 +1831,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Butterfly Flowers - Flowering Tendril 1X | Field TP "
     },
     {
       "id": "crop_e7155dd2",
-      "identifier": "Cabbage - Large Head 1X | Field TP Fa",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage - large head 1x | field tp fa cabbage large head brassica",
@@ -1878,11 +1877,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cabbage - Large Head 1X | Field TP Fa"
     },
     {
       "id": "crop_35c37126",
-      "identifier": "Cabbage (Chinese) - Large Head 1X | Field TP Wi",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (chinese) - large head 1x | field tp wi cabbage chinese large head brassica",
@@ -1924,11 +1923,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Chinese) - Large Head 1X | Field TP Wi"
     },
     {
       "id": "crop_4f35f1e9",
-      "identifier": "Cabbage (Chinese) - Small Head 1X | Field TP Fa",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (chinese) - small head 1x | field tp fa cabbage chinese small head brassica",
@@ -1970,11 +1969,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Chinese) - Small Head 1X | Field TP Fa"
     },
     {
       "id": "crop_ac61f708",
-      "identifier": "Cabbage (Fast Early 9\") - Large Head 1X | Field TP Sp",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (fast early 9\") - large head 1x | field tp sp cabbage fast early 9\" large head brassica",
@@ -2015,11 +2014,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Fast Early 9\") - Large Head 1X | Field TP Sp"
     },
     {
       "id": "crop_ac95ab62",
-      "identifier": "Cabbage (Fast Early) - Large Head 1X | Field TP Su",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (fast early) - large head 1x | field tp su cabbage fast early large head brassica",
@@ -2060,11 +2059,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Fast Early) - Large Head 1X | Field TP Su"
     },
     {
       "id": "crop_429f5082",
-      "identifier": "Cabbage (Fast Mid 12\") - Large Head 1X | Field TP Su",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (fast mid 12\") - large head 1x | field tp su cabbage fast mid 12\" large head brassica",
@@ -2105,11 +2104,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Fast Mid 12\") - Large Head 1X | Field TP Su"
     },
     {
       "id": "crop_833d8498",
-      "identifier": "Cabbage (Fast Mid 9\") - Large Head 1X | Field TP Sp",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (fast mid 9\") - large head 1x | field tp sp cabbage fast mid 9\" large head brassica",
@@ -2150,11 +2149,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Fast Mid 9\") - Large Head 1X | Field TP Sp"
     },
     {
       "id": "crop_3d4705c0",
-      "identifier": "Cabbage (Large) - Large Head 1X | Field TP Ow",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (large) - large head 1x | field tp ow cabbage large large head brassica",
@@ -2196,11 +2195,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cabbage (Large) - Large Head 1X | Field TP Ow"
     },
     {
       "id": "crop_cb0e4e7f",
-      "identifier": "Cabbage (Large) - Mature Leaf 1X | Field TP Ow",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (large) - mature leaf 1x | field tp ow cabbage large mature leaf brassica",
@@ -2242,11 +2241,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cabbage (Large) - Mature Leaf 1X | Field TP Ow"
     },
     {
       "id": "crop_ef67ebae",
-      "identifier": "Cabbage (Late) - Large Head 1X | Field TP Su",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (late) - large head 1x | field tp su cabbage late large head brassica",
@@ -2287,11 +2286,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cabbage (Late) - Large Head 1X | Field TP Su"
     },
     {
       "id": "crop_23c11660",
-      "identifier": "Cabbage (Lg) - Large Head 1X | Field TP Wi",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (lg) - large head 1x | field tp wi cabbage lg large head brassica",
@@ -2333,11 +2332,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Lg) - Large Head 1X | Field TP Wi"
     },
     {
       "id": "crop_19230b3e",
-      "identifier": "Cabbage (Megaton) - Large Head 1X | Field TP Fa",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (megaton) - large head 1x | field tp fa cabbage megaton large head brassica",
@@ -2379,11 +2378,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Megaton) - Large Head 1X | Field TP Fa"
     },
     {
       "id": "crop_f7dc67c4",
-      "identifier": "Cabbage (Savoy) - Large Head 1X | Field TP Ow",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (savoy) - large head 1x | field tp ow cabbage savoy large head brassica",
@@ -2424,11 +2423,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cabbage (Savoy) - Large Head 1X | Field TP Ow"
     },
     {
       "id": "crop_b1dcfd2f",
-      "identifier": "Cabbage (Sm) - Small Head 1X | Field TP Wi",
       "crop": "Cabbage",
       "category": "Brassica",
       "searchText": "cabbage (sm) - small head 1x | field tp wi cabbage sm small head brassica",
@@ -2470,11 +2469,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cabbage (Sm) - Small Head 1X | Field TP Wi"
     },
     {
       "id": "crop_c451f3c3",
-      "identifier": "Carrot (Early) - Mature Root 1X | Field DS Sp",
       "crop": "Carrot",
       "category": "Root",
       "searchText": "carrot (early) - mature root 1x | field ds sp carrot early mature root root",
@@ -2507,11 +2506,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Carrot (Early) - Mature Root 1X | Field DS Sp"
     },
     {
       "id": "crop_faadfb53",
-      "identifier": "Carrot (Early) - Mature Root 1X | Field DS Su",
       "crop": "Carrot",
       "category": "Root",
       "searchText": "carrot (early) - mature root 1x | field ds su carrot early mature root root",
@@ -2544,11 +2543,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Carrot (Early) - Mature Root 1X | Field DS Su"
     },
     {
       "id": "crop_27d29219",
-      "identifier": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi",
       "crop": "Carrot",
       "category": "Root",
       "searchText": "carrot (maincrop) - storage root 1x | field ds fawi carrot maincrop storage root root",
@@ -2581,11 +2580,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi"
     },
     {
       "id": "crop_4156a541",
-      "identifier": "Carrot (Oxheart) - Mature Root 1X | Field DS SpSuFa",
       "crop": "Carrot",
       "searchText": "carrot (oxheart) - mature root 1x | field ds spsufa carrot oxheart mature root",
       "growingStructure": "field",
@@ -2615,11 +2614,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Carrot (Oxheart) - Mature Root 1X | Field DS SpSuFa"
     },
     {
       "id": "crop_aeb0f0b9",
-      "identifier": "Catnip - Mature Stem 3X | Field TP Su",
       "crop": "Catnip",
       "category": "Herb",
       "searchText": "catnip - mature stem 3x | field tp su catnip mature stem herb",
@@ -2657,11 +2656,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Catnip - Mature Stem 3X | Field TP Su"
     },
     {
       "id": "crop_cfb64b69",
-      "identifier": "Cauliflower - Mature Head 1X | Field TP Fa",
       "crop": "Cauliflower",
       "category": "Brassica",
       "searchText": "cauliflower - mature head 1x | field tp fa cauliflower mature head brassica",
@@ -2703,11 +2702,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cauliflower - Mature Head 1X | Field TP Fa"
     },
     {
       "id": "crop_ee5c5a5d",
-      "identifier": "Cauliflower - Mature Head 1X | Field TP Ow",
       "crop": "Cauliflower",
       "category": "Brassica",
       "searchText": "cauliflower - mature head 1x | field tp ow cauliflower mature head brassica",
@@ -2748,11 +2747,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cauliflower - Mature Head 1X | Field TP Ow"
     },
     {
       "id": "crop_1c6688f1",
-      "identifier": "Cauliflower - Mature Head 1X | Field TP Su",
       "crop": "Cauliflower",
       "category": "Brassica",
       "searchText": "cauliflower - mature head 1x | field tp su cauliflower mature head brassica",
@@ -2794,11 +2793,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cauliflower - Mature Head 1X | Field TP Su"
     },
     {
       "id": "crop_42f9072e",
-      "identifier": "Cauliflower (Green-Stem) - Mature Head 1X | Field TP Su",
       "crop": "Cauliflower",
       "category": "Brassica",
       "searchText": "cauliflower (green-stem) - mature head 1x | field tp su cauliflower green-stem mature head brassica",
@@ -2840,11 +2839,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cauliflower (Green-Stem) - Mature Head 1X | Field TP Su"
     },
     {
       "id": "crop_624125e4",
-      "identifier": "Celery - Loose Rib 1X | Field TP SpSu",
       "crop": "Celery",
       "category": "Celery",
       "searchText": "celery - loose rib 1x | field tp spsu celery loose rib celery",
@@ -2886,11 +2885,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Celery - Loose Rib 1X | Field TP SpSu"
     },
     {
       "id": "crop_920f8d08",
-      "identifier": "Celery Root - Mature Root 1X | Field DS SpSuFaWi",
       "crop": "Celery Root",
       "searchText": "celery root - mature root 1x | field ds spsufawi celery root mature root",
       "growingStructure": "field",
@@ -2920,11 +2919,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Celery Root - Mature Root 1X | Field DS SpSuFaWi"
     },
     {
       "id": "crop_e91dd2a6",
-      "identifier": "Celery Root - Mini Root 1X | Field DS SpSuFaWi",
       "crop": "Celery Root",
       "searchText": "celery root - mini root 1x | field ds spsufawi celery root mini root",
       "growingStructure": "field",
@@ -2954,11 +2953,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Celery Root - Mini Root 1X | Field DS SpSuFaWi"
     },
     {
       "id": "crop_5038f9e6",
-      "identifier": "Celosia - Mature Stem 1X | Field DS Sp",
       "crop": "Celosia",
       "category": "Flower",
       "searchText": "celosia - mature stem 1x | field ds sp celosia mature stem flower",
@@ -2990,11 +2989,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Celosia - Mature Stem 1X | Field DS Sp"
     },
     {
       "id": "crop_38443995",
-      "identifier": "Celosia - Mature Stem 1X | Field TP Sp",
       "crop": "Celosia",
       "category": "Flower",
       "searchText": "celosia - mature stem 1x | field tp sp celosia mature stem flower",
@@ -3032,11 +3031,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Celosia - Mature Stem 1X | Field TP Sp"
     },
     {
       "id": "crop_278e708f",
-      "identifier": "Chervil - Mature Stem 2X | Field TP Su",
       "crop": "Chervil",
       "category": "Herb",
       "searchText": "chervil - mature stem 2x | field tp su chervil mature stem herb",
@@ -3074,11 +3073,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Chervil - Mature Stem 2X | Field TP Su"
     },
     {
       "id": "crop_849c08bd",
-      "identifier": "Chicory - Chicon 1X | Field DS Ow",
       "crop": "Chicory",
       "searchText": "chicory - chicon 1x | field ds ow chicory chicon",
       "growingStructure": "field",
@@ -3106,11 +3105,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Chicory - Chicon 1X | Field DS Ow"
     },
     {
       "id": "crop_c04913d2",
-      "identifier": "Chicory - Mature Head 1X | Field DS Ow",
       "crop": "Chicory",
       "searchText": "chicory - mature head 1x | field ds ow chicory mature head",
       "growingStructure": "field",
@@ -3138,11 +3137,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Chicory - Mature Head 1X | Field DS Ow"
     },
     {
       "id": "crop_005e61a3",
-      "identifier": "Chijimisai - Mature Head 2X | Field TP Ow",
       "crop": "Chijimisai",
       "category": "Brassica",
       "searchText": "chijimisai - mature head 2x | field tp ow chijimisai mature head brassica",
@@ -3177,11 +3176,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Chijimisai - Mature Head 2X | Field TP Ow"
     },
     {
       "id": "crop_4a0bc5b2",
-      "identifier": "Choi Sum - Mature Head 1X | Field TP ",
       "crop": "Choi Sum",
       "category": "Brassica",
       "searchText": "choi sum - mature head 1x | field tp  choi sum mature head brassica",
@@ -3219,11 +3218,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Choi Sum - Mature Head 1X | Field TP "
     },
     {
       "id": "crop_95aae4db",
-      "identifier": "Choi Sum - Mature Head 4X | Field TP ",
       "crop": "Choi Sum",
       "category": "Brassica",
       "searchText": "choi sum - mature head 4x | field tp  choi sum mature head brassica",
@@ -3261,11 +3260,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Choi Sum - Mature Head 4X | Field TP "
     },
     {
       "id": "crop_edf48783",
-      "identifier": "Chrysanthemum - Mature Stem 1X | Field DS ",
       "crop": "Chrysanthemum",
       "category": "Brassica",
       "searchText": "chrysanthemum - mature stem 1x | field ds  chrysanthemum mature stem brassica",
@@ -3298,11 +3297,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Chrysanthemum - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_fdafc443",
-      "identifier": "Chrysanthemum Greens - Mature Leaf 1X | Field DS Ow",
       "crop": "Chrysanthemum Greens",
       "category": "Brassica",
       "searchText": "chrysanthemum greens - mature leaf 1x | field ds ow chrysanthemum greens mature leaf brassica",
@@ -3335,11 +3334,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Chrysanthemum Greens - Mature Leaf 1X | Field DS Ow"
     },
     {
       "id": "crop_cf764ebe",
-      "identifier": "Chrysanthemum Greens - Mature Leaf 1X | Tunnel DS Ow",
       "crop": "Chrysanthemum Greens",
       "category": "Brassica",
       "searchText": "chrysanthemum greens - mature leaf 1x | tunnel ds ow chrysanthemum greens mature leaf brassica",
@@ -3372,11 +3371,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Chrysanthemum Greens - Mature Leaf 1X | Tunnel DS Ow"
     },
     {
       "id": "crop_19b1d727",
-      "identifier": "Cilantro - Loose Leaf 3X | Field DS FaWi",
       "crop": "Cilantro",
       "category": "Herb",
       "searchText": "cilantro - loose leaf 3x | field ds fawi cilantro loose leaf herb",
@@ -3408,11 +3407,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cilantro - Loose Leaf 3X | Field DS FaWi"
     },
     {
       "id": "crop_cbbe306a",
-      "identifier": "Cilantro - Loose Leaf 3X | Field DS Sp",
       "crop": "Cilantro",
       "category": "Herb",
       "searchText": "cilantro - loose leaf 3x | field ds sp cilantro loose leaf herb",
@@ -3444,11 +3443,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cilantro - Loose Leaf 3X | Field DS Sp"
     },
     {
       "id": "crop_dd7aec12",
-      "identifier": "Cilantro - Loose Leaf 3X | Field TP FaWi",
       "crop": "Cilantro",
       "category": "Herb",
       "searchText": "cilantro - loose leaf 3x | field tp fawi cilantro loose leaf herb",
@@ -3486,11 +3485,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cilantro - Loose Leaf 3X | Field TP FaWi"
     },
     {
       "id": "crop_ec659a58",
-      "identifier": "Cilantro - Loose Leaf 3X | Field TP Sp",
       "crop": "Cilantro",
       "category": "Herb",
       "searchText": "cilantro - loose leaf 3x | field tp sp cilantro loose leaf herb",
@@ -3528,11 +3527,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cilantro - Loose Leaf 3X | Field TP Sp"
     },
     {
       "id": "crop_e409ef3d",
-      "identifier": "Cilantro - Loose Leaf 3X | Field TP Su",
       "crop": "Cilantro",
       "category": "Herb",
       "searchText": "cilantro - loose leaf 3x | field tp su cilantro loose leaf herb",
@@ -3570,11 +3569,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Cilantro - Loose Leaf 3X | Field TP Su"
     },
     {
       "id": "crop_e4adc992",
-      "identifier": "Clematis - Cut Flower 1X | Field DS SpSuFaWi",
       "crop": "Clematis",
       "searchText": "clematis - cut flower 1x | field ds spsufawi clematis cut flower",
       "growingStructure": "field",
@@ -3600,11 +3599,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Clematis - Cut Flower 1X | Field DS SpSuFaWi"
     },
     {
       "id": "crop_367e5da4",
-      "identifier": "Collard Greens - Loose Leaf 1X | Field DS ",
       "crop": "Collard Greens",
       "searchText": "collard greens - loose leaf 1x | field ds  collard greens loose leaf",
       "growingStructure": "field",
@@ -3627,11 +3626,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Collard Greens - Loose Leaf 1X | Field DS "
     },
     {
       "id": "crop_345ad6f6",
-      "identifier": "Collard Greens - Mature Leaf X | Field DS Ow",
       "crop": "Collard Greens",
       "searchText": "collard greens - mature leaf x | field ds ow collard greens mature leaf",
       "growingStructure": "field",
@@ -3644,11 +3643,11 @@
       "defaultMarketSplit": {
         "market-direct": 100
       },
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Collard Greens - Mature Leaf X | Field DS Ow"
     },
     {
       "id": "crop_a470b277",
-      "identifier": "Corn  (Squash Interplant) - Mature Cob 1X | Field TP ",
       "crop": "Corn ",
       "category": "Corn",
       "searchText": "corn  (squash interplant) - mature cob 1x | field tp  corn  squash interplant mature cob corn",
@@ -3686,11 +3685,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Corn  (Squash Interplant) - Mature Cob 1X | Field TP "
     },
     {
       "id": "crop_2ad48cd5",
-      "identifier": "Corn  (Sweet Early) - Mature Cob 1X | Field TP ",
       "crop": "Corn ",
       "category": "Corn",
       "searchText": "corn  (sweet early) - mature cob 1x | field tp  corn  sweet early mature cob corn",
@@ -3729,11 +3728,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Corn  (Sweet Early) - Mature Cob 1X | Field TP "
     },
     {
       "id": "crop_611acc26",
-      "identifier": "Corn  (Sweet Early) - Mature Cob 2X | Field DS ",
       "crop": "Corn ",
       "category": "Corn",
       "searchText": "corn  (sweet early) - mature cob 2x | field ds  corn  sweet early mature cob corn",
@@ -3766,11 +3765,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Corn  (Sweet Early) - Mature Cob 2X | Field DS "
     },
     {
       "id": "crop_7f3c5ffc",
-      "identifier": "Corn Salad - Mature Head 3X | Field DS Fa",
       "crop": "Corn Salad",
       "searchText": "corn salad - mature head 3x | field ds fa corn salad mature head",
       "growingStructure": "field",
@@ -3802,11 +3801,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Corn Salad - Mature Head 3X | Field DS Fa"
     },
     {
       "id": "crop_0cf475c5",
-      "identifier": "Corn Salad - Mature Head 3X | Field DS Ow",
       "crop": "Corn Salad",
       "searchText": "corn salad - mature head 3x | field ds ow corn salad mature head",
       "growingStructure": "field",
@@ -3838,11 +3837,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Corn Salad - Mature Head 3X | Field DS Ow"
     },
     {
       "id": "crop_22ba437f",
-      "identifier": "Corn Salad - Mature Head 3X | Field TP Fa",
       "crop": "Corn Salad",
       "category": "Green",
       "searchText": "corn salad - mature head 3x | field tp fa corn salad mature head green",
@@ -3881,11 +3880,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Corn Salad - Mature Head 3X | Field TP Fa"
     },
     {
       "id": "crop_c81bf5f4",
-      "identifier": "Corn Salad - Mature Head 3X | Field TP Ow",
       "crop": "Corn Salad",
       "searchText": "corn salad - mature head 3x | field tp ow corn salad mature head",
       "growingStructure": "field",
@@ -3923,11 +3922,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Corn Salad - Mature Head 3X | Field TP Ow"
     },
     {
       "id": "crop_6dc2dcec",
-      "identifier": "Corn Salad - Mature Head 3X | Field TP Sp",
       "crop": "Corn Salad",
       "category": "Green",
       "searchText": "corn salad - mature head 3x | field tp sp corn salad mature head green",
@@ -3966,11 +3965,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Corn Salad - Mature Head 3X | Field TP Sp"
     },
     {
       "id": "crop_f4dd8901",
-      "identifier": "Corn Salad (Golden) - Mature Head 3X | Field TP Su",
       "crop": "Corn Salad",
       "category": "Green",
       "searchText": "corn salad (golden) - mature head 3x | field tp su corn salad golden mature head green",
@@ -4008,11 +4007,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Corn Salad (Golden) - Mature Head 3X | Field TP Su"
     },
     {
       "id": "crop_1c8451fb",
-      "identifier": "Corn Salad (Reseed) - Mature Head 1X | Field DS Sp",
       "crop": "Corn Salad",
       "category": "Green",
       "searchText": "corn salad (reseed) - mature head 1x | field ds sp corn salad reseed mature head green",
@@ -4040,11 +4039,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Corn Salad (Reseed) - Mature Head 1X | Field DS Sp"
     },
     {
       "id": "crop_a9c43125",
-      "identifier": "Cosmos - Cut Flower 3X | Field DS ",
       "crop": "Cosmos",
       "category": "Flower",
       "searchText": "cosmos - cut flower 3x | field ds  cosmos cut flower flower",
@@ -4077,11 +4076,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Cosmos - Cut Flower 3X | Field DS "
     },
     {
       "id": "crop_0772b898",
-      "identifier": "Cover Mix - Mature Stem 1X | Field DS Ow",
       "crop": "Cover Mix",
       "searchText": "cover mix - mature stem 1x | field ds ow cover mix mature stem",
       "growingStructure": "field",
@@ -4098,11 +4097,11 @@
       "defaultMarketSplit": {
         "market-direct": 100
       },
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Cover Mix - Mature Stem 1X | Field DS Ow"
     },
     {
       "id": "crop_88758b20",
-      "identifier": "Cress (Ornamental) - Mature Stems 1X | Field DS SpFa",
       "crop": "Cress",
       "category": "Flower",
       "searchText": "cress (ornamental) - mature stems 1x | field ds spfa cress ornamental mature stems flower",
@@ -4134,11 +4133,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Cress (Ornamental) - Mature Stems 1X | Field DS SpFa"
     },
     {
       "id": "crop_9cb46c6c",
-      "identifier": "Cress (Ornamental) - Mature Stems 1X | Field TP SpFa",
       "crop": "Cress",
       "category": "Flower",
       "searchText": "cress (ornamental) - mature stems 1x | field tp spfa cress ornamental mature stems flower",
@@ -4176,11 +4175,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cress (Ornamental) - Mature Stems 1X | Field TP SpFa"
     },
     {
       "id": "crop_856e3cd7",
-      "identifier": "Cucumber (Asian Long) - Large Fruit 1X | Greenhouse TP ",
       "crop": "Cucumber",
       "category": "Cucumber",
       "searchText": "cucumber (asian long) - large fruit 1x | greenhouse tp  cucumber asian long large fruit cucumber",
@@ -4217,11 +4216,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cucumber (Asian Long) - Large Fruit 1X | Greenhouse TP "
     },
     {
       "id": "crop_bcd445f9",
-      "identifier": "Cucumber (Asian Long) - Ripe Fruit 1X | Field TP ",
       "crop": "Cucumber",
       "category": "Cucumber",
       "searchText": "cucumber (asian long) - ripe fruit 1x | field tp  cucumber asian long ripe fruit cucumber",
@@ -4260,11 +4259,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cucumber (Asian Long) - Ripe Fruit 1X | Field TP "
     },
     {
       "id": "crop_053c537d",
-      "identifier": "Cucumber (Lebanese) - Ripe Fruit 1X | Field TP ",
       "crop": "Cucumber",
       "category": "Cucumber",
       "searchText": "cucumber (lebanese) - ripe fruit 1x | field tp  cucumber lebanese ripe fruit cucumber",
@@ -4303,11 +4302,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cucumber (Lebanese) - Ripe Fruit 1X | Field TP "
     },
     {
       "id": "crop_52c27fbe",
-      "identifier": "Cucumber (Lebanese) - Small Fruit 1X | Greenhouse TP ",
       "crop": "Cucumber",
       "searchText": "cucumber (lebanese) - small fruit 1x | greenhouse tp  cucumber lebanese small fruit",
       "growingStructure": "greenhouse",
@@ -4343,11 +4342,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cucumber (Lebanese) - Small Fruit 1X | Greenhouse TP "
     },
     {
       "id": "crop_00de35b5",
-      "identifier": "Cucumber (Slicer) - Large Fruit 1X | Greenhouse TP ",
       "crop": "Cucumber",
       "searchText": "cucumber (slicer) - large fruit 1x | greenhouse tp  cucumber slicer large fruit",
       "growingStructure": "greenhouse",
@@ -4383,11 +4382,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cucumber (Slicer) - Large Fruit 1X | Greenhouse TP "
     },
     {
       "id": "crop_c691809b",
-      "identifier": "Cucumber (Slicer) - Ripe Fruit 1X | Field TP ",
       "crop": "Cucumber",
       "category": "Cucumber",
       "searchText": "cucumber (slicer) - ripe fruit 1x | field tp  cucumber slicer ripe fruit cucumber",
@@ -4426,11 +4425,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Cucumber (Slicer) - Ripe Fruit 1X | Field TP "
     },
     {
       "id": "crop_fb81fb70",
-      "identifier": "Dahlia - Cut Flower 1X | Field DS ",
       "crop": "Dahlia",
       "searchText": "dahlia - cut flower 1x | field ds  dahlia cut flower",
       "growingStructure": "field",
@@ -4456,11 +4455,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Dahlia - Cut Flower 1X | Field DS "
     },
     {
       "id": "crop_69161e95",
-      "identifier": "Dahlia (Mix) - Mature Stem 1X | Field DS ",
       "crop": "Dahlia",
       "searchText": "dahlia (mix) - mature stem 1x | field ds  dahlia mix mature stem",
       "growingStructure": "field",
@@ -4491,11 +4490,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Dahlia (Mix) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_f179420f",
-      "identifier": "Dahlia (Tuber) - Mature Stem 1X | Field DS ",
       "crop": "Dahlia",
       "category": "Flower",
       "searchText": "dahlia (tuber) - mature stem 1x | field ds  dahlia tuber mature stem flower",
@@ -4530,11 +4529,11 @@
           "postHarvestFieldDays": 28
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Dahlia (Tuber) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_beca8c64",
-      "identifier": "Dianthus - Mature Stem 1X | Field TP ",
       "crop": "Dianthus",
       "category": "Flower",
       "searchText": "dianthus - mature stem 1x | field tp  dianthus mature stem flower",
@@ -4573,11 +4572,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Dianthus - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_f8ea5053",
-      "identifier": "Dill - Mature Leaf 4X | Field DS ",
       "crop": "Dill",
       "category": "Herb",
       "searchText": "dill - mature leaf 4x | field ds  dill mature leaf herb",
@@ -4609,11 +4608,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Dill - Mature Leaf 4X | Field DS "
     },
     {
       "id": "crop_fe011fda",
-      "identifier": "Dill - Mature Leaf 4X | Field TP Sp",
       "crop": "Dill",
       "category": "Herb",
       "searchText": "dill - mature leaf 4x | field tp sp dill mature leaf herb",
@@ -4651,11 +4650,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Dill - Mature Leaf 4X | Field TP Sp"
     },
     {
       "id": "crop_a1a5d360",
-      "identifier": "Dill - Mature Leaf 4X | Field TP Su",
       "crop": "Dill",
       "category": "Herb",
       "searchText": "dill - mature leaf 4x | field tp su dill mature leaf herb",
@@ -4693,11 +4692,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Dill - Mature Leaf 4X | Field TP Su"
     },
     {
       "id": "crop_9eb7df6a",
-      "identifier": "Dill (White dill) - Mature Stem 3X | Field DS ",
       "crop": "Dill",
       "category": "Flower",
       "searchText": "dill (white dill) - mature stem 3x | field ds  dill white dill mature stem flower",
@@ -4730,11 +4729,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Dill (White dill) - Mature Stem 3X | Field DS "
     },
     {
       "id": "crop_a960785c",
-      "identifier": "Dill (White dill) - Mature Stem 3X | Field TP ",
       "crop": "Dill",
       "category": "Flower",
       "searchText": "dill (white dill) - mature stem 3x | field tp  dill white dill mature stem flower",
@@ -4773,11 +4772,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Dill (White dill) - Mature Stem 3X | Field TP "
     },
     {
       "id": "crop_637618ba",
-      "identifier": "Dropmore - Mature Stem 1X | Field TP ",
       "crop": "Dropmore",
       "category": "Flower",
       "searchText": "dropmore - mature stem 1x | field tp  dropmore mature stem flower",
@@ -4816,11 +4815,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Dropmore - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_8ba50ad9",
-      "identifier": "Dropmore (Perennial) - Mature Stem 1X | Field PE ",
       "crop": "Dropmore",
       "category": "Flower",
       "searchText": "dropmore (perennial) - mature stem 1x | field pe  dropmore perennial mature stem flower",
@@ -4850,11 +4849,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Dropmore (Perennial) - Mature Stem 1X | Field PE "
     },
     {
       "id": "crop_d3b241aa",
-      "identifier": "Eggplant - Ripe Fruit 1X | Greenhouse TP ",
       "crop": "Eggplant",
       "category": "Eggplant",
       "searchText": "eggplant - ripe fruit 1x | greenhouse tp  eggplant ripe fruit eggplant",
@@ -4901,11 +4900,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Eggplant - Ripe Fruit 1X | Greenhouse TP "
     },
     {
       "id": "crop_e268f921",
-      "identifier": "Epazote - Mature Stem 3X | Field TP Su",
       "crop": "Epazote",
       "category": "Herb",
       "searchText": "epazote - mature stem 3x | field tp su epazote mature stem herb",
@@ -4943,11 +4942,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Epazote - Mature Stem 3X | Field TP Su"
     },
     {
       "id": "crop_d91a525d",
-      "identifier": "Everlasting - Mature Stem 1X | Field TP Sp",
       "crop": "Everlasting",
       "category": "Flower",
       "searchText": "everlasting - mature stem 1x | field tp sp everlasting mature stem flower",
@@ -4985,11 +4984,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Everlasting - Mature Stem 1X | Field TP Sp"
     },
     {
       "id": "crop_900b4e6f",
-      "identifier": "Fava Bean - Mature Pod 1X | Field DS Sp",
       "crop": "Fava Bean",
       "category": "Fava Bean",
       "searchText": "fava bean - mature pod 1x | field ds sp fava bean mature pod fava bean",
@@ -5020,11 +5019,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Fava Bean - Mature Pod 1X | Field DS Sp"
     },
     {
       "id": "crop_27017241",
-      "identifier": "Fava Bean - Mature Pod 2X | Field DS Ow",
       "crop": "Fava Bean",
       "category": "Fava Bean",
       "searchText": "fava bean - mature pod 2x | field ds ow fava bean mature pod fava bean",
@@ -5055,11 +5054,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Fava Bean - Mature Pod 2X | Field DS Ow"
     },
     {
       "id": "crop_d30adc7e",
-      "identifier": "Fennel - Mature Bulb 1X | Field DS Sp",
       "crop": "Fennel",
       "searchText": "fennel - mature bulb 1x | field ds sp fennel mature bulb",
       "growingStructure": "field",
@@ -5088,11 +5087,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Fennel - Mature Bulb 1X | Field DS Sp"
     },
     {
       "id": "crop_4c67787b",
-      "identifier": "Fennel - Mature Bulb 1X | Field TP Fa",
       "crop": "Fennel",
       "searchText": "fennel - mature bulb 1x | field tp fa fennel mature bulb",
       "growingStructure": "field",
@@ -5127,11 +5126,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Fennel - Mature Bulb 1X | Field TP Fa"
     },
     {
       "id": "crop_df3a15ec",
-      "identifier": "Fennel - Mini Bulb 1X | Field TP Fa",
       "crop": "Fennel",
       "category": "Fennel",
       "searchText": "fennel - mini bulb 1x | field tp fa fennel mini bulb fennel",
@@ -5170,11 +5169,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Fennel - Mini Bulb 1X | Field TP Fa"
     },
     {
       "id": "crop_af24bec8",
-      "identifier": "Fennel - Mini Bulb 1X | Field TP Sp",
       "crop": "Fennel",
       "category": "Fennel",
       "searchText": "fennel - mini bulb 1x | field tp sp fennel mini bulb fennel",
@@ -5213,11 +5212,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Fennel - Mini Bulb 1X | Field TP Sp"
     },
     {
       "id": "crop_1c8d5d3b",
-      "identifier": "Flax - Flowering Stalks 1X | Field DS ",
       "crop": "Flax",
       "category": "Flower",
       "searchText": "flax - flowering stalks 1x | field ds  flax flowering stalks flower",
@@ -5249,13 +5248,13 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Flax - Flowering Stalks 1X | Field DS "
     },
     {
       "id": "crop_5e57ca0b",
-      "identifier": "Frisée - Baby Leaf 1X | Field DS ",
-      "crop": "Frisée",
-      "searchText": "frisée - baby leaf 1x | field ds  frisée baby leaf",
+      "crop": "Fris\u00e9e",
+      "searchText": "fris\u00e9e - baby leaf 1x | field ds  fris\u00e9e baby leaf",
       "growingStructure": "field",
       "dtm": 50,
       "deprecated": false,
@@ -5276,20 +5275,20 @@
       },
       "productYields": [
         {
-          "productId": "frisée|baby leaf|lb",
+          "productId": "fris\u00e9e|baby leaf|lb",
           "dtm": 50,
           "numberOfHarvests": 4,
           "daysBetweenHarvest": 16,
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Fris\u00e9e - Baby Leaf 1X | Field DS "
     },
     {
       "id": "crop_9ee6d6a0",
-      "identifier": "Frisée - Mature Head 1X | Field DS ",
-      "crop": "Frisée",
-      "searchText": "frisée - mature head 1x | field ds  frisée mature head",
+      "crop": "Fris\u00e9e",
+      "searchText": "fris\u00e9e - mature head 1x | field ds  fris\u00e9e mature head",
       "growingStructure": "field",
       "dtm": 57,
       "deprecated": false,
@@ -5308,17 +5307,17 @@
       },
       "productYields": [
         {
-          "productId": "frisée|mature head|head",
+          "productId": "fris\u00e9e|mature head|head",
           "dtm": 57,
           "numberOfHarvests": 0,
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Fris\u00e9e - Mature Head 1X | Field DS "
     },
     {
       "id": "crop_8c049a25",
-      "identifier": "Garlic (Green) - Young Bulb 1X | Field DS Ow",
       "crop": "Garlic",
       "category": "Garlic",
       "searchText": "garlic (green) - young bulb 1x | field ds ow garlic green young bulb garlic",
@@ -5348,11 +5347,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Garlic (Green) - Young Bulb 1X | Field DS Ow"
     },
     {
       "id": "crop_b32bddc6",
-      "identifier": "Garlic (Hardneck) - Storage Bulb 1X | Field DS Ow",
       "crop": "Garlic",
       "category": "Garlic",
       "searchText": "garlic (hardneck) - storage bulb 1x | field ds ow garlic hardneck storage bulb garlic",
@@ -5384,11 +5383,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Garlic (Hardneck) - Storage Bulb 1X | Field DS Ow"
     },
     {
       "id": "crop_fd362051",
-      "identifier": "Garlic (Softneck) - Storage Bulb 1X | Field DS Ow",
       "crop": "Garlic",
       "category": "Garlic",
       "searchText": "garlic (softneck) - storage bulb 1x | field ds ow garlic softneck storage bulb garlic",
@@ -5420,11 +5419,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Garlic (Softneck) - Storage Bulb 1X | Field DS Ow"
     },
     {
       "id": "crop_441afb2d",
-      "identifier": "Ginger - Young Root 1X | Field DS Sp",
       "crop": "Ginger",
       "searchText": "ginger - young root 1x | field ds sp ginger young root",
       "growingStructure": "field",
@@ -5450,11 +5449,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Ginger - Young Root 1X | Field DS Sp"
     },
     {
       "id": "crop_f96cba76",
-      "identifier": "Ginger (Moiga) - Young Root X | Field DS ",
       "crop": "Ginger",
       "searchText": "ginger (moiga) - young root x | field ds  ginger moiga young root",
       "growingStructure": "field",
@@ -5476,11 +5475,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Ginger (Moiga) - Young Root X | Field DS "
     },
     {
       "id": "crop_4522811a",
-      "identifier": "Gooseberry (Cape) - Mature Berry 1X | Field TP ",
       "crop": "Gooseberry",
       "searchText": "gooseberry (cape) - mature berry 1x | field tp  gooseberry cape mature berry",
       "growingStructure": "field",
@@ -5524,11 +5523,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Gooseberry (Cape) - Mature Berry 1X | Field TP "
     },
     {
       "id": "crop_29307180",
-      "identifier": "Grass (Frosted Explosion) - Mature Stalks 1X | Field TP ",
       "crop": "Grass",
       "category": "Flower",
       "searchText": "grass (frosted explosion) - mature stalks 1x | field tp  grass frosted explosion mature stalks flower",
@@ -5566,11 +5565,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Grass (Frosted Explosion) - Mature Stalks 1X | Field TP "
     },
     {
       "id": "crop_947bae5b",
-      "identifier": "Ground Cherry - Mature Fruit 1X | Field TP ",
       "crop": "Ground Cherry",
       "category": "Solanacea",
       "searchText": "ground cherry - mature fruit 1x | field tp  ground cherry mature fruit solanacea",
@@ -5617,11 +5616,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Ground Cherry - Mature Fruit 1X | Field TP "
     },
     {
       "id": "crop_d1da8e5a",
-      "identifier": "Hibiscus (Mahagony Splendor) - Mature Stem 1X | Field TP SuFa",
       "crop": "Hibiscus",
       "category": "Flower",
       "searchText": "hibiscus (mahagony splendor) - mature stem 1x | field tp sufa hibiscus mahagony splendor mature stem flower",
@@ -5659,11 +5658,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Hibiscus (Mahagony Splendor) - Mature Stem 1X | Field TP SuFa"
     },
     {
       "id": "crop_29003ea8",
-      "identifier": "Hops Vine with Flowers - Flowering Vine 1X | Field DS ",
       "crop": "Hops Vine with Flowers",
       "searchText": "hops vine with flowers - flowering vine 1x | field ds  hops vine with flowers flowering vine",
       "growingStructure": "field",
@@ -5689,11 +5688,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Hops Vine with Flowers - Flowering Vine 1X | Field DS "
     },
     {
       "id": "crop_6158135f",
-      "identifier": "Huauzontle - Mature Stem 1X | Field DS ",
       "crop": "Huauzontle",
       "searchText": "huauzontle - mature stem 1x | field ds  huauzontle mature stem",
       "growingStructure": "field",
@@ -5719,11 +5718,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Huauzontle - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_181d3ed9",
-      "identifier": "Hyacinth Bean Vine - Flowering Tendril 1X | Field DS ",
       "crop": "Hyacinth Bean Vine",
       "searchText": "hyacinth bean vine - flowering tendril 1x | field ds  hyacinth bean vine flowering tendril",
       "growingStructure": "field",
@@ -5749,11 +5748,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Hyacinth Bean Vine - Flowering Tendril 1X | Field DS "
     },
     {
       "id": "crop_abcd12a4",
-      "identifier": "Hydrangea (Annabelle) - Mature Stem 1X | Field DS ",
       "crop": "Hydrangea",
       "searchText": "hydrangea (annabelle) - mature stem 1x | field ds  hydrangea annabelle mature stem",
       "growingStructure": "field",
@@ -5779,11 +5778,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Hydrangea (Annabelle) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_b9dc9a6d",
-      "identifier": "Hydrangea (Pee Gee) - Mature Stem 1X | Field DS ",
       "crop": "Hydrangea",
       "searchText": "hydrangea (pee gee) - mature stem 1x | field ds  hydrangea pee gee mature stem",
       "growingStructure": "field",
@@ -5809,11 +5808,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Hydrangea (Pee Gee) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_b61327e1",
-      "identifier": "Hydrangea (Quick Fire) - Mature Stem 1X | Field DS ",
       "crop": "Hydrangea",
       "searchText": "hydrangea (quick fire) - mature stem 1x | field ds  hydrangea quick fire mature stem",
       "growingStructure": "field",
@@ -5839,11 +5838,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Hydrangea (Quick Fire) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_aa3b858f",
-      "identifier": "Jelly Melon - Ripe Fruit 1X | Field DS ",
       "crop": "Jelly Melon",
       "searchText": "jelly melon - ripe fruit 1x | field ds  jelly melon ripe fruit",
       "growingStructure": "field",
@@ -5869,11 +5868,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Jelly Melon - Ripe Fruit 1X | Field DS "
     },
     {
       "id": "crop_fbb9499c",
-      "identifier": "Kaibroc - Loose Florets 1X | Field TP Wi",
       "crop": "Kaibroc",
       "category": "Brassica",
       "searchText": "kaibroc - loose florets 1x | field tp wi kaibroc loose florets brassica",
@@ -5915,11 +5914,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Kaibroc - Loose Florets 1X | Field TP Wi"
     },
     {
       "id": "crop_4cd80a74",
-      "identifier": "Kale - Baby Leaf 1X | Field DS Su",
       "crop": "Kale",
       "searchText": "kale - baby leaf 1x | field ds su kale baby leaf",
       "growingStructure": "field",
@@ -5945,11 +5944,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Kale - Baby Leaf 1X | Field DS Su"
     },
     {
       "id": "crop_319b6fea",
-      "identifier": "Kale - Mature Leaf 2X | Field TP Fa",
       "crop": "Kale",
       "category": "Brassica",
       "searchText": "kale - mature leaf 2x | field tp fa kale mature leaf brassica",
@@ -5987,11 +5986,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Kale - Mature Leaf 2X | Field TP Fa"
     },
     {
       "id": "crop_3a7aaa6f",
-      "identifier": "Kale - Mature Leaf 2X | Field TP Ow",
       "crop": "Kale",
       "category": "Brassica",
       "searchText": "kale - mature leaf 2x | field tp ow kale mature leaf brassica",
@@ -6029,11 +6028,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Kale - Mature Leaf 2X | Field TP Ow"
     },
     {
       "id": "crop_133a91b9",
-      "identifier": "Kale - Mature Leaf 2X | Field TP Sp",
       "crop": "Kale",
       "category": "Brassica",
       "searchText": "kale - mature leaf 2x | field tp sp kale mature leaf brassica",
@@ -6071,11 +6070,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Kale - Mature Leaf 2X | Field TP Sp"
     },
     {
       "id": "crop_ff901fc0",
-      "identifier": "Kohlrabi (Lg) - Storage Bulb 1X | Field TP Fa",
       "crop": "Kohlrabi",
       "category": "Brassica",
       "searchText": "kohlrabi (lg) - storage bulb 1x | field tp fa kohlrabi lg storage bulb brassica",
@@ -6113,11 +6112,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Kohlrabi (Lg) - Storage Bulb 1X | Field TP Fa"
     },
     {
       "id": "crop_949779a2",
-      "identifier": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Fa",
       "crop": "Kohlrabi",
       "category": "Brassica",
       "searchText": "kohlrabi (sm) - storage bulb 1x | field tp fa kohlrabi sm storage bulb brassica",
@@ -6155,11 +6154,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Fa"
     },
     {
       "id": "crop_4c388fea",
-      "identifier": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Sp",
       "crop": "Kohlrabi",
       "searchText": "kohlrabi (sm) - storage bulb 1x | field tp sp kohlrabi sm storage bulb",
       "growingStructure": "field",
@@ -6196,11 +6195,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Sp"
     },
     {
       "id": "crop_89c75f89",
-      "identifier": "Komatsuna - Loose Leaf 1.5X | Field TP Ow",
       "crop": "Komatsuna",
       "searchText": "komatsuna - loose leaf 1.5x | field tp ow komatsuna loose leaf",
       "growingStructure": "field",
@@ -6236,11 +6235,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Komatsuna - Loose Leaf 1.5X | Field TP Ow"
     },
     {
       "id": "crop_77c16fc1",
-      "identifier": "Komatsuna - Loose Leaf 1.5X | Tunnel TP Ow",
       "crop": "Komatsuna",
       "searchText": "komatsuna - loose leaf 1.5x | tunnel tp ow komatsuna loose leaf",
       "growingStructure": "high-tunnel",
@@ -6276,11 +6275,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Komatsuna - Loose Leaf 1.5X | Tunnel TP Ow"
     },
     {
       "id": "crop_3c0bcc20",
-      "identifier": "Komatsuna - Mature Head 1.5X | Field TP Wi",
       "crop": "Komatsuna",
       "searchText": "komatsuna - mature head 1.5x | field tp wi komatsuna mature head",
       "growingStructure": "field",
@@ -6316,11 +6315,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Komatsuna - Mature Head 1.5X | Field TP Wi"
     },
     {
       "id": "crop_45c3021a",
-      "identifier": "Komatsuna - Mature Leaf 2X | Field TP Su",
       "crop": "Komatsuna",
       "category": "Brassica",
       "searchText": "komatsuna - mature leaf 2x | field tp su komatsuna mature leaf brassica",
@@ -6359,11 +6358,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Komatsuna - Mature Leaf 2X | Field TP Su"
     },
     {
       "id": "crop_79f4e6f0",
-      "identifier": "Komatsuna - Mature Leaf 4X | Field DS Su",
       "crop": "Komatsuna",
       "category": "Brassica",
       "searchText": "komatsuna - mature leaf 4x | field ds su komatsuna mature leaf brassica",
@@ -6396,11 +6395,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Komatsuna - Mature Leaf 4X | Field DS Su"
     },
     {
       "id": "crop_d6794120",
-      "identifier": "Leek - Mature Stalk 1X | Field DS FaWi",
       "crop": "Leek",
       "searchText": "leek - mature stalk 1x | field ds fawi leek mature stalk",
       "growingStructure": "field",
@@ -6428,11 +6427,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Leek - Mature Stalk 1X | Field DS FaWi"
     },
     {
       "id": "crop_4efc578a",
-      "identifier": "Leek - Mature Stalk 1X | Field DS Ow",
       "crop": "Leek",
       "searchText": "leek - mature stalk 1x | field ds ow leek mature stalk",
       "growingStructure": "field",
@@ -6460,11 +6459,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Leek - Mature Stalk 1X | Field DS Ow"
     },
     {
       "id": "crop_7ad35b7e",
-      "identifier": "Leek - Mature Stalk 1X | Field DS Su",
       "crop": "Leek",
       "searchText": "leek - mature stalk 1x | field ds su leek mature stalk",
       "growingStructure": "field",
@@ -6492,11 +6491,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Leek - Mature Stalk 1X | Field DS Su"
     },
     {
       "id": "crop_762b96e1",
-      "identifier": "Leek - Mature Stalk 5X | Field DS FaWi",
       "crop": "Leek",
       "category": "Onion",
       "searchText": "leek - mature stalk 5x | field ds fawi leek mature stalk onion",
@@ -6528,11 +6527,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Leek - Mature Stalk 5X | Field DS FaWi"
     },
     {
       "id": "crop_d1dfa781",
-      "identifier": "Leek - Mature Stalk 5X | Field TP Ow",
       "crop": "Leek",
       "category": "Onion",
       "searchText": "leek - mature stalk 5x | field tp ow leek mature stalk onion",
@@ -6570,11 +6569,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Leek - Mature Stalk 5X | Field TP Ow"
     },
     {
       "id": "crop_1e504a11",
-      "identifier": "Leek - Mature Stalk 5X | Field TP Su",
       "crop": "Leek",
       "searchText": "leek - mature stalk 5x | field tp su leek mature stalk",
       "growingStructure": "field",
@@ -6610,11 +6609,11 @@
           "cellsPerTray": 400
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Leek - Mature Stalk 5X | Field TP Su"
     },
     {
       "id": "crop_aa54c66e",
-      "identifier": "Lemon Balm - Mature Stem 1X | Field TP Su",
       "crop": "Lemon Balm",
       "category": "Herb",
       "searchText": "lemon balm - mature stem 1x | field tp su lemon balm mature stem herb",
@@ -6652,11 +6651,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lemon Balm - Mature Stem 1X | Field TP Su"
     },
     {
       "id": "crop_70ec8a30",
-      "identifier": "Lemongrass - Mature Stalks 1X | Field TP SpSu",
       "crop": "Lemongrass",
       "category": "Herb",
       "searchText": "lemongrass - mature stalks 1x | field tp spsu lemongrass mature stalks herb",
@@ -6695,11 +6694,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lemongrass - Mature Stalks 1X | Field TP SpSu"
     },
     {
       "id": "crop_4694dbae",
-      "identifier": "Lettuce - Baby Leaf X | Field DS Ow",
       "crop": "Lettuce",
       "searchText": "lettuce - baby leaf x | field ds ow lettuce baby leaf",
       "growingStructure": "field",
@@ -6721,11 +6720,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Lettuce - Baby Leaf X | Field DS Ow"
     },
     {
       "id": "crop_25dc2a4f",
-      "identifier": "Lettuce - Overwinter Head 1X | Field DS Ow",
       "crop": "Lettuce",
       "searchText": "lettuce - overwinter head 1x | field ds ow lettuce overwinter head",
       "growingStructure": "field",
@@ -6753,11 +6752,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce - Overwinter Head 1X | Field DS Ow"
     },
     {
       "id": "crop_3648a7da",
-      "identifier": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (4x9) - mature head 1x | field tp sp lettuce 4x9 mature head green",
@@ -6795,11 +6794,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (4x9) - Mature Head 1X | Field TP Sp"
     },
     {
       "id": "crop_80596a0e",
-      "identifier": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (4x9) - mature head 1x | field tp sufa lettuce 4x9 mature head green",
@@ -6837,11 +6836,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa"
     },
     {
       "id": "crop_864fe126",
-      "identifier": "Lettuce (4x9) - Mature Head 1X | Tunnel TP Sp",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (4x9) - mature head 1x | tunnel tp sp lettuce 4x9 mature head green",
@@ -6879,11 +6878,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (4x9) - Mature Head 1X | Tunnel TP Sp"
     },
     {
       "id": "crop_48d103bd",
-      "identifier": "Lettuce (6\") - Mini Head 1X | Field DS Sp",
       "crop": "Lettuce",
       "searchText": "lettuce (6\") - mini head 1x | field ds sp lettuce 6\" mini head",
       "growingStructure": "field",
@@ -6911,11 +6910,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (6\") - Mini Head 1X | Field DS Sp"
     },
     {
       "id": "crop_aea87fdd",
-      "identifier": "Lettuce (6\") - Mini Head 1X | Field DS SuFa",
       "crop": "Lettuce",
       "searchText": "lettuce (6\") - mini head 1x | field ds sufa lettuce 6\" mini head",
       "growingStructure": "field",
@@ -6943,11 +6942,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (6\") - Mini Head 1X | Field DS SuFa"
     },
     {
       "id": "crop_6e4a5448",
-      "identifier": "Lettuce (6\") - Mini Head 1X | Field TP Ow",
       "crop": "Lettuce",
       "searchText": "lettuce (6\") - mini head 1x | field tp ow lettuce 6\" mini head",
       "growingStructure": "field",
@@ -6984,11 +6983,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Lettuce (6\") - Mini Head 1X | Field TP Ow"
     },
     {
       "id": "crop_605d07e7",
-      "identifier": "Lettuce (6\") - Mini Head 1X | Field TP Sp",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (6\") - mini head 1x | field tp sp lettuce 6\" mini head green",
@@ -7026,11 +7025,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (6\") - Mini Head 1X | Field TP Sp"
     },
     {
       "id": "crop_7fd9e91b",
-      "identifier": "Lettuce (6\") - Mini Head 1X | Field TP SuFa",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (6\") - mini head 1x | field tp sufa lettuce 6\" mini head green",
@@ -7068,11 +7067,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (6\") - Mini Head 1X | Field TP SuFa"
     },
     {
       "id": "crop_3037f906",
-      "identifier": "Lettuce (6\") - Mini Head 1X | Tunnel TP Sp",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (6\") - mini head 1x | tunnel tp sp lettuce 6\" mini head green",
@@ -7110,11 +7109,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (6\") - Mini Head 1X | Tunnel TP Sp"
     },
     {
       "id": "crop_ed17fbe2",
-      "identifier": "Lettuce (6\") - Mini Head 1X | Tunnel TP Wi",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (6\") - mini head 1x | tunnel tp wi lettuce 6\" mini head green",
@@ -7152,11 +7151,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Lettuce (6\") - Mini Head 1X | Tunnel TP Wi"
     },
     {
       "id": "crop_97aad4a8",
-      "identifier": "Lettuce (9\") - Mature Head 1X | Field DS Sp",
       "crop": "Lettuce",
       "searchText": "lettuce (9\") - mature head 1x | field ds sp lettuce 9\" mature head",
       "growingStructure": "field",
@@ -7184,11 +7183,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (9\") - Mature Head 1X | Field DS Sp"
     },
     {
       "id": "crop_c829d145",
-      "identifier": "Lettuce (9\") - Mature Head 1X | Field DS SuFa",
       "crop": "Lettuce",
       "searchText": "lettuce (9\") - mature head 1x | field ds sufa lettuce 9\" mature head",
       "growingStructure": "field",
@@ -7216,11 +7215,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (9\") - Mature Head 1X | Field DS SuFa"
     },
     {
       "id": "crop_d352b3f9",
-      "identifier": "Lettuce (9\") - Mature Head 1X | Field TP Ow",
       "crop": "Lettuce",
       "searchText": "lettuce (9\") - mature head 1x | field tp ow lettuce 9\" mature head",
       "growingStructure": "field",
@@ -7257,11 +7256,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Lettuce (9\") - Mature Head 1X | Field TP Ow"
     },
     {
       "id": "crop_5d90133d",
-      "identifier": "Lettuce (9\") - Mature Head 1X | Field TP Sp",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (9\") - mature head 1x | field tp sp lettuce 9\" mature head green",
@@ -7299,11 +7298,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (9\") - Mature Head 1X | Field TP Sp"
     },
     {
       "id": "crop_c255a0c7",
-      "identifier": "Lettuce (9\") - Mature Head 1X | Field TP SuFa",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (9\") - mature head 1x | field tp sufa lettuce 9\" mature head green",
@@ -7341,11 +7340,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (9\") - Mature Head 1X | Field TP SuFa"
     },
     {
       "id": "crop_e570f088",
-      "identifier": "Lettuce (9\") - Mature Head 1X | Tunnel TP Sp",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (9\") - mature head 1x | tunnel tp sp lettuce 9\" mature head green",
@@ -7382,11 +7381,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Lettuce (9\") - Mature Head 1X | Tunnel TP Sp"
     },
     {
       "id": "crop_edbd939f",
-      "identifier": "Lettuce (9\") - Mature Head 1X | Tunnel TP Wi",
       "crop": "Lettuce",
       "category": "Green",
       "searchText": "lettuce (9\") - mature head 1x | tunnel tp wi lettuce 9\" mature head green",
@@ -7424,11 +7423,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Lettuce (9\") - Mature Head 1X | Tunnel TP Wi"
     },
     {
       "id": "crop_c1479609",
-      "identifier": "Lettuce (Salanova) - Loose Leaf 1X | Field TP Sp",
       "crop": "Lettuce",
       "searchText": "lettuce (salanova) - loose leaf 1x | field tp sp lettuce salanova loose leaf",
       "growingStructure": "field",
@@ -7464,11 +7463,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (Salanova) - Loose Leaf 1X | Field TP Sp"
     },
     {
       "id": "crop_dd406948",
-      "identifier": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
       "crop": "Lettuce",
       "searchText": "lettuce (salanova) - loose leaf 1x | field tp sufa lettuce salanova loose leaf",
       "growingStructure": "field",
@@ -7504,11 +7503,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa"
     },
     {
       "id": "crop_21457d98",
-      "identifier": "Lettuce (Salanova) - Loose Leaf 1X | Tunnel TP Sp",
       "crop": "Lettuce",
       "searchText": "lettuce (salanova) - loose leaf 1x | tunnel tp sp lettuce salanova loose leaf",
       "growingStructure": "high-tunnel",
@@ -7544,11 +7543,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lettuce (Salanova) - Loose Leaf 1X | Tunnel TP Sp"
     },
     {
       "id": "crop_ac75484e",
-      "identifier": "Lilies (Double Pollen Free) - Mature Stalk 1X | Field DS ",
       "crop": "Lilies",
       "searchText": "lilies (double pollen free) - mature stalk 1x | field ds  lilies double pollen free mature stalk",
       "growingStructure": "field",
@@ -7574,11 +7573,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lilies (Double Pollen Free) - Mature Stalk 1X | Field DS "
     },
     {
       "id": "crop_559d8f27",
-      "identifier": "Lovage - Mature Leaf 1X | Field TP SpFa",
       "crop": "Lovage",
       "category": "Herb",
       "searchText": "lovage - mature leaf 1x | field tp spfa lovage mature leaf herb",
@@ -7621,11 +7620,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lovage - Mature Leaf 1X | Field TP SpFa"
     },
     {
       "id": "crop_f81c25b5",
-      "identifier": "Lovage (Perennial) - Mature Leaf 1X | Field PE ",
       "crop": "Lovage",
       "category": "Herb",
       "searchText": "lovage (perennial) - mature leaf 1x | field pe  lovage perennial mature leaf herb",
@@ -7655,11 +7654,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Lovage (Perennial) - Mature Leaf 1X | Field PE "
     },
     {
       "id": "crop_45cd1b11",
-      "identifier": "Magenta Spreen - Flowering Stalks 1X |  DS Sp",
       "crop": "Magenta Spreen",
       "searchText": "magenta spreen - flowering stalks 1x |  ds sp magenta spreen flowering stalks",
       "growingStructure": "field",
@@ -7689,11 +7688,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Magenta Spreen - Flowering Stalks 1X |  DS Sp"
     },
     {
       "id": "crop_ae24b9c1",
-      "identifier": "Magenta Spreen - Flowering Stalks 1X |  TP Sp",
       "crop": "Magenta Spreen",
       "category": "Flower",
       "searchText": "magenta spreen - flowering stalks 1x |  tp sp magenta spreen flowering stalks flower",
@@ -7730,11 +7729,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Magenta Spreen - Flowering Stalks 1X |  TP Sp"
     },
     {
       "id": "crop_acf569b8",
-      "identifier": "Magenta Spreen - Young Stem 1X |  DS Sp",
       "crop": "Magenta Spreen",
       "category": "Flower",
       "searchText": "magenta spreen - young stem 1x |  ds sp magenta spreen young stem flower",
@@ -7765,11 +7764,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Magenta Spreen - Young Stem 1X |  DS Sp"
     },
     {
       "id": "crop_7532d6c4",
-      "identifier": "Malabar Spinach - Mature Leaf 1X | Field DS ",
       "crop": "Malabar Spinach",
       "searchText": "malabar spinach - mature leaf 1x | field ds  malabar spinach mature leaf",
       "growingStructure": "field",
@@ -7799,11 +7798,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Malabar Spinach - Mature Leaf 1X | Field DS "
     },
     {
       "id": "crop_5f4ec2fb",
-      "identifier": "Malabar Spinach - Mature Leaf 1X | Tunnel TP ",
       "crop": "Malabar Spinach",
       "category": "Green",
       "searchText": "malabar spinach - mature leaf 1x | tunnel tp  malabar spinach mature leaf green",
@@ -7840,11 +7839,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Malabar Spinach - Mature Leaf 1X | Tunnel TP "
     },
     {
       "id": "crop_412ab12e",
-      "identifier": "Malabar Spinach - Young Buds 1X | Field TP ",
       "crop": "Malabar Spinach",
       "category": "Green",
       "searchText": "malabar spinach - young buds 1x | field tp  malabar spinach young buds green",
@@ -7884,11 +7883,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Malabar Spinach - Young Buds 1X | Field TP "
     },
     {
       "id": "crop_1cf329ab",
-      "identifier": "Marigolds (African) - Mature Stem 1X | Field DS ",
       "crop": "Marigolds",
       "category": "Flower",
       "searchText": "marigolds (african) - mature stem 1x | field ds  marigolds african mature stem flower",
@@ -7921,11 +7920,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Marigolds (African) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_90ed092c",
-      "identifier": "Marigolds (African) - Mature Stem 1X | Field TP ",
       "crop": "Marigolds",
       "category": "Flower",
       "searchText": "marigolds (african) - mature stem 1x | field tp  marigolds african mature stem flower",
@@ -7964,11 +7963,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Marigolds (African) - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_ab459ad8",
-      "identifier": "Marigolds (French) - Mature Stem 1X | Field DS ",
       "crop": "Marigolds",
       "category": "Flower",
       "searchText": "marigolds (french) - mature stem 1x | field ds  marigolds french mature stem flower",
@@ -8001,11 +8000,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Marigolds (French) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_a2dd97d6",
-      "identifier": "Marigolds (French) - Mature Stem 1X | Field TP ",
       "crop": "Marigolds",
       "category": "Flower",
       "searchText": "marigolds (french) - mature stem 1x | field tp  marigolds french mature stem flower",
@@ -8044,11 +8043,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Marigolds (French) - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_9b7b2595",
-      "identifier": "Marigolds (Gem) - Mature Stem 1X | Field DS ",
       "crop": "Marigolds",
       "category": "Flower",
       "searchText": "marigolds (gem) - mature stem 1x | field ds  marigolds gem mature stem flower",
@@ -8081,11 +8080,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Marigolds (Gem) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_a7a75396",
-      "identifier": "Marigolds (Gem) - Mature Stem 1X | Field TP ",
       "crop": "Marigolds",
       "category": "Flower",
       "searchText": "marigolds (gem) - mature stem 1x | field tp  marigolds gem mature stem flower",
@@ -8124,11 +8123,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Marigolds (Gem) - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_20a446d5",
-      "identifier": "Marjoram - Mature Stem 2X | Field TP Su",
       "crop": "Marjoram",
       "category": "Herb",
       "searchText": "marjoram - mature stem 2x | field tp su marjoram mature stem herb",
@@ -8166,11 +8165,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Marjoram - Mature Stem 2X | Field TP Su"
     },
     {
       "id": "crop_dabe2b63",
-      "identifier": "Melon - Ripe Fruit 1X | Field TP ",
       "crop": "Melon",
       "category": "Melon",
       "searchText": "melon - ripe fruit 1x | field tp  melon ripe fruit melon",
@@ -8210,11 +8209,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Melon - Ripe Fruit 1X | Field TP "
     },
     {
       "id": "crop_0dd18a19",
-      "identifier": "Melon (Watermelon Small) - Ripe Fruit 1X | Field TP ",
       "crop": "Melon",
       "searchText": "melon (watermelon small) - ripe fruit 1x | field tp  melon watermelon small ripe fruit",
       "growingStructure": "field",
@@ -8250,11 +8249,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Melon (Watermelon Small) - Ripe Fruit 1X | Field TP "
     },
     {
       "id": "crop_3e371957",
-      "identifier": "Microgreens - Micro Leaf X | Field DS ",
       "crop": "Microgreens",
       "searchText": "microgreens - micro leaf x | field ds  microgreens micro leaf",
       "growingStructure": "field",
@@ -8276,11 +8275,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Microgreens - Micro Leaf X | Field DS "
     },
     {
       "id": "crop_a4c3cdc5",
-      "identifier": "Milkweed - Mature Stem 1X | Field TP Sp",
       "crop": "Milkweed",
       "category": "Flower",
       "searchText": "milkweed - mature stem 1x | field tp sp milkweed mature stem flower",
@@ -8322,11 +8321,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Milkweed - Mature Stem 1X | Field TP Sp"
     },
     {
       "id": "crop_3f445dfc",
-      "identifier": "Mint - Mature Sprigs 4X | Pot TP ",
       "crop": "Mint",
       "category": "Herb",
       "searchText": "mint - mature sprigs 4x | pot tp  mint mature sprigs herb",
@@ -8360,11 +8359,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Mint - Mature Sprigs 4X | Pot TP "
     },
     {
       "id": "crop_029e3d3f",
-      "identifier": "Mock Orange - Mature Branch 1X | Field DS ",
       "crop": "Mock Orange",
       "searchText": "mock orange - mature branch 1x | field ds  mock orange mature branch",
       "growingStructure": "field",
@@ -8390,11 +8389,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Mock Orange - Mature Branch 1X | Field DS "
     },
     {
       "id": "crop_cd325435",
-      "identifier": "Mustard Greens - Baby Leaf 1X | Field DS Su",
       "crop": "Mustard Greens",
       "searchText": "mustard greens - baby leaf 1x | field ds su mustard greens baby leaf",
       "growingStructure": "field",
@@ -8420,11 +8419,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Mustard Greens - Baby Leaf 1X | Field DS Su"
     },
     {
       "id": "crop_dddae7be",
-      "identifier": "Nausturtium - Mature Stem 2X | Field TP ",
       "crop": "Nausturtium",
       "category": "Flower",
       "searchText": "nausturtium - mature stem 2x | field tp  nausturtium mature stem flower",
@@ -8463,11 +8462,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Nausturtium - Mature Stem 2X | Field TP "
     },
     {
       "id": "crop_e09614bc",
-      "identifier": "Nigella - Mature Stalk X | Field DS Sp",
       "crop": "Nigella",
       "searchText": "nigella - mature stalk x | field ds sp nigella mature stalk",
       "growingStructure": "field",
@@ -8491,11 +8490,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Nigella - Mature Stalk X | Field DS Sp"
     },
     {
       "id": "crop_389d7a2e",
-      "identifier": "Nigella - Mature Stem 1X | Field DS Sp",
       "crop": "Nigella",
       "category": "Flower",
       "searchText": "nigella - mature stem 1x | field ds sp nigella mature stem flower",
@@ -8528,11 +8527,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Nigella - Mature Stem 1X | Field DS Sp"
     },
     {
       "id": "crop_c8190e31",
-      "identifier": "Nigella - Mature Stem 1X | Tunnel TP Ow",
       "crop": "Nigella",
       "category": "Flower",
       "searchText": "nigella - mature stem 1x | tunnel tp ow nigella mature stem flower",
@@ -8571,11 +8570,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Nigella - Mature Stem 1X | Tunnel TP Ow"
     },
     {
       "id": "crop_314aac79",
-      "identifier": "Onion - Mature Bulb 6X | Field DS Ow",
       "crop": "Onion",
       "category": "Onion",
       "searchText": "onion - mature bulb 6x | field ds ow onion mature bulb onion",
@@ -8607,11 +8606,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Onion - Mature Bulb 6X | Field DS Ow"
     },
     {
       "id": "crop_542122f4",
-      "identifier": "Onion - Mature Bulb 6X | Field TP Ow",
       "crop": "Onion",
       "category": "Onion",
       "searchText": "onion - mature bulb 6x | field tp ow onion mature bulb onion",
@@ -8649,11 +8648,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Onion - Mature Bulb 6X | Field TP Ow"
     },
     {
       "id": "crop_365c21f9",
-      "identifier": "Onion - Mature Bulb 6X | Field TP SpSu",
       "crop": "Onion",
       "category": "Onion",
       "searchText": "onion - mature bulb 6x | field tp spsu onion mature bulb onion",
@@ -8690,11 +8689,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Onion - Mature Bulb 6X | Field TP SpSu"
     },
     {
       "id": "crop_b7c5c4b0",
-      "identifier": "Onion (Salad Early) - Young Bulb 10X | Field TP Sp",
       "crop": "Onion",
       "category": "Onion",
       "searchText": "onion (salad early) - young bulb 10x | field tp sp onion salad early young bulb onion",
@@ -8732,11 +8731,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Onion (Salad Early) - Young Bulb 10X | Field TP Sp"
     },
     {
       "id": "crop_b9a7054e",
-      "identifier": "Onion (Salad Late) - Young Bulb 10X | Field TP Sp",
       "crop": "Onion",
       "category": "Onion",
       "searchText": "onion (salad late) - young bulb 10x | field tp sp onion salad late young bulb onion",
@@ -8774,11 +8773,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Onion (Salad Late) - Young Bulb 10X | Field TP Sp"
     },
     {
       "id": "crop_364076dd",
-      "identifier": "Oregano - Mature Stem 2X | Field TP Su",
       "crop": "Oregano",
       "category": "Herb",
       "searchText": "oregano - mature stem 2x | field tp su oregano mature stem herb",
@@ -8816,11 +8815,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Oregano - Mature Stem 2X | Field TP Su"
     },
     {
       "id": "crop_b7614245",
-      "identifier": "Pansy and Violas - Mature Stem 1X | Field TP Sp",
       "crop": "Pansy and Violas",
       "category": "Flower",
       "searchText": "pansy and violas - mature stem 1x | field tp sp pansy and violas mature stem flower",
@@ -8859,11 +8858,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Pansy and Violas - Mature Stem 1X | Field TP Sp"
     },
     {
       "id": "crop_be4da1d5",
-      "identifier": "Pansy and Violas - Mature Stem 1X | Tunnel TP Ow",
       "crop": "Pansy and Violas",
       "category": "Flower",
       "searchText": "pansy and violas - mature stem 1x | tunnel tp ow pansy and violas mature stem flower",
@@ -8902,11 +8901,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Pansy and Violas - Mature Stem 1X | Tunnel TP Ow"
     },
     {
       "id": "crop_0fef4c1f",
-      "identifier": "Pansy and Violas (Reseed) - Mature Stem 1X | Field DS Sp",
       "crop": "Pansy and Violas",
       "category": "Flower",
       "searchText": "pansy and violas (reseed) - mature stem 1x | field ds sp pansy and violas reseed mature stem flower",
@@ -8935,11 +8934,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Pansy and Violas (Reseed) - Mature Stem 1X | Field DS Sp"
     },
     {
       "id": "crop_7b358ea4",
-      "identifier": "Parsley - Mature Leaf 3X | Field TP Sp",
       "crop": "Parsley",
       "category": "Herb",
       "searchText": "parsley - mature leaf 3x | field tp sp parsley mature leaf herb",
@@ -8978,11 +8977,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Parsley - Mature Leaf 3X | Field TP Sp"
     },
     {
       "id": "crop_b77714d5",
-      "identifier": "Parsley - Mature Leaf 3X | Field TP Su",
       "crop": "Parsley",
       "category": "Herb",
       "searchText": "parsley - mature leaf 3x | field tp su parsley mature leaf herb",
@@ -9021,11 +9020,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Parsley - Mature Leaf 3X | Field TP Su"
     },
     {
       "id": "crop_f5f0b0e7",
-      "identifier": "Parsnip (12r) - Mature Root 1X | Field DS Fa",
       "crop": "Parsnip",
       "category": "Root",
       "searchText": "parsnip (12r) - mature root 1x | field ds fa parsnip 12r mature root root",
@@ -9057,11 +9056,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Parsnip (12r) - Mature Root 1X | Field DS Fa"
     },
     {
       "id": "crop_8c7390dc",
-      "identifier": "Parsnip (4r) - Mature Root 1X | Field DS Fa",
       "crop": "Parsnip",
       "category": "Root",
       "searchText": "parsnip (4r) - mature root 1x | field ds fa parsnip 4r mature root root",
@@ -9093,11 +9092,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Parsnip (4r) - Mature Root 1X | Field DS Fa"
     },
     {
       "id": "crop_fbf39c56",
-      "identifier": "Pea Tendril - Young Shoots 1X | Field DS Sp",
       "crop": "Pea Tendril",
       "searchText": "pea tendril - young shoots 1x | field ds sp pea tendril young shoots",
       "growingStructure": "field",
@@ -9128,11 +9127,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Pea Tendril - Young Shoots 1X | Field DS Sp"
     },
     {
       "id": "crop_67266a07",
-      "identifier": "Pea Tendril - Young Shoots 3X | Field TP ",
       "crop": "Pea Tendril",
       "category": "Pea",
       "searchText": "pea tendril - young shoots 3x | field tp  pea tendril young shoots pea",
@@ -9171,11 +9170,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Pea Tendril - Young Shoots 3X | Field TP "
     },
     {
       "id": "crop_3e6e3ac5",
-      "identifier": "Pea Tendril - Young Shoots 3X | Greenhouse TP ",
       "crop": "Pea Tendril",
       "category": "Pea",
       "searchText": "pea tendril - young shoots 3x | greenhouse tp  pea tendril young shoots pea",
@@ -9214,11 +9213,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Pea Tendril - Young Shoots 3X | Greenhouse TP "
     },
     {
       "id": "crop_83ada80b",
-      "identifier": "Peas (Snap) - Young Pod 3X | Field DS SpSu",
       "crop": "Peas",
       "searchText": "peas (snap) - young pod 3x | field ds spsu peas snap young pod",
       "growingStructure": "field",
@@ -9248,11 +9247,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Peas (Snap) - Young Pod 3X | Field DS SpSu"
     },
     {
       "id": "crop_c091b4e4",
-      "identifier": "Peas (Snap) - Young Pod 3X | Field TP SpSu",
       "crop": "Peas",
       "searchText": "peas (snap) - young pod 3x | field tp spsu peas snap young pod",
       "growingStructure": "field",
@@ -9288,11 +9287,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Peas (Snap) - Young Pod 3X | Field TP SpSu"
     },
     {
       "id": "crop_ff1a3d02",
-      "identifier": "Peas (Snow) - Young Pod 3X | Field DS SpSu",
       "crop": "Peas",
       "searchText": "peas (snow) - young pod 3x | field ds spsu peas snow young pod",
       "growingStructure": "field",
@@ -9322,11 +9321,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Peas (Snow) - Young Pod 3X | Field DS SpSu"
     },
     {
       "id": "crop_93c264ed",
-      "identifier": "Peonies - Mature Stalk 1X | Field DS ",
       "crop": "Peonies",
       "searchText": "peonies - mature stalk 1x | field ds  peonies mature stalk",
       "growingStructure": "field",
@@ -9356,11 +9355,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Peonies - Mature Stalk 1X | Field DS "
     },
     {
       "id": "crop_5ba4d3d6",
-      "identifier": "Pepper (Bell) - Ripe Fruit Large 1X | Field TP ",
       "crop": "Pepper",
       "category": "Pepper",
       "searchText": "pepper (bell) - ripe fruit large 1x | field tp  pepper bell ripe fruit large pepper",
@@ -9403,11 +9402,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Pepper (Bell) - Ripe Fruit Large 1X | Field TP "
     },
     {
       "id": "crop_f84ecbe6",
-      "identifier": "Pepper (Bell) - Ripe Fruit Large 1X | Greenhouse TP ",
       "crop": "Pepper",
       "category": "Pepper",
       "searchText": "pepper (bell) - ripe fruit large 1x | greenhouse tp  pepper bell ripe fruit large pepper",
@@ -9448,11 +9447,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Pepper (Bell) - Ripe Fruit Large 1X | Greenhouse TP "
     },
     {
       "id": "crop_87651c07",
-      "identifier": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP ",
       "crop": "Pepper",
       "category": "Pepper",
       "searchText": "pepper (hot) - ripe fruit small 1x | field tp  pepper hot ripe fruit small pepper",
@@ -9495,11 +9494,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP "
     },
     {
       "id": "crop_35a0860c",
-      "identifier": "Pepper (Hot) - Ripe Fruit Small 1X | Greenhouse TP ",
       "crop": "Pepper",
       "category": "Pepper",
       "searchText": "pepper (hot) - ripe fruit small 1x | greenhouse tp  pepper hot ripe fruit small pepper",
@@ -9540,11 +9539,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Pepper (Hot) - Ripe Fruit Small 1X | Greenhouse TP "
     },
     {
       "id": "crop_fd075ad9",
-      "identifier": "Petunia - Mature Stem 1X | Field TP ",
       "crop": "Petunia",
       "category": "Flower",
       "searchText": "petunia - mature stem 1x | field tp  petunia mature stem flower",
@@ -9583,11 +9582,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Petunia - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_10341419",
-      "identifier": "Potato (Early) - Mature Root 1X | Field DS ",
       "crop": "Potato",
       "category": "Root",
       "searchText": "potato (early) - mature root 1x | field ds  potato early mature root root",
@@ -9619,11 +9618,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Potato (Early) - Mature Root 1X | Field DS "
     },
     {
       "id": "crop_a0562191",
-      "identifier": "Potato (Main Crop) - Storage Root 1X | Field DS ",
       "crop": "Potato",
       "category": "Root",
       "searchText": "potato (main crop) - storage root 1x | field ds  potato main crop storage root root",
@@ -9654,11 +9653,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Potato (Main Crop) - Storage Root 1X | Field DS "
     },
     {
       "id": "crop_9962524c",
-      "identifier": "Potato (Mid Season) - Mature Root 1X | Field DS ",
       "crop": "Potato",
       "category": "Root",
       "searchText": "potato (mid season) - mature root 1x | field ds  potato mid season mature root root",
@@ -9690,11 +9689,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Potato (Mid Season) - Mature Root 1X | Field DS "
     },
     {
       "id": "crop_12ccfaee",
-      "identifier": "Queen Anne's Lace - Mature Stem 1X | Field DS ",
       "crop": "Queen Anne's Lace",
       "category": "Flower",
       "searchText": "queen anne's lace - mature stem 1x | field ds  queen anne's lace mature stem flower",
@@ -9727,11 +9726,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Queen Anne's Lace - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_3384d5b6",
-      "identifier": "Radicchio (110 Day) - Forced Head 1X | Field TP Su",
       "crop": "Radicchio",
       "category": "Green",
       "searchText": "radicchio (110 day) - forced head 1x | field tp su radicchio 110 day forced head green",
@@ -9769,11 +9768,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Radicchio (110 Day) - Forced Head 1X | Field TP Su"
     },
     {
       "id": "crop_b1823d58",
-      "identifier": "Radicchio (90 Day) - Forced Head 1X | Field TP Su",
       "crop": "Radicchio",
       "category": "Green",
       "searchText": "radicchio (90 day) - forced head 1x | field tp su radicchio 90 day forced head green",
@@ -9811,11 +9810,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Radicchio (90 Day) - Forced Head 1X | Field TP Su"
     },
     {
       "id": "crop_9a1a1bfe",
-      "identifier": "Radish - Mature Root 5X | Field TP SpFaWi",
       "crop": "Radish",
       "category": "Root",
       "searchText": "radish - mature root 5x | field tp spfawi radish mature root root",
@@ -9855,11 +9854,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Radish - Mature Root 5X | Field TP SpFaWi"
     },
     {
       "id": "crop_c07d321b",
-      "identifier": "Radish (10r) - Mature Root 1X | Field DS Sp",
       "crop": "Radish",
       "category": "Root",
       "searchText": "radish (10r) - mature root 1x | field ds sp radish 10r mature root root",
@@ -9893,11 +9892,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Radish (10r) - Mature Root 1X | Field DS Sp"
     },
     {
       "id": "crop_a9c25ba8",
-      "identifier": "Radish (6r) - Mature Root 1X | Field DS Sp",
       "crop": "Radish",
       "category": "Root",
       "searchText": "radish (6r) - mature root 1x | field ds sp radish 6r mature root root",
@@ -9931,11 +9930,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Radish (6r) - Mature Root 1X | Field DS Sp"
     },
     {
       "id": "crop_5dc36c40",
-      "identifier": "Radish (6r) - Mature Root 1X | Field DS Su",
       "crop": "Radish",
       "category": "Root",
       "searchText": "radish (6r) - mature root 1x | field ds su radish 6r mature root root",
@@ -9969,11 +9968,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Radish (6r) - Mature Root 1X | Field DS Su"
     },
     {
       "id": "crop_a8dd9bdd",
-      "identifier": "Radish (Cluster) - Storage Root 3X | Field TP FaWi",
       "crop": "Radish",
       "category": "Root",
       "searchText": "radish (cluster) - storage root 3x | field tp fawi radish cluster storage root root",
@@ -10013,11 +10012,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Radish (Cluster) - Storage Root 3X | Field TP FaWi"
     },
     {
       "id": "crop_85c57582",
-      "identifier": "Radish (Daikon) - Storage Root 1X | Field DS FaWi",
       "crop": "Radish",
       "category": "Root",
       "searchText": "radish (daikon) - storage root 1x | field ds fawi radish daikon storage root root",
@@ -10051,11 +10050,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Radish (Daikon) - Storage Root 1X | Field DS FaWi"
     },
     {
       "id": "crop_61815b8c",
-      "identifier": "Radish (Daikon) - Storage Root 1X | Field TP FaWi",
       "crop": "Radish",
       "category": "Root",
       "searchText": "radish (daikon) - storage root 1x | field tp fawi radish daikon storage root root",
@@ -10095,11 +10094,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Radish (Daikon) - Storage Root 1X | Field TP FaWi"
     },
     {
       "id": "crop_83b2e500",
-      "identifier": "Radish (Munchen Bier) - Storage Root 1X | Field DS ",
       "crop": "Radish",
       "category": "Root",
       "searchText": "radish (munchen bier) - storage root 1x | field ds  radish munchen bier storage root root",
@@ -10130,11 +10129,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Radish (Munchen Bier) - Storage Root 1X | Field DS "
     },
     {
       "id": "crop_e62185fe",
-      "identifier": "Ranunculus - Mature Stalk X | Field DS ",
       "crop": "Ranunculus",
       "searchText": "ranunculus - mature stalk x | field ds  ranunculus mature stalk",
       "growingStructure": "field",
@@ -10158,11 +10157,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Ranunculus - Mature Stalk X | Field DS "
     },
     {
       "id": "crop_1a953809",
-      "identifier": "Raspberry (Black Primocane) - Black Berry 1X | Field DS Su",
       "crop": "Raspberry",
       "category": "Berry",
       "searchText": "raspberry (black primocane) - black berry 1x | field ds su raspberry black primocane black berry berry",
@@ -10195,11 +10194,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Raspberry (Black Primocane) - Black Berry 1X | Field DS Su"
     },
     {
       "id": "crop_d8fe71c4",
-      "identifier": "Raspberry (Red Fall Bearing) - Red Berry 1X | Field DS Su",
       "crop": "Raspberry",
       "category": "Berry",
       "searchText": "raspberry (red fall bearing) - red berry 1x | field ds su raspberry red fall bearing red berry berry",
@@ -10232,11 +10231,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Raspberry (Red Fall Bearing) - Red Berry 1X | Field DS Su"
     },
     {
       "id": "crop_af6eb525",
-      "identifier": "Raspberry (Red June Bearing) - Red Berry 1X | Field DS Su",
       "crop": "Raspberry",
       "category": "Berry",
       "searchText": "raspberry (red june bearing) - red berry 1x | field ds su raspberry red june bearing red berry berry",
@@ -10269,11 +10268,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Raspberry (Red June Bearing) - Red Berry 1X | Field DS Su"
     },
     {
       "id": "crop_1b55d234",
-      "identifier": "Rat Tail Radish - Mature Pod 1X | Field TP SpSuFa",
       "crop": "Rat Tail Radish",
       "category": "Beans",
       "searchText": "rat tail radish - mature pod 1x | field tp spsufa rat tail radish mature pod beans",
@@ -10313,11 +10312,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Rat Tail Radish - Mature Pod 1X | Field TP SpSuFa"
     },
     {
       "id": "crop_415f92f0",
-      "identifier": "Rose (Golden Celebration) - Mature Stem 1X | Field DS ",
       "crop": "Rose",
       "searchText": "rose (golden celebration) - mature stem 1x | field ds  rose golden celebration mature stem",
       "growingStructure": "field",
@@ -10343,11 +10342,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Rose (Golden Celebration) - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_caffc567",
-      "identifier": "Roselle - Mature Leaf 1X | Field TP Su",
       "crop": "Roselle",
       "category": "Green",
       "searchText": "roselle - mature leaf 1x | field tp su roselle mature leaf green",
@@ -10385,11 +10384,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Roselle - Mature Leaf 1X | Field TP Su"
     },
     {
       "id": "crop_0d378e6d",
-      "identifier": "Rosemary - Mature Sprigs 6X | Pot TP ",
       "crop": "Rosemary",
       "category": "Herb",
       "searchText": "rosemary - mature sprigs 6x | pot tp  rosemary mature sprigs herb",
@@ -10423,11 +10422,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Rosemary - Mature Sprigs 6X | Pot TP "
     },
     {
       "id": "crop_191cbb0c",
-      "identifier": "Rubeckia (Annual) - Mature Stem 1X | Field TP ",
       "crop": "Rubeckia",
       "category": "Flower",
       "searchText": "rubeckia (annual) - mature stem 1x | field tp  rubeckia annual mature stem flower",
@@ -10466,11 +10465,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Rubeckia (Annual) - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_c09b59c7",
-      "identifier": "Rubeckia (Perennial) - Mature Stem 1X | Field PE ",
       "crop": "Rubeckia",
       "category": "Flower",
       "searchText": "rubeckia (perennial) - mature stem 1x | field pe  rubeckia perennial mature stem flower",
@@ -10500,11 +10499,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Rubeckia (Perennial) - Mature Stem 1X | Field PE "
     },
     {
       "id": "crop_db30fac1",
-      "identifier": "Rutabaga - Mature Root 2X | Field TP Fa",
       "crop": "Rutabaga",
       "searchText": "rutabaga - mature root 2x | field tp fa rutabaga mature root",
       "growingStructure": "field",
@@ -10541,11 +10540,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Rutabaga - Mature Root 2X | Field TP Fa"
     },
     {
       "id": "crop_3d1a8e66",
-      "identifier": "Rutabaga - Mature Root 2X | Field TP Ow",
       "crop": "Rutabaga",
       "category": "Root",
       "searchText": "rutabaga - mature root 2x | field tp ow rutabaga mature root root",
@@ -10583,11 +10582,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Rutabaga - Mature Root 2X | Field TP Ow"
     },
     {
       "id": "crop_e0b650d4",
-      "identifier": "Sage - Mature Sprigs 4X | Pot TP ",
       "crop": "Sage",
       "category": "Herb",
       "searchText": "sage - mature sprigs 4x | pot tp  sage mature sprigs herb",
@@ -10621,11 +10620,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Sage - Mature Sprigs 4X | Pot TP "
     },
     {
       "id": "crop_584abc60",
-      "identifier": "Salsola (Agretti) - Mature Leaf 1X | Field DS ",
       "crop": "Salsola",
       "category": "Green",
       "searchText": "salsola (agretti) - mature leaf 1x | field ds  salsola agretti mature leaf green",
@@ -10658,11 +10657,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Salsola (Agretti) - Mature Leaf 1X | Field DS "
     },
     {
       "id": "crop_16461004",
-      "identifier": "Salsola (Saltwort) - Mature Leaf 1X | Field DS ",
       "crop": "Salsola",
       "category": "Green",
       "searchText": "salsola (saltwort) - mature leaf 1x | field ds  salsola saltwort mature leaf green",
@@ -10695,11 +10694,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Salsola (Saltwort) - Mature Leaf 1X | Field DS "
     },
     {
       "id": "crop_ecebb74b",
-      "identifier": "Salsola (Saltwort) - Mature Leaf 1X | Field TP ",
       "crop": "Salsola",
       "category": "Green",
       "searchText": "salsola (saltwort) - mature leaf 1x | field tp  salsola saltwort mature leaf green",
@@ -10738,11 +10737,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Salsola (Saltwort) - Mature Leaf 1X | Field TP "
     },
     {
       "id": "crop_0afddf57",
-      "identifier": "Scabiosa - Mature Stem 1X | Field DS Sp",
       "crop": "Scabiosa",
       "category": "Flower",
       "searchText": "scabiosa - mature stem 1x | field ds sp scabiosa mature stem flower",
@@ -10774,11 +10773,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Scabiosa - Mature Stem 1X | Field DS Sp"
     },
     {
       "id": "crop_2b814b4a",
-      "identifier": "Scallion - Mature Stalk 6X | Field DS Fa",
       "crop": "Scallion",
       "category": "Onion",
       "searchText": "scallion - mature stalk 6x | field ds fa scallion mature stalk onion",
@@ -10811,11 +10810,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Scallion - Mature Stalk 6X | Field DS Fa"
     },
     {
       "id": "crop_2141dffb",
-      "identifier": "Scallion - Mature Stalk 6X | Field DS Ow",
       "crop": "Scallion",
       "category": "Onion",
       "searchText": "scallion - mature stalk 6x | field ds ow scallion mature stalk onion",
@@ -10848,11 +10847,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Scallion - Mature Stalk 6X | Field DS Ow"
     },
     {
       "id": "crop_617f210e",
-      "identifier": "Scallion - Mature Stalk 6X | Field DS Sp",
       "crop": "Scallion",
       "category": "Onion",
       "searchText": "scallion - mature stalk 6x | field ds sp scallion mature stalk onion",
@@ -10885,11 +10884,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Scallion - Mature Stalk 6X | Field DS Sp"
     },
     {
       "id": "crop_89bfab2c",
-      "identifier": "Scallion - Mature Stalk 6X | Field TP Fa",
       "crop": "Scallion",
       "category": "Onion",
       "searchText": "scallion - mature stalk 6x | field tp fa scallion mature stalk onion",
@@ -10928,11 +10927,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Scallion - Mature Stalk 6X | Field TP Fa"
     },
     {
       "id": "crop_b5ba5626",
-      "identifier": "Scallion - Mature Stalk 6X | Field TP Ow",
       "crop": "Scallion",
       "category": "Onion",
       "searchText": "scallion - mature stalk 6x | field tp ow scallion mature stalk onion",
@@ -10971,11 +10970,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Scallion - Mature Stalk 6X | Field TP Ow"
     },
     {
       "id": "crop_86bad289",
-      "identifier": "Scallion - Mature Stalk 6X | Field TP Sp",
       "crop": "Scallion",
       "category": "Onion",
       "searchText": "scallion - mature stalk 6x | field tp sp scallion mature stalk onion",
@@ -11014,11 +11013,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Scallion - Mature Stalk 6X | Field TP Sp"
     },
     {
       "id": "crop_2f13886c",
-      "identifier": "Scallion (Interplant) - Mature Stalk 6X | Field TP Sp",
       "crop": "Scallion",
       "category": "Onion",
       "searchText": "scallion (interplant) - mature stalk 6x | field tp sp scallion interplant mature stalk onion",
@@ -11057,11 +11056,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Scallion (Interplant) - Mature Stalk 6X | Field TP Sp"
     },
     {
       "id": "crop_1605a6ef",
-      "identifier": "Shallots - Mature Bulb 4X | Field TP Ow",
       "crop": "Shallots",
       "category": "Onion",
       "searchText": "shallots - mature bulb 4x | field tp ow shallots mature bulb onion",
@@ -11100,11 +11099,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Shallots - Mature Bulb 4X | Field TP Ow"
     },
     {
       "id": "crop_92402892",
-      "identifier": "Shallots - Mature Bulb 4X | Field TP SpSu",
       "crop": "Shallots",
       "category": "Onion",
       "searchText": "shallots - mature bulb 4x | field tp spsu shallots mature bulb onion",
@@ -11141,11 +11140,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Shallots - Mature Bulb 4X | Field TP SpSu"
     },
     {
       "id": "crop_fbabad4b",
-      "identifier": "Shallots (French Grey) - Mature Bulb 1X | Field DS Ow",
       "crop": "Shallots",
       "category": "Onion",
       "searchText": "shallots (french grey) - mature bulb 1x | field ds ow shallots french grey mature bulb onion",
@@ -11176,11 +11175,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Shallots (French Grey) - Mature Bulb 1X | Field DS Ow"
     },
     {
       "id": "crop_2fe93f65",
-      "identifier": "Shiso - Loose Leaf 3X | Field DS SpSu",
       "crop": "Shiso",
       "searchText": "shiso - loose leaf 3x | field ds spsu shiso loose leaf",
       "growingStructure": "field",
@@ -11211,11 +11210,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Shiso - Loose Leaf 3X | Field DS SpSu"
     },
     {
       "id": "crop_61306aec",
-      "identifier": "Snapdragons - Mature Stem 1X | Field TP ",
       "crop": "Snapdragons",
       "category": "Flower",
       "searchText": "snapdragons - mature stem 1x | field tp  snapdragons mature stem flower",
@@ -11254,11 +11253,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Snapdragons - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_05cd7b84",
-      "identifier": "Snapdragons - Mature Stem 1X | Tunnel TP Ow",
       "crop": "Snapdragons",
       "category": "Flower",
       "searchText": "snapdragons - mature stem 1x | tunnel tp ow snapdragons mature stem flower",
@@ -11297,11 +11296,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Snapdragons - Mature Stem 1X | Tunnel TP Ow"
     },
     {
       "id": "crop_34c8fdd7",
-      "identifier": "Sorrel - Mature Leaf 3X | Field DS ",
       "crop": "Sorrel",
       "searchText": "sorrel - mature leaf 3x | field ds  sorrel mature leaf",
       "growingStructure": "field",
@@ -11331,11 +11330,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Sorrel - Mature Leaf 3X | Field DS "
     },
     {
       "id": "crop_07929499",
-      "identifier": "Sorrel - Mature Leaf 3X | Field TP ",
       "crop": "Sorrel",
       "category": "Green",
       "searchText": "sorrel - mature leaf 3x | field tp  sorrel mature leaf green",
@@ -11372,11 +11371,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Sorrel - Mature Leaf 3X | Field TP "
     },
     {
       "id": "crop_d1f732bf",
-      "identifier": "Sorrel - Mature Leaf X | Field DS Ow",
       "crop": "Sorrel",
       "searchText": "sorrel - mature leaf x | field ds ow sorrel mature leaf",
       "growingStructure": "field",
@@ -11404,11 +11403,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Sorrel - Mature Leaf X | Field DS Ow"
     },
     {
       "id": "crop_4c9e0ff3",
-      "identifier": "Sorrel - Mature Leaf X | Field TP Ow",
       "crop": "Sorrel",
       "searchText": "sorrel - mature leaf x | field tp ow sorrel mature leaf",
       "growingStructure": "field",
@@ -11442,11 +11441,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Sorrel - Mature Leaf X | Field TP Ow"
     },
     {
       "id": "crop_ad0c6c2f",
-      "identifier": "Spinach - Baby Leaf 1X | Field DS ",
       "crop": "Spinach",
       "searchText": "spinach - baby leaf 1x | field ds  spinach baby leaf",
       "growingStructure": "field",
@@ -11476,11 +11475,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Spinach - Baby Leaf 1X | Field DS "
     },
     {
       "id": "crop_8ca5828a",
-      "identifier": "Spinach - Mature Leaf 1X | Field DS FaOw",
       "crop": "Spinach",
       "category": "Green",
       "searchText": "spinach - mature leaf 1x | field ds faow spinach mature leaf green",
@@ -11512,11 +11511,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Spinach - Mature Leaf 1X | Field DS FaOw"
     },
     {
       "id": "crop_ba2d38e3",
-      "identifier": "Spinach (3r) - Mature Leaf 1X | Field TP FaOw",
       "crop": "Spinach",
       "category": "Green",
       "searchText": "spinach (3r) - mature leaf 1x | field tp faow spinach 3r mature leaf green",
@@ -11554,11 +11553,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Spinach (3r) - Mature Leaf 1X | Field TP FaOw"
     },
     {
       "id": "crop_0ef640e9",
-      "identifier": "Spinach (4r) - Mature Leaf 1X | Field TP FaOw",
       "crop": "Spinach",
       "category": "Green",
       "searchText": "spinach (4r) - mature leaf 1x | field tp faow spinach 4r mature leaf green",
@@ -11596,11 +11595,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Spinach (4r) - Mature Leaf 1X | Field TP FaOw"
     },
     {
       "id": "crop_6995527a",
-      "identifier": "Spinach - Mature Leaf 1X | Field TP Sp",
       "crop": "Spinach",
       "category": "Green",
       "searchText": "spinach - mature leaf 1x | field tp sp spinach mature leaf green",
@@ -11638,11 +11637,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Spinach - Mature Leaf 1X | Field TP Sp"
     },
     {
       "id": "crop_ac1e9978",
-      "identifier": "Squash (Butternut) - Storage 1X | Field TP ",
       "crop": "Squash",
       "category": "Winter Squash",
       "searchText": "squash (butternut) - storage 1x | field tp  squash butternut storage winter squash",
@@ -11680,11 +11679,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Squash (Butternut) - Storage 1X | Field TP "
     },
     {
       "id": "crop_5784f53e",
-      "identifier": "Squash (Delicata) - Storage 1X | Field TP ",
       "crop": "Squash",
       "category": "Winter Squash",
       "searchText": "squash (delicata) - storage 1x | field tp  squash delicata storage winter squash",
@@ -11722,11 +11721,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Squash (Delicata) - Storage 1X | Field TP "
     },
     {
       "id": "crop_2861479e",
-      "identifier": "Squash (Kuri) - Storage 1X | Field TP ",
       "crop": "Squash",
       "category": "Winter Squash",
       "searchText": "squash (kuri) - storage 1x | field tp  squash kuri storage winter squash",
@@ -11764,11 +11763,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Squash (Kuri) - Storage 1X | Field TP "
     },
     {
       "id": "crop_336fec30",
-      "identifier": "Stock (Antique Pink) - Mature Stem 1X | Field TP ",
       "crop": "Stock",
       "category": "Flower",
       "searchText": "stock (antique pink) - mature stem 1x | field tp  stock antique pink mature stem flower",
@@ -11807,11 +11806,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Stock (Antique Pink) - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_583aed67",
-      "identifier": "Strawberry (Annual) - Ripe Fruit 1X | Field DS Su",
       "crop": "Strawberry",
       "searchText": "strawberry (annual) - ripe fruit 1x | field ds su strawberry annual ripe fruit",
       "growingStructure": "field",
@@ -11842,11 +11841,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Strawberry (Annual) - Ripe Fruit 1X | Field DS Su"
     },
     {
       "id": "crop_06fac013",
-      "identifier": "Strawberry (Perrenial) - Ripe Fruit 1X | Field DS Su",
       "crop": "Strawberry",
       "searchText": "strawberry (perrenial) - ripe fruit 1x | field ds su strawberry perrenial ripe fruit",
       "growingStructure": "field",
@@ -11877,11 +11876,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Strawberry (Perrenial) - Ripe Fruit 1X | Field DS Su"
     },
     {
       "id": "crop_27240b9a",
-      "identifier": "Strawberry Spinach - Mature Leaf 1X | Field DS SpSuFa",
       "crop": "Strawberry Spinach",
       "searchText": "strawberry spinach - mature leaf 1x | field ds spsufa strawberry spinach mature leaf",
       "growingStructure": "field",
@@ -11907,11 +11906,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Strawberry Spinach - Mature Leaf 1X | Field DS SpSuFa"
     },
     {
       "id": "crop_a49d7468",
-      "identifier": "Strawflower",
       "crop": "Strawflower",
       "category": "Flower",
       "searchText": "strawflower strawflower mature stem flower",
@@ -11949,11 +11948,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Strawflower"
     },
     {
       "id": "crop_6469dbe5",
-      "identifier": "Sudangrass - None 1X | Field DS Su",
       "crop": "Sudangrass",
       "category": "Cover Crop",
       "searchText": "sudangrass - none 1x | field ds su sudangrass none cover crop",
@@ -11973,11 +11972,11 @@
       "defaultMarketSplit": {
         "market-direct": 100
       },
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Sudangrass - None 1X | Field DS Su"
     },
     {
       "id": "crop_4ad4d515",
-      "identifier": "Summer Squash (Long Season) - Ripe Fruit 1X | Field DS Su",
       "crop": "Summer Squash",
       "category": "Summer Squash",
       "searchText": "summer squash (long season) - ripe fruit 1x | field ds su summer squash long season ripe fruit summer squash",
@@ -12009,11 +12008,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Summer Squash (Long Season) - Ripe Fruit 1X | Field DS Su"
     },
     {
       "id": "crop_0e22e42f",
-      "identifier": "Summer Squash (Long Season) - Ripe Fruit 1X | Field TP Su",
       "crop": "Summer Squash",
       "category": "Summer Squash",
       "searchText": "summer squash (long season) - ripe fruit 1x | field tp su summer squash long season ripe fruit summer squash",
@@ -12051,11 +12050,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Summer Squash (Long Season) - Ripe Fruit 1X | Field TP Su"
     },
     {
       "id": "crop_0eef9228",
-      "identifier": "Summer Squash (Short Season) - Ripe Fruit 1X | Field DS Su",
       "crop": "Summer Squash",
       "category": "Summer Squash",
       "searchText": "summer squash (short season) - ripe fruit 1x | field ds su summer squash short season ripe fruit summer squash",
@@ -12087,11 +12086,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Summer Squash (Short Season) - Ripe Fruit 1X | Field DS Su"
     },
     {
       "id": "crop_9f8f7436",
-      "identifier": "Summer Squash (Short Season) - Ripe Fruit 1X | Field TP Su",
       "crop": "Summer Squash",
       "category": "Summer Squash",
       "searchText": "summer squash (short season) - ripe fruit 1x | field tp su summer squash short season ripe fruit summer squash",
@@ -12129,11 +12128,11 @@
           "cellsPerTray": 50
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Summer Squash (Short Season) - Ripe Fruit 1X | Field TP Su"
     },
     {
       "id": "crop_a61d23ea",
-      "identifier": "Sunchoke - Mature Root 1X | Field DS SuFa",
       "crop": "Sunchoke",
       "category": "Sunchoke",
       "searchText": "sunchoke - mature root 1x | field ds sufa sunchoke mature root sunchoke",
@@ -12165,11 +12164,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Sunchoke - Mature Root 1X | Field DS SuFa"
     },
     {
       "id": "crop_472285fe",
-      "identifier": "Sunflower - Mature Stem 1X | Field DS SpSuFa",
       "crop": "Sunflower",
       "searchText": "sunflower - mature stem 1x | field ds spsufa sunflower mature stem",
       "growingStructure": "field",
@@ -12195,11 +12194,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Sunflower - Mature Stem 1X | Field DS SpSuFa"
     },
     {
       "id": "crop_166c0f30",
-      "identifier": "Sunflower - Mature Stem 2X | Field DS ",
       "crop": "Sunflower",
       "searchText": "sunflower - mature stem 2x | field ds  sunflower mature stem",
       "growingStructure": "field",
@@ -12230,11 +12229,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Sunflower - Mature Stem 2X | Field DS "
     },
     {
       "id": "crop_7c825dd9",
-      "identifier": "Sunflower (Anarchy Mix) - Mature Stem 2X | Field DS ",
       "crop": "Sunflower",
       "category": "Flower",
       "searchText": "sunflower (anarchy mix) - mature stem 2x | field ds  sunflower anarchy mix mature stem flower",
@@ -12267,11 +12266,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Sunflower (Anarchy Mix) - Mature Stem 2X | Field DS "
     },
     {
       "id": "crop_4dd40aa1",
-      "identifier": "Sunflower (Procut) - Mature Stem 1X | Field DS SpSuFa",
       "crop": "Sunflower",
       "searchText": "sunflower (procut) - mature stem 1x | field ds spsufa sunflower procut mature stem",
       "growingStructure": "field",
@@ -12301,11 +12300,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Sunflower (Procut) - Mature Stem 1X | Field DS SpSuFa"
     },
     {
       "id": "crop_d68b6177",
-      "identifier": "Swiss Chard - Mature Leaf 1X | Field TP Ow",
       "crop": "Swiss Chard",
       "category": "Green",
       "searchText": "swiss chard - mature leaf 1x | field tp ow swiss chard mature leaf green",
@@ -12342,11 +12341,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Swiss Chard - Mature Leaf 1X | Field TP Ow"
     },
     {
       "id": "crop_31605773",
-      "identifier": "Swiss Chard - Mature Leaf 1X | Field TP SpSuFa",
       "crop": "Swiss Chard",
       "category": "Green",
       "searchText": "swiss chard - mature leaf 1x | field tp spsufa swiss chard mature leaf green",
@@ -12383,11 +12382,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Swiss Chard - Mature Leaf 1X | Field TP SpSuFa"
     },
     {
       "id": "crop_4ec3dc3b",
-      "identifier": "Talinum - Mature Stem 1X | Field TP SpSu",
       "crop": "Talinum",
       "category": "Flower",
       "searchText": "talinum - mature stem 1x | field tp spsu talinum mature stem flower",
@@ -12425,11 +12424,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Talinum - Mature Stem 1X | Field TP SpSu"
     },
     {
       "id": "crop_f3344111",
-      "identifier": "Tarp - Clear Ground 0X | Field DS SpSuFaWi",
       "crop": "Tarp",
       "category": "Tarp",
       "searchText": "tarp - clear ground 0x | field ds spsufawi tarp clear ground tarp",
@@ -12455,11 +12454,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Tarp - Clear Ground 0X | Field DS SpSuFaWi"
     },
     {
       "id": "crop_8247b3d6",
-      "identifier": "Thyme - Mature Sprigs 4X | Pot TP ",
       "crop": "Thyme",
       "category": "Herb",
       "searchText": "thyme - mature sprigs 4x | pot tp  thyme mature sprigs herb",
@@ -12493,11 +12492,11 @@
           "cellsPerTray": 18
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Thyme - Mature Sprigs 4X | Pot TP "
     },
     {
       "id": "crop_cb5197c4",
-      "identifier": "Tomatillo - Ripe Fruit 1X | Field TP ",
       "crop": "Tomatillo",
       "category": "Tomato",
       "searchText": "tomatillo - ripe fruit 1x | field tp  tomatillo ripe fruit tomato",
@@ -12545,11 +12544,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Tomatillo - Ripe Fruit 1X | Field TP "
     },
     {
       "id": "crop_059618f8",
-      "identifier": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (beefsteak det) - ripe fruit large 1x | field tp su tomato beefsteak det ripe fruit large tomato",
@@ -12596,11 +12595,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su"
     },
     {
       "id": "crop_1d3959a3",
-      "identifier": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Field TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (beefsteak) - ripe fruit large 1x | field tp su tomato beefsteak ripe fruit large tomato",
@@ -12647,11 +12646,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Field TP Su"
     },
     {
       "id": "crop_30fa2c6c",
-      "identifier": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Greenhouse TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (beefsteak) - ripe fruit large 1x | greenhouse tp su tomato beefsteak ripe fruit large tomato",
@@ -12698,11 +12697,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Greenhouse TP Su"
     },
     {
       "id": "crop_c98eafbb",
-      "identifier": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Large Tunnel TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (beefsteak) - ripe fruit large 1x | large tunnel tp su tomato beefsteak ripe fruit large tomato",
@@ -12749,11 +12748,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Large Tunnel TP Su"
     },
     {
       "id": "crop_c8c3a1a9",
-      "identifier": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (cherry det) - ripe fruit small 1x | field tp su tomato cherry det ripe fruit small tomato",
@@ -12800,11 +12799,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su"
     },
     {
       "id": "crop_a3749274",
-      "identifier": "Tomato (Cherry) - Ripe Fruit Small 1X | Field TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (cherry) - ripe fruit small 1x | field tp su tomato cherry ripe fruit small tomato",
@@ -12851,11 +12850,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Tomato (Cherry) - Ripe Fruit Small 1X | Field TP Su"
     },
     {
       "id": "crop_a4c3ea11",
-      "identifier": "Tomato (Cherry) - Ripe Fruit Small 1X | Greenhouse TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (cherry) - ripe fruit small 1x | greenhouse tp su tomato cherry ripe fruit small tomato",
@@ -12902,11 +12901,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Tomato (Cherry) - Ripe Fruit Small 1X | Greenhouse TP Su"
     },
     {
       "id": "crop_4d6259cc",
-      "identifier": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (medium det) - ripe fruit medium 1x | field tp su tomato medium det ripe fruit medium tomato",
@@ -12953,11 +12952,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-planting-to-harvest"
+      "dtmBasis": "tp-from-planting-to-harvest",
+      "name": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su"
     },
     {
       "id": "crop_32c0b597",
-      "identifier": "Tomato (Medium) - Ripe Fruit Medium 1X | Field TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (medium) - ripe fruit medium 1x | field tp su tomato medium ripe fruit medium tomato",
@@ -13004,11 +13003,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Tomato (Medium) - Ripe Fruit Medium 1X | Field TP Su"
     },
     {
       "id": "crop_422207d1",
-      "identifier": "Tomato (Medium) - Ripe Fruit Medium 1X | Greenhouse TP Su",
       "crop": "Tomato",
       "category": "Tomato",
       "searchText": "tomato (medium) - ripe fruit medium 1x | greenhouse tp su tomato medium ripe fruit medium tomato",
@@ -13055,11 +13054,11 @@
           "cellsPerTray": 9
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Tomato (Medium) - Ripe Fruit Medium 1X | Greenhouse TP Su"
     },
     {
       "id": "crop_96e55192",
-      "identifier": "Turnip (Storage) - Mature Root 6X | Field TP ",
       "crop": "Turnip",
       "category": "Root",
       "searchText": "turnip (storage) - mature root 6x | field tp  turnip storage mature root root",
@@ -13097,11 +13096,11 @@
           "cellsPerTray": 128
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Turnip (Storage) - Mature Root 6X | Field TP "
     },
     {
       "id": "crop_55143b3d",
-      "identifier": "Turnip (Tokyo) - Mature Root 1X | Field DS ",
       "crop": "Turnip",
       "searchText": "turnip (tokyo) - mature root 1x | field ds  turnip tokyo mature root",
       "growingStructure": "field",
@@ -13131,11 +13130,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS "
     },
     {
       "id": "crop_e15f2f9c",
-      "identifier": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp",
       "crop": "Turnip",
       "category": "Root",
       "searchText": "turnip (tokyo) - mature root 1x | field ds sp turnip tokyo mature root root",
@@ -13166,11 +13165,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp"
     },
     {
       "id": "crop_cd9cbb1c",
-      "identifier": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
       "crop": "Turnip",
       "category": "Root",
       "searchText": "turnip (tokyo) - mature root 1x | field ds sufa turnip tokyo mature root root",
@@ -13201,11 +13200,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa"
     },
     {
       "id": "crop_5293744b",
-      "identifier": "Wisteria - Mature Stem 1X | Field DS ",
       "crop": "Wisteria",
       "searchText": "wisteria - mature stem 1x | field ds  wisteria mature stem",
       "growingStructure": "field",
@@ -13231,11 +13230,11 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "tp-from-seeding-to-harvest"
+      "dtmBasis": "tp-from-seeding-to-harvest",
+      "name": "Wisteria - Mature Stem 1X | Field DS "
     },
     {
       "id": "crop_4fd4eaee",
-      "identifier": "Yarrow - Mature Stem 1X | Field TP ",
       "crop": "Yarrow",
       "category": "Flower",
       "searchText": "yarrow - mature stem 1x | field tp  yarrow mature stem flower",
@@ -13273,11 +13272,11 @@
           "cellsPerTray": 72
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Yarrow - Mature Stem 1X | Field TP "
     },
     {
       "id": "crop_73a11e12",
-      "identifier": "Zinnia - Mature Stem 1X | Field DS Su",
       "crop": "Zinnia",
       "category": "Flower",
       "searchText": "zinnia - mature stem 1x | field ds su zinnia mature stem flower",
@@ -13309,7 +13308,8 @@
           "harvestBufferDays": 7
         }
       ],
-      "dtmBasis": "ds-from-germination-to-harvest"
+      "dtmBasis": "ds-from-germination-to-harvest",
+      "name": "Zinnia - Mature Stem 1X | Field DS Su"
     }
   ]
 }

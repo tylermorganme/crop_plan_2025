@@ -40,3 +40,12 @@ Write migrations in `src/lib/migrations/index.ts`.
 3. Clone and transform, return new object
 4. Append to `migrations` array
 5. Test with existing plan data
+
+## Migration Code Constraints
+
+- **No `require()` for `@/` paths.** Vitest resolves `@/` aliases only for ESM `import`, not CommonJS `require()`. If a migration needs external data, use `try/catch` with a fallback so tests that hydrate old-version plans don't crash.
+
+## Testing Migrations
+
+- **Use `CURRENT_SCHEMA_VERSION` in assertions**, never hardcoded version numbers. Hydration runs ALL migrations to current, so `expect(plan.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)`. Hardcoded values break every time a new migration is added.
+- Migration-specific assertions (e.g. "field was renamed") can test the data directly without caring about the version number.

@@ -129,9 +129,13 @@ export function buildCropSearchText(crop: {
   resource?: string;
   crop?: string;
   notes?: string;
+  tags?: string[];
+  specTags?: string[];
   plantingMethod?: string;
   groupId?: string;
   growingStructure?: string;
+  irrigation?: string;
+  rowCover?: string;
 }): string {
   return [
     crop.name,
@@ -143,6 +147,10 @@ export function buildCropSearchText(crop: {
     crop.plantingMethod,
     crop.groupId,
     crop.growingStructure,
+    crop.irrigation,
+    crop.rowCover,
+    ...(crop.tags ?? []),
+    ...(crop.specTags ?? []),
   ].filter(Boolean).join(' ').toLowerCase();
 }
 

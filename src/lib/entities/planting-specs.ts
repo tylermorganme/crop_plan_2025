@@ -79,8 +79,8 @@ export interface PlantingSpec {
   /** Unique identifier (e.g., "arugula-baby-leaf-field-ds-sp") */
   id: string;
 
-  /** Human-readable identifier matching legacy data */
-  identifier: string;
+  /** Human-readable display name, e.g. "Tomato - Beefsteak Mature | GH TP" */
+  name: string;
 
   /**
    * @deprecated Use cropName instead. Kept for backwards compatibility with stored data.
@@ -101,7 +101,7 @@ export interface PlantingSpec {
 
   /**
    * Materialized search text for efficient filtering.
-   * Contains concatenated searchable fields: identifier, crop, product names, category.
+   * Contains concatenated searchable fields: name, crop, product names, category.
    * Pre-computed at import/creation time to avoid repeated lookups during filtering.
    */
   searchText?: string;
@@ -209,6 +209,9 @@ export interface PlantingSpec {
    * Favorites can be filtered in the Explorer for quick access.
    */
   isFavorite?: boolean;
+
+  /** Arbitrary user tags for grouping/filtering */
+  tags?: string[];
 
   // ---- Timestamps ----
 
@@ -1110,7 +1113,7 @@ export function generateConfigId(): string {
 export function createBlankConfig(): PlantingSpec {
   return {
     id: generateConfigId(),
-    identifier: '',
+    name: '',
     crop: '',
     cropName: '',
     category: '',
@@ -1148,19 +1151,19 @@ function generateCopyName(name: string): string {
 
 /**
  * Create a copy of an existing PlantingSpec for modification.
- * Generates a new ID and suggests a new identifier with (N) suffix.
+ * Generates a new ID and suggests a new name with (N) suffix.
  */
 export function copyConfig(source: PlantingSpec): PlantingSpec {
   return {
     ...source,
     id: generateConfigId(),
-    identifier: generateCopyName(source.identifier),
+    name: generateCopyName(source.name),
   };
 }
 
 /**
  * Clone a PlantingSpec for inclusion in a plan's local catalog.
- * Creates a deep copy preserving all fields including identifier.
+ * Creates a deep copy preserving all fields.
  *
  * Use this when importing configs from master catalog to plan-local catalog.
  */
@@ -1170,7 +1173,7 @@ export function clonePlantingSpec(source: PlantingSpec): PlantingSpec {
 }
 
 /**
- * Clone multiple PlantingSpecs into a catalog keyed by identifier.
+ * Clone multiple PlantingSpecs into a catalog keyed by spec.id.
  * Use this for bulk import from master catalog to plan-local catalog.
  */
 export function clonePlantingCatalog(
@@ -1178,7 +1181,7 @@ export function clonePlantingCatalog(
 ): Record<string, PlantingSpec> {
   const catalog: Record<string, PlantingSpec> = {};
   for (const source of sources) {
-    catalog[source.identifier] = clonePlantingSpec(source);
+    catalog[source.id] = clonePlantingSpec(source);
   }
   return catalog;
 }

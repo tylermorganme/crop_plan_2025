@@ -461,6 +461,9 @@ export const declarativeMigrations: Record<number, MigrationOp[]> = {
   ],
 
   // v16 → v17: Rename normalMethod → dtmBasis with value transformation
+  // Note: specs.* wildcard works for patch path matching (string keys match *)
+  // but NOT for plan migration (getValuesAtPath only handles arrays).
+  // Plan migration uses the imperative function; DSL handles patches only.
   16: [
     {
       op: 'transformValue',
@@ -475,6 +478,11 @@ export const declarativeMigrations: Record<number, MigrationOp[]> = {
       },
     },
     { op: 'renamePath', from: 'specs.*.normalMethod', to: 'specs.*.dtmBasis' },
+  ],
+
+  // v18 → v19: Rename identifier → name on PlantingSpec
+  18: [
+    { op: 'renamePath', from: 'specs.*.identifier', to: 'specs.*.name' },
   ],
 };
 

@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
-import { parseISO, format } from 'date-fns';
+import { parseISO, format, subDays } from 'date-fns';
 import { usePlanStore } from '@/lib/plan-store';
 import { useUIStore } from '@/lib/ui-store';
 import { Z_INDEX } from '@/lib/z-index';
@@ -46,7 +46,7 @@ const ALL_COLUMNS = [
   'bed',
   'beds',
   'category',
-  'identifier',
+  'specName',
   'fieldStartDate',
   'ghDate',
   'harvestStart',
@@ -102,7 +102,7 @@ const DEFAULT_VISIBLE: ColumnId[] = [
 const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
   crop: 180,
   category: 100,
-  identifier: 200,
+  specName: 200,
   fieldStartDate: 110,
   ghDate: 110,
   harvestStart: 110,
@@ -144,9 +144,9 @@ const DEFAULT_WIDTHS: Partial<Record<ColumnId, number>> = {
 const COLUMN_HEADERS: Record<ColumnId, string> = {
   crop: 'Crop',
   category: 'Category',
-  identifier: 'Identifier',
+  specName: 'Name',
   fieldStartDate: 'Field Date',
-  ghDate: 'GH Date',
+  ghDate: 'Planned GH Date',
   harvestStart: 'Harvest Start',
   harvestEnd: 'Harvest End',
   bed: 'Bed',
@@ -184,7 +184,7 @@ const COLUMN_HEADERS: Record<ColumnId, string> = {
 
 // Sortable columns
 const SORTABLE_COLUMNS: Set<ColumnId> = new Set([
-  'crop', 'category', 'identifier', 'fieldStartDate', 'ghDate',
+  'crop', 'category', 'specName', 'fieldStartDate', 'ghDate',
   'harvestStart', 'harvestEnd', 'bed', 'bedFeet', 'dtm',
   'harvestWindow', 'daysInField', 'daysInCells', 'revenue', 'revenuePerFt',
   'method', 'growingStructure', 'id', 'specId', 'lastModified',
@@ -585,7 +585,7 @@ function ColumnManager({ visibleColumns, onToggle, onClose, onShowAll, onHideAll
 interface EnrichedPlanting extends Planting {
   cropName: string;
   category: string;
-  identifier: string;
+  specName: string;
   bedName: string;
   bedsDisplay: string;  // All beds spanned, e.g. "A1, A2, A3 (12')"
   isUnassigned: boolean;
@@ -609,6 +609,7 @@ interface EnrichedPlanting extends Planting {
   revenuePerFt: number | null; // Revenue per bed foot
   maxYieldPerWeek: string;   // Max yield/week display string (e.g. "2.5 lb/wk")
   minYieldPerWeek: string;   // Min yield/week display string (e.g. "1.8 lb/wk")
+  specTags?: string[];       // Tags from the PlantingSpec (for search)
 }
 
 // =============================================================================
@@ -887,7 +888,7 @@ export default function PlantingsPage() {
       if (p.sequenceId !== undefined) {
         sequenceDisplay = p.sequenceId;
         if (p.sequenceSlot !== undefined) {
-          seqNum = p.sequenceSlot + 1;
+          seqNum = p.sequenceSlot;
         }
       }
 
@@ -900,20 +901,30 @@ export default function PlantingsPage() {
       // Calculate yield per week (uses actual planting bedFeet)
       const yieldPerWeek = spec ? calculateYieldPerWeek(spec, p.bedFeet, productsLookup) : null;
 
+      // Compute planned greenhouse date: fieldDate - daysInCells (for transplants only)
+      let ghDate: string | null = null;
+      if (dates.method === 'TP' && daysInCells > 0 && dates.fieldStartDate) {
+        const fieldDate = parseISO(dates.fieldStartDate);
+        ghDate = format(subDays(fieldDate, daysInCells), 'yyyy-MM-dd');
+      }
+
       return {
         ...p,
         // From TimelineCrop (pre-computed dates)
         ...dates,
+        // Override ghDate with computed value
+        ghDate,
         dtm,
         harvestWindow,
 
         // From spec lookup
         cropName: spec?.crop ?? p.specId,
         category: spec?.category ?? '',
-        identifier: spec?.identifier ?? p.specId,
+        specName: spec?.name ?? p.specId,
         rows: spec?.rows ?? null,
         spacing: spec?.spacing ?? null,
         growingStructure: spec?.growingStructure ?? 'field',
+        specTags: spec?.tags,
 
         // From bed lookup
         bedName: bed?.name ?? '',
@@ -984,7 +995,7 @@ export default function PlantingsPage() {
       switch (effectiveSortColumn) {
         case 'crop': cmp = a.cropName.localeCompare(b.cropName); break;
         case 'category': cmp = a.category.localeCompare(b.category); break;
-        case 'identifier': cmp = a.identifier.localeCompare(b.identifier); break;
+        case 'specName': cmp = a.specName.localeCompare(b.specName); break;
         case 'fieldStartDate': cmp = a.fieldStartDate.localeCompare(b.fieldStartDate); break;
         case 'ghDate': cmp = (a.ghDate ?? '').localeCompare(b.ghDate ?? ''); break;
         case 'harvestStart': cmp = (a.harvestStart ?? '').localeCompare(b.harvestStart ?? ''); break;
@@ -1356,8 +1367,8 @@ export default function PlantingsPage() {
         return <span className="font-medium">{planting.cropName}</span>;
       case 'category':
         return <span className="text-gray-600">{planting.category}</span>;
-      case 'identifier':
-        return <span className="text-gray-600 text-xs">{planting.identifier}</span>;
+      case 'specName':
+        return <span className="text-gray-600 text-xs">{planting.specName}</span>;
       case 'fieldStartDate':
         // Use the computed field date from TimelineCrop (accounts for sequences and actuals)
         // planting.fieldStartDate is now the effective field date from ...dates spread

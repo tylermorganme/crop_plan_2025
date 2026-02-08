@@ -29,7 +29,7 @@ const FIELD_GROUPS: FieldGroup[] = [
   {
     name: 'Identity',
     fields: [
-      { key: 'identifier', label: 'Identifier' },
+      { key: 'name', label: 'Name' },
       { key: 'crop', label: 'Crop' },
       { key: 'category', label: 'Category' },
     ],
@@ -258,7 +258,7 @@ export default function CompareSpecsModal({
                     key={spec.id}
                     className="text-left p-2 border-b-2 border-gray-300 font-medium text-gray-900 min-w-[180px]"
                   >
-                    {spec.identifier || spec.id}
+                    {spec.name || spec.id}
                   </th>
                 ))}
               </tr>

@@ -284,14 +284,21 @@ function migrateV6ToV7(rawPlan: unknown): unknown {
   }
 
   // Load crops template for default colors
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const cropsTemplate: Array<{
-    id: string;
-    name: string;
-    bgColor: string;
-    textColor: string;
-  }> = require('@/data/crops-template.json');
-  const templateMap = new Map(cropsTemplate.map((c) => [c.name, c]));
+  // Try/catch: require('@/...') isn't resolved in vitest (alias is ESM-only).
+  // All real plans are past v7, so this only matters for tests with synthetic old plans.
+  let templateMap = new Map<string, { bgColor: string; textColor: string }>();
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const cropsTemplate: Array<{
+      id: string;
+      name: string;
+      bgColor: string;
+      textColor: string;
+    }> = require('@/data/crops-template.json');
+    templateMap = new Map(cropsTemplate.map((c) => [c.name, c]));
+  } catch {
+    // Template unavailable (e.g. vitest) — proceed with default colors
+  }
 
   // Default color for crops not in template
   const DEFAULT_BG = '#78909c';
@@ -779,6 +786,90 @@ function migrateV16ToV17(rawPlan: unknown): unknown {
   return { ...plan, specs: newSpecs };
 }
 
+// -----------------------------------------------------------------------------
+// v17 → v18: Re-key specs by spec.id (durable) instead of identifier (display name)
+// -----------------------------------------------------------------------------
+
+/**
+ * Migrates plan.specs from being keyed by identifier (human-readable name)
+ * to being keyed by spec.id (durable opaque ID like "crop_e804ff77").
+ * Also updates all planting.specId references from identifier to spec.id.
+ *
+ * After this migration, renaming a spec's identifier no longer requires
+ * re-keying the Record or updating planting references.
+ */
+function migrateV17ToV18(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    specs?: Record<string, { id: string; identifier: string; [k: string]: unknown }>;
+    plantings?: Array<{ specId: string; [k: string]: unknown }>;
+    [k: string]: unknown;
+  };
+
+  if (!plan.specs || Object.keys(plan.specs).length === 0) return plan;
+
+  // Idempotency: check if already migrated (first key matches first spec's id)
+  const firstKey = Object.keys(plan.specs)[0];
+  const firstSpec = plan.specs[firstKey];
+  if (firstSpec && firstKey === firstSpec.id) return plan;
+
+  // Build identifier → id mapping and re-key the specs Record
+  const identifierToId: Record<string, string> = {};
+  const newSpecs: Record<string, unknown> = {};
+  for (const [identifier, spec] of Object.entries(plan.specs)) {
+    identifierToId[identifier] = spec.id;
+    newSpecs[spec.id] = spec;
+  }
+
+  // Update planting.specId references from identifier to spec.id
+  const newPlantings = plan.plantings?.map(planting => {
+    const newId = identifierToId[planting.specId];
+    if (newId) {
+      return { ...planting, specId: newId };
+    }
+    // Orphaned reference — leave as-is (same failure mode as before)
+    return planting;
+  });
+
+  return {
+    ...plan,
+    specs: newSpecs,
+    plantings: newPlantings ?? plan.plantings,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// v18 → v19: Rename PlantingSpec.identifier → PlantingSpec.name
+// -----------------------------------------------------------------------------
+
+/**
+ * Renames the `identifier` field to `name` on all PlantingSpec entries.
+ * The field was originally a compound key from Excel that served as a PK,
+ * but now that spec.id is the durable key, it's just a display name.
+ */
+function migrateV18ToV19(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    specs?: Record<string, { identifier?: string; name?: string; [k: string]: unknown }>;
+    [k: string]: unknown;
+  };
+
+  if (!plan.specs || Object.keys(plan.specs).length === 0) return plan;
+
+  // Idempotency: if first spec already has `name` and no `identifier`, skip
+  const firstSpec = Object.values(plan.specs)[0];
+  if (firstSpec && firstSpec.name && !firstSpec.identifier) return plan;
+
+  const newSpecs: Record<string, unknown> = {};
+  for (const [key, spec] of Object.entries(plan.specs)) {
+    const { identifier, ...rest } = spec;
+    newSpecs[key] = {
+      ...rest,
+      name: identifier ?? rest.name,
+    };
+  }
+
+  return { ...plan, specs: newSpecs };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -817,6 +908,8 @@ const migrations: MigrationFn[] = [
   migrateV14ToV15, // Index 13: v14 → v15 (fix productYields.productId references)
   migrateV15ToV16, // Index 14: v15 → v16 (no-op placeholder - data repair done via backfill script)
   migrateV16ToV17, // Index 15: v16 → v17 (normalMethod → dtmBasis with clearer values)
+  migrateV17ToV18, // Index 16: v17 → v18 (re-key specs by spec.id, update planting.specId)
+  migrateV18ToV19, // Index 17: v18 → v19 (PlantingSpec.identifier → PlantingSpec.name)
 ];
 
 // =============================================================================

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { parseISO } from 'date-fns';
 import { DateInputWithButtons } from './DateInputWithButtons';
 import {
@@ -17,7 +17,9 @@ import type { TimelineCrop } from '@/lib/entities/plan';
 import type { MutationResult } from '@/lib/plan-store';
 import type { Market, MarketSplit } from '@/lib/entities/market';
 import { getActiveMarkets, getMarketSplitTotal } from '@/lib/entities/market';
+import type { Bed, BedGroup } from '@/lib/entities/bed';
 import { GddPreview } from './GddPreview';
+import { TagInput } from './TagInput';
 import { getPrimarySeedToHarvest } from '@/lib/entities/planting-specs';
 import {
   SeedSourceSelectWithDefault,
@@ -193,6 +195,124 @@ function MarketSplitEditor({
 }
 
 // =============================================================================
+// Bulk Planting Tags (add/remove for multi-select)
+// =============================================================================
+
+function BulkPlantingTags({
+  plantings,
+  tagSuggestions,
+  onBulkUpdatePlantings,
+}: {
+  plantings: TimelineCrop[];
+  tagSuggestions?: string[];
+  onBulkUpdatePlantings: (updates: { id: string; changes: Partial<Planting> }[]) => Promise<MutationResult>;
+}) {
+  const [tagsToAdd, setTagsToAdd] = useState<string[]>([]);
+  const [tagsToRemove, setTagsToRemove] = useState<Set<string>>(new Set());
+
+  // Compute tag frequency across selected plantings
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of plantings) {
+      if (p.tags) {
+        for (const t of p.tags) {
+          counts[t] = (counts[t] || 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }, [plantings]);
+
+  const existingTags = useMemo(() =>
+    Object.entries(tagCounts).sort(([a], [b]) => a.localeCompare(b)),
+    [tagCounts]
+  );
+
+  const handleApply = async () => {
+    if (tagsToAdd.length === 0 && tagsToRemove.size === 0) return;
+    const updates = plantings
+      .filter((p) => p.plantingId)
+      .map((p) => {
+        const current = p.tags ?? [];
+        let updated = current.filter((t) => !tagsToRemove.has(t));
+        for (const t of tagsToAdd) {
+          if (!updated.includes(t)) updated.push(t);
+        }
+        return {
+          id: p.plantingId!,
+          changes: { tags: updated.length > 0 ? updated : undefined },
+        };
+      });
+    if (updates.length > 0) {
+      await onBulkUpdatePlantings(updates);
+    }
+    setTagsToAdd([]);
+    setTagsToRemove(new Set());
+  };
+
+  const toggleRemove = (tag: string) => {
+    setTagsToRemove((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  };
+
+  const hasChanges = tagsToAdd.length > 0 || tagsToRemove.size > 0;
+
+  return (
+    <div className="pt-3 border-t">
+      <div className="text-xs text-gray-600 mb-1.5">Tags</div>
+      {/* Add tags */}
+      <TagInput
+        tags={tagsToAdd}
+        onChange={setTagsToAdd}
+        suggestions={tagSuggestions}
+        placeholder="Add tags..."
+        compact
+      />
+      {/* Remove tags — show existing as clickable chips */}
+      {existingTags.length > 0 && (
+        <div className="mt-2">
+          <div className="text-[10px] text-gray-500 mb-1">Click to remove:</div>
+          <div className="flex flex-wrap gap-1">
+            {existingTags.map(([tag, count]) => {
+              const removing = tagsToRemove.has(tag);
+              return (
+                <button
+                  key={tag}
+                  onClick={() => toggleRemove(tag)}
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs transition-colors ${
+                    removing
+                      ? 'bg-red-100 text-red-800 line-through'
+                      : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                  }`}
+                >
+                  {tag}
+                  {count < plantings.length && (
+                    <span className="text-[10px] opacity-60">({count})</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {/* Apply button */}
+      {hasChanges && (
+        <button
+          onClick={handleApply}
+          className="mt-2 w-full px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+        >
+          Apply Tag Changes
+        </button>
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -222,9 +342,11 @@ export interface PlantingInspectorPanelProps {
   onUnlinkFromSequence?: (plantingId: string) => void;
 
   // Spec actions
-  onEditPlantingSpec?: (identifier: string) => void;
+  onEditPlantingSpec?: (specId: string) => void;
   /** Clone spec and assign to this planting */
   onCloneSpec?: (plantingId: string, specId: string) => void;
+  /** Reassign planting to a different spec */
+  onReassignSpec?: (plantingId: string, newSpecId: string) => void;
   /** Reset planting to use spec defaults (clears overrides, uses default seed source) */
   onRefreshFromSpec?: (plantingId: string) => void;
 
@@ -239,6 +361,10 @@ export interface PlantingInspectorPanelProps {
   products?: Record<string, Product>;
   /** Markets for market split editor */
   markets?: Record<string, Market>;
+  /** Beds for bed assignment dropdown */
+  beds?: Record<string, Bed>;
+  /** Bed groups for ordering the dropdown */
+  bedGroups?: Record<string, BedGroup>;
 
   // UI options
   showTimingEdits?: boolean;
@@ -249,6 +375,9 @@ export interface PlantingInspectorPanelProps {
   location?: { lat: number; lon: number };
   /** Plan year for GDD calculations */
   planYear?: number;
+
+  /** Known tags across all plantings for autocomplete suggestions */
+  tagSuggestions?: string[];
 }
 
 export function PlantingInspectorPanel({
@@ -267,6 +396,7 @@ export function PlantingInspectorPanel({
   onUnlinkFromSequence,
   onEditPlantingSpec,
   onCloneSpec,
+  onReassignSpec,
   onRefreshFromSpec,
   specs,
   crops,
@@ -276,13 +406,38 @@ export function PlantingInspectorPanel({
   usedMixIds,
   products,
   markets,
+  beds,
+  bedGroups,
   showTimingEdits = false,
   className = '',
   location,
   planYear,
+  tagSuggestions,
 }: PlantingInspectorPanelProps) {
   const [showSequenceInfo, setShowSequenceInfo] = useState(false);
   const [isPlantingsListExpanded, setIsPlantingsListExpanded] = useState(true);
+  const [showSpecPicker, setShowSpecPicker] = useState(false);
+  const [specSearchText, setSpecSearchText] = useState('');
+  const specSearchRef = useRef<HTMLInputElement>(null);
+
+  // Filtered + grouped specs for picker combobox
+  const filteredSpecs = useMemo(() => {
+    if (!specs) return [];
+    const all = Object.values(specs);
+    const query = specSearchText.toLowerCase().trim();
+    const filtered = query
+      ? all.filter(s => s.name.toLowerCase().includes(query) || (s.category ?? '').toLowerCase().includes(query) || (s.crop ?? '').toLowerCase().includes(query))
+      : all;
+    return filtered.sort((a, b) => (a.category ?? '').localeCompare(b.category ?? '') || a.name.localeCompare(b.name));
+  }, [specs, specSearchText]);
+
+  // Auto-focus the search input when picker opens
+  useEffect(() => {
+    if (showSpecPicker) {
+      setSpecSearchText('');
+      requestAnimationFrame(() => specSearchRef.current?.focus());
+    }
+  }, [showSpecPicker]);
 
   // No selection
   if (selectedCrops.length === 0) {
@@ -527,6 +682,99 @@ export function PlantingInspectorPanel({
               </div>
             )}
 
+            {/* Bulk Market Split */}
+            {onBulkUpdatePlantings && markets && Object.keys(markets).length > 0 && (() => {
+              const activeMarkets = getActiveMarkets(markets);
+              // Compute effective split for each planting (custom or spec default)
+              const effectiveSplits = plantings.map(p => {
+                if (p.marketSplit) return p.marketSplit;
+                // Fall back to spec default
+                const specId = p.specId;
+                if (specId && specs?.[specId]?.defaultMarketSplit) {
+                  return specs[specId].defaultMarketSplit!;
+                }
+                return { 'market-direct': 100 } as MarketSplit;
+              });
+              // Check if all the same
+              const allSame = effectiveSplits.every(s => {
+                return activeMarkets.every(m => (s[m.id] ?? 0) === (effectiveSplits[0][m.id] ?? 0));
+              });
+              const displaySplit = allSame ? effectiveSplits[0] : {};
+              const isMixed = !allSame;
+
+              return (
+                <div className="pt-3 border-t">
+                  <div className="text-xs text-gray-600 mb-1.5">Market Split {isMixed && <span className="text-amber-600">(mixed)</span>}</div>
+                  <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${activeMarkets.length}, 1fr)` }}>
+                    {activeMarkets.map(market => (
+                      <div key={market.id}>
+                        <div className="text-[10px] text-gray-500 text-center mb-0.5">{market.name}</div>
+                        <input
+                          key={`bulk-split-${market.id}-${plantings.map(p => p.groupId).join('-')}-${displaySplit[market.id] ?? ''}`}
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={5}
+                          defaultValue={isMixed ? '' : (displaySplit[market.id] ?? '')}
+                          placeholder={isMixed ? '—' : '0'}
+                          onBlur={async (e) => {
+                            // Collect values from sibling inputs to build the full split
+                            const container = e.target.closest('.grid');
+                            if (!container) return;
+                            const inputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]');
+                            const newSplit: MarketSplit = {};
+                            let hasValue = false;
+                            inputs.forEach((input, i) => {
+                              const val = parseFloat(input.value);
+                              if (!isNaN(val) && val > 0 && activeMarkets[i]) {
+                                newSplit[activeMarkets[i].id] = val;
+                                hasValue = true;
+                              }
+                            });
+                            if (!hasValue) return;
+                            const updates = plantings
+                              .filter(p => p.plantingId)
+                              .map(p => ({
+                                id: p.plantingId!,
+                                changes: { marketSplit: newSplit },
+                              }));
+                            if (updates.length > 0) {
+                              await onBulkUpdatePlantings(updates);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          className={`w-full px-1 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center ${
+                            isMixed ? 'border-amber-400 bg-amber-50' : 'border-gray-300'
+                          }`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {!isMixed && (() => {
+                    const total = getMarketSplitTotal(displaySplit);
+                    return total > 0 && total !== 100 ? (
+                      <div className="text-[10px] text-amber-600 mt-0.5 text-center">
+                        Total: {Math.round(total)}% (will be treated as ratio)
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              );
+            })()}
+
+            {/* Bulk Tags */}
+            {onBulkUpdatePlantings && (
+              <BulkPlantingTags
+                plantings={plantings}
+                tagSuggestions={tagSuggestions}
+                onBulkUpdatePlantings={onBulkUpdatePlantings}
+              />
+            )}
+
             {/* Tip */}
             <div className="text-xs text-gray-500">
               Tip: {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Click to add/remove from selection
@@ -680,7 +928,45 @@ export function PlantingInspectorPanel({
           <div className="grid grid-cols-2 gap-2 text-center">
             <div>
               <div className="text-xs text-gray-600 mb-1">Bed</div>
-              {crop.resource ? (
+              {onUpdatePlanting && beds && bedGroups ? (() => {
+                // Build ordered bed options: sort groups by displayOrder, beds within each group by displayOrder
+                const sortedGroups = Object.values(bedGroups).sort((a, b) => a.displayOrder - b.displayOrder);
+                const allBeds = Object.values(beds);
+                // Find current bed UUID from bed name
+                const currentBedId = allBeds.find(b => b.name === crop.resource)?.id ?? '';
+                return (
+                  <select
+                    key={`bed-${crop.groupId}-${currentBedId}`}
+                    value={currentBedId}
+                    onChange={async (e) => {
+                      const newBedId = e.target.value;
+                      if (newBedId !== currentBedId) {
+                        const result = await onUpdatePlanting(crop.groupId, {
+                          startBed: newBedId || null,
+                        });
+                        if (!result.success) {
+                          e.target.value = currentBedId;
+                        }
+                      }
+                    }}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center"
+                  >
+                    <option value="">Unassigned</option>
+                    {sortedGroups.map(group => {
+                      const groupBeds = allBeds
+                        .filter(b => b.groupId === group.id)
+                        .sort((a, b) => a.displayOrder - b.displayOrder);
+                      return (
+                        <optgroup key={group.id} label={group.name}>
+                          {groupBeds.map(b => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </optgroup>
+                      );
+                    })}
+                  </select>
+                );
+              })() : crop.resource ? (
                 <div
                   className="text-sm text-gray-900 truncate py-1"
                   title={groupCrops.length > 1 ? groupCrops.map((c) => c.resource).join(', ') : crop.resource}
@@ -724,18 +1010,82 @@ export function PlantingInspectorPanel({
           </div>
 
           {/* Config Info - show what config this planting was created from */}
-          {baseSpec && (
+          {(baseSpec || specId) && (
             <div className="bg-gray-50 rounded p-2">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="text-xs text-gray-500">Spec</div>
-                  <div className="text-sm font-medium text-gray-900">{baseSpec.identifier}</div>
+                  {baseSpec ? (
+                    <div className="text-sm font-medium text-gray-900 cursor-help" title={specId || undefined}>{baseSpec.name}</div>
+                  ) : (
+                    <div className="text-sm font-medium text-red-600" title={specId || undefined}>Missing spec: {specId}</div>
+                  )}
                 </div>
-                <div className="text-right">
-                  <div className="text-xs text-gray-500">Category</div>
-                  <div className="text-sm text-gray-700">{baseSpec.category || '—'}</div>
-                </div>
+                {baseSpec && (
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500">Category</div>
+                    <div className="text-sm text-gray-700">{baseSpec.category || '—'}</div>
+                  </div>
+                )}
+                {onReassignSpec && crop.plantingId && (
+                  <button
+                    onClick={() => setShowSpecPicker(!showSpecPicker)}
+                    className="ml-2 px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  >
+                    {showSpecPicker ? 'Cancel' : 'Change'}
+                  </button>
+                )}
               </div>
+              {showSpecPicker && onReassignSpec && crop.plantingId && specs && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <input
+                    ref={specSearchRef}
+                    type="text"
+                    value={specSearchText}
+                    onChange={(e) => setSpecSearchText(e.target.value)}
+                    placeholder="Type to filter specs..."
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 mb-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setShowSpecPicker(false);
+                      }
+                    }}
+                  />
+                  <div className="max-h-48 overflow-auto border border-gray-200 rounded-md bg-white">
+                    {filteredSpecs.length === 0 ? (
+                      <div className="px-2 py-2 text-xs text-gray-400 text-center">No matching specs</div>
+                    ) : (
+                      (() => {
+                        let lastCategory = '';
+                        return filteredSpecs.map((spec) => {
+                          const showHeader = spec.category !== lastCategory;
+                          lastCategory = spec.category ?? '';
+                          return (
+                            <div key={spec.id}>
+                              {showHeader && (
+                                <div className="px-2 py-1 text-[10px] font-semibold text-gray-500 uppercase tracking-wider bg-gray-50 sticky top-0">
+                                  {spec.category || 'Uncategorized'}
+                                </div>
+                              )}
+                              <button
+                                onClick={() => {
+                                  onReassignSpec(crop.plantingId!, spec.id);
+                                  setShowSpecPicker(false);
+                                }}
+                                className={`w-full text-left px-2 py-1.5 text-sm hover:bg-blue-50 transition-colors ${
+                                  spec.id === specId ? 'bg-blue-50 font-medium text-blue-700' : 'text-gray-700'
+                                }`}
+                              >
+                                {spec.name}
+                              </button>
+                            </div>
+                          );
+                        });
+                      })()
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -918,7 +1268,7 @@ export function PlantingInspectorPanel({
                   className="px-2 py-0.5 rounded text-xs font-bold"
                   style={{ backgroundColor: '#7c3aed', color: '#ffffff' }}
                 >
-                  #{crop.sequenceSlot + 1}
+                  #{crop.sequenceSlot}
                 </span>
               </div>
               {crop.isLocked && (
@@ -1163,6 +1513,32 @@ export function PlantingInspectorPanel({
             <div>
               <div className="text-xs text-gray-600 mb-1">Notes</div>
               <div className="text-sm text-gray-900 whitespace-pre-wrap">{crop.notes}</div>
+            </div>
+          )}
+
+          {/* Tags - Editable */}
+          {onUpdatePlanting && (
+            <div className="pt-3 border-t">
+              <div className="text-xs text-gray-600 mb-1">Tags</div>
+              <TagInput
+                tags={crop.tags ?? []}
+                onChange={(tags) => onUpdatePlanting(crop.groupId, { tags: tags.length > 0 ? tags : undefined })}
+                suggestions={tagSuggestions}
+                placeholder="Add tags..."
+                compact
+              />
+            </div>
+          )}
+
+          {/* Tags Display (read-only mode) */}
+          {!onUpdatePlanting && crop.tags && crop.tags.length > 0 && (
+            <div>
+              <div className="text-xs text-gray-600 mb-1">Tags</div>
+              <div className="flex flex-wrap gap-1">
+                {crop.tags.map((tag) => (
+                  <span key={tag} className="bg-blue-100 text-blue-800 rounded-full px-2 py-0.5 text-xs">{tag}</span>
+                ))}
+              </div>
             </div>
           )}
 

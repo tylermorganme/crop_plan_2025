@@ -182,7 +182,7 @@ function formatString(value: string | null | undefined, format?: string): string
   }
 
   if (value.length <= maxLength) return value;
-  return value.slice(0, maxLength) + '…';
+  return value.slice(0, maxLength);
 }
 
 /** Apply formatting based on data type and optional format specifier */
@@ -211,7 +211,7 @@ const TOKENS: TokenDef[] = [
   {
     key: 'specId',
     label: 'Spec ID',
-    description: 'Planting spec identifier',
+    description: 'Planting spec name',
     dataType: 'string',
     resolve: (crop) => crop.specId || null,
   },
@@ -302,9 +302,9 @@ const TOKENS: TokenDef[] = [
   {
     key: 'seq',
     label: 'Seq',
-    description: 'Sequence slot (e.g., "S2")',
+    description: 'Sequence slot (e.g., "S1")',
     dataType: 'string',
-    resolve: (crop) => crop.sequenceSlot != null ? `S${crop.sequenceSlot + 1}` : null,
+    resolve: (crop) => crop.sequenceSlot != null ? `S${crop.sequenceSlot}` : null,
   },
   {
     key: 'structure',
@@ -319,6 +319,28 @@ const TOKENS: TokenDef[] = [
         'high-tunnel': 'HT',
       };
       return map[crop.growingStructure] || null;
+    },
+  },
+  {
+    key: 'irrigation',
+    label: 'Irrigation',
+    description: 'Irrigation type from spec',
+    dataType: 'string',
+    resolve: (crop, ctx) => {
+      if (!ctx.specs || !crop.specId) return null;
+      const spec = ctx.specs[crop.specId];
+      return spec?.irrigation || null;
+    },
+  },
+  {
+    key: 'rowCover',
+    label: 'Row Cover',
+    description: 'Row cover type from spec',
+    dataType: 'string',
+    resolve: (crop, ctx) => {
+      if (!ctx.specs || !crop.specId) return null;
+      const spec = ctx.specs[crop.specId];
+      return spec?.rowCover || null;
     },
   },
   {

@@ -165,7 +165,7 @@ describe('sqlite-storage', () => {
       const plan = createTestPlan({
         beds: { 'bed-1': { id: 'bed-1', name: 'A1', lengthFt: 50, groupId: 'g1', displayOrder: 0 } },
         bedGroups: { g1: { id: 'g1', name: 'Row A', displayOrder: 0 } },
-        specs: { 'crop-1': { id: 'crop-1', identifier: 'tomato-1', crop: 'Tomato' } as never },
+        specs: { 'crop-1': { id: 'crop-1', name: 'tomato-1', crop: 'Tomato' } as never },
         varieties: { 'var-1': { id: 'var-1', crop: 'Tomato', name: 'Cherokee Purple' } as never },
         seedMixes: { 'mix-1': { id: 'mix-1', name: 'Salad Mix' } as never },
         products: { 'prod-1': { id: 'prod-1', name: 'Tomatoes' } as never },

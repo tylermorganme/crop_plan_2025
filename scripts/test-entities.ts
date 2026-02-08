@@ -176,10 +176,10 @@ function createTestPlan(): Plan {
   const specs: Record<string, PlantingSpec> = {
     'arugula-baby-leaf': {
       id: 'arugula-baby-leaf',
-      identifier: 'Arugula - Baby Leaf | Field DS Sp',
+      name: 'Arugula - Baby Leaf | Field DS Sp',
       crop: 'Arugula',
       category: 'Green',
-      dtm: 45,
+      productYields: [{ productId: 'arugula', dtm: 45, numberOfHarvests: 1 }],
     },
   };
 
