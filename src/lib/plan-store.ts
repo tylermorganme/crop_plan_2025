@@ -35,6 +35,7 @@ import {
   initializePlantingIdCounter,
   clonePlanting,
   createPlanting,
+  generatePlantingId,
 } from './entities/planting';
 import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities/bed';
 import { createSequence, initializeSequenceIdCounter, type PlantingSequence } from './entities/planting-sequence';
@@ -303,6 +304,14 @@ export interface CopyPlanOptions {
 /**
  * Copy the current plan with optional date shifting and crop unassignment.
  * Returns the new plan ID.
+ *
+ * DESIGN: Uses "deep clone then transform" pattern to ensure ALL plan data
+ * is copied by default. Only fields that need transformation are explicitly
+ * handled. This prevents data loss when new fields are added to the Plan type.
+ *
+ * Previously, this used an allowlist pattern that explicitly listed each field
+ * to copy. That approach caused data loss when new fields (like sequences,
+ * markets) were added but not included in the copy logic.
  */
 export async function copyPlan(options: CopyPlanOptions): Promise<string> {
   const state = usePlanStore.getState();
@@ -337,14 +346,16 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
     return format(shifted, 'yyyy-MM-dd');
   }
 
-  // Clone plantings using CRUD function
-  const sourcePlantings = state.currentPlan.plantings ?? [];
-  const newPlantings: Planting[] = sourcePlantings.map((p) =>
-    clonePlanting(p, {
-      fieldStartDate: shiftDate(p.fieldStartDate),
-      startBed: options.unassignAll ? null : p.startBed,
-    })
-  );
+  // ==========================================================================
+  // STEP 1: Deep clone the ENTIRE plan to preserve ALL data by default
+  // ==========================================================================
+  // This is the "pit of success" - new fields are automatically included.
+  // We use structuredClone for a true deep copy that handles nested objects.
+  const clonedPlan: Plan = structuredClone(state.currentPlan);
+
+  // ==========================================================================
+  // STEP 2: Transform only the fields that MUST change
+  // ==========================================================================
 
   // Calculate the new plan year based on shift
   let newYear = state.currentPlan.metadata.year ?? new Date().getFullYear();
@@ -358,63 +369,70 @@ export async function copyPlan(options: CopyPlanOptions): Promise<string> {
 
   const uniqueName = await getUniquePlanName(options.newName);
 
-  // Clone beds, groups, and catalog using CRUD functions
-  let beds: Record<string, Bed>;
-  let bedGroups: Record<string, BedGroup>;
+  // Update plan identity
+  clonedPlan.id = newId;
+  clonedPlan.schemaVersion = CURRENT_SCHEMA_VERSION;
 
-  if (state.currentPlan.beds && state.currentPlan.bedGroups) {
-    beds = cloneBeds(state.currentPlan.beds);
-    bedGroups = cloneBedGroups(state.currentPlan.bedGroups);
-  } else {
-    const bedGroupsTemplate = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
-    const result = createBedsFromTemplate(bedGroupsTemplate);
-    beds = result.beds;
-    bedGroups = result.groups;
-  }
-
-  const specs = state.currentPlan.specs
-    ? clonePlantingCatalog(Object.values(state.currentPlan.specs))
-    : {};
-
-  // Copy varieties, seed mixes, products, and crops (shallow copy - IDs are preserved)
-  const varieties = state.currentPlan.varieties ? { ...state.currentPlan.varieties } : undefined;
-  const seedMixes = state.currentPlan.seedMixes ? { ...state.currentPlan.seedMixes } : undefined;
-  const products = state.currentPlan.products ? { ...state.currentPlan.products } : undefined;
-  const crops = state.currentPlan.crops ? { ...state.currentPlan.crops } : undefined;
-
-  const newPlan: Plan = {
+  // Update metadata (preserve location, lastFrostDate, etc. from clone)
+  clonedPlan.metadata = {
+    ...clonedPlan.metadata,
     id: newId,
-    schemaVersion: CURRENT_SCHEMA_VERSION,
-    metadata: {
-      id: newId,
-      name: uniqueName,
-      createdAt: now,
-      lastModified: now,
-      year: newYear,
-      version: 1,
-      parentPlanId: state.currentPlan.id,
-      parentVersion: state.currentPlan.metadata.version,
-    },
-    plantings: newPlantings,
-    beds,
-    bedGroups,
-    specs,
-    crops,
-    varieties,
-    seedMixes,
-    products,
-    notes: options.notes,
-    changeLog: [],
+    name: uniqueName,
+    createdAt: now,
+    lastModified: now,
+    year: newYear,
+    version: 1,
+    parentPlanId: state.currentPlan.id,
+    parentVersion: state.currentPlan.metadata.version,
   };
 
+  // Transform plantings: new IDs, shifted dates, optional bed unassignment
+  // IMPORTANT: Preserve sequenceId and sequenceSlot - they reference
+  // sequence definitions that are also cloned (same IDs preserved)
+  const newPlantings: Planting[] = (clonedPlan.plantings ?? []).map((p) => ({
+    ...p,
+    id: generatePlantingId(),
+    fieldStartDate: shiftDate(p.fieldStartDate),
+    startBed: options.unassignAll ? null : p.startBed,
+    lastModified: now,
+  }));
+  clonedPlan.plantings = newPlantings;
+
+  // Reset changeLog for fresh plan
+  clonedPlan.changeLog = [];
+
+  // Override notes if provided
+  if (options.notes !== undefined) {
+    clonedPlan.notes = options.notes;
+  }
+
+  // Clone beds and bedGroups with new UUIDs
+  // Note: Bed UUIDs don't need to change since plantings reference them by UUID
+  // and both are cloned together, preserving the relationship
+  if (state.currentPlan.beds && state.currentPlan.bedGroups) {
+    clonedPlan.beds = cloneBeds(state.currentPlan.beds);
+    clonedPlan.bedGroups = cloneBedGroups(state.currentPlan.bedGroups);
+  }
+
+  // Clone specs catalog (generates new internal timestamps)
+  if (state.currentPlan.specs) {
+    clonedPlan.specs = clonePlantingCatalog(Object.values(state.currentPlan.specs));
+  }
+
+  // NOTE: The following are preserved as-is from the deep clone:
+  // - sequences (succession planting definitions - plantings reference by sequenceId)
+  // - markets (market channels - plantings reference by marketId in marketSplit)
+  // - varieties, seedMixes, products, crops (catalogs - referenced by ID)
+  // - seedOrders, portionSettings, and any future fields!
+
   try {
-    validatePlan(newPlan);
+    validatePlan(clonedPlan);
   } catch (e) {
     console.warn('[copyPlan] Plan validation warning:', e);
   }
 
   // Save to library
-  await savePlanToLibrary(newPlan);
+  await savePlanToLibrary(clonedPlan);
 
   return newId;
 }
@@ -490,28 +508,25 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Bulk add multiple plantings (single undo step) */
   bulkAddPlantings: (plantings: Planting[]) => Promise<number>;
   /** Bulk update multiple plantings (single undo step). Returns error if validation fails. */
-  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor'>> }[]) => Promise<MutationResult & { count?: number }>;
+  bulkUpdatePlantings: (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor' | 'tags'>> }[]) => Promise<MutationResult & { count?: number }>;
   duplicatePlanting: (plantingId: string) => Promise<string>;
   /** Bulk duplicate multiple plantings (single undo step) */
   bulkDuplicatePlantings: (plantingIds: string[]) => Promise<string[]>;
   /** Update a single planting. Returns error if validation fails (e.g., bedFeet exceeds bed capacity). */
-  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor'>>) => Promise<MutationResult>;
+  updatePlanting: (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor' | 'tags'>>) => Promise<MutationResult>;
   /** Assign a seed variety or mix to a planting */
   assignSeedSource: (plantingId: string, seedSource: import('./entities/planting').SeedSource | null) => Promise<void>;
-  recalculateSpecs: (specIdentifier: string, catalog: import('./entities/planting-specs').PlantingSpec[]) => Promise<number>;
-  /** Update a planting spec in the plan's catalog and recalculate affected plantings.
-   * @param spec - The updated spec
-   * @param originalIdentifier - The original identifier if it was renamed (required when identifier changes)
-   */
-  updatePlantingSpec: (spec: import('./entities/planting-specs').PlantingSpec, originalIdentifier?: string) => Promise<number>;
+  recalculateSpecs: (specId: string, catalog: import('./entities/planting-specs').PlantingSpec[]) => Promise<number>;
+  /** Update a planting spec in the plan's catalog. Keyed by spec.id (durable). */
+  updatePlantingSpec: (spec: import('./entities/planting-specs').PlantingSpec) => Promise<number>;
   /** Add a new planting spec to the plan's catalog */
   addPlantingSpec: (spec: import('./entities/planting-specs').PlantingSpec) => Promise<void>;
-  /** Delete planting specs from the plan's catalog by their identifiers */
-  deletePlantingSpecs: (identifiers: string[]) => Promise<number>;
+  /** Delete planting specs from the plan's catalog by their spec IDs. Rejects if any plantings reference them. */
+  deletePlantingSpecs: (specIds: string[]) => Promise<MutationResult & { deletedCount: number }>;
   /** Toggle a planting spec's favorite status */
-  toggleSpecFavorite: (identifier: string) => Promise<void>;
+  toggleSpecFavorite: (specId: string) => Promise<void>;
   /** Bulk update multiple planting specs (single undo step) */
-  bulkUpdatePlantingSpecs: (updates: { identifier: string; changes: Partial<import('./entities/planting-specs').PlantingSpec> }[]) => Promise<number>;
+  bulkUpdatePlantingSpecs: (updates: { specId: string; changes: Partial<import('./entities/planting-specs').PlantingSpec> }[]) => Promise<number>;
   /** Update a crop entity's colors or name */
   updateCrop: (cropId: string, updates: { bgColor?: string; textColor?: string; name?: string; gddBaseTemp?: number; gddUpperTemp?: number }) => Promise<void>;
   /** Add a new crop entity */
@@ -729,6 +744,10 @@ type ExtendedPlanStore = ExtendedPlanState & ExtendedPlanActions;
 // Zustand Store (no persist middleware)
 // ============================================
 
+// In-flight request deduplication for loadPlanById
+// Prevents duplicate API calls when multiple components/effects call loadPlanById concurrently
+let _loadPlanInFlight: { planId: string; promise: Promise<void> } | null = null;
+
 export const usePlanStore = create<ExtendedPlanStore>()(
   immer((set, get) => ({
     // Initial state
@@ -763,91 +782,108 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         return;
       }
 
-      set((state) => {
-        state.isLoading = true;
-      });
+      // Deduplicate concurrent calls for the same plan
+      // If a load is already in-flight for this planId, wait for it instead of making another API call
+      if (!options?.force && _loadPlanInFlight?.planId === planId) {
+        return _loadPlanInFlight.promise;
+      }
 
-      const data = await loadPlanFromLibrary(planId);
-      if (!data) {
+      const doLoad = async () => {
         set((state) => {
+          state.isLoading = true;
+        });
+
+        const data = await loadPlanFromLibrary(planId);
+        if (!data) {
+          set((state) => {
+            state.isLoading = false;
+          });
+          throw new Error(`Plan not found: ${planId}`);
+        }
+
+        // Client staleness check: warn if plan was saved by newer code
+        const planSchemaVersion = (data.plan as { schemaVersion?: number }).schemaVersion ?? 1;
+        if (planSchemaVersion > CURRENT_SCHEMA_VERSION) {
+          useUIStore.getState().setToast({
+            message: `This plan was saved with a newer version of the app. Please refresh to get the latest code.`,
+            type: 'error',
+          });
+          console.warn(
+            `[loadPlanById] Schema mismatch: plan has version ${planSchemaVersion}, client has ${CURRENT_SCHEMA_VERSION}`
+          );
+        }
+
+        // Migrate plan to current schema version
+        data.plan = migratePlan(data.plan);
+
+        // Ensure beds and groups exist (for brand new plans without any beds)
+        if (!data.plan.beds || !data.plan.bedGroups) {
+          const bedGroupsTemplate = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
+          const { beds, groups } = createBedsFromTemplate(bedGroupsTemplate);
+          data.plan.beds = beds;
+          data.plan.bedGroups = groups;
+        }
+
+        // Ensure varieties, seedMixes, products, and seedOrders exist (for plans created before stock data loading)
+        if (!data.plan.varieties || Object.keys(data.plan.varieties).length === 0) {
+          data.plan.varieties = getStockVarieties();
+        }
+        if (!data.plan.seedMixes || Object.keys(data.plan.seedMixes).length === 0) {
+          data.plan.seedMixes = getStockSeedMixes();
+        }
+        if (!data.plan.products || Object.keys(data.plan.products).length === 0) {
+          data.plan.products = getStockProducts();
+        }
+        // Seed orders start empty - user enters them fresh
+        if (!data.plan.seedOrders) {
+          data.plan.seedOrders = {};
+        }
+        // Ensure markets exist (for plans created before markets feature)
+        if (!data.plan.markets || Object.keys(data.plan.markets).length === 0) {
+          data.plan.markets = getStockMarkets();
+        }
+
+        // Validate plan on load
+        try {
+          validatePlan(data.plan);
+        } catch (e) {
+          console.warn('[loadPlanById] Plan validation warning:', e);
+          // Continue loading - don't fail on invalid data, just warn
+        }
+
+        // Initialize ID counters based on existing data to avoid collisions
+        const existingPlantingIds = (data.plan.plantings ?? []).map(p => p.id);
+        initializePlantingIdCounter(existingPlantingIds);
+
+        const existingSequenceIds = Object.keys(data.plan.sequences ?? {});
+        initializeSequenceIdCounter(existingSequenceIds);
+
+        // Load undo/redo counts from SQLite
+        const { undoCount, redoCount } = await storage.getUndoRedoCounts(planId);
+
+        set((state) => {
+          state.currentPlan = data.plan;
+          state.activePlanId = planId;
+          state.undoCount = undoCount;
+          state.redoCount = redoCount;
+          state.isDirty = false;
           state.isLoading = false;
         });
-        throw new Error(`Plan not found: ${planId}`);
-      }
 
-      // Client staleness check: warn if plan was saved by newer code
-      const planSchemaVersion = (data.plan as { schemaVersion?: number }).schemaVersion ?? 1;
-      if (planSchemaVersion > CURRENT_SCHEMA_VERSION) {
-        useUIStore.getState().setToast({
-          message: `This plan was saved with a newer version of the app. Please refresh to get the latest code.`,
-          type: 'error',
-        });
-        console.warn(
-          `[loadPlanById] Schema mismatch: plan has version ${planSchemaVersion}, client has ${CURRENT_SCHEMA_VERSION}`
-        );
-      }
+        // Sync to localStorage for cross-tab via storage events
+        try {
+          localStorage.setItem(ACTIVE_PLAN_KEY, planId);
+        } catch { /* ignore */ }
+      };
 
-      // Migrate plan to current schema version
-      data.plan = migratePlan(data.plan);
-
-      // Ensure beds and groups exist (for brand new plans without any beds)
-      if (!data.plan.beds || !data.plan.bedGroups) {
-        const bedGroupsTemplate = (bedPlanData as { bedGroups: Record<string, string[]> }).bedGroups;
-        const { beds, groups } = createBedsFromTemplate(bedGroupsTemplate);
-        data.plan.beds = beds;
-        data.plan.bedGroups = groups;
-      }
-
-      // Ensure varieties, seedMixes, products, and seedOrders exist (for plans created before stock data loading)
-      if (!data.plan.varieties || Object.keys(data.plan.varieties).length === 0) {
-        data.plan.varieties = getStockVarieties();
-      }
-      if (!data.plan.seedMixes || Object.keys(data.plan.seedMixes).length === 0) {
-        data.plan.seedMixes = getStockSeedMixes();
-      }
-      if (!data.plan.products || Object.keys(data.plan.products).length === 0) {
-        data.plan.products = getStockProducts();
-      }
-      // Seed orders start empty - user enters them fresh
-      if (!data.plan.seedOrders) {
-        data.plan.seedOrders = {};
-      }
-      // Ensure markets exist (for plans created before markets feature)
-      if (!data.plan.markets || Object.keys(data.plan.markets).length === 0) {
-        data.plan.markets = getStockMarkets();
-      }
-
-      // Validate plan on load
-      try {
-        validatePlan(data.plan);
-      } catch (e) {
-        console.warn('[loadPlanById] Plan validation warning:', e);
-        // Continue loading - don't fail on invalid data, just warn
-      }
-
-      // Initialize ID counters based on existing data to avoid collisions
-      const existingPlantingIds = (data.plan.plantings ?? []).map(p => p.id);
-      initializePlantingIdCounter(existingPlantingIds);
-
-      const existingSequenceIds = Object.keys(data.plan.sequences ?? {});
-      initializeSequenceIdCounter(existingSequenceIds);
-
-      // Load undo/redo counts from SQLite
-      const { undoCount, redoCount } = await storage.getUndoRedoCounts(planId);
-
-      set((state) => {
-        state.currentPlan = data.plan;
-        state.activePlanId = planId;
-        state.undoCount = undoCount;
-        state.redoCount = redoCount;
-        state.isDirty = false;
-        state.isLoading = false;
+      // Track in-flight request for deduplication, then clean up
+      const promise = doLoad().finally(() => {
+        if (_loadPlanInFlight?.planId === planId) {
+          _loadPlanInFlight = null;
+        }
       });
-
-      // Sync to localStorage for cross-tab via storage events
-      try {
-        localStorage.setItem(ACTIVE_PLAN_KEY, planId);
-      } catch { /* ignore */ }
+      _loadPlanInFlight = { planId, promise };
+      return promise;
     },
 
     renamePlan: async (newName: string) => {
@@ -1318,7 +1354,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return processedPlantings.length;
     },
 
-    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor'>> }[]) => {
+    bulkUpdatePlantings: async (updates: { id: string; changes: Partial<Pick<Planting, 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor' | 'tags'>> }[]) => {
       const state = get();
       if (!state.currentPlan?.plantings) {
         return { success: true, count: 0 };
@@ -1446,6 +1482,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               if ('yieldFactor' in changes) {
                 planting.yieldFactor = changes.yieldFactor;
               }
+              if ('tags' in changes) {
+                planting.tags = changes.tags && changes.tags.length > 0 ? changes.tags : undefined;
+              }
 
               planting.lastModified = now;
             }
@@ -1511,7 +1550,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return newPlantings.map(p => p.id);
     },
 
-    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor'>>) => {
+    updatePlanting: async (plantingId: string, updates: Partial<Pick<Planting, 'specId' | 'startBed' | 'bedFeet' | 'fieldStartDate' | 'overrides' | 'notes' | 'seedSource' | 'useDefaultSeedSource' | 'marketSplit' | 'actuals' | 'useGddTiming' | 'yieldFactor' | 'tags'>>) => {
       // Pre-validate
       const { currentPlan } = get();
       if (!currentPlan?.plantings) {
@@ -1625,6 +1664,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               // Store yieldFactor, clearing if 1 (default) to save storage
               p.yieldFactor = updates.yieldFactor === 1 ? undefined : updates.yieldFactor;
             }
+            if ('tags' in updates) {
+              p.tags = updates.tags && updates.tags.length > 0 ? updates.tags : undefined;
+            }
 
             p.lastModified = now;
 
@@ -1647,17 +1689,20 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       await get().updatePlanting(plantingId, { seedSource: seedSource ?? undefined });
     },
 
-    recalculateSpecs: async (specIdentifier: string) => {
+    recalculateSpecs: async (specId: string) => {
       const state = get();
       if (!state.currentPlan?.plantings) {
         throw new Error('No plan loaded');
       }
 
       // Count affected plantings
-      const affected = state.currentPlan.plantings.filter(p => p.specId === specIdentifier);
+      const affected = state.currentPlan.plantings.filter(p => p.specId === specId);
       if (affected.length === 0) {
         return 0;
       }
+
+      const spec = state.currentPlan.specs?.[specId];
+      const label = spec?.name ?? specId;
 
       // With plantings model, no stored data needs updating - display is computed on-demand
       // Just touch lastModified to trigger re-render
@@ -1669,10 +1714,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           (plan) => {
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
-              createChangeEntry('batch', `Spec changed: ${specIdentifier}`, affected.map(p => p.id))
+              createChangeEntry('batch', `Spec changed: ${label}`, affected.map(p => p.id))
             );
           },
-          `Spec changed: ${specIdentifier}`
+          `Spec changed: ${label}`
         );
         storeState.isDirty = true;
       });
@@ -1680,7 +1725,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return affected.length;
     },
 
-    updatePlantingSpec: async (spec: PlantingSpec, originalIdentifier?: string) => {
+    updatePlantingSpec: async (spec: PlantingSpec) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
@@ -1690,19 +1735,22 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error('Plan has no crop catalog');
       }
 
-      // Determine if this is a rename operation
-      const isRename = originalIdentifier && originalIdentifier !== spec.identifier;
-      const lookupIdentifier = originalIdentifier ?? spec.identifier;
-
-      // Count affected plantings (use original identifier for lookup)
-      const affectedPlantingIds = (state.currentPlan.plantings ?? [])
-        .filter(p => p.specId === lookupIdentifier)
-        .map(p => p.id);
-
-      // Check for duplicate identifier on rename
-      if (isRename && state.currentPlan.specs[spec.identifier]) {
-        throw new Error(`A spec with identifier "${spec.identifier}" already exists`);
+      if (!state.currentPlan.specs[spec.id]) {
+        throw new Error(`Spec "${spec.id}" not found`);
       }
+
+      // Check name uniqueness for UX (another spec with same display name)
+      const existing = Object.values(state.currentPlan.specs).find(
+        s => s.id !== spec.id && s.name === spec.name
+      );
+      if (existing) {
+        throw new Error(`A spec with name "${spec.name}" already exists`);
+      }
+
+      // Count affected plantings
+      const affectedPlantingIds = (state.currentPlan.plantings ?? [])
+        .filter(p => p.specId === spec.id)
+        .map(p => p.id);
 
       set((storeState) => {
         if (!storeState.currentPlan?.specs) return;
@@ -1712,28 +1760,14 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           (plan) => {
             const cloned = clonePlantingSpec(spec);
             cloned.updatedAt = new Date().toISOString();
-
-            // If identifier changed, delete old entry and update planting references
-            if (isRename) {
-              delete plan.specs![originalIdentifier];
-              // Update plantings to reference the new identifier
-              for (const planting of plan.plantings ?? []) {
-                if (planting.specId === originalIdentifier) {
-                  planting.specId = spec.identifier;
-                }
-              }
-            }
-
-            // Add/update with new identifier
-            plan.specs![spec.identifier] = cloned;
+            // Key by spec.id — no re-keying needed on name rename
+            plan.specs![spec.id] = cloned;
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
-              createChangeEntry('batch', `Updated spec "${spec.identifier}"`, affectedPlantingIds)
+              createChangeEntry('batch', `Updated spec "${spec.name}"`, affectedPlantingIds)
             );
           },
-          isRename
-            ? `Rename spec "${originalIdentifier}" to "${spec.identifier}"`
-            : `Update spec "${spec.identifier}"`
+          `Update spec "${spec.name}"`
         );
         storeState.isDirty = true;
       });
@@ -1752,9 +1786,17 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         state.currentPlan.specs = {};
       }
 
-      // Check for duplicate identifier
-      if (state.currentPlan.specs[spec.identifier]) {
-        throw new Error(`A spec with identifier "${spec.identifier}" already exists`);
+      // Check for duplicate spec ID
+      if (state.currentPlan.specs[spec.id]) {
+        throw new Error(`A spec with id "${spec.id}" already exists`);
+      }
+
+      // Check name uniqueness for UX
+      const existingByName = Object.values(state.currentPlan.specs).find(
+        s => s.name === spec.name
+      );
+      if (existingByName) {
+        throw new Error(`A spec with name "${spec.name}" already exists`);
       }
 
       const now = new Date().toISOString();
@@ -1769,23 +1811,23 @@ export const usePlanStore = create<ExtendedPlanStore>()(
             if (!plan.specs) {
               plan.specs = {};
             }
-            // Add new spec to catalog using CRUD function
+            // Add new spec to catalog keyed by spec.id
             const cloned = clonePlantingSpec(spec);
             cloned.createdAt = now;
             cloned.updatedAt = now;
-            plan.specs[spec.identifier] = cloned;
+            plan.specs[spec.id] = cloned;
             plan.metadata.lastModified = Date.now();
             plan.changeLog.push(
-              createChangeEntry('batch', `Added new spec "${spec.identifier}"`, [])
+              createChangeEntry('batch', `Added new spec "${spec.name}"`, [])
             );
           },
-          `Add spec "${spec.identifier}"`
+          `Add spec "${spec.name}"`
         );
         storeState.isDirty = true;
       });
     },
 
-    deletePlantingSpecs: async (identifiers: string[]) => {
+    deletePlantingSpecs: async (specIds: string[]) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
@@ -1795,28 +1837,44 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error('Plan has no crop catalog');
       }
 
-      // Find which identifiers actually exist
-      const existingIdentifiers = identifiers.filter(
+      // Find which spec IDs actually exist
+      const existingIds = specIds.filter(
         id => state.currentPlan!.specs![id]
       );
 
-      if (existingIdentifiers.length === 0) {
-        return 0;
+      if (existingIds.length === 0) {
+        return { success: true, deletedCount: 0 };
       }
+
+      // Check if any plantings reference these specs
+      const referencingPlantings = (state.currentPlan.plantings ?? []).filter(
+        p => p.specId && existingIds.includes(p.specId)
+      );
+      if (referencingPlantings.length > 0) {
+        const specNames = existingIds
+          .map(id => state.currentPlan!.specs![id]?.name ?? id)
+          .join(', ');
+        return {
+          success: false,
+          error: `Cannot delete: ${referencingPlantings.length} planting(s) still reference ${existingIds.length === 1 ? `"${specNames}"` : 'these specs'}. Reassign or delete those plantings first.`,
+          deletedCount: 0,
+        };
+      }
+
+      // Build description using human-readable name
+      const firstSpec = state.currentPlan.specs[existingIds[0]];
+      const description = existingIds.length === 1
+        ? `Delete spec "${firstSpec?.name ?? existingIds[0]}"`
+        : `Delete ${existingIds.length} specs`;
 
       set((storeState) => {
         if (!storeState.currentPlan?.specs) return;
 
-        const description = existingIdentifiers.length === 1
-          ? `Delete spec "${existingIdentifiers[0]}"`
-          : `Delete ${existingIdentifiers.length} specs`;
-
         mutateWithPatches(
           storeState,
           (plan) => {
-            // Delete specs from catalog
-            for (const identifier of existingIdentifiers) {
-              delete plan.specs![identifier];
+            for (const specId of existingIds) {
+              delete plan.specs![specId];
             }
 
             plan.metadata.lastModified = Date.now();
@@ -1829,10 +1887,10 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         storeState.isDirty = true;
       });
 
-      return existingIdentifiers.length;
+      return { success: true, deletedCount: existingIds.length };
     },
 
-    toggleSpecFavorite: async (identifier: string) => {
+    toggleSpecFavorite: async (specId: string) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
@@ -1842,15 +1900,16 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         throw new Error('Plan has no crop catalog');
       }
 
-      const spec = state.currentPlan.specs[identifier];
+      const spec = state.currentPlan.specs[specId];
       if (!spec) {
-        throw new Error(`Spec "${identifier}" not found`);
+        throw new Error(`Spec "${specId}" not found`);
       }
 
       const newValue = !spec.isFavorite;
+      const label = spec.name ?? specId;
       const description = newValue
-        ? `Add "${identifier}" to favorites`
-        : `Remove "${identifier}" from favorites`;
+        ? `Add "${label}" to favorites`
+        : `Remove "${label}" from favorites`;
 
       set((storeState) => {
         if (!storeState.currentPlan?.specs) return;
@@ -1858,7 +1917,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         mutateWithPatches(
           storeState,
           (plan) => {
-            plan.specs![identifier].isFavorite = newValue;
+            plan.specs![specId].isFavorite = newValue;
             plan.metadata.lastModified = Date.now();
           },
           description
@@ -1867,7 +1926,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       });
     },
 
-    bulkUpdatePlantingSpecs: async (updates: { identifier: string; changes: Partial<PlantingSpec> }[]) => {
+    bulkUpdatePlantingSpecs: async (updates: { specId: string; changes: Partial<PlantingSpec> }[]) => {
       const state = get();
       if (!state.currentPlan) {
         throw new Error('No plan loaded');
@@ -1878,7 +1937,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       }
 
       // Filter to only specs that exist
-      const validUpdates = updates.filter(u => state.currentPlan!.specs![u.identifier]);
+      const validUpdates = updates.filter(u => state.currentPlan!.specs![u.specId]);
 
       if (validUpdates.length === 0) {
         return 0;
@@ -1894,8 +1953,8 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         mutateWithPatches(
           storeState,
           (plan) => {
-            for (const { identifier, changes } of validUpdates) {
-              Object.assign(plan.specs![identifier], changes, { updatedAt: now });
+            for (const { specId, changes } of validUpdates) {
+              Object.assign(plan.specs![specId], changes, { updatedAt: now });
             }
             plan.metadata.lastModified = Date.now();
           },
@@ -3625,8 +3684,11 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           seedSource: original.seedSource,
           useDefaultSeedSource: original.useDefaultSeedSource,
           marketSplit: original.marketSplit,
+          useGddTiming: original.useGddTiming,
+          yieldFactor: original.yieldFactor,
           overrides: original.overrides,
           notes: original.notes,
+          tags: original.tags ? [...original.tags] : undefined,
           sequenceId: sequence.id,
           sequenceSlot: i,
         });

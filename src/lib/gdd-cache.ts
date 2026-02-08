@@ -38,6 +38,8 @@ export interface DailyGddCache {
   byDate: Map<string, number>;
   /** Map from (year * 366 + dayOfYear) to GDD value for quick lookup */
   byYearDay: Map<number, number>;
+  /** Pre-computed historical average GDD by day-of-year (index 1-366) for estimating missing days */
+  avgByDoy: number[];
 }
 
 /** Cumulative GDD lookup table for a specific year */
@@ -115,6 +117,9 @@ export function getDailyCache(
   // Build new cache
   const byDate = new Map<string, number>();
   const byYearDay = new Map<number, number>();
+  // Accumulators for per-DOY historical average
+  const doySum = new Float64Array(367);  // index 1-366
+  const doyCount = new Uint16Array(367);
 
   for (const day of cache.tempData.daily) {
     const gdd = calculateDailyGdd(
@@ -127,13 +132,29 @@ export function getDailyCache(
 
     byDate.set(day.date, gdd);
 
-    // Also index by year+dayOfYear for fast lookup
-    const date = new Date(day.date);
-    const yearDayKey = date.getFullYear() * 366 + getDayOfYear(date);
+    // Parse date parts directly from string (avoids Date object allocation)
+    const m = parseInt(day.date.substring(5, 7), 10);
+    const d = parseInt(day.date.substring(8, 10), 10);
+    const y = parseInt(day.date.substring(0, 4), 10);
+    const doy = dayOfYearFromParts(m, d, y);
+
+    const yearDayKey = y * 366 + doy;
     byYearDay.set(yearDayKey, gdd);
+
+    // Accumulate for historical average
+    doySum[doy] += gdd;
+    doyCount[doy]++;
   }
 
-  const dailyCache: DailyGddCache = { byDate, byYearDay };
+  // Build avgByDoy lookup (index 1-366)
+  const avgByDoy: number[] = new Array(367).fill(10); // default ~10 GDD/day
+  for (let i = 1; i <= 366; i++) {
+    if (doyCount[i] > 0) {
+      avgByDoy[i] = doySum[i] / doyCount[i];
+    }
+  }
+
+  const dailyCache: DailyGddCache = { byDate, byYearDay, avgByDoy };
   cache.dailyCaches.set(keyStr, dailyCache);
 
   return dailyCache;
@@ -182,7 +203,7 @@ export function getCumulativeTable(
 
 /**
  * Estimate GDD for a day-of-year when no data exists.
- * Uses historical average from other years in the dataset.
+ * Uses pre-computed historical average from the daily cache (O(1) lookup).
  */
 function estimateGddForDayOfYear(
   cache: GddCache,
@@ -190,29 +211,7 @@ function estimateGddForDayOfYear(
   key: GddCacheKey
 ): number {
   const dailyCache = getDailyCache(cache, key);
-
-  // Find all records with the same day-of-year across all years
-  let sum = 0;
-  let count = 0;
-
-  for (const day of cache.tempData.daily) {
-    const date = new Date(day.date);
-    const doy = getDayOfYear(date);
-    if (doy === targetDoy) {
-      const gdd = dailyCache.byDate.get(day.date);
-      if (gdd !== undefined) {
-        sum += gdd;
-        count++;
-      }
-    }
-  }
-
-  if (count > 0) {
-    return sum / count;
-  }
-
-  // No historical data - return conservative estimate
-  return 10; // ~10 GDD/day is reasonable average
+  return dailyCache.avgByDoy[targetDoy];
 }
 
 // =============================================================================
@@ -436,6 +435,22 @@ function binarySearchGddReverse(
 // =============================================================================
 // DATE UTILITIES
 // =============================================================================
+
+/** Cumulative days before each month (non-leap year). Month 1=Jan. */
+const DAYS_BEFORE_MONTH = [0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+
+/**
+ * Get day of year (1-366) from month, day, year integers.
+ * Avoids Date object allocation for hot-path usage.
+ */
+function dayOfYearFromParts(month: number, day: number, year: number): number {
+  let doy = DAYS_BEFORE_MONTH[month] + day;
+  // Leap year adjustment for months after February
+  if (month > 2 && (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0))) {
+    doy++;
+  }
+  return doy;
+}
 
 /**
  * Get day of year (1-366) from a Date object.

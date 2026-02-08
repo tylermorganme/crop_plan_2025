@@ -16,7 +16,6 @@ import { useComputedCrops } from '@/lib/use-computed-crops';
 import { findHarvestDate, findPlantDate, makeCacheKey, getGddForDays } from '@/lib/gdd-cache';
 import {
   usePlanStore,
-  loadPlanFromLibrary,
 } from '@/lib/plan-store';
 import { useUIStore } from '@/lib/ui-store';
 import { Z_INDEX } from '@/lib/z-index';
@@ -58,6 +57,7 @@ export default function TimelinePlanPage() {
   // Toast notifications - shared across views via UI store
   const toast = useUIStore((state) => state.toast);
   const setToast = useUIStore((state) => state.setToast);
+  const selectPlanting = useUIStore((state) => state.selectPlanting);
   const [editingSpec, setEditingSpec] = useState<PlantingSpec | null>(null);
 
   // Pending drag changes - queued during drag, committed on drop
@@ -81,13 +81,11 @@ export default function TimelinePlanPage() {
   const addPlanting = usePlanStore((state) => state.addPlanting);
   const updatePlantingBoxDisplay = usePlanStore((state) => state.updatePlantingBoxDisplay);
 
-  // Helper to get planting spec from plan's catalog (falls back to master)
-  const getCropByIdentifier = useCallback((identifier: string) => {
-    // First try plan's catalog
-    if (currentPlan?.specs?.[identifier]) {
-      return currentPlan.specs[identifier];
+  // Helper to get planting spec from plan's catalog by spec ID
+  const getSpecById = useCallback((specId: string) => {
+    if (currentPlan?.specs?.[specId]) {
+      return currentPlan.specs[specId];
     }
-    // Fall back to master catalog (shouldn't happen for new plans)
     return null;
   }, [currentPlan]);
 
@@ -105,31 +103,21 @@ export default function TimelinePlanPage() {
 
   // Load the specific plan by ID
   useEffect(() => {
-    // Try to load the plan from library
-    async function loadPlan() {
-      if (!planId) {
-        setError('No plan ID provided');
-        setLoading(false);
-        return;
-      }
+    if (!planId) {
+      setError('No plan ID provided');
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const planData = await loadPlanFromLibrary(planId);
-        if (planData) {
-          await loadPlanById(planId);
-          // Set this as the active plan for Spec Explorer
-          localStorage.setItem('spec-explorer-active-plan', planId);
-          setLoading(false);
-        } else {
-          setError(`Plan not found: ${planId}`);
-          setLoading(false);
-        }
-      } catch (e) {
+    loadPlanById(planId)
+      .then(() => {
+        localStorage.setItem('spec-explorer-active-plan', planId);
+        setLoading(false);
+      })
+      .catch((e) => {
         setError(`Failed to load plan: ${e instanceof Error ? e.message : 'Unknown error'}`);
         setLoading(false);
-      }
-    }
-    loadPlan();
+      });
   }, [planId, loadPlanById]);
 
   // Note: Snapshot scheduler removed - SQLite storage handles persistence directly
@@ -400,13 +388,14 @@ export default function TimelinePlanPage() {
 
     try {
       await addPlanting(newPlanting);
+      selectPlanting(newPlanting.id);
       setToast({ message: `Added ${specId} to ${bedId}`, type: 'success' });
-      return newPlanting.id; // Return the ID so timeline can select it
+      return newPlanting.id;
     } catch (e) {
       setToast({ message: `Failed to add: ${e instanceof Error ? e.message : 'Unknown error'}`, type: 'error' });
       throw e;
     }
-  }, [addPlanting]);
+  }, [addPlanting, selectPlanting]);
 
   const handleEditPlantingSpec = useCallback((plantingId: string) => {
     // Find the planting to get the specId
@@ -417,7 +406,7 @@ export default function TimelinePlanPage() {
       return;
     }
 
-    const spec = getCropByIdentifier(planting.specId);
+    const spec = getSpecById(planting.specId);
     if (!spec) {
       setToast({ message: `Spec not found: ${planting.specId}`, type: 'error' });
       return;
@@ -425,7 +414,7 @@ export default function TimelinePlanPage() {
 
     setEditingSpec(spec);
     setConfigEditorOpen(true);
-  }, [currentPlan?.plantings, getCropByIdentifier, setToast]);
+  }, [currentPlan?.plantings, getSpecById, setToast]);
 
   const handleSavePlantingSpec = useCallback(async (updated: PlantingSpec) => {
     try {
@@ -436,9 +425,9 @@ export default function TimelinePlanPage() {
       setEditingSpec(null);
 
       if (affectedCount > 0) {
-        setToast({ message: `Saved "${updated.identifier}" - updated ${affectedCount} planting(s)`, type: 'success' });
+        setToast({ message: `Saved "${updated.name}" - updated ${affectedCount} planting(s)`, type: 'success' });
       } else {
-        setToast({ message: `Saved "${updated.identifier}"`, type: 'success' });
+        setToast({ message: `Saved "${updated.name}"`, type: 'success' });
       }
     } catch (e) {
       setToast({
