@@ -494,6 +494,20 @@ export default function CropTimeline({
         aVal = a.rowCover?.toLowerCase() || '';
         bVal = b.rowCover?.toLowerCase() || '';
         break;
+      case 'sequence': {
+        // Group by sequenceId, then order by slot within each sequence
+        // Non-sequence plantings sort last
+        const aSeq = a.sequenceId ?? '\uffff';
+        const bSeq = b.sequenceId ?? '\uffff';
+        if (aSeq !== bSeq) {
+          aVal = aSeq;
+          bVal = bSeq;
+        } else {
+          aVal = a.sequenceSlot ?? 999;
+          bVal = b.sequenceSlot ?? 999;
+        }
+        break;
+      }
     }
 
     // Compare values
