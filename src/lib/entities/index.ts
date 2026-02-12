@@ -36,6 +36,8 @@ export {
   initializePlantingIdCounter,
   createPlanting,
   clonePlanting,
+  getEffectiveSeedSource,
+  applyDefaultSeedSource,
 } from './planting';
 
 // Planting sequence entity
@@ -77,6 +79,10 @@ export {
   calculateCropEndDay,
   calculateFieldOccupationDays,
 } from './planting-specs';
+
+// Seed search entity (OMRI compliance)
+export type { SeedSearchRecord } from './seed-search';
+export { getSeedSearchId, createSeedSearch, isSeedSearchComplete } from './seed-search';
 
 // Plan entity
 export type {

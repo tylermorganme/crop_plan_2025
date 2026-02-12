@@ -13,6 +13,7 @@ import type { SeedMix } from './seed-mix';
 import type { Product } from './product';
 import type { SeedOrder } from './seed-order';
 import type { Market } from './market';
+import type { SeedSearchRecord } from './seed-search';
 import type { PlantingSequence } from './planting-sequence';
 import type { Crop } from './crop';
 
@@ -153,7 +154,7 @@ export interface TimelineCrop {
   seedSource?: import('./planting').SeedSource;
   /** Whether planting uses spec's default seed source */
   useDefaultSeedSource?: boolean;
-  /** Calculated seeds needed for this planting (based on PlantingSpec.seedsPerBed) */
+  /** Calculated seeds needed for this planting */
   seedsNeeded?: number;
   /** Crop name (for filtering varieties/mixes in picker) */
   crop?: string;
@@ -222,6 +223,9 @@ export interface Plan {
   /** Markets for revenue split (keyed by ID) */
   markets?: Record<string, Market>;
 
+  /** OMRI organic seed search records (keyed by composite `${varietyId}__${year}`) */
+  seedSearches?: Record<string, SeedSearchRecord>;
+
   /** Planting sequences for succession planting (keyed by ID) */
   sequences?: Record<string, PlantingSequence>;
 
@@ -233,6 +237,9 @@ export interface Plan {
 
   /** Optional notes about this plan */
   notes?: string;
+
+  /** Template for generating seed search inquiry messages to seed companies */
+  seedSearchMessageTemplate?: string;
 }
 
 // =============================================================================

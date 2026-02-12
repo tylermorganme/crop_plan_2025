@@ -15,7 +15,6 @@ import {
 import {
   AreaChart,
   Area,
-  BarChart,
   Bar,
   Line,
   ComposedChart,
@@ -43,13 +42,13 @@ import {
 import {
   calculatePlanSeeds,
   formatSeeds,
-  formatOunces,
-  formatWeight,
+  findVarietyUsages,
   type PlanSeedReport,
-  type SupplierSeedResult,
   type VarietySeedResult,
+  type PlantingSeedContribution,
 } from '@/lib/seeds';
 import { createSeedOrder, type SeedOrder, type ProductUnit } from '@/lib/entities/seed-order';
+import { convertSeedQuantity, getVarietyDensity, type SeedDensity, type SeedUnit } from '@/lib/seed-units';
 import type { Variety, DensityUnit } from '@/lib/entities/variety';
 import type { Market } from '@/lib/entities/market';
 import { getActiveMarkets } from '@/lib/entities/market';
@@ -100,31 +99,17 @@ const DEFAULT_HAVE_UNIT: ProductUnit = 'g';
 // =============================================================================
 
 /** Convert weight between units for comparison */
+/** Format a weight value with unit-aware precision (integers for count, 2 decimals for weight) */
+function formatWeightValue(value: number, unit: ProductUnit): string {
+  if (unit === 'ct') return Math.round(value).toLocaleString();
+  return value.toFixed(2);
+}
+
 /** Format ISO date string as "Mon Day, Year" (e.g., "Jan 15, 2025") */
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '-';
   const date = new Date(dateStr + 'T00:00:00');
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function convertWeight(value: number, fromUnit: ProductUnit, toUnit: ProductUnit): number {
-  if (fromUnit === toUnit) return value;
-
-  // Convert to grams first (our base unit)
-  const toGrams: Record<ProductUnit, number> = {
-    g: 1,
-    oz: 28.3495,
-    lb: 453.592,
-    ct: 0, // Can't convert count to weight
-  };
-
-  // Can't convert between count and weight
-  if (fromUnit === 'ct' || toUnit === 'ct') {
-    return fromUnit === toUnit ? value : 0;
-  }
-
-  const grams = value * toGrams[fromUnit];
-  return grams / toGrams[toUnit];
 }
 
 // =============================================================================
@@ -1571,16 +1556,19 @@ interface DensityEditModalProps {
 
 function DensityEditModal({ varietyId, varieties, onSave, onClose }: DensityEditModalProps) {
   const variety = varieties[varietyId];
-  const [density, setDensity] = useState(variety?.density?.toString() ?? '');
-  const [densityUnit, setDensityUnit] = useState<DensityUnit>(variety?.densityUnit ?? 'oz');
+  const [countBased, setCountBased] = useState(variety?.densityUnit === 'ct');
+  const [density, setDensity] = useState(() =>
+    variety?.densityUnit === 'ct' ? '' : (variety?.density?.toString() ?? '')
+  );
+  const [densityUnit, setDensityUnit] = useState<DensityUnit>(() =>
+    variety?.densityUnit === 'ct' ? 'oz' : (variety?.densityUnit ?? 'oz')
+  );
   const [saving, setSaving] = useState(false);
 
-  if (!variety) {
-    return null;
-  }
-
   // Find similar varieties with density data
+  // (must be before the early return to satisfy rules-of-hooks)
   const similarVarieties = useMemo(() => {
+    if (!variety) return [];
     const results: Array<{ variety: Variety; matchType: 'exact-name' | 'same-crop' }> = [];
     const seen = new Set<string>();
 
@@ -1609,16 +1597,20 @@ function DensityEditModal({ varietyId, varieties, onSave, onClose }: DensityEdit
     });
 
     return results.slice(0, 10); // Limit to 10
-  }, [varieties, varietyId, variety.name, variety.crop]);
+  }, [varieties, varietyId, variety]);
+
+  if (!variety) {
+    return null;
+  }
 
   const handleSave = async () => {
-    if (!density) return;
+    if (!countBased && !density) return;
     setSaving(true);
     try {
       await onSave({
         ...variety,
-        density: parseFloat(density),
-        densityUnit,
+        density: countBased ? 1 : parseFloat(density),
+        densityUnit: countBased ? 'ct' : densityUnit,
       });
       onClose();
     } finally {
@@ -1627,11 +1619,16 @@ function DensityEditModal({ varietyId, varieties, onSave, onClose }: DensityEdit
   };
 
   const applyFromSimilar = (v: Variety) => {
-    if (v.density !== undefined) {
-      setDensity(v.density.toString());
-    }
-    if (v.densityUnit) {
-      setDensityUnit(v.densityUnit);
+    if (v.densityUnit === 'ct') {
+      setCountBased(true);
+    } else {
+      setCountBased(false);
+      if (v.density !== undefined) {
+        setDensity(v.density.toString());
+      }
+      if (v.densityUnit) {
+        setDensityUnit(v.densityUnit);
+      }
     }
   };
 
@@ -1648,38 +1645,58 @@ function DensityEditModal({ varietyId, varieties, onSave, onClose }: DensityEdit
 
         {/* Form */}
         <div className="px-4 py-4 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Seeds per unit
-              </label>
-              <input
-                type="number"
-                value={density}
-                onChange={e => setDensity(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="e.g., 6000"
-                autoFocus
-              />
-            </div>
-            <div className="w-24">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Unit
-              </label>
-              <select
-                value={densityUnit}
-                onChange={e => setDensityUnit(e.target.value as DensityUnit)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="oz">oz</option>
-                <option value="g">g</option>
-                <option value="lb">lb</option>
-              </select>
-            </div>
-          </div>
-          <p className="mt-2 text-xs text-gray-500">
-            Enter the number of seeds per {densityUnit}
-          </p>
+          {/* Count-based toggle */}
+          <label className="flex items-center gap-2 mb-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={countBased}
+              onChange={e => setCountBased(e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm font-medium text-gray-700">Sold by count</span>
+            <span className="text-xs text-gray-500">(pelleted seeds, plugs, etc.)</span>
+          </label>
+
+          {countBased ? (
+            <p className="text-sm text-gray-600 bg-gray-50 rounded-md px-3 py-2">
+              Weight-based density is not needed. Seed quantities will be tracked by count.
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Seeds per unit
+                  </label>
+                  <input
+                    type="number"
+                    value={density}
+                    onChange={e => setDensity(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., 6000"
+                    autoFocus
+                  />
+                </div>
+                <div className="w-24">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Unit
+                  </label>
+                  <select
+                    value={densityUnit}
+                    onChange={e => setDensityUnit(e.target.value as DensityUnit)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="oz">oz</option>
+                    <option value="g">g</option>
+                    <option value="lb">lb</option>
+                  </select>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                Enter the number of seeds per {densityUnit}
+              </p>
+            </>
+          )}
         </div>
 
         {/* Similar varieties */}
@@ -1727,10 +1744,169 @@ function DensityEditModal({ varietyId, varieties, onSave, onClose }: DensityEdit
           </button>
           <button
             onClick={handleSave}
-            disabled={!density || saving}
+            disabled={(!countBased && !density) || saving}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// REPLACE VARIETY MODAL
+// =============================================================================
+
+interface ReplaceVarietyModalProps {
+  varietyId: string;
+  varieties: Record<string, Variety>;
+  onConfirm: (oldVarietyId: string, newVarietyId: string) => Promise<unknown>;
+  onClose: () => void;
+}
+
+function ReplaceVarietyModal({ varietyId, varieties, onConfirm, onClose }: ReplaceVarietyModalProps) {
+  const variety = varieties[varietyId];
+  const currentPlan = usePlanStore((state) => state.currentPlan);
+  const [selectedVarietyId, setSelectedVarietyId] = useState('');
+  const [isReplacing, setIsReplacing] = useState(false);
+
+  const usages = useMemo(() => {
+    if (!currentPlan) return null;
+    return findVarietyUsages(currentPlan, varietyId);
+  }, [currentPlan, varietyId]);
+
+  // Build list of replacement candidates: same crop, not current, not deprecated
+  const candidates = useMemo(() => {
+    if (!variety) return [];
+    return Object.values(varieties)
+      .filter(v => v.crop.toLowerCase() === variety.crop.toLowerCase() && v.id !== varietyId && !v.deprecated)
+      .sort((a, b) => a.name.localeCompare(b.name) || a.supplier.localeCompare(b.supplier));
+  }, [varieties, varietyId, variety]);
+
+  if (!variety || !usages) return null;
+
+  const totalUsages = usages.directPlantings.length + usages.specsWithDefault.length + usages.mixesContaining.length + (usages.hasOrder ? 1 : 0);
+  const inheritedCount = usages.specsWithDefault.reduce((sum, s) => sum + s.plantingCount, 0);
+
+  const handleReplace = async () => {
+    if (!selectedVarietyId) return;
+    setIsReplacing(true);
+    try {
+      await onConfirm(varietyId, selectedVarietyId);
+      onClose();
+    } finally {
+      setIsReplacing(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center" style={{ zIndex: Z_INDEX.MODAL }}>
+      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Replace Variety</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {variety.crop} &bull; {variety.name} &bull; {variety.supplier}
+          </p>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto px-4 py-4 space-y-4">
+          {/* Current usage summary */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Current Usage</h3>
+            {totalUsages === 0 ? (
+              <p className="text-sm text-gray-500 italic">This variety is not used anywhere in the plan.</p>
+            ) : (
+              <ul className="text-sm text-gray-600 space-y-1">
+                {usages.directPlantings.length > 0 && (
+                  <li>&bull; {usages.directPlantings.length} planting{usages.directPlantings.length !== 1 ? 's' : ''} assigned directly</li>
+                )}
+                {usages.specsWithDefault.length > 0 && (
+                  <li>&bull; {usages.specsWithDefault.length} spec{usages.specsWithDefault.length !== 1 ? 's' : ''} use as default{inheritedCount > 0 ? ` (${inheritedCount} planting${inheritedCount !== 1 ? 's' : ''} inherit)` : ''}</li>
+                )}
+                {usages.mixesContaining.length > 0 && (
+                  <li>
+                    &bull; {usages.mixesContaining.length} mix{usages.mixesContaining.length !== 1 ? 'es' : ''}:
+                    {' '}{usages.mixesContaining.map(m => `"${m.name}" (${m.percent}%)`).join(', ')}
+                  </li>
+                )}
+                {usages.hasOrder && (
+                  <li>&bull; Seed order on file</li>
+                )}
+              </ul>
+            )}
+          </div>
+
+          {/* Replacement picker */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Replace with
+            </label>
+            {candidates.length === 0 ? (
+              <p className="text-sm text-gray-500 italic">No other {variety.crop} varieties available.</p>
+            ) : (
+              <select
+                value={selectedVarietyId}
+                onChange={e => setSelectedVarietyId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select a variety...</option>
+                {candidates.map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} — {v.supplier}{v.organic ? ' (organic)' : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Preview of changes when a replacement is selected */}
+          {selectedVarietyId && (
+            <div className="bg-gray-50 rounded-md p-3">
+              <h3 className="text-sm font-medium text-gray-700 mb-1">Changes</h3>
+              <ul className="text-sm text-gray-600 space-y-0.5">
+                {usages.directPlantings.length > 0 && (
+                  <li>&bull; Update seed source on {usages.directPlantings.length} planting{usages.directPlantings.length !== 1 ? 's' : ''}</li>
+                )}
+                {usages.specsWithDefault.length > 0 && (
+                  <li>&bull; Update default seed source on {usages.specsWithDefault.length} spec{usages.specsWithDefault.length !== 1 ? 's' : ''}</li>
+                )}
+                {usages.mixesContaining.map(m => {
+                  const replacementAlreadyInMix = currentPlan?.seedMixes?.[m.id]?.components.some(
+                    c => c.varietyId === selectedVarietyId
+                  );
+                  return (
+                    <li key={m.id}>
+                      &bull; Update &quot;{m.name}&quot; mix
+                      {replacementAlreadyInMix && <span className="text-amber-600 ml-1">(percentages will be merged)</span>}
+                    </li>
+                  );
+                })}
+                {usages.hasOrder && (
+                  <li>&bull; Remove old seed order</li>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleReplace}
+            disabled={!selectedVarietyId || isReplacing || totalUsages === 0}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isReplacing ? 'Replacing...' : 'Replace All'}
           </button>
         </div>
       </div>
@@ -1746,30 +1922,40 @@ function DensityEditModal({ varietyId, varieties, onSave, onClose }: DensityEdit
 function SeedOrderRow({
   variety,
   savedOrder,
+  density,
   onSave,
   onEditDensity,
+  onReplace,
   colWidths,
+  isExpanded,
+  onToggleExpand,
 }: {
   variety: VarietySeedResult;
   savedOrder?: SeedOrder;
+  density?: SeedDensity;
   onSave: (order: SeedOrder) => void;
   onEditDensity: (varietyId: string) => void;
+  onReplace: (varietyId: string) => void;
   colWidths: Record<string, number>;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }) {
   // Local form state - initialize from saved order if exists, otherwise use defaults
-  // "Have" fields - inventory on hand (defaults to grams for scale weighing)
+  // Count-based varieties default to 'ct' units instead of weight units
+  const isCountBased = variety.weightUnit === 'ct';
+  // "Have" fields - inventory on hand (defaults to grams for scale weighing, or ct for count-based)
   const [haveWeight, setHaveWeight] = useState(() =>
     savedOrder?.haveWeight ? String(savedOrder.haveWeight) : ''
   );
   const [haveUnit, setHaveUnit] = useState<ProductUnit>(() =>
-    savedOrder?.haveUnit ?? DEFAULT_HAVE_UNIT
+    savedOrder?.haveUnit ?? (isCountBased ? 'ct' : DEFAULT_HAVE_UNIT)
   );
-  // "Order" fields - what to purchase (defaults to oz)
+  // "Order" fields - what to purchase (defaults to oz, or ct for count-based)
   const [weight, setWeight] = useState(() =>
     savedOrder?.productWeight ? String(savedOrder.productWeight) : ''
   );
   const [unit, setUnit] = useState<ProductUnit>(() =>
-    savedOrder?.productUnit ?? DEFAULT_ORDER_UNIT
+    savedOrder?.productUnit ?? (isCountBased ? 'ct' : DEFAULT_ORDER_UNIT)
   );
   const [qty, setQty] = useState(() =>
     savedOrder?.quantity ? String(savedOrder.quantity) : '1'
@@ -1802,11 +1988,19 @@ function SeedOrderRow({
 
   // Calculate "Total Need" in Order Unit (so Need and Order are in same unit)
   const totalNeedInOrderUnit = variety.weightNeeded && variety.weightUnit
-    ? convertWeight(variety.weightNeeded, variety.weightUnit, unit)
+    ? convertSeedQuantity(variety.weightNeeded, variety.weightUnit as SeedUnit, unit as SeedUnit, density)
     : undefined;
 
   // Calculate "Have" in Order Unit for Order Need calculation
-  const haveInOrderUnit = haveWeightNum > 0 ? convertWeight(haveWeightNum, haveUnit, unit) : 0;
+  const haveInOrderUnit = haveWeightNum > 0
+    ? (convertSeedQuantity(haveWeightNum, haveUnit as SeedUnit, unit as SeedUnit, density) ?? 0)
+    : 0;
+
+  // Calculate "Have #" - seed count from in-stock amount using variety density
+  const haveSeedsRaw = haveWeightNum > 0
+    ? convertSeedQuantity(haveWeightNum, haveUnit as SeedUnit, 'ct', density)
+    : undefined;
+  const haveSeeds = haveSeedsRaw !== undefined ? Math.round(haveSeedsRaw) : undefined;
 
   // Calculate "Order Need" = Total Need - Have (what you still need to order)
   const orderNeed = totalNeedInOrderUnit !== undefined
@@ -1868,6 +2062,13 @@ function SeedOrderRow({
             ↗
           </a>
         )}
+        <button
+          onClick={() => onReplace(variety.varietyId)}
+          className="text-blue-500 hover:text-blue-700 text-xs flex-shrink-0"
+          title="Replace this variety everywhere"
+        >
+          Replace
+        </button>
       </div>
       {/* Supplier */}
       <div style={cellStyle('supplier')} className="py-1.5 px-2 text-gray-600 whitespace-nowrap truncate flex items-center">
@@ -1877,14 +2078,20 @@ function SeedOrderRow({
       <div style={cellStyle('organic')} className="py-1.5 px-2 text-center flex items-center justify-center">
         {variety.organic ? <span className="text-green-600">✓</span> : <span className="text-gray-300">-</span>}
       </div>
-      {/* Seeds Needed */}
-      <div style={cellStyle('seedsNeeded')} className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap flex items-center justify-end">
+      {/* Seeds Needed - click to expand planting breakdown */}
+      <div
+        style={cellStyle('seedsNeeded')}
+        className="py-1.5 px-2 text-right whitespace-nowrap flex items-center justify-end cursor-pointer hover:text-blue-600 text-gray-700"
+        onClick={onToggleExpand}
+        title="Click to see planting breakdown"
+      >
+        <span className="text-[10px] text-gray-400 mr-1">{isExpanded ? '\u25BE' : '\u25B8'}</span>
         {formatSeeds(variety.seedsNeeded)}
       </div>
       {/* Total Need - displayed in Order Unit */}
       <div style={cellStyle('weightNeeded')} className="py-1.5 px-2 text-right whitespace-nowrap flex items-center justify-end">
         {totalNeedInOrderUnit !== undefined ? (
-          <span className="text-gray-600">{totalNeedInOrderUnit.toFixed(2)} {unit}</span>
+          <span className="text-gray-600">{formatWeightValue(totalNeedInOrderUnit, unit)} {unit}</span>
         ) : (
           <button
             onClick={() => onEditDensity(variety.varietyId)}
@@ -1926,10 +2133,16 @@ function SeedOrderRow({
           <option value="ct">ct</option>
         </select>
       </div>
+      {/* Have # - seed count from in-stock weight */}
+      <div style={cellStyle('haveSeeds')} className="py-1.5 px-2 text-right text-blue-700 whitespace-nowrap flex items-center justify-end bg-blue-50/30">
+        {haveSeeds !== undefined
+          ? formatSeeds(haveSeeds)
+          : <span className="text-gray-300">-</span>}
+      </div>
       {/* Order Need = Total Need - Have (in order unit) */}
       <div style={cellStyle('additionalNeeded')} className="py-1.5 px-2 text-right text-gray-600 whitespace-nowrap flex items-center justify-end">
         {orderNeed !== undefined
-          ? `${orderNeed.toFixed(2)} ${unit}`
+          ? `${formatWeightValue(orderNeed, unit)} ${unit}`
           : <span className="text-gray-300">-</span>}
       </div>
       {/* Order weight input */}
@@ -1989,7 +2202,7 @@ function SeedOrderRow({
       </div>
       {/* Order Total (weight * qty) */}
       <div style={cellStyle('orderWeight')} className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap flex items-center justify-end">
-        {orderWeight > 0 ? `${orderWeight} ${unit}` : <span className="text-gray-300">-</span>}
+        {orderWeight > 0 ? `${formatWeightValue(orderWeight, unit)} ${unit}` : <span className="text-gray-300">-</span>}
       </div>
       {/* Order Cost (cost * qty) */}
       <div style={cellStyle('orderCost')} className="py-1.5 px-2 text-right text-gray-700 whitespace-nowrap flex items-center justify-end">
@@ -2003,35 +2216,136 @@ function SeedOrderRow({
   );
 }
 
+// Format seed source for display in breakdown panel
+function formatSeedSource(c: PlantingSeedContribution, varietyName: string): string {
+  switch (c.assignmentType) {
+    case 'direct': return varietyName;
+    case 'spec-default': return varietyName;
+    case 'mix-direct': return c.mixName ?? 'Mix';
+    case 'mix-spec-default': return c.mixName ?? 'Mix';
+  }
+}
+
+// Format a date string for compact display (e.g., "04/15")
+function formatShortDate(dateStr: string): string {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Inline detail panel showing per-planting seed contributions for a variety */
+function PlantingBreakdownPanel({
+  contributions,
+  totalSeeds,
+  varietyName,
+  beds,
+}: {
+  contributions: PlantingSeedContribution[];
+  totalSeeds: number;
+  varietyName: string;
+  beds: Record<string, { id: string; name: string }>;
+}) {
+  if (contributions.length === 0) {
+    return (
+      <div className="bg-blue-50/30 border-b border-blue-200 text-xs px-4 py-2">
+        <span className="text-gray-500 italic">No plantings use this variety</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-blue-50/30 border-b border-blue-200 text-xs">
+      <div className="px-4 py-2">
+        <div className="font-medium text-gray-600 mb-1">
+          Planting Breakdown ({contributions.length} planting{contributions.length !== 1 ? 's' : ''})
+        </div>
+        <table className="w-full text-left">
+          <thead>
+            <tr className="text-gray-500 border-b border-blue-100">
+              <th className="py-1 pr-3 font-medium">ID</th>
+              <th className="py-1 pr-3 font-medium">Spec</th>
+              <th className="py-1 pr-3 font-medium">Date</th>
+              <th className="py-1 pr-3 font-medium">Bed</th>
+              <th className="py-1 pr-3 font-medium text-right">Ft</th>
+              <th className="py-1 pr-3 font-medium text-right">Plants</th>
+              <th className="py-1 pr-3 font-medium text-right">Seeds/Pl</th>
+              <th className="py-1 pr-3 font-medium text-right">Safety</th>
+              <th className="py-1 pr-3 font-medium text-right">Planting Seeds</th>
+              <th className="py-1 pr-3 font-medium text-center">Share</th>
+              <th className="py-1 pr-3 font-medium text-right">Variety Seeds</th>
+              <th className="py-1 font-medium">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {contributions.map(c => (
+              <tr key={c.plantingId} className="border-b border-blue-50 hover:bg-blue-50/50">
+                <td className="py-1 pr-3 text-gray-500 font-mono">{c.plantingId}</td>
+                <td className="py-1 pr-3 text-gray-900 truncate max-w-[200px]" title={c.specName}>{c.specName}</td>
+                <td className="py-1 pr-3 text-gray-600">{formatShortDate(c.fieldStartDate)}</td>
+                <td className="py-1 pr-3 text-gray-600">{c.startBed ? (beds[c.startBed]?.name ?? c.startBed) : '-'}</td>
+                <td className="py-1 pr-3 text-right text-gray-600">{c.bedFeet}&apos;</td>
+                <td className="py-1 pr-3 text-right text-gray-600">{c.plantsInBed.toLocaleString()}</td>
+                <td className="py-1 pr-3 text-right text-gray-600">{c.seedsPerPlanting}</td>
+                <td className="py-1 pr-3 text-right text-gray-600">
+                  {c.extraStartFactor !== 1
+                    ? `${c.extraStartFactor.toFixed(1)}x`
+                    : '-'}
+                </td>
+                <td className="py-1 pr-3 text-right text-gray-600">{formatSeeds(c.totalPlantingSeeds)}</td>
+                <td className="py-1 pr-3 text-center">
+                  {c.varietyShare === 1
+                    ? <span className="text-green-700 font-medium">100%</span>
+                    : <span className="text-amber-700">{Math.round(c.varietyShare * 100)}%</span>
+                  }
+                </td>
+                <td className="py-1 pr-3 text-right font-medium text-gray-900">{formatSeeds(c.varietySeeds)}</td>
+                <td className="py-1 text-gray-500">{formatSeedSource(c, varietyName)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="border-t border-blue-200 font-medium text-gray-700">
+              <td colSpan={10} className="py-1 pr-3 text-right">Total:</td>
+              <td className="py-1 pr-3 text-right">{formatSeeds(totalSeeds)}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // Default column widths in pixels
 const DEFAULT_COL_WIDTHS: Record<string, number> = {
-  crop: 80,
-  variety: 140,
-  supplier: 100,
-  organic: 50,
-  seedsNeeded: 80,
-  weightNeeded: 80,
-  inStock: 60,
-  stockUnit: 50,
-  additionalNeeded: 80,
-  productWeight: 70,
-  productUnit: 50,
-  productQty: 50,
-  productPrice: 70,
-  orderWeight: 80,
-  orderCost: 80,
-  status: 55,
+  crop: 65,
+  variety: 130,
+  supplier: 90,
+  organic: 35,
+  seedsNeeded: 65,
+  weightNeeded: 65,
+  inStock: 50,
+  stockUnit: 42,
+  haveSeeds: 55,
+  additionalNeeded: 65,
+  productWeight: 55,
+  productUnit: 42,
+  productQty: 40,
+  productPrice: 55,
+  orderWeight: 65,
+  orderCost: 65,
+  status: 45,
 };
 
 // Column order for iteration
 const COL_ORDER = [
   'crop', 'variety', 'supplier', 'organic', 'seedsNeeded', 'weightNeeded',
-  'inStock', 'stockUnit', 'additionalNeeded', 'productWeight', 'productUnit',
+  'inStock', 'stockUnit', 'haveSeeds', 'additionalNeeded', 'productWeight', 'productUnit',
   'productQty', 'productPrice', 'orderWeight', 'orderCost', 'status',
 ];
 
 // localStorage key for persisting column widths
-const SEEDS_TAB_STORAGE_KEY = 'seeds-tab-state';
+const SEEDS_TAB_STORAGE_KEY = 'seeds-tab-state-v2';
 
 interface SeedsTabPersistedState {
   colWidths: Record<string, number>;
@@ -2053,16 +2367,68 @@ function saveSeedsTabState(state: SeedsTabPersistedState) {
   } catch { /* ignore */ }
 }
 
+type SeedSortKey = 'crop' | 'variety' | 'supplier' | 'needed';
+
+/** Resizable column header for the seeds table */
+function ResizableHeader({
+  colKey,
+  children,
+  className = '',
+  sortable,
+  sortKeyName,
+  colWidths,
+  sortKey,
+  sortDesc,
+  onSort,
+  onResizeStart,
+}: {
+  colKey: string;
+  children: React.ReactNode;
+  className?: string;
+  sortable?: boolean;
+  sortKeyName?: SeedSortKey;
+  colWidths: Record<string, number>;
+  sortKey: SeedSortKey;
+  sortDesc: boolean;
+  onSort: (key: SeedSortKey) => void;
+  onResizeStart: (colKey: string, e: React.MouseEvent) => void;
+}) {
+  return (
+    <div
+      style={{ width: colWidths[colKey], minWidth: colWidths[colKey] }}
+      className={`relative py-2 px-2 text-xs font-medium text-gray-600 select-none flex items-center ${className} ${
+        sortable ? 'cursor-pointer hover:text-gray-900' : ''
+      }`}
+      onClick={sortable && sortKeyName ? () => onSort(sortKeyName) : undefined}
+    >
+      <span className="truncate">{children}</span>
+      {sortable && sortKeyName && sortKey === sortKeyName && (
+        <span className="ml-1 flex-shrink-0">{sortDesc ? '↓' : '↑'}</span>
+      )}
+      <div
+        onMouseDown={(e) => onResizeStart(colKey, e)}
+        onClick={(e) => e.stopPropagation()}
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400"
+        style={{ marginRight: -1 }}
+      />
+    </div>
+  );
+}
+
 function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSupplier, setFilterSupplier] = useState<string>('');
   const [filterCrop, setFilterCrop] = useState<string>('');
   const [filterMissingDensity, setFilterMissingDensity] = useState(false);
-  const [sortKey, setSortKey] = useState<'crop' | 'variety' | 'supplier' | 'needed'>('crop');
+  const [sortKey, setSortKey] = useState<SeedSortKey>('crop');
   const [sortDesc, setSortDesc] = useState(false);
 
-  // Column widths state - start with defaults, hydrate from localStorage
-  const [colWidths, setColWidths] = useState<Record<string, number>>(DEFAULT_COL_WIDTHS);
+  // Column widths state - hydrate from localStorage on first render
+  const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
+    const saved = loadSeedsTabState();
+    // Merge saved widths on top of defaults so new columns always get a width
+    return saved?.colWidths ? { ...DEFAULT_COL_WIDTHS, ...saved.colWidths } : DEFAULT_COL_WIDTHS;
+  });
   const [resizing, setResizing] = useState<string | null>(null);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(0);
@@ -2079,18 +2445,18 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
   // Density edit modal state
   const [editingVarietyId, setEditingVarietyId] = useState<string | null>(null);
 
+  // Replace variety modal state
+  const [replacingVarietyId, setReplacingVarietyId] = useState<string | null>(null);
+  const replaceVarietyEverywhere = usePlanStore((state) => state.replaceVarietyEverywhere);
+
+  // Planting breakdown expand state (accordion — one at a time)
+  const [expandedVarietyId, setExpandedVarietyId] = useState<string | null>(null);
+  const beds = usePlanStore((state) => state.currentPlan?.beds ?? {});
+
   // Calculate missing density info
   const missingDensityVarieties = useMemo(() => {
     return report.byVariety.filter(v => v.weightNeeded === undefined);
   }, [report.byVariety]);
-
-  // Load persisted state on mount
-  useEffect(() => {
-    const saved = loadSeedsTabState();
-    if (saved?.colWidths) {
-      setColWidths(saved.colWidths);
-    }
-  }, []);
 
   // Save column widths when they change (debounced via resizing check)
   useEffect(() => {
@@ -2144,40 +2510,6 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
       document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [resizing, startX, startWidth]);
-
-  // Resizable header component - uses div like SpecExplorer
-  const ResizableHeader = ({
-    colKey,
-    children,
-    className = '',
-    sortable,
-    sortKeyName,
-  }: {
-    colKey: string;
-    children: React.ReactNode;
-    className?: string;
-    sortable?: boolean;
-    sortKeyName?: typeof sortKey;
-  }) => (
-    <div
-      style={{ width: colWidths[colKey], minWidth: colWidths[colKey] }}
-      className={`relative py-2 px-2 text-xs font-medium text-gray-600 select-none flex items-center ${className} ${
-        sortable ? 'cursor-pointer hover:text-gray-900' : ''
-      }`}
-      onClick={sortable && sortKeyName ? () => handleSort(sortKeyName) : undefined}
-    >
-      <span className="truncate">{children}</span>
-      {sortable && sortKeyName && sortKey === sortKeyName && (
-        <span className="ml-1 flex-shrink-0">{sortDesc ? '↓' : '↑'}</span>
-      )}
-      <div
-        onMouseDown={(e) => handleMouseDown(colKey, e)}
-        onClick={(e) => e.stopPropagation()}
-        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-blue-400"
-        style={{ marginRight: -1 }}
-      />
-    </div>
-  );
 
   // Get unique values for filters
   const uniqueSuppliers = useMemo(() => {
@@ -2357,37 +2689,53 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
           <div className="overflow-auto flex-1">
             {/* Header - sticky */}
             <div className="sticky top-0 z-10 flex bg-gray-50 border-b border-gray-200" style={{ width: totalWidth }}>
-              <ResizableHeader colKey="crop" sortable sortKeyName="crop">Crop</ResizableHeader>
-              <ResizableHeader colKey="variety" sortable sortKeyName="variety">Variety</ResizableHeader>
-              <ResizableHeader colKey="supplier" sortable sortKeyName="supplier">Supplier</ResizableHeader>
-              <ResizableHeader colKey="organic" className="justify-center">Organic</ResizableHeader>
-              <ResizableHeader colKey="seedsNeeded" sortable sortKeyName="needed" className="justify-end">Seeds Needed</ResizableHeader>
-              <ResizableHeader colKey="weightNeeded" className="justify-end">Weight Needed</ResizableHeader>
+              <ResizableHeader colKey="crop" sortable sortKeyName="crop" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Crop</ResizableHeader>
+              <ResizableHeader colKey="variety" sortable sortKeyName="variety" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Variety</ResizableHeader>
+              <ResizableHeader colKey="supplier" sortable sortKeyName="supplier" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Supplier</ResizableHeader>
+              <ResizableHeader colKey="organic" className="justify-center" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Organic</ResizableHeader>
+              <ResizableHeader colKey="seedsNeeded" sortable sortKeyName="needed" className="justify-end" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Seeds Needed</ResizableHeader>
+              <ResizableHeader colKey="weightNeeded" className="justify-end" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Weight Needed</ResizableHeader>
               {/* Inventory columns - blue tint */}
-              <ResizableHeader colKey="inStock" className="justify-center text-blue-700 bg-blue-50/50">In Stock</ResizableHeader>
-              <ResizableHeader colKey="stockUnit" className="justify-center text-blue-700 bg-blue-50/50">Stock Unit</ResizableHeader>
+              <ResizableHeader colKey="inStock" className="justify-center text-blue-700 bg-blue-50/50" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>In Stock</ResizableHeader>
+              <ResizableHeader colKey="stockUnit" className="justify-center text-blue-700 bg-blue-50/50" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Stock Unit</ResizableHeader>
+              <ResizableHeader colKey="haveSeeds" className="justify-end text-blue-700 bg-blue-50/50" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Have #</ResizableHeader>
               {/* Additional needed */}
-              <ResizableHeader colKey="additionalNeeded" className="justify-end">Additional Needed</ResizableHeader>
+              <ResizableHeader colKey="additionalNeeded" className="justify-end" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Additional Needed</ResizableHeader>
               {/* Product/order input columns */}
-              <ResizableHeader colKey="productWeight" className="justify-center">Product Weight</ResizableHeader>
-              <ResizableHeader colKey="productUnit" className="justify-center">Product Unit</ResizableHeader>
-              <ResizableHeader colKey="productQty" className="justify-center">Product Qty</ResizableHeader>
-              <ResizableHeader colKey="productPrice" className="justify-center">Product Price</ResizableHeader>
-              <ResizableHeader colKey="orderWeight" className="justify-end">Order Weight</ResizableHeader>
-              <ResizableHeader colKey="orderCost" className="justify-end">Order Cost</ResizableHeader>
-              <ResizableHeader colKey="status" className="justify-center">Status</ResizableHeader>
+              <ResizableHeader colKey="productWeight" className="justify-center" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Product Weight</ResizableHeader>
+              <ResizableHeader colKey="productUnit" className="justify-center" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Product Unit</ResizableHeader>
+              <ResizableHeader colKey="productQty" className="justify-center" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Product Qty</ResizableHeader>
+              <ResizableHeader colKey="productPrice" className="justify-center" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Product Price</ResizableHeader>
+              <ResizableHeader colKey="orderWeight" className="justify-end" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Order Weight</ResizableHeader>
+              <ResizableHeader colKey="orderCost" className="justify-end" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Order Cost</ResizableHeader>
+              <ResizableHeader colKey="status" className="justify-center" colWidths={colWidths} sortKey={sortKey} sortDesc={sortDesc} onSort={handleSort} onResizeStart={handleMouseDown}>Status</ResizableHeader>
             </div>
             {/* Body */}
             <div style={{ width: totalWidth }}>
               {filteredData.map(v => (
-                <SeedOrderRow
-                  key={v.varietyId}
-                  variety={v}
-                  savedOrder={seedOrders[`SO_${v.varietyId}`]}
-                  onSave={upsertSeedOrder}
-                  onEditDensity={setEditingVarietyId}
-                  colWidths={colWidths}
-                />
+                <Fragment key={v.varietyId}>
+                  <SeedOrderRow
+                    variety={v}
+                    savedOrder={seedOrders[`SO_${v.varietyId}`]}
+                    density={varieties[v.varietyId] ? getVarietyDensity(varieties[v.varietyId]) : undefined}
+                    onSave={upsertSeedOrder}
+                    onEditDensity={setEditingVarietyId}
+                    onReplace={setReplacingVarietyId}
+                    colWidths={colWidths}
+                    isExpanded={expandedVarietyId === v.varietyId}
+                    onToggleExpand={() => setExpandedVarietyId(
+                      expandedVarietyId === v.varietyId ? null : v.varietyId
+                    )}
+                  />
+                  {expandedVarietyId === v.varietyId && (
+                    <PlantingBreakdownPanel
+                      contributions={v.contributions}
+                      totalSeeds={v.seedsNeeded}
+                      varietyName={v.varietyName}
+                      beds={beds}
+                    />
+                  )}
+                </Fragment>
               ))}
             </div>
           </div>
@@ -2409,6 +2757,16 @@ function SeedsTab({ report, planId }: { report: PlanSeedReport; planId: string }
           varieties={varieties}
           onSave={updateVariety}
           onClose={() => setEditingVarietyId(null)}
+        />
+      )}
+
+      {/* Replace Variety Modal */}
+      {replacingVarietyId && (
+        <ReplaceVarietyModal
+          varietyId={replacingVarietyId}
+          varieties={varieties}
+          onConfirm={replaceVarietyEverywhere}
+          onClose={() => setReplacingVarietyId(null)}
         />
       )}
     </div>
@@ -3576,7 +3934,7 @@ export default function ReportsPage() {
         ) : undefined
       }
     >
-      <div className="h-full flex flex-col max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="h-full flex flex-col px-4 sm:px-6 lg:px-8 py-4">
         {activeTab === 'revenue' && revenueReport && (
           <RevenueTab report={revenueReport} markets={currentPlan.markets ?? {}} />
         )}

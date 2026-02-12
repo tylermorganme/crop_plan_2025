@@ -12,6 +12,8 @@ import type { SearchConfig } from './search-dsl';
 import { buildCropSearchText } from './search-dsl';
 import { getBedGroup } from './entities/bed';
 import { calculatePlantingMethod, type PlantingSpec } from './entities/planting-specs';
+import type { Variety } from './entities/variety';
+import type { SeedMix } from './entities/seed-mix';
 
 // =============================================================================
 // TimelineCrop Search Config
@@ -292,6 +294,121 @@ export const plantingSpecSearchConfig: SearchConfig<PlantingSpec> = {
     },
   ],
   buildSearchText: buildSpecSearchText,
+};
+
+// =============================================================================
+// SeedMix Search Config (Seed Mixes Page)
+// =============================================================================
+
+/**
+ * Build searchable text from a SeedMix.
+ */
+export function buildSeedMixSearchText(m: SeedMix): string {
+  return [
+    m.crop,
+    m.name,
+    m.notes,
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+/**
+ * Search configuration for SeedMix (used by Seed Mixes page).
+ *
+ * Supported field filters:
+ * - crop:value - matches crop name
+ * - name:value - matches mix name
+ * - notes:value - matches notes
+ *
+ * The 'used' field filter is injected at runtime since it depends on plan data.
+ */
+export const seedMixSearchConfig: SearchConfig<SeedMix> = {
+  fields: [
+    {
+      name: 'crop',
+      getValue: (m) => m.crop,
+    },
+    {
+      name: 'name',
+      getValue: (m) => m.name,
+    },
+    {
+      name: 'notes',
+      getValue: (m) => m.notes,
+    },
+  ],
+  buildSearchText: buildSeedMixSearchText,
+};
+
+// =============================================================================
+// Variety Search Config (Varieties Page)
+// =============================================================================
+
+/**
+ * Build searchable text from a Variety.
+ */
+export function buildVarietySearchText(v: Variety): string {
+  return [
+    v.crop,
+    v.name,
+    v.supplier,
+    v.notes,
+  ].filter(Boolean).join(' ').toLowerCase();
+}
+
+/**
+ * Search configuration for Variety (used by Varieties page).
+ *
+ * Supported field filters:
+ * - crop:value - matches crop name
+ * - name:value - matches variety name
+ * - supplier:value - matches supplier
+ * - organic:true/false - matches organic status
+ * - pelleted:true/false - matches pelleted status
+ * - owned:true/false - matches alreadyOwn status
+ * - unit:value - matches density unit (oz, g, lb, ct)
+ *
+ * The 'used' field filter is injected at runtime since it depends on plan data.
+ */
+export const varietySearchConfig: SearchConfig<Variety> = {
+  fields: [
+    {
+      name: 'crop',
+      getValue: (v) => v.crop,
+    },
+    {
+      name: 'name',
+      aliases: ['variety'],
+      getValue: (v) => v.name,
+    },
+    {
+      name: 'supplier',
+      getValue: (v) => v.supplier,
+    },
+    {
+      name: 'organic',
+      aliases: ['org'],
+      matchType: 'equals',
+      getValue: (v) => !!v.organic,
+    },
+    {
+      name: 'pelleted',
+      aliases: ['pell'],
+      matchType: 'equals',
+      getValue: (v) => !!v.pelleted,
+    },
+    {
+      name: 'owned',
+      aliases: ['own'],
+      matchType: 'equals',
+      getValue: (v) => !!v.alreadyOwn,
+    },
+    {
+      name: 'unit',
+      matchType: 'equals',
+      getValue: (v) => v.densityUnit ?? '',
+    },
+  ],
+  buildSearchText: buildVarietySearchText,
 };
 
 // =============================================================================

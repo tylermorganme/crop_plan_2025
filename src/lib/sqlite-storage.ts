@@ -1510,6 +1510,16 @@ export function hydratePlan(planId: string): Plan {
     throw new Error(`Failed to load base plan for ${planId}`);
   }
 
+  // Ensure optional Record fields exist before patch replay.
+  // Client-side loadPlanById initializes these BEFORE Immer mutations run,
+  // so generated patches assume the parent object exists (e.g. "add" at
+  // ["seedOrders", "SO_..."]). Without this, patch replay fails with
+  // "Cannot apply patch, path doesn't resolve".
+  if (!basePlan.seedOrders) basePlan.seedOrders = {};
+  if (!basePlan.seedSearches) basePlan.seedSearches = {};
+  if (!basePlan.sequences) basePlan.sequences = {};
+  if (!basePlan.markets) basePlan.markets = {};
+
   // Apply patches sequentially (skipping no-ops)
   let currentPlan = basePlan;
   let skippedNoOps = 0;

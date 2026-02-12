@@ -365,6 +365,8 @@ export default function CropTimeline({
     // Original position for visual feedback
     originalLeft: number;
     originalWidth: number;
+    // Horizontal pixel offset during drag (for preview indicator)
+    deltaX: number;
     // Y position within lane for ghost placement
     laneOffsetY?: number;
   } | null>(null);
@@ -1001,6 +1003,7 @@ export default function CropTimeline({
       primaryGroupId: effectiveCrop.groupId,
       originalLeft: originalPos.left,
       originalWidth: originalPos.width,
+      deltaX: 0,
     });
   };
 
@@ -1063,6 +1066,11 @@ export default function CropTimeline({
     // Calculate date changes if timing edit enabled
     if (timingEditEnabled && dragStartX.current !== null && dragPreview) {
       const deltaX = e.clientX - dragStartX.current;
+
+      // Update preview indicator position
+      if (deltaX !== dragPreview.deltaX) {
+        setDragPreview(prev => prev ? { ...prev, deltaX } : prev);
+      }
       const deltaDays = pixelsToDays(deltaX);
 
       if (deltaDays !== 0) {
@@ -1834,7 +1842,7 @@ export default function CropTimeline({
       {/* Main content area with timeline + panels */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
         <div className="flex-1 min-w-0 overflow-auto bg-white border rounded-b" ref={plannerScrollRef}>
-        {/* Header indicator during drag - shows original position */}
+        {/* Header indicators during drag - original position + preview position */}
         {dragPreview && (
           <div
             className="rounded border-2 border-dashed border-gray-400 pointer-events-none"
@@ -1843,6 +1851,21 @@ export default function CropTimeline({
               top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
               zIndex: Z_INDEX.TIMELINE_HEADER + 2,
               marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft,
+              width: Math.round(dragPreview.originalWidth),
+              height: CROP_HEIGHT,
+              marginBottom: -CROP_HEIGHT,
+            }}
+          />
+        )}
+        {/* Preview position indicator - solid blue, only shown when moved */}
+        {dragPreview && Math.abs(dragPreview.deltaX) >= 1 && (
+          <div
+            className="rounded border-2 border-blue-500 pointer-events-none"
+            style={{
+              position: 'sticky',
+              top: (HEADER_HEIGHT - CROP_HEIGHT) / 2,
+              zIndex: Z_INDEX.TIMELINE_HEADER + 2,
+              marginLeft: LANE_LABEL_WIDTH + dragPreview.originalLeft + dragPreview.deltaX,
               width: Math.round(dragPreview.originalWidth),
               height: CROP_HEIGHT,
               marginBottom: -CROP_HEIGHT,

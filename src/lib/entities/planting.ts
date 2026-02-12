@@ -268,3 +268,38 @@ export function clonePlanting(
     ...overrides,
   });
 }
+
+/**
+ * Resolve the effective seed source for a planting.
+ *
+ * Priority: explicit seedSource > spec defaultSeedSource (unless opted out).
+ * This is the single source of truth for seed source resolution — all views
+ * and calculations should use this instead of inline logic.
+ */
+export function getEffectiveSeedSource(
+  planting: Pick<Planting, 'seedSource' | 'useDefaultSeedSource'>,
+  specDefault: SeedSource | undefined,
+): SeedSource | undefined {
+  return planting.seedSource
+    ?? (planting.useDefaultSeedSource !== false ? specDefault : undefined);
+}
+
+/**
+ * Ensure a planting has useDefaultSeedSource set correctly.
+ *
+ * If the planting has no explicit seedSource and useDefaultSeedSource is
+ * undefined, check the spec for a defaultSeedSource and opt in automatically.
+ * This is the single source of truth for this defaulting logic — all code
+ * paths that create plantings should call this.
+ *
+ * Mutates the planting in place and returns it for chaining.
+ */
+export function applyDefaultSeedSource(
+  planting: Planting,
+  specDefault: SeedSource | undefined,
+): Planting {
+  if (!planting.seedSource && planting.useDefaultSeedSource === undefined && specDefault) {
+    planting.useDefaultSeedSource = true;
+  }
+  return planting;
+}

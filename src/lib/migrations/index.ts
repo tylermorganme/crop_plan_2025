@@ -870,6 +870,65 @@ function migrateV18ToV19(rawPlan: unknown): unknown {
   return { ...plan, specs: newSpecs };
 }
 
+/**
+ * v19 → v20: Rename PlantingSpec.safetyFactor → extraStartFactor
+ * Clarifies the intent: this is the "start extra cells/trays" multiplier for transplants.
+ */
+function migrateV19ToV20(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    specs?: Record<string, { safetyFactor?: unknown; extraStartFactor?: unknown; [k: string]: unknown }>;
+    [k: string]: unknown;
+  };
+
+  if (!plan.specs || Object.keys(plan.specs).length === 0) return plan;
+
+  // Idempotency: skip if first spec already migrated
+  const firstSpec = Object.values(plan.specs)[0];
+  if (firstSpec && !('safetyFactor' in firstSpec)) return plan;
+
+  const newSpecs: Record<string, unknown> = {};
+  for (const [key, spec] of Object.entries(plan.specs)) {
+    const { safetyFactor, ...rest } = spec;
+    newSpecs[key] = {
+      ...rest,
+      extraStartFactor: safetyFactor ?? rest.extraStartFactor,
+    };
+  }
+
+  return { ...plan, specs: newSpecs };
+}
+
+/**
+ * v20 → v21: Fold seedingFactor into extraStartFactor, then remove seedingFactor.
+ * Both fields were insurance multipliers for seed ordering. Combining them into
+ * a single extraStartFactor simplifies the model.
+ * New value = (old extraStartFactor ?? 1) * (old seedingFactor ?? 1)
+ */
+function migrateV20ToV21(rawPlan: unknown): unknown {
+  const plan = rawPlan as {
+    specs?: Record<string, { seedingFactor?: number; extraStartFactor?: number; [k: string]: unknown }>;
+    [k: string]: unknown;
+  };
+
+  if (!plan.specs || Object.keys(plan.specs).length === 0) return plan;
+
+  // Idempotency: skip if first spec has no seedingFactor
+  const firstSpec = Object.values(plan.specs)[0];
+  if (firstSpec && !('seedingFactor' in firstSpec)) return plan;
+
+  const newSpecs: Record<string, unknown> = {};
+  for (const [key, spec] of Object.entries(plan.specs)) {
+    const { seedingFactor, extraStartFactor, ...rest } = spec;
+    const combinedFactor = (extraStartFactor ?? 1) * (seedingFactor ?? 1);
+    newSpecs[key] = {
+      ...rest,
+      extraStartFactor: combinedFactor === 1 ? undefined : combinedFactor,
+    };
+  }
+
+  return { ...plan, specs: newSpecs };
+}
+
 // =============================================================================
 // MIGRATION ARRAY
 // =============================================================================
@@ -910,6 +969,8 @@ const migrations: MigrationFn[] = [
   migrateV16ToV17, // Index 15: v16 → v17 (normalMethod → dtmBasis with clearer values)
   migrateV17ToV18, // Index 16: v17 → v18 (re-key specs by spec.id, update planting.specId)
   migrateV18ToV19, // Index 17: v18 → v19 (PlantingSpec.identifier → PlantingSpec.name)
+  migrateV19ToV20, // Index 18: v19 → v20 (PlantingSpec.safetyFactor → extraStartFactor)
+  migrateV20ToV21, // Index 19: v20 → v21 (fold seedingFactor into extraStartFactor, remove seedingFactor)
 ];
 
 // =============================================================================

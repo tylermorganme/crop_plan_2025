@@ -86,10 +86,8 @@ const FIELD_GROUPS: FieldGroup[] = [
   {
     name: 'Seed',
     fields: [
-      { key: 'seedsPerBed', label: 'Seeds/Bed' },
       { key: 'seedsPerPlanting', label: 'Seeds/Planting' },
-      { key: 'safetyFactor', label: 'Safety Factor', format: (v) => v ? `${v}x` : '—' },
-      { key: 'seedingFactor', label: 'Seeding Factor', format: (v) => v ? `${v}x` : '—' },
+      { key: 'extraStartFactor', label: 'Extra Start Factor', format: (v) => v ? `${v}x` : '—' },
       {
         key: 'defaultSeedSource',
         label: 'Default Seed Source',

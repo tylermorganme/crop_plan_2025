@@ -1455,7 +1455,7 @@ export function PlantingInspectorPanel({
             <div className="pt-3 border-t">
               <div className="text-xs text-gray-600 mb-1">
                 Seed Source
-                {!crop.seedSource && !crop.useDefaultSeedSource && <span className="text-amber-500 ml-1">⚠</span>}
+                {!crop.seedSource && crop.useDefaultSeedSource === false && <span className="text-amber-500 ml-1">⚠</span>}
               </div>
               <SeedSourceSelectWithDefault
                 cropName={crop.crop}

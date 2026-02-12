@@ -136,8 +136,7 @@ export function SeedMixEditorModal({
       })
       .map((v) => ({
         value: v.id,
-        label: `${v.crop}: ${v.name}`,
-        secondary: v.supplier || undefined,
+        label: v.supplier ? `${v.crop}: ${v.name} — ${v.supplier}` : `${v.crop}: ${v.name}`,
         group: v.crop,
       }));
   }, [varieties]);

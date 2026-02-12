@@ -2,16 +2,26 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePlanStore, initializePlanStore } from '@/lib/plan-store';
-import { createVariety, type Variety, type DensityUnit } from '@/lib/entities/variety';
+import { createVariety, getSeedsPerGram, type Variety, type DensityUnit } from '@/lib/entities/variety';
+import { getEffectiveSeedSource } from '@/lib/entities/planting';
 import { Z_INDEX } from '@/lib/z-index';
 import AppHeader from '@/components/AppHeader';
 import { FastEditTable, ColumnDef } from '@/components/FastEditTable';
+import { SearchInput } from '@/components/SearchInput';
+import { parseSearchQuery, matchesFilter, type SearchConfig } from '@/lib/search-dsl';
+import { varietySearchConfig, getFilterFieldNames, getSortFieldNames } from '@/lib/search-configs';
 
 // Stable empty object reference to avoid SSR hydration issues
 const EMPTY_VARIETIES: Record<string, Variety> = {};
 
-type SortKey = 'crop' | 'name' | 'supplier' | 'organic' | 'dtm' | 'density';
+type SortKey = 'crop' | 'name' | 'supplier' | 'organic' | 'used' | 'dtm' | 'density' | 'densityPct';
 type SortDir = 'asc' | 'desc';
+
+/** Sort fields valid for variety DSL sorting */
+const VARIETY_SORT_FIELDS = new Set<string>([
+  ...getSortFieldNames(varietySearchConfig),
+  'name', 'dtm', 'density', 'densityPct', 'used',
+]);
 
 // Toast notification component
 function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
@@ -39,7 +49,7 @@ function VarietyEditor({
   onSave,
   onClose,
 }: {
-  variety: Variety | null;
+  variety: (Variety | Omit<Variety, 'id'>) | null;
   onSave: (variety: Variety) => void;
   onClose: () => void;
 }) {
@@ -65,7 +75,7 @@ function VarietyEditor({
     const densityVal = form.density ? parseInt(form.density, 10) : undefined;
 
     const newVariety = createVariety({
-      id: variety?.id,
+      id: variety && 'id' in variety ? variety.id : undefined,
       crop: form.crop.trim(),
       name: form.name.trim(),
       supplier: form.supplier.trim(),
@@ -81,7 +91,7 @@ function VarietyEditor({
     });
 
     onSave(newVariety);
-  }, [form, variety?.id, onSave]);
+  }, [form, variety, onSave]);
 
   return (
     <div
@@ -184,21 +194,273 @@ function VarietyEditor({
   );
 }
 
+// =============================================================================
+// Export / Import Helpers
+// =============================================================================
+
+/** Fields exported for LLM handoff — omit internal IDs */
+interface ExportVariety {
+  crop: string;
+  name: string;
+  supplier: string;
+  organic?: boolean;
+  pelleted?: boolean;
+  dtm?: number;
+  density?: number;
+  densityUnit?: string;
+  website?: string;
+  notes?: string;
+  alreadyOwn?: boolean;
+}
+
+function varietyToExport(v: Variety): ExportVariety {
+  const out: ExportVariety = {
+    crop: v.crop,
+    name: v.name,
+    supplier: v.supplier,
+  };
+  if (v.organic) out.organic = true;
+  if (v.pelleted) out.pelleted = true;
+  if (v.dtm) out.dtm = v.dtm;
+  if (v.density) out.density = v.density;
+  if (v.densityUnit) out.densityUnit = v.densityUnit;
+  if (v.website) out.website = v.website;
+  if (v.notes) out.notes = v.notes;
+  if (v.alreadyOwn) out.alreadyOwn = true;
+  return out;
+}
+
+function downloadJson(data: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+const TEMPLATE_VARIETIES: ExportVariety[] = [
+  {
+    crop: 'Tomato',
+    name: 'Example Variety',
+    supplier: 'Example Supplier',
+    organic: true,
+    dtm: 75,
+    density: 8000,
+    densityUnit: 'oz',
+    website: 'https://example.com/product',
+    notes: 'Optional notes',
+  },
+  {
+    crop: 'Lettuce',
+    name: 'Another Variety',
+    supplier: 'Another Supplier',
+    organic: false,
+    pelleted: true,
+    density: 1,
+    densityUnit: 'ct',
+  },
+];
+
+// Optional fields that can be toggled for import
+const IMPORT_FIELDS = [
+  { key: 'organic', label: 'Organic' },
+  { key: 'pelleted', label: 'Pelleted' },
+  { key: 'dtm', label: 'DTM' },
+  { key: 'density', label: 'Density' },
+  { key: 'densityUnit', label: 'Density Unit' },
+  { key: 'website', label: 'Website' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'alreadyOwn', label: 'Already Own' },
+] as const;
+
+type ImportFieldKey = typeof IMPORT_FIELDS[number]['key'];
+
+// Import Modal
+function ImportModal({
+  onImport,
+  onClose,
+}: {
+  onImport: (json: string) => Promise<{ added: number; updated: number }>;
+  onClose: () => void;
+}) {
+  const [text, setText] = useState('');
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<{ added: number; updated: number } | null>(null);
+  const [enabledFields, setEnabledFields] = useState<Set<ImportFieldKey>>(new Set());
+
+  // Detect which optional fields are present in the pasted data
+  const detectedFields = useMemo((): Set<ImportFieldKey> => {
+    if (!text.trim()) return new Set();
+    try {
+      const parsed = JSON.parse(text);
+      const arr = Array.isArray(parsed) ? parsed : parsed.varieties;
+      if (!Array.isArray(arr) || arr.length === 0) return new Set();
+      const found = new Set<ImportFieldKey>();
+      for (const row of arr) {
+        for (const { key } of IMPORT_FIELDS) {
+          if (row[key] !== undefined) found.add(key);
+        }
+      }
+      return found;
+    } catch {
+      return new Set();
+    }
+  }, [text]);
+
+  const toggleField = (key: ImportFieldKey) => {
+    setEnabledFields(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (enabledFields.size === detectedFields.size) {
+      setEnabledFields(new Set());
+    } else {
+      setEnabledFields(new Set(detectedFields));
+    }
+  };
+
+  const handleImport = async () => {
+    setError('');
+    setResult(null);
+    try {
+      const parsed = JSON.parse(text);
+      const arr = Array.isArray(parsed) ? parsed : parsed.varieties;
+      if (!Array.isArray(arr)) {
+        setError('Expected a JSON array or an object with a "varieties" array.');
+        return;
+      }
+      for (let i = 0; i < arr.length; i++) {
+        if (!arr[i].crop || !arr[i].name || !arr[i].supplier) {
+          setError(`Row ${i + 1} is missing required fields (crop, name, supplier).`);
+          return;
+        }
+      }
+      // Strip fields that aren't enabled
+      const filtered = arr.map((row: Record<string, unknown>) => {
+        const out: Record<string, unknown> = {
+          crop: row.crop,
+          name: row.name,
+          supplier: row.supplier,
+        };
+        for (const key of enabledFields) {
+          if (row[key] !== undefined) out[key] = row[key];
+        }
+        return out;
+      });
+      const res = await onImport(JSON.stringify(filtered));
+      setResult(res);
+    } catch (e) {
+      setError(e instanceof SyntaxError ? 'Invalid JSON.' : String(e));
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+      style={{ zIndex: Z_INDEX.MODAL }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl flex flex-col max-h-[80vh]">
+        <div className="px-4 py-3 border-b flex justify-between items-center flex-shrink-0">
+          <h2 className="font-semibold text-gray-900">Import Varieties</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">&times;</button>
+        </div>
+        <div className="p-4 flex-1 overflow-auto space-y-3">
+          <p className="text-sm text-gray-600">
+            Paste a JSON array of varieties. Each needs at minimum: <code className="text-xs bg-gray-100 px-1 rounded">crop</code>, <code className="text-xs bg-gray-100 px-1 rounded">name</code>, <code className="text-xs bg-gray-100 px-1 rounded">supplier</code>.
+            Matching varieties (same crop+name+supplier) will be updated; new ones added.
+          </p>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="w-full h-48 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            placeholder={'[{"crop": "Tomato", "name": "Gold Nugget", "supplier": "Johnnys", ...}]'}
+          />
+          {/* Field selection */}
+          {detectedFields.size > 0 && (
+            <div className="border border-gray-200 rounded-md p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Fields to update:</span>
+                <button onClick={toggleAll} className="text-xs text-blue-600 hover:text-blue-700">
+                  {enabledFields.size === detectedFields.size ? 'Select None' : 'Select All'}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {IMPORT_FIELDS.map(({ key, label }) => {
+                  const present = detectedFields.has(key);
+                  if (!present) return null;
+                  const enabled = enabledFields.has(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => toggleField(key)}
+                      className={`px-2 py-1 text-xs rounded border transition-colors ${
+                        enabled
+                          ? 'bg-blue-50 border-blue-300 text-blue-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}
+                    >
+                      {enabled ? '✓ ' : ''}{label}
+                    </button>
+                  );
+                })}
+              </div>
+              {enabledFields.size === 0 && (
+                <p className="text-xs text-amber-600">No fields selected — only new varieties will be added, existing ones won't be updated.</p>
+              )}
+            </div>
+          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {result && (
+            <p className="text-sm text-green-600">
+              Done — {result.added} added, {result.updated} updated.
+            </p>
+          )}
+        </div>
+        <div className="px-4 py-3 border-t flex justify-end gap-2 flex-shrink-0">
+          <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded">
+            {result ? 'Close' : 'Cancel'}
+          </button>
+          {!result && (
+            <button
+              onClick={handleImport}
+              disabled={!text.trim() || !detectedFields.size}
+              className="px-3 py-1.5 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:bg-blue-300"
+            >
+              Import
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function VarietiesPage() {
 
   const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [editingVariety, setEditingVariety] = useState<Variety | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterCrop, setFilterCrop] = useState<string>('');
-  const [filterSupplier, setFilterSupplier] = useState<string>('');
-  const [filterOrganic, setFilterOrganic] = useState<boolean | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('crop');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [openInNewWindow, setOpenInNewWindow] = useState(true);
+  const [isCloning, setIsCloning] = useState(false);
 
   // Store hooks - now using plan store
   const varieties = usePlanStore((state) => state.currentPlan?.varieties ?? EMPTY_VARIETIES);
+  const plantings = usePlanStore((state) => state.currentPlan?.plantings);
+  const specs = usePlanStore((state) => state.currentPlan?.specs);
+  const seedMixes = usePlanStore((state) => state.currentPlan?.seedMixes);
   const hasPlan = usePlanStore((state) => state.currentPlan !== null);
   const addVariety = usePlanStore((state) => state.addVariety);
   const updateVariety = usePlanStore((state) => state.updateVariety);
@@ -210,54 +472,106 @@ export default function VarietiesPage() {
     initializePlanStore().then(() => setIsLoaded(true));
   }, []);
 
-  // Compute unique values for filters
-  const { uniqueCrops, uniqueSuppliers } = useMemo(() => {
-    const crops = new Set<string>();
-    const suppliers = new Set<string>();
-    Object.values(varieties).forEach((v) => {
-      if (v.crop) crops.add(v.crop);
-      if (v.supplier) suppliers.add(v.supplier);
-    });
-    return {
-      uniqueCrops: Array.from(crops).sort(),
-      uniqueSuppliers: Array.from(suppliers).sort(),
-    };
+  // Build set of variety IDs used by any planting (via seedSource, spec defaultSeedSource, or mix components)
+  const usedVarietyIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (!plantings || !specs) return ids;
+    for (const planting of plantings) {
+      const spec = specs[planting.specId];
+      const source = getEffectiveSeedSource(planting, spec?.defaultSeedSource);
+      if (source?.type === 'variety') {
+        ids.add(source.id);
+      } else if (source?.type === 'mix' && seedMixes) {
+        const mix = seedMixes[source.id];
+        if (mix) {
+          for (const component of mix.components) {
+            ids.add(component.varietyId);
+          }
+        }
+      }
+    }
+    return ids;
+  }, [plantings, specs, seedMixes]);
+
+  // Extended search config with 'used' field (depends on plan data)
+  const extendedSearchConfig: SearchConfig<Variety> = useMemo(() => ({
+    ...varietySearchConfig,
+    fields: [
+      ...varietySearchConfig.fields,
+      {
+        name: 'used',
+        matchType: 'equals' as const,
+        getValue: (v: Variety) => usedVarietyIds.has(v.id),
+      },
+    ],
+  }), [usedVarietyIds]);
+
+  // Parse search query for filter terms and sort directives
+  const parsedSearch = useMemo(
+    () => parseSearchQuery(searchQuery, VARIETY_SORT_FIELDS),
+    [searchQuery]
+  );
+
+  // DSL sort overrides column header sort
+  const effectiveSortKey = (parsedSearch.sortField as SortKey) ?? sortKey;
+  const effectiveSortDir = parsedSearch.sortField ? parsedSearch.sortDir : sortDir;
+
+  // Filter field + sort field names for SearchInput autocomplete
+  const filterFieldNames = useMemo(() => getFilterFieldNames(extendedSearchConfig), [extendedSearchConfig]);
+  const sortFieldNames = useMemo(() => [...new Set([...getSortFieldNames(extendedSearchConfig), 'name', 'dtm', 'density', 'densityPct', 'used'])], [extendedSearchConfig]);
+
+  // Compute average seeds/gram grouped by crop + pelleted status
+  // (pelleted seeds are much less dense, so comparing them to non-pelleted is misleading)
+  const cropAvgSeedsPerGram = useMemo(() => {
+    const byGroup = new Map<string, number[]>();
+    for (const v of Object.values(varieties)) {
+      const spg = getSeedsPerGram(v);
+      if (spg === undefined) continue;
+      const key = `${v.crop}|${v.pelleted ? 'pelleted' : 'raw'}`;
+      if (!byGroup.has(key)) byGroup.set(key, []);
+      byGroup.get(key)!.push(spg);
+    }
+    const avgs: Record<string, number> = {};
+    for (const [key, values] of byGroup) {
+      if (values.length > 0) {
+        avgs[key] = values.reduce((a, b) => a + b, 0) / values.length;
+      }
+    }
+    return avgs;
   }, [varieties]);
 
   // Filter and sort varieties
   const filteredVarieties = useMemo(() => {
     let result = Object.values(varieties);
 
-    if (filterCrop) result = result.filter((v) => v.crop === filterCrop);
-    if (filterSupplier) result = result.filter((v) => v.supplier === filterSupplier);
-    if (filterOrganic !== null) result = result.filter((v) => v.organic === filterOrganic);
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (v) =>
-          v.name.toLowerCase().includes(q) ||
-          v.crop.toLowerCase().includes(q) ||
-          v.supplier?.toLowerCase().includes(q)
-      );
+    // DSL-based filtering
+    if (parsedSearch.filterTerms.length > 0) {
+      result = result.filter((v) => matchesFilter(v, parsedSearch.filterTerms, extendedSearchConfig));
     }
 
     // Sort
     result.sort((a, b) => {
       let cmp = 0;
-      switch (sortKey) {
+      switch (effectiveSortKey) {
         case 'crop': cmp = a.crop.localeCompare(b.crop); break;
         case 'name': cmp = a.name.localeCompare(b.name); break;
         case 'supplier': cmp = (a.supplier || '').localeCompare(b.supplier || ''); break;
         case 'organic': cmp = (a.organic ? 1 : 0) - (b.organic ? 1 : 0); break;
+        case 'used': cmp = (usedVarietyIds.has(a.id) ? 1 : 0) - (usedVarietyIds.has(b.id) ? 1 : 0); break;
         case 'dtm': cmp = (a.dtm || 0) - (b.dtm || 0); break;
         case 'density': cmp = (a.density || 0) - (b.density || 0); break;
+        case 'densityPct': {
+          const aPct = (() => { const spg = getSeedsPerGram(a); const avg = cropAvgSeedsPerGram[a.crop]; return spg !== undefined && avg ? spg / avg : 0; })();
+          const bPct = (() => { const spg = getSeedsPerGram(b); const avg = cropAvgSeedsPerGram[b.crop]; return spg !== undefined && avg ? spg / avg : 0; })();
+          cmp = aPct - bPct;
+          break;
+        }
       }
-      return sortDir === 'asc' ? cmp : -cmp;
+      return effectiveSortDir === 'asc' ? cmp : -cmp;
     });
 
     return result;
-  }, [varieties, filterCrop, filterSupplier, filterOrganic, searchQuery, sortKey, sortDir]);
+  }, [varieties, parsedSearch.filterTerms, extendedSearchConfig, effectiveSortKey, effectiveSortDir, usedVarietyIds, cropAvgSeedsPerGram]);
 
   const handleSort = useCallback((key: string) => {
     const typedKey = key as SortKey;
@@ -334,8 +648,27 @@ export default function VarietiesPage() {
       sortable: true,
       getValue: (v) => v.organic ? 1 : 0,
       render: (v) => (
+        <div
+          className="h-full flex items-center justify-center cursor-pointer hover:bg-gray-50"
+          onClick={() => updateVariety({ ...v, organic: !v.organic })}
+        >
+          {v.organic
+            ? <span className="text-green-600 text-xs">✓</span>
+            : <span className="text-gray-300 text-xs">-</span>}
+        </div>
+      ),
+    },
+    {
+      key: 'used',
+      header: 'Used',
+      width: 50,
+      sortable: true,
+      getValue: (v) => usedVarietyIds.has(v.id) ? 1 : 0,
+      render: (v) => (
         <div className="h-full flex items-center justify-center">
-          {v.organic && <span className="text-green-600 text-xs">✓</span>}
+          {usedVarietyIds.has(v.id)
+            ? <span className="text-green-600 text-xs">✓</span>
+            : <span className="text-gray-300 text-xs">-</span>}
         </div>
       ),
     },
@@ -385,13 +718,47 @@ export default function VarietiesPage() {
       ),
     },
     {
+      key: 'densityPct',
+      header: '% Avg',
+      width: 70,
+      sortable: true,
+      align: 'right',
+      getValue: (v) => {
+        const spg = getSeedsPerGram(v);
+        const key = `${v.crop}|${v.pelleted ? 'pelleted' : 'raw'}`;
+        const avg = cropAvgSeedsPerGram[key];
+        if (spg === undefined || !avg) return null;
+        return Math.round((spg / avg) * 100);
+      },
+      render: (v) => {
+        const spg = getSeedsPerGram(v);
+        const key = `${v.crop}|${v.pelleted ? 'pelleted' : 'raw'}`;
+        const avg = cropAvgSeedsPerGram[key];
+        if (spg === undefined || !avg) {
+          return <div className="px-2 text-sm text-gray-400 text-right h-full flex items-center justify-end">—</div>;
+        }
+        const pct = Math.round((spg / avg) * 100);
+        const color = pct < 50 || pct > 200 ? 'text-red-600 font-medium' : pct < 75 || pct > 133 ? 'text-amber-600' : 'text-gray-700';
+        return (
+          <div className={`px-2 text-sm text-right h-full flex items-center justify-end ${color}`} title={`${pct}% of ${v.pelleted ? 'pelleted' : ''} ${v.crop} avg (${Math.round(avg)} seeds/g)`}>
+            {pct}%
+          </div>
+        );
+      },
+    },
+    {
       key: 'pelleted',
       header: 'Pell',
       width: 50,
       getValue: (v) => v.pelleted ? 1 : 0,
       render: (v) => (
-        <div className="h-full flex items-center justify-center">
-          {v.pelleted && <span className="text-purple-600 text-xs">✓</span>}
+        <div
+          className="h-full flex items-center justify-center cursor-pointer hover:bg-gray-50"
+          onClick={() => updateVariety({ ...v, pelleted: !v.pelleted })}
+        >
+          {v.pelleted
+            ? <span className="text-purple-600 text-xs">✓</span>
+            : <span className="text-gray-300 text-xs">-</span>}
         </div>
       ),
     },
@@ -401,8 +768,13 @@ export default function VarietiesPage() {
       width: 50,
       getValue: (v) => v.alreadyOwn ? 1 : 0,
       render: (v) => (
-        <div className="h-full flex items-center justify-center">
-          {v.alreadyOwn && <span className="text-blue-600 text-xs">✓</span>}
+        <div
+          className="h-full flex items-center justify-center cursor-pointer hover:bg-gray-50"
+          onClick={() => updateVariety({ ...v, alreadyOwn: !v.alreadyOwn })}
+        >
+          {v.alreadyOwn
+            ? <span className="text-blue-600 text-xs">✓</span>
+            : <span className="text-gray-300 text-xs">-</span>}
         </div>
       ),
     },
@@ -414,28 +786,38 @@ export default function VarietiesPage() {
       render: (v) => (
         <div className="h-full flex items-center px-2">
           {v.website && (
-            <a href={v.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
+            <a
+              href={v.website}
+              target={openInNewWindow ? '_blank' : '_self'}
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline text-xs"
+              onClick={openInNewWindow ? (e) => {
+                e.preventDefault();
+                window.open(v.website!, '_blank', 'width=1024,height=768');
+              } : undefined}
+            >
               Link
             </a>
           )}
         </div>
       ),
     },
-  ], [updateVariety]);
+  ], [updateVariety, usedVarietyIds, openInNewWindow, cropAvgSeedsPerGram]);
 
   const handleSaveVariety = useCallback(
     async (variety: Variety) => {
-      if (editingVariety) {
+      if (editingVariety && !isCloning) {
         await updateVariety(variety);
         setToast({ message: 'Updated', type: 'success' });
       } else {
         await addVariety(variety);
-        setToast({ message: 'Added', type: 'success' });
+        setToast({ message: isCloning ? 'Cloned' : 'Added', type: 'success' });
       }
       setIsEditorOpen(false);
       setEditingVariety(null);
+      setIsCloning(false);
     },
-    [editingVariety, addVariety, updateVariety]
+    [editingVariety, isCloning, addVariety, updateVariety]
   );
 
   const handleDeleteVariety = useCallback(
@@ -458,12 +840,32 @@ export default function VarietiesPage() {
     }
   }, [importVarieties]);
 
-  const clearFilters = useCallback(() => {
-    setSearchQuery('');
-    setFilterCrop('');
-    setFilterSupplier('');
-    setFilterOrganic(null);
+  const handleExportUsed = useCallback(() => {
+    const usedVarieties = Object.values(varieties)
+      .filter((v) => usedVarietyIds.has(v.id))
+      .sort((a, b) => a.crop.localeCompare(b.crop) || a.name.localeCompare(b.name))
+      .map(varietyToExport);
+    downloadJson(usedVarieties, 'varieties-used.json');
+    setToast({ message: `Exported ${usedVarieties.length} used varieties`, type: 'success' });
+  }, [varieties, usedVarietyIds]);
+
+  const handleExportFiltered = useCallback(() => {
+    const exported = filteredVarieties.map(varietyToExport);
+    downloadJson(exported, 'varieties-export.json');
+    setToast({ message: `Exported ${exported.length} varieties`, type: 'success' });
+  }, [filteredVarieties]);
+
+  const handleDownloadTemplate = useCallback(() => {
+    downloadJson(TEMPLATE_VARIETIES, 'varieties-template.json');
   }, []);
+
+  const handleImport = useCallback(async (json: string) => {
+    const parsed = JSON.parse(json);
+    const arr = Array.isArray(parsed) ? parsed : parsed.varieties;
+    const result = await importVarieties(arr);
+    setToast({ message: `Imported: ${result.added} added, ${result.updated} updated`, type: 'success' });
+    return result;
+  }, [importVarieties]);
 
   if (!isLoaded) {
     return (
@@ -488,7 +890,11 @@ export default function VarietiesPage() {
   }
 
   const varietyCount = Object.keys(varieties).length;
-  const hasFilters = searchQuery || filterCrop || filterSupplier || filterOrganic !== null;
+
+  // For cloning: strip the id so createVariety generates a fresh one
+  const editorVariety = isCloning && editingVariety
+    ? (() => { const { id: _, ...rest } = editingVariety; return { ...rest, name: `${rest.name} (copy)` }; })()
+    : editingVariety;
 
   return (
     <>
@@ -499,49 +905,42 @@ export default function VarietiesPage() {
           <h1 className="text-lg font-semibold text-gray-900">Varieties</h1>
           <span className="text-sm text-gray-500">{filteredVarieties.length}/{varietyCount}</span>
 
-          <input
-            type="text"
+          <SearchInput
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
-            className="px-2 py-1 border rounded text-sm w-40"
+            onChange={setSearchQuery}
+            placeholder="Search varieties..."
+            sortFields={sortFieldNames}
+            filterFields={filterFieldNames}
+            width="w-64"
           />
-          <select
-            value={filterCrop}
-            onChange={(e) => setFilterCrop(e.target.value)}
-            className="px-2 py-1 border rounded text-sm"
-          >
-            <option value="">All Crops</option>
-            {uniqueCrops.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select
-            value={filterSupplier}
-            onChange={(e) => setFilterSupplier(e.target.value)}
-            className="px-2 py-1 border rounded text-sm"
-          >
-            <option value="">All Suppliers</option>
-            {uniqueSuppliers.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <select
-            value={filterOrganic === null ? '' : filterOrganic ? 'y' : 'n'}
-            onChange={(e) => setFilterOrganic(e.target.value === '' ? null : e.target.value === 'y')}
-            className="px-2 py-1 border rounded text-sm"
-          >
-            <option value="">All Types</option>
-            <option value="y">Organic</option>
-            <option value="n">Conventional</option>
-          </select>
-          {hasFilters && (
-            <button onClick={clearFilters} className="text-xs text-gray-500 hover:text-gray-700">Clear</button>
-          )}
 
           <div className="flex-1" />
 
+          <button
+            onClick={() => setOpenInNewWindow(v => !v)}
+            className={`px-3 py-1 text-sm border rounded ${openInNewWindow ? 'bg-blue-50 border-blue-400 text-blue-700' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+            title={openInNewWindow ? 'Search links open in new window' : 'Search links open in same tab'}
+          >
+            {openInNewWindow ? '↗ New Window' : '→ Same Tab'}
+          </button>
+
+          <button onClick={handleExportUsed} className="px-3 py-1 text-sm text-gray-700 border rounded hover:bg-gray-50" title="Export varieties used in plan as JSON">
+            Export Used
+          </button>
+          <button onClick={handleExportFiltered} className="px-3 py-1 text-sm text-gray-700 border rounded hover:bg-gray-50" title="Export currently filtered varieties as JSON">
+            Export Filtered
+          </button>
+          <button onClick={() => setIsImportOpen(true)} className="px-3 py-1 text-sm text-gray-700 border rounded hover:bg-gray-50" title="Import varieties from JSON">
+            Import
+          </button>
+          <button onClick={handleDownloadTemplate} className="px-3 py-1 text-sm text-gray-700 border rounded hover:bg-gray-50" title="Download JSON template">
+            Template
+          </button>
           <button onClick={handleLoadStock} className="px-3 py-1 text-sm text-gray-700 border rounded hover:bg-gray-50">
             Reset to Stock
           </button>
           <button
-            onClick={() => { setEditingVariety(null); setIsEditorOpen(true); }}
+            onClick={() => { setEditingVariety(null); setIsCloning(false); setIsEditorOpen(true); }}
             className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
           >
             + Add
@@ -557,18 +956,46 @@ export default function VarietiesPage() {
               columns={columns}
               rowHeight={32}
               headerHeight={36}
-              sortKey={sortKey}
-              sortDir={sortDir}
+              sortKey={effectiveSortKey}
+              sortDir={effectiveSortDir}
               onSort={handleSort}
               onCellChange={handleCellChange}
               emptyMessage={varietyCount === 0 ? 'No varieties loaded.' : 'No matches'}
               renderActions={(v) => (
                 <>
                   <button
-                    onClick={() => { setEditingVariety(v); setIsEditorOpen(true); }}
-                    className="px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-200 rounded"
+                    onClick={() => {
+                      const url = `https://www.google.com/search?q=${encodeURIComponent(`${v.supplier} ${v.crop} ${v.name} seeds`)}`;
+                      openInNewWindow ? window.open(url, '_blank', 'width=1024,height=768') : window.open(url, '_self');
+                    }}
+                    className="px-1 py-0.5 text-xs text-blue-600 hover:bg-blue-50 rounded"
+                    title={`Search: ${v.supplier} ${v.crop} ${v.name} seeds`}
+                  >
+                    🔍
+                  </button>
+                  <button
+                    onClick={() => {
+                      const url = `https://www.google.com/search?q=${encodeURIComponent(`organic ${v.crop} ${v.name} seed`)}`;
+                      openInNewWindow ? window.open(url, '_blank', 'width=1024,height=768') : window.open(url, '_self');
+                    }}
+                    className="px-1 py-0.5 text-xs text-green-600 hover:bg-green-50 rounded"
+                    title={`Search: organic ${v.crop} ${v.name} seed`}
+                  >
+                    🌱
+                  </button>
+                  <button
+                    onClick={() => { setEditingVariety(v); setIsCloning(false); setIsEditorOpen(true); }}
+                    className="px-1 py-0.5 text-xs text-gray-600 hover:bg-gray-200 rounded"
+                    title="Edit variety"
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => { setEditingVariety(v); setIsCloning(true); setIsEditorOpen(true); }}
+                    className="px-1 py-0.5 text-xs text-gray-600 hover:bg-gray-200 rounded"
+                    title="Clone variety"
+                  >
+                    Clone
                   </button>
                   <button
                     onClick={() => handleDeleteVariety(v)}
@@ -578,16 +1005,23 @@ export default function VarietiesPage() {
                   </button>
                 </>
               )}
-              actionsWidth={70}
+              actionsWidth={160}
             />
           </div>
         </div>
 
         {isEditorOpen && (
           <VarietyEditor
-            variety={editingVariety}
+            variety={editorVariety}
             onSave={handleSaveVariety}
-            onClose={() => { setIsEditorOpen(false); setEditingVariety(null); }}
+            onClose={() => { setIsEditorOpen(false); setEditingVariety(null); setIsCloning(false); }}
+          />
+        )}
+
+        {isImportOpen && (
+          <ImportModal
+            onImport={handleImport}
+            onClose={() => setIsImportOpen(false)}
           />
         )}
 

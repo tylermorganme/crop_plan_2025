@@ -27,20 +27,20 @@ console.log('SEED DATA PARITY AUDIT');
 console.log('='.repeat(70));
 console.log();
 
-// Check 1: Is Seeding Factor being imported?
-console.log('CHECK 1: Seeding Factor Import');
+// Check 1: Is extraStartFactor being imported?
+console.log('CHECK 1: Extra Start Factor Import');
 console.log('-'.repeat(40));
-const hasSeeding = crops.some(c => c.seedingFactor !== undefined);
-console.log(`  seedingFactor in crops.json: ${hasSeeding ? 'YES' : 'NO (MISSING!)'}`);
+const hasExtraStart = crops.some(c => c.extraStartFactor !== undefined);
+console.log(`  extraStartFactor in crops.json: ${hasExtraStart ? 'YES' : 'NO (MISSING!)'}`);
 
-// Count Seeding Factor values in source
-const seedingFactorCounts = {};
-cropsOld.forEach(c => {
-  const sf = c['Seeding Factor'];
-  seedingFactorCounts[sf] = (seedingFactorCounts[sf] || 0) + 1;
+// Count combined factor values
+const factorCounts = {};
+crops.forEach(c => {
+  const f = c.extraStartFactor ?? 1;
+  factorCounts[f] = (factorCounts[f] || 0) + 1;
 });
-console.log(`  Seeding Factor distribution in Excel:`);
-Object.entries(seedingFactorCounts)
+console.log(`  extraStartFactor distribution:`);
+Object.entries(factorCounts)
   .sort((a, b) => b[1] - a[1])
   .forEach(([val, count]) => {
     console.log(`    ${val}: ${count} crops`);
@@ -109,7 +109,7 @@ console.log();
 console.log('CHECK 3: Field Presence');
 console.log('-'.repeat(40));
 
-const seedFields = ['seedsPerBed', 'seedsPerPlanting', 'safetyFactor', 'seedingFactor'];
+const seedFields = ['seedsPerPlanting', 'extraStartFactor'];
 const importedFields = ['rows', 'spacing'];
 
 for (const field of [...seedFields, ...importedFields]) {
@@ -176,8 +176,8 @@ console.log();
 
 // Summarize results
 const issues = [];
-if (!hasSeeding) {
-  issues.push('seedingFactor NOT being imported');
+if (!hasExtraStart) {
+  issues.push('extraStartFactor NOT being imported');
 }
 if (mismatches > 0) {
   issues.push(`${mismatches} Seeds Per Bed mismatches with Excel`);
@@ -185,7 +185,6 @@ if (mismatches > 0) {
 
 if (issues.length === 0) {
   console.log('✅ All seed data checks passed!');
-  console.log('   - seedingFactor is being imported');
   console.log('   - Seeds Per Bed values match Excel exactly');
   console.log('   - All seed-related fields are present');
 } else {

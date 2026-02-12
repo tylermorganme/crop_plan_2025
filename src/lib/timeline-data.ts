@@ -786,11 +786,14 @@ export function expandPlantingsToTimelineCrops(
         // Track yield factor
         crop.yieldFactor = planting.yieldFactor;
 
-        // Calculate seeds needed based on PlantingSpec.seedsPerBed
-        if (spec.seedsPerBed && planting.bedFeet) {
-          // seedsPerBed is per 50ft bed, scale to actual feet
-          const bedsEquivalent = planting.bedFeet / 50;
-          crop.seedsNeeded = Math.ceil(spec.seedsPerBed * bedsEquivalent);
+        // Calculate seeds needed from formula fields
+        const rawSpec = catalog[planting.specId];
+        if (planting.bedFeet && rawSpec?.spacing && rawSpec.spacing > 0) {
+          const rows = rawSpec.rows ?? 1;
+          const spp = rawSpec.seedsPerPlanting ?? 1;
+          const sf = rawSpec.extraStartFactor ?? 1;
+          const plants = (12 / rawSpec.spacing) * rows * planting.bedFeet;
+          crop.seedsNeeded = Math.ceil(plants * spp * sf);
         }
       }
 

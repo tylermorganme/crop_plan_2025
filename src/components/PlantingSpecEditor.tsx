@@ -416,9 +416,32 @@ export default function PlantingSpecEditor({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // For number inputs: store the raw string while typing so "1." doesn't get eaten.
+  // The raw string is cleared on blur, at which point the parsed number takes over.
+  const [rawNumberStrings, setRawNumberStrings] = useState<Record<string, string>>({});
+
   const updateNumberField = (field: keyof PlantingSpec, value: string) => {
-    const num = value === '' ? undefined : parseFloat(value);
-    updateField(field, num as PlantingSpec[typeof field]);
+    if (value === '') {
+      setRawNumberStrings(prev => { const next = { ...prev }; delete next[field]; return next; });
+      updateField(field, undefined as PlantingSpec[typeof field]);
+      return;
+    }
+    // Keep raw string for intermediate states like "1." or "0.0"
+    setRawNumberStrings(prev => ({ ...prev, [field]: value }));
+    const num = parseFloat(value);
+    if (!isNaN(num)) {
+      updateField(field, num as PlantingSpec[typeof field]);
+    }
+  };
+
+  const commitNumberField = (field: keyof PlantingSpec) => {
+    setRawNumberStrings(prev => { const next = { ...prev }; delete next[field]; return next; });
+  };
+
+  const getNumberValue = (field: keyof PlantingSpec): string | number => {
+    if (field in rawNumberStrings) return rawNumberStrings[field];
+    const v = formData[field];
+    return (typeof v === 'number' ? v : '') as string | number;
   };
 
   // Look up cropId by name (case-insensitive) for color linking
@@ -666,8 +689,9 @@ export default function PlantingSpecEditor({
                     min="0.1"
                     step="any"
                     max="72"
-                    value={formData.spacing ?? ''}
+                    value={getNumberValue('spacing')}
                     onChange={(e) => updateNumberField('spacing', e.target.value)}
+                    onBlur={() => commitNumberField('spacing')}
                     placeholder="e.g., 12"
                     className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -682,6 +706,49 @@ export default function PlantingSpecEditor({
                   </span>
                   <span className="text-blue-500 ml-2">
                     ({formData.rows} rows × {Math.floor(12 / formData.spacing)} plants/row/ft × 50ft)
+                  </span>
+                </div>
+              )}
+            </section>
+
+            {/* Seeding Section */}
+            <section>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 pb-1 border-b">Seeding</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Seeds per Planting</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={getNumberValue('seedsPerPlanting')}
+                    onChange={(e) => updateNumberField('seedsPerPlanting', e.target.value)}
+                    onBlur={() => commitNumberField('seedsPerPlanting')}
+                    placeholder="e.g., 1"
+                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Seeds per cell or plant site</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Extra Start Factor</label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.1"
+                    value={getNumberValue('extraStartFactor')}
+                    onChange={(e) => updateNumberField('extraStartFactor', e.target.value)}
+                    onBlur={() => commitNumberField('extraStartFactor')}
+                    placeholder="e.g., 1.3"
+                    className="w-full px-3 py-2 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Start extra cells, cull the weak (transplant)</p>
+                </div>
+              </div>
+              {/* Show calculated seeds per bed when all values are set */}
+              {formData.rows && formData.spacing && formData.spacing > 0 && (
+                <div className="mt-3 p-2 bg-blue-50 rounded text-sm text-blue-700">
+                  <span className="font-medium">
+                    {Math.ceil((12 / formData.spacing) * formData.rows * 50 * (formData.seedsPerPlanting ?? 1) * (formData.extraStartFactor ?? 1)).toLocaleString()} seeds per 50ft bed
                   </span>
                 </div>
               )}

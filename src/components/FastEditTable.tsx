@@ -32,6 +32,8 @@ export interface ColumnDef<T> {
   format?: (row: T) => string;
   /** Fully custom cell renderer (bypasses editable/format) */
   render?: (row: T) => React.ReactNode;
+  /** Stick this column to the left edge when scrolling horizontally */
+  sticky?: boolean;
 }
 
 export interface FastEditTableProps<T> {
@@ -209,6 +211,7 @@ export function FastEditTable<T>({
   onSelectionChange,
 }: FastEditTableProps<T>) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   // Selection handlers
   const toggleRow = useCallback((key: string) => {
@@ -231,6 +234,13 @@ export function FastEditTable<T>({
     }
   }, [data, rowKey, selectedKeys, onSelectionChange]);
 
+  // Sync header scroll with body scroll
+  const handleBodyScroll = useCallback(() => {
+    if (tableContainerRef.current && headerRef.current) {
+      headerRef.current.scrollLeft = tableContainerRef.current.scrollLeft;
+    }
+  }, []);
+
   // Virtualization
   const rowVirtualizer = useVirtualizer({
     count: data.length,
@@ -244,6 +254,21 @@ export function FastEditTable<T>({
     const checkboxW = selectable ? CHECKBOX_WIDTH : 0;
     return checkboxW + columns.reduce((sum, col) => sum + col.width, 0) + (renderActions ? actionsWidth : 0);
   }, [columns, renderActions, actionsWidth, selectable]);
+
+  // Compute left offsets for sticky columns and find the last sticky key
+  const { stickyOffsets, lastStickyKey } = useMemo(() => {
+    const offsets = new Map<string, number>();
+    let left = selectable ? CHECKBOX_WIDTH : 0;
+    let lastKey: string | null = null;
+    for (const col of columns) {
+      if (col.sticky) {
+        offsets.set(col.key, left);
+        lastKey = col.key;
+      }
+      left += col.width;
+    }
+    return { stickyOffsets: offsets, lastStickyKey: lastKey };
+  }, [columns, selectable]);
 
   // Render a cell based on column config
   const renderCell = useCallback(
@@ -305,6 +330,7 @@ export function FastEditTable<T>({
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div
+        ref={headerRef}
         className="bg-gray-100 border-b flex-shrink-0 overflow-hidden"
         style={{ height: headerHeight }}
       >
@@ -319,33 +345,42 @@ export function FastEditTable<T>({
               />
             </div>
           )}
-          {columns.map((col) => (
-            <div
-              key={col.key}
-              className={`px-2 flex-shrink-0 ${col.editable ? 'bg-blue-50/50' : ''}`}
-              style={{ width: col.width }}
-            >
-              {col.sortable && onSort ? (
-                <SortHeader
-                  label={col.header}
-                  sortKey={col.key}
-                  currentSortKey={sortKey}
-                  sortDir={sortDir}
-                  onSort={onSort}
-                  align={col.align}
-                  editable={!!col.editable}
-                />
-              ) : (
-                <div
-                  className={`text-xs font-medium uppercase tracking-wide ${
-                    col.editable ? 'text-blue-700' : 'text-gray-600'
-                  } ${col.align === 'right' ? 'text-right' : ''}`}
-                >
-                  {col.header}
-                </div>
-              )}
-            </div>
-          ))}
+          {columns.map((col) => {
+            const stickyLeft = stickyOffsets.get(col.key);
+            const isSticky = stickyLeft !== undefined;
+            const isLastSticky = col.key === lastStickyKey;
+            return (
+              <div
+                key={col.key}
+                className={`px-2 flex-shrink-0 ${col.editable ? 'bg-blue-50/50' : ''} ${isSticky ? 'bg-gray-100' : ''}`}
+                style={{
+                  width: col.width,
+                  ...(isSticky ? { position: 'sticky' as const, left: stickyLeft, zIndex: 2 } : {}),
+                  ...(isLastSticky ? { boxShadow: '2px 0 4px -1px rgba(0,0,0,0.1)' } : {}),
+                }}
+              >
+                {col.sortable && onSort ? (
+                  <SortHeader
+                    label={col.header}
+                    sortKey={col.key}
+                    currentSortKey={sortKey}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                    align={col.align}
+                    editable={!!col.editable}
+                  />
+                ) : (
+                  <div
+                    className={`text-xs font-medium uppercase tracking-wide ${
+                      col.editable ? 'text-blue-700' : 'text-gray-600'
+                    } ${col.align === 'right' ? 'text-right' : ''}`}
+                  >
+                    {col.header}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {renderActions && (
             <div className="flex-shrink-0" style={{ width: actionsWidth }} />
           )}
@@ -353,7 +388,7 @@ export function FastEditTable<T>({
       </div>
 
       {/* Body */}
-      <div ref={tableContainerRef} className="flex-1 overflow-auto">
+      <div ref={tableContainerRef} className="flex-1 overflow-auto" onScroll={handleBodyScroll}>
         <div
           style={{
             height: rowVirtualizer.getTotalSize(),
@@ -391,16 +426,25 @@ export function FastEditTable<T>({
                     />
                   </div>
                 )}
-                {columns.map((col) => (
-                  <div
-                    key={col.key}
-                    className="flex-shrink-0 h-full"
-                    style={{ width: col.width }}
-                    data-edit-col={col.editable ? col.key : undefined}
-                  >
-                    {renderCell(row, col)}
-                  </div>
-                ))}
+                {columns.map((col) => {
+                  const stickyLeft = stickyOffsets.get(col.key);
+                  const isSticky = stickyLeft !== undefined;
+                  const isLastSticky = col.key === lastStickyKey;
+                  return (
+                    <div
+                      key={col.key}
+                      className={`flex-shrink-0 h-full ${isSticky ? 'bg-white group-hover:bg-gray-50' : ''} ${isSticky && isSelected ? '!bg-blue-50' : ''}`}
+                      style={{
+                        width: col.width,
+                        ...(isSticky ? { position: 'sticky' as const, left: stickyLeft, zIndex: 1 } : {}),
+                        ...(isLastSticky ? { boxShadow: '2px 0 4px -1px rgba(0,0,0,0.1)' } : {}),
+                      }}
+                      data-edit-col={col.editable ? col.key : undefined}
+                    >
+                      {renderCell(row, col)}
+                    </div>
+                  );
+                })}
                 {renderActions && (
                   <div
                     className="flex-shrink-0 px-2 flex items-center gap-1 opacity-0 group-hover:opacity-100"

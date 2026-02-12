@@ -60,7 +60,7 @@ def parse_and_convert(excel_formula: str, harvests: int = 1) -> Optional[Formula
     f = f.replace('BedLength', 'bedFeet')
     f = f.replace('Harvests', 'harvests')
     f = f.replace('Seeds Per Bed', 'seeds')
-    f = f.replace('Safety Factor', 'safetyFactor')
+    f = f.replace('Safety Factor', 'extraStartFactor')
 
     # Track if formula has /harvests (meaning it's already computing per-harvest)
     has_div_harvests = '/harvests' in f.lower()
@@ -273,9 +273,9 @@ def parse_and_convert(excel_formula: str, harvests: int = 1) -> Optional[Formula
         return FormulaConversion(f'(bedFeet / 100) * {rate} * daysBetweenHarvest * harvests', 'AREA_DBH_SCALED', False)
 
     # ========== Seed-based patterns ==========
-    # 1/16 * seeds / safetyFactor -> seeds * 0.0625 * harvests
-    # Note: safetyFactor is typically 1.1 (10% buffer), we'll bake it in
-    m = re.match(r'^1/(\d+\.?\d*)\*seeds/safetyFactor$', f)
+    # 1/16 * seeds / extraStartFactor -> seeds * 0.0625 * harvests
+    # Note: extraStartFactor is typically 1.1 (10% buffer), we'll bake it in
+    m = re.match(r'^1/(\d+\.?\d*)\*seeds/extraStartFactor$', f)
     if m:
         rate = 1.0 / float(m.group(1))
         # Bake in typical safety factor of 1.1

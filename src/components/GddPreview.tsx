@@ -134,34 +134,32 @@ export function GddPreview({
     );
   }
 
-  // Calculate adjusted seed-to-harvest (greenhouse + adjusted field)
-  const adjustedSeedToHarvest = daysInCells + gddData.adjustedDtm;
-  const seedToHarvestDiff = adjustedSeedToHarvest - seedToHarvest;
+  const daysDiff = gddData.daysDifference;
 
   return (
     <div className="space-y-2">
-      {/* Main comparison - shows total seed-to-harvest */}
+      {/* Main comparison - field days only (GDD only affects field time) */}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
-          <div className="text-xs text-gray-500">Seed→Harvest</div>
-          <div className="text-sm font-medium">{seedToHarvest}d</div>
+          <div className="text-xs text-gray-500">Field Days</div>
+          <div className="text-sm font-medium">{fieldDays}d</div>
         </div>
         <div>
           <div className="text-xs text-gray-500">GDD Adjusted</div>
           <div className={`text-sm font-medium ${
-            seedToHarvestDiff > 0 ? 'text-amber-600' :
-            seedToHarvestDiff < 0 ? 'text-green-600' : ''
+            daysDiff > 0 ? 'text-amber-600' :
+            daysDiff < 0 ? 'text-green-600' : ''
           }`}>
-            {adjustedSeedToHarvest}d
+            {gddData.adjustedDtm}d
           </div>
         </div>
         <div>
           <div className="text-xs text-gray-500">Difference</div>
           <div className={`text-sm font-medium ${
-            seedToHarvestDiff > 0 ? 'text-amber-600' :
-            seedToHarvestDiff < 0 ? 'text-green-600' : 'text-gray-500'
+            daysDiff > 0 ? 'text-amber-600' :
+            daysDiff < 0 ? 'text-green-600' : 'text-gray-500'
           }`}>
-            {formatGddDifference(seedToHarvestDiff)}
+            {formatGddDifference(daysDiff)}
           </div>
         </div>
       </div>
@@ -180,6 +178,14 @@ export function GddPreview({
             {fieldDays}d → {gddData.adjustedDtm}d
           </span>
         </div>
+        {daysInCells > 0 && (
+          <div className="flex justify-between">
+            <span>Seed→Harvest:</span>
+            <span className="font-medium">
+              {seedToHarvest}d → {daysInCells + gddData.adjustedDtm}d
+            </span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span>Reference GDD:</span>
           <span className="font-medium">{gddData.referenceGdd}</span>

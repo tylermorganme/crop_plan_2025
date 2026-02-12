@@ -109,9 +109,6 @@ export interface PlantingConfigLookup {
   /** Days in greenhouse cells (0 = direct seed) */
   daysInCells: number;
 
-  /** Seeds needed per 50ft bed (for ordering calculations) */
-  seedsPerBed?: number;
-
   // ---- GDD Fields ----
 
   /** Target field date for GDD reference (MM-DD format) */
@@ -165,7 +162,6 @@ export function lookupConfigFromCatalog(
     dtm: seedToHarvest, // Use seedToHarvest for timeline calculations
     harvestWindow,
     daysInCells,
-    seedsPerBed: entry.seedsPerBed,
     targetFieldDate: entry.targetFieldDate,
     // Note: gddBaseTemp and gddUpperTemp come from Crop entity,
     // must be enriched by caller with access to plan.crops

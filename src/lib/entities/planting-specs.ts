@@ -162,19 +162,13 @@ export interface PlantingSpec {
   // Formula-based yield calculation with arbitrary expressions.
   // See docs/yield-calculation-design.md for full explanation.
 
-  // ---- Seed-based yield (for shallots, etc.) ----
-
-  /** Seeds per bed for seed-based yield calculations */
-  seedsPerBed?: number;
+  // ---- Seed calculation fields ----
 
   /** Seeds per planting/transplant */
   seedsPerPlanting?: number;
 
-  /** Safety factor for extra cells/trays (typically 1.1-1.3) */
-  safetyFactor?: number;
-
-  /** Seeding factor for multi-seeding per cell (typically 1, sometimes 2) */
-  seedingFactor?: number;
+  /** Extra start factor — insurance multiplier for seed ordering (e.g., 1.3 = 30% extra) */
+  extraStartFactor?: number;
 
 
   // ---- Scheduling ----
@@ -627,7 +621,7 @@ export function buildYieldContext(
     daysBetweenHarvest: primaryPy?.daysBetweenHarvest ?? 7,
     rows,
     spacing,
-    seeds: crop.seedsPerBed ?? 0,
+    seeds: plantingsPerBed * (crop.seedsPerPlanting ?? 1) * (crop.extraStartFactor ?? 1),
     seedToHarvest,
     daysToMaturity: seedToHarvest, // DTM is now synonymous with seedToHarvest
     daysInCells,

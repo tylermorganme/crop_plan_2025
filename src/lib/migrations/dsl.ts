@@ -484,6 +484,16 @@ export const declarativeMigrations: Record<number, MigrationOp[]> = {
   18: [
     { op: 'renamePath', from: 'specs.*.identifier', to: 'specs.*.name' },
   ],
+
+  // v19 → v20: Rename safetyFactor → extraStartFactor on PlantingSpec
+  19: [
+    { op: 'renamePath', from: 'specs.*.safetyFactor', to: 'specs.*.extraStartFactor' },
+  ],
+
+  // v20 → v21: Remove seedingFactor (folded into extraStartFactor by imperative migration)
+  20: [
+    { op: 'deletePath', path: 'specs.*.seedingFactor' },
+  ],
 };
 
 /**

@@ -164,14 +164,16 @@ const cleanCrops = crops.map((c) => {
     rows: c['Rows'] || undefined,
     spacing: c['Spacing'] || undefined,
 
-    // Seed data - used for seed-based yield formulas
-    // Note: seedsPerBed already has safetyFactor × seedingFactor baked in from Excel
-    // We import these separately so we can understand the components
-    seedsPerBed: c['Seeds Per Bed'] || undefined,
+    // Seed data - component fields for seed calculation formula:
+    // seeds = (12/spacing) * rows * bedFeet * seedsPerPlanting * extraStartFactor
     seedsPerPlanting: c['Seeds Per Planting'] || undefined,
-    safetyFactor: c['Safety Factor'] || undefined,
-    // seedingFactor: multi-seeding per cell (typically 1, sometimes 2 for crops like spinach)
-    seedingFactor: c['Seeding Factor'] || undefined,
+    // extraStartFactor combines Excel's "Safety Factor" and "Seeding Factor" into one multiplier
+    extraStartFactor: (() => {
+      const sf = c['Safety Factor'] || 1;
+      const seeding = c['Seeding Factor'] || 1;
+      const combined = sf * seeding;
+      return combined !== 1 ? Math.round(combined * 10000) / 10000 : undefined;
+    })(),
 
     // Harvest/yield data - these are the normalized inputs
     // Frontend can offer different input modes that convert to this format

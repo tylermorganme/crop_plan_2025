@@ -36,6 +36,7 @@ import {
   clonePlanting,
   createPlanting,
   generatePlantingId,
+  applyDefaultSeedSource,
 } from './entities/planting';
 import { cloneBeds, cloneBedGroups, createBed, createBedGroup } from './entities/bed';
 import { createSequence, initializeSequenceIdCounter, type PlantingSequence } from './entities/planting-sequence';
@@ -54,6 +55,7 @@ import { createSeedOrder, getSeedOrderId, type SeedOrder, type CreateSeedOrderIn
 export type MutationResult = { success: true } | { success: false; error: string };
 import { useUIStore } from './ui-store';
 import { createMarket, getActiveMarkets as getActiveMarketsFromRecord, type Market } from './entities/market';
+import type { SeedSearchRecord } from './entities/seed-search';
 
 /**
  * Raw variety input from JSON import.
@@ -599,6 +601,13 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   getVariety: (varietyId: string) => import('./entities/variety').Variety | undefined;
   /** Get all varieties for a crop */
   getVarietiesForCrop: (crop: string) => import('./entities/variety').Variety[];
+  /** Atomically replace all references to one variety with another across the plan */
+  replaceVarietyEverywhere: (oldVarietyId: string, newVarietyId: string) => Promise<{
+    plantingsUpdated: number;
+    specsUpdated: number;
+    mixesUpdated: number;
+    orderTransferred: boolean;
+  }>;
 
   // ---- Seed Mix Management ----
   /** Add a seed mix to the plan */
@@ -656,11 +665,19 @@ interface ExtendedPlanActions extends Omit<PlanActions, 'loadPlanById' | 'rename
   /** Get all active markets */
   getActiveMarkets: () => import('./entities/market').Market[];
 
+  // ---- Seed Search Management (OMRI Compliance) ----
+  /** Upsert a seed search record (creates or updates) */
+  updateSeedSearch: (record: import('./entities/seed-search').SeedSearchRecord) => Promise<void>;
+  /** Bulk upsert seed search records (single undo step) */
+  bulkUpdateSeedSearches: (records: import('./entities/seed-search').SeedSearchRecord[]) => Promise<void>;
+
   // ---- Plan Metadata ----
   /** Update plan metadata (name, description, year, timezone, etc.) */
   updatePlanMetadata: (updates: Partial<Omit<import('./entities/plan').PlanMetadata, 'id' | 'createdAt' | 'lastModified'>>) => Promise<void>;
   /** Update plan notes */
   updatePlanNotes: (notes: string) => Promise<void>;
+  /** Update seed search message template */
+  updateSeedSearchMessageTemplate: (template: string) => Promise<void>;
   /** Update crop box display configuration */
   updatePlantingBoxDisplay: (config: import('./entities/plan').PlantingBoxDisplayConfig) => Promise<void>;
 
@@ -801,16 +818,20 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           throw new Error(`Plan not found: ${planId}`);
         }
 
-        // Client staleness check: warn if plan was saved by newer code
+        // Client staleness check: block load if plan was saved by newer code
         const planSchemaVersion = (data.plan as { schemaVersion?: number }).schemaVersion ?? 1;
         if (planSchemaVersion > CURRENT_SCHEMA_VERSION) {
+          set((state) => {
+            state.isLoading = false;
+          });
           useUIStore.getState().setToast({
             message: `This plan was saved with a newer version of the app. Please refresh to get the latest code.`,
             type: 'error',
           });
           console.warn(
-            `[loadPlanById] Schema mismatch: plan has version ${planSchemaVersion}, client has ${CURRENT_SCHEMA_VERSION}`
+            `[loadPlanById] Schema mismatch: plan has version ${planSchemaVersion}, client has ${CURRENT_SCHEMA_VERSION}. Refusing to load.`
           );
+          return;
         }
 
         // Migrate plan to current schema version
@@ -952,6 +973,12 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       const seedMixes = getStockSeedMixes();
       const products = getStockProducts();
       const markets = getStockMarkets();
+
+      // Apply default seed sources to plantings based on spec defaults
+      for (const p of convertedPlantings) {
+        const spec = p.specId ? specs[p.specId] : undefined;
+        applyDefaultSeedSource(p, spec?.defaultSeedSource);
+      }
 
       const plan: Plan = {
         id,
@@ -1245,15 +1272,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
         startBedUuid = null;
       }
 
-      // Check if planting should use default seed source
-      let shouldUseDefaultSeedSource = false;
-      if (!planting.seedSource && planting.useDefaultSeedSource === undefined &&
-          planting.specId && currentPlan.specs) {
-        const spec = currentPlan.specs[planting.specId];
-        if (spec?.defaultSeedSource) {
-          shouldUseDefaultSeedSource = true;
-        }
-      }
+      // Apply default seed source if spec has one
+      const spec = planting.specId ? currentPlan.specs?.[planting.specId] : undefined;
+      applyDefaultSeedSource(planting, spec?.defaultSeedSource);
 
       set((state) => {
         // Use patch-based mutation
@@ -1268,10 +1289,6 @@ export const usePlanStore = create<ExtendedPlanStore>()(
               startBed: startBedUuid,
               lastModified: now,
             };
-
-            if (shouldUseDefaultSeedSource) {
-              newPlanting.useDefaultSeedSource = true;
-            }
 
             plan.plantings.push(newPlanting);
 
@@ -1314,14 +1331,9 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           lastModified: Date.now(),
         };
 
-        // Check for default seed source
-        if (!planting.seedSource && planting.useDefaultSeedSource === undefined &&
-            planting.specId && state.currentPlan!.specs) {
-          const spec = state.currentPlan!.specs[planting.specId];
-          if (spec?.defaultSeedSource) {
-            processed.useDefaultSeedSource = true;
-          }
-        }
+        // Apply default seed source if spec has one
+        const spec = planting.specId ? state.currentPlan!.specs?.[planting.specId] : undefined;
+        applyDefaultSeedSource(processed, spec?.defaultSeedSource);
 
         return processed;
       });
@@ -3039,6 +3051,84 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       });
     },
 
+    replaceVarietyEverywhere: async (oldVarietyId: string, newVarietyId: string) => {
+      const plan = get().currentPlan;
+      if (!plan) return { plantingsUpdated: 0, specsUpdated: 0, mixesUpdated: 0, orderTransferred: false };
+
+      const oldVariety = plan.varieties?.[oldVarietyId];
+      const newVariety = plan.varieties?.[newVarietyId];
+      if (!oldVariety || !newVariety) return { plantingsUpdated: 0, specsUpdated: 0, mixesUpdated: 0, orderTransferred: false };
+
+      let plantingsUpdated = 0;
+      let specsUpdated = 0;
+      let mixesUpdated = 0;
+      let orderTransferred = false;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+
+        mutateWithPatches(
+          state,
+          (draft) => {
+            // 1. Replace planting.seedSource
+            if (draft.plantings) {
+              for (const p of draft.plantings) {
+                if (p.seedSource?.type === 'variety' && p.seedSource.id === oldVarietyId) {
+                  p.seedSource = { type: 'variety', id: newVarietyId };
+                  plantingsUpdated++;
+                }
+              }
+            }
+
+            // 2. Replace spec.defaultSeedSource
+            if (draft.specs) {
+              for (const spec of Object.values(draft.specs)) {
+                if (spec.defaultSeedSource?.type === 'variety' && spec.defaultSeedSource.id === oldVarietyId) {
+                  spec.defaultSeedSource = { type: 'variety', id: newVarietyId };
+                  specsUpdated++;
+                }
+              }
+            }
+
+            // 3. Replace in seed mix components (merge if replacement already present)
+            if (draft.seedMixes) {
+              for (const mix of Object.values(draft.seedMixes)) {
+                const oldIdx = mix.components.findIndex(c => c.varietyId === oldVarietyId);
+                if (oldIdx === -1) continue;
+
+                const newIdx = mix.components.findIndex(c => c.varietyId === newVarietyId);
+                if (newIdx !== -1 && newIdx !== oldIdx) {
+                  // Merge: add old percent to existing new component, remove old
+                  mix.components[newIdx].percent += mix.components[oldIdx].percent;
+                  mix.components.splice(oldIdx, 1);
+                } else {
+                  // Simple swap
+                  mix.components[oldIdx].varietyId = newVarietyId;
+                }
+                mixesUpdated++;
+              }
+            }
+
+            // 4. Clean up orphaned seed order for old variety
+            if (draft.seedOrders) {
+              const oldOrderId = getSeedOrderId(oldVarietyId);
+              if (draft.seedOrders[oldOrderId]) {
+                delete draft.seedOrders[oldOrderId];
+                orderTransferred = true;
+              }
+            }
+
+            draft.metadata.lastModified = Date.now();
+          },
+          `Replace variety "${oldVariety.name}" → "${newVariety.name}"`
+        );
+
+        state.isDirty = true;
+      });
+
+      return { plantingsUpdated, specsUpdated, mixesUpdated, orderTransferred };
+    },
+
     importVarieties: async (rawInputs: RawVarietyInput[]) => {
       const existingVarieties = get().currentPlan?.varieties ?? {};
       const existingByKey = new Map<string, string>();
@@ -3568,6 +3658,47 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       return getActiveMarketsFromRecord(markets);
     },
 
+    // ---- Seed Search Management (OMRI Compliance) ----
+
+    updateSeedSearch: async (record: SeedSearchRecord) => {
+      set((state) => {
+        if (!state.currentPlan) return;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.seedSearches) {
+              plan.seedSearches = {};
+            }
+            plan.seedSearches[record.id] = record;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update seed search for ${record.varietyId} (${record.year})`
+        );
+        state.isDirty = true;
+      });
+    },
+
+    bulkUpdateSeedSearches: async (records: SeedSearchRecord[]) => {
+      if (records.length === 0) return;
+      set((state) => {
+        if (!state.currentPlan) return;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            if (!plan.seedSearches) {
+              plan.seedSearches = {};
+            }
+            for (const record of records) {
+              plan.seedSearches[record.id] = record;
+            }
+            plan.metadata.lastModified = Date.now();
+          },
+          `Initialize ${records.length} seed search records`
+        );
+        state.isDirty = true;
+      });
+    },
+
     // ---- Plan Metadata ----
     updatePlanMetadata: async (updates) => {
       const { currentPlan } = get();
@@ -3610,6 +3741,24 @@ export const usePlanStore = create<ExtendedPlanStore>()(
       });
 
       await get().refreshPlanList();
+    },
+
+    updateSeedSearchMessageTemplate: async (template: string) => {
+      const { currentPlan } = get();
+      if (!currentPlan) return;
+
+      set((state) => {
+        if (!state.currentPlan) return;
+        mutateWithPatches(
+          state,
+          (plan) => {
+            plan.seedSearchMessageTemplate = template;
+            plan.metadata.lastModified = Date.now();
+          },
+          `Update seed search message template`
+        );
+        state.isDirty = true;
+      });
     },
 
     updatePlantingBoxDisplay: async (config) => {
@@ -3676,6 +3825,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
 
       for (let i = 1; i < options.count; i++) {
         const offsetDate = addDays(anchorDate, i * options.offsetDays);
+        const spec = original.specId ? currentPlan.specs?.[original.specId] : undefined;
         const newPlanting = createPlanting({
           specId: original.specId,
           fieldStartDate: format(offsetDate, 'yyyy-MM-dd'),
@@ -3692,6 +3842,7 @@ export const usePlanStore = create<ExtendedPlanStore>()(
           sequenceId: sequence.id,
           sequenceSlot: i,
         });
+        applyDefaultSeedSource(newPlanting, spec?.defaultSeedSource);
         newPlantings.push(newPlanting);
         newPlantingIds.push(newPlanting.id);
       }

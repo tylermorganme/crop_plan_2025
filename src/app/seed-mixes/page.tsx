@@ -5,18 +5,28 @@ import { createPortal } from 'react-dom';
 import { usePlanStore, initializePlanStore } from '@/lib/plan-store';
 import { type SeedMix, type SeedMixComponent } from '@/lib/entities/seed-mix';
 import type { Variety } from '@/lib/entities/variety';
+import { getEffectiveSeedSource } from '@/lib/entities/planting';
 import { Z_INDEX } from '@/lib/z-index';
 import AppHeader from '@/components/AppHeader';
 import { FastEditTable, ColumnDef } from '@/components/FastEditTable';
 import { SeedMixEditorModal } from '@/components/SeedMixEditorModal';
+import { SearchInput } from '@/components/SearchInput';
+import { parseSearchQuery, matchesFilter, type SearchConfig } from '@/lib/search-dsl';
+import { seedMixSearchConfig, getFilterFieldNames, getSortFieldNames } from '@/lib/search-configs';
 
 // Stable empty object references to avoid SSR hydration issues
 const EMPTY_VARIETIES: Record<string, Variety> = {};
 const EMPTY_SEED_MIXES: Record<string, SeedMix> = {};
 const EMPTY_CROPS: Record<string, { id: string; name: string }> = {};
 
-type SortKey = 'crop' | 'name' | 'components';
+type SortKey = 'crop' | 'name' | 'components' | 'used' | 'dtm';
 type SortDir = 'asc' | 'desc';
+
+/** Sort fields valid for seed mix DSL sorting */
+const MIX_SORT_FIELDS = new Set<string>([
+  ...getSortFieldNames(seedMixSearchConfig),
+  'components', 'used', 'dtm',
+]);
 
 // Convert weights to percentages (e.g., [2, 1, 1] -> [0.5, 0.25, 0.25])
 function weightsToPercents(weights: number[]): number[] {
@@ -119,7 +129,6 @@ export default function SeedMixesPage() {
   const [editingMix, setEditingMix] = useState<SeedMix | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterCrop, setFilterCrop] = useState<string>('');
   const [sortKey, setSortKey] = useState<SortKey>('crop');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [hoveredMix, setHoveredMix] = useState<{ mix: SeedMix; position: { top: number; left: number } } | null>(null);
@@ -127,6 +136,8 @@ export default function SeedMixesPage() {
   // Store hooks
   const varieties = usePlanStore((state) => state.currentPlan?.varieties ?? EMPTY_VARIETIES);
   const seedMixes = usePlanStore((state) => state.currentPlan?.seedMixes ?? EMPTY_SEED_MIXES);
+  const plantings = usePlanStore((state) => state.currentPlan?.plantings);
+  const specs = usePlanStore((state) => state.currentPlan?.specs);
   const crops = usePlanStore((state) => state.currentPlan?.crops ?? EMPTY_CROPS);
   const hasPlan = usePlanStore((state) => state.currentPlan !== null);
   const addSeedMix = usePlanStore((state) => state.addSeedMix);
@@ -142,39 +153,77 @@ export default function SeedMixesPage() {
     initializePlanStore().then(() => setIsLoaded(true));
   }, []);
 
-  // Compute unique crops
-  const uniqueCrops = useMemo(() => {
-    const crops = new Set(Object.values(seedMixes).map((m) => m.crop));
-    return Array.from(crops).sort();
-  }, [seedMixes]);
+  // Build set of mix IDs used by any planting (via seedSource or spec defaultSeedSource)
+  const usedMixIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (!plantings || !specs) return ids;
+    for (const planting of plantings) {
+      const spec = specs[planting.specId];
+      const source = getEffectiveSeedSource(planting, spec?.defaultSeedSource);
+      if (source?.type === 'mix') {
+        ids.add(source.id);
+      }
+    }
+    return ids;
+  }, [plantings, specs]);
+
+  // Extended search config with 'used' field (depends on plan data)
+  const extendedSearchConfig: SearchConfig<SeedMix> = useMemo(() => ({
+    ...seedMixSearchConfig,
+    fields: [
+      ...seedMixSearchConfig.fields,
+      {
+        name: 'used',
+        matchType: 'equals' as const,
+        getValue: (m: SeedMix) => usedMixIds.has(m.id),
+      },
+    ],
+  }), [usedMixIds]);
+
+  // Parse search query for filter terms and sort directives
+  const parsedSearch = useMemo(
+    () => parseSearchQuery(searchQuery, MIX_SORT_FIELDS),
+    [searchQuery]
+  );
+
+  // DSL sort overrides column header sort
+  const effectiveSortKey = (parsedSearch.sortField as SortKey) ?? sortKey;
+  const effectiveSortDir = parsedSearch.sortField ? parsedSearch.sortDir : sortDir;
+
+  // Filter field + sort field names for SearchInput autocomplete
+  const filterFieldNames = useMemo(() => getFilterFieldNames(extendedSearchConfig), [extendedSearchConfig]);
+  const sortFieldNames = useMemo(() => [...new Set([...getSortFieldNames(extendedSearchConfig), 'components', 'used', 'dtm'])], [extendedSearchConfig]);
+
+  // Helper: get min DTM for a mix (used for sorting)
+  const getMixDtmMin = useCallback((m: SeedMix): number => {
+    const dtms = m.components.map(c => varieties[c.varietyId]?.dtm).filter((d): d is number => d != null);
+    return dtms.length > 0 ? Math.min(...dtms) : 0;
+  }, [varieties]);
 
   // Filter and sort mixes
   const filteredMixes = useMemo(() => {
     let result = Object.values(seedMixes);
 
-    if (filterCrop) result = result.filter((m) => m.crop === filterCrop);
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (m) =>
-          m.name.toLowerCase().includes(q) ||
-          m.crop.toLowerCase().includes(q)
-      );
+    // DSL-based filtering
+    if (parsedSearch.filterTerms.length > 0) {
+      result = result.filter((m) => matchesFilter(m, parsedSearch.filterTerms, extendedSearchConfig));
     }
 
+    // Sort
     result.sort((a, b) => {
       let cmp = 0;
-      switch (sortKey) {
+      switch (effectiveSortKey) {
         case 'crop': cmp = a.crop.localeCompare(b.crop); break;
         case 'name': cmp = a.name.localeCompare(b.name); break;
         case 'components': cmp = a.components.length - b.components.length; break;
+        case 'used': cmp = (usedMixIds.has(a.id) ? 1 : 0) - (usedMixIds.has(b.id) ? 1 : 0); break;
+        case 'dtm': cmp = getMixDtmMin(a) - getMixDtmMin(b); break;
       }
-      return sortDir === 'asc' ? cmp : -cmp;
+      return effectiveSortDir === 'asc' ? cmp : -cmp;
     });
 
     return result;
-  }, [seedMixes, filterCrop, searchQuery, sortKey, sortDir]);
+  }, [seedMixes, parsedSearch.filterTerms, extendedSearchConfig, effectiveSortKey, effectiveSortDir, usedMixIds, getMixDtmMin]);
 
   const handleSort = useCallback((key: string) => {
     const typedKey = key as SortKey;
@@ -185,6 +234,16 @@ export default function SeedMixesPage() {
       setSortDir('asc');
     }
   }, [sortKey]);
+
+  // Handle inline cell edits
+  const handleCellChange = useCallback(
+    async (_rowKey: string, columnKey: string, newValue: string, row: SeedMix) => {
+      if (columnKey === 'notes') {
+        await updateSeedMix({ ...row, notes: newValue.trim() || undefined });
+      }
+    },
+    [updateSeedMix]
+  );
 
   // Column definitions for FastEditTable
   const columns: ColumnDef<SeedMix>[] = useMemo(() => [
@@ -204,6 +263,20 @@ export default function SeedMixesPage() {
       render: (m) => (
         <div className="px-2 text-sm font-medium truncate h-full flex items-center" title={m.name}>
           {m.name}
+        </div>
+      ),
+    },
+    {
+      key: 'used',
+      header: 'Used',
+      width: 50,
+      sortable: true,
+      getValue: (m) => usedMixIds.has(m.id) ? 1 : 0,
+      render: (m) => (
+        <div className="h-full flex items-center justify-center">
+          {usedMixIds.has(m.id)
+            ? <span className="text-green-600 text-xs">✓</span>
+            : <span className="text-gray-300 text-xs">-</span>}
         </div>
       ),
     },
@@ -251,17 +324,27 @@ export default function SeedMixesPage() {
       },
     },
     {
+      key: 'dtm',
+      header: 'DTM',
+      width: 80,
+      sortable: true,
+      align: 'right',
+      getValue: (m) => {
+        const dtms = m.components.map(c => varieties[c.varietyId]?.dtm).filter((d): d is number => d != null);
+        if (dtms.length === 0) return '';
+        const lo = Math.min(...dtms);
+        const hi = Math.max(...dtms);
+        return lo === hi ? `${lo}` : `${lo}-${hi}`;
+      },
+    },
+    {
       key: 'notes',
       header: 'Notes',
       width: 150,
+      editable: { type: 'text', placeholder: '—' },
       getValue: (m) => m.notes || '',
-      render: (m) => (
-        <div className="px-2 text-sm text-gray-400 truncate h-full flex items-center italic" title={m.notes}>
-          {m.notes}
-        </div>
-      ),
     },
-  ], [getVariety]);
+  ], [getVariety, varieties, usedMixIds]);
 
   const handleSaveMix = useCallback(
     async (mix: SeedMix) => {
@@ -313,11 +396,6 @@ export default function SeedMixesPage() {
     }
   }, [importSeedMixes, importVarieties, varieties]);
 
-  const clearFilters = useCallback(() => {
-    setSearchQuery('');
-    setFilterCrop('');
-  }, []);
-
   if (!isLoaded) {
     return (
       <>
@@ -342,7 +420,6 @@ export default function SeedMixesPage() {
 
   const mixCount = Object.keys(seedMixes).length;
   const varietyCount = Object.keys(varieties).length;
-  const hasFilters = searchQuery || filterCrop;
 
   return (
     <>
@@ -353,24 +430,14 @@ export default function SeedMixesPage() {
           <h1 className="text-lg font-semibold text-gray-900">Seed Mixes</h1>
           <span className="text-sm text-gray-500">{filteredMixes.length}/{mixCount}</span>
 
-          <input
-            type="text"
+          <SearchInput
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
-            className="px-2 py-1 border rounded text-sm w-40"
+            onChange={setSearchQuery}
+            placeholder="Search mixes..."
+            sortFields={sortFieldNames}
+            filterFields={filterFieldNames}
+            width="w-64"
           />
-          <select
-            value={filterCrop}
-            onChange={(e) => setFilterCrop(e.target.value)}
-            className="px-2 py-1 border rounded text-sm"
-          >
-            <option value="">All Crops</option>
-            {uniqueCrops.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          {hasFilters && (
-            <button onClick={clearFilters} className="text-xs text-gray-500 hover:text-gray-700">Clear</button>
-          )}
 
           <div className="flex-1" />
 
@@ -402,9 +469,10 @@ export default function SeedMixesPage() {
                 columns={columns}
                 rowHeight={32}
                 headerHeight={36}
-                sortKey={sortKey}
-                sortDir={sortDir}
+                sortKey={effectiveSortKey}
+                sortDir={effectiveSortDir}
                 onSort={handleSort}
+                onCellChange={handleCellChange}
                 emptyMessage={mixCount === 0 ? 'No seed mixes loaded.' : 'No matches'}
                 renderActions={(m) => (
                   <>

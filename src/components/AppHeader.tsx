@@ -82,9 +82,10 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
   const isSeedMixesActive = pathname === '/seed-mixes';
   const isProductsActive = pathname === '/products';
   const isMarketsActive = pathname === '/markets';
+  const isSeedSearchActive = pathname === '/seed-search';
 
   // Config dropdown is active if any of its sub-pages are active
-  const isConfigActive = isBedsActive || isCropsActive || isVarietiesActive || isSeedMixesActive || isProductsActive || isMarketsActive || isSettingsActive;
+  const isConfigActive = isBedsActive || isCropsActive || isVarietiesActive || isSeedMixesActive || isProductsActive || isMarketsActive || isSeedSearchActive || isSettingsActive;
 
   // Links - go to active plan's views
   const timelineHref = activePlanId ? `/timeline/${activePlanId}` : '/plans';
@@ -262,6 +263,14 @@ export default function AppHeader({ toolbar }: AppHeaderProps) {
                   }`}
                 >
                   Markets
+                </Link>
+                <Link
+                  href="/seed-search"
+                  className={`block px-3 py-1.5 text-sm hover:bg-gray-100 ${
+                    isSeedSearchActive ? 'text-blue-700 bg-blue-50' : 'text-gray-700'
+                  }`}
+                >
+                  Seed Search
                 </Link>
                 {activePlanId && (
                   <>

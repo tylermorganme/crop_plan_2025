@@ -178,9 +178,13 @@ function BulkSpecEditorModal({
   onTagChanges,
 }: BulkSpecEditorModalProps) {
   // ---- Market Split State ----
-  const [enableMarketSplit, setEnableMarketSplit] = useState(true); // Default enabled since it's why they opened this
+  const [enableMarketSplit, setEnableMarketSplit] = useState(false);
   const [marketSplit, setMarketSplit] = useState<MarketSplit>({});
   const activeMarkets = getActiveMarkets(markets);
+
+  // ---- Seed Factor State ----
+  const [enableExtraStart, setEnableExtraStart] = useState(false);
+  const [extraStartFactor, setExtraStartFactor] = useState<number>(1);
 
   // ---- Tags State ----
   const [tagsToAdd, setTagsToAdd] = useState<string[]>([]);
@@ -197,8 +201,10 @@ function BulkSpecEditorModal({
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setEnableMarketSplit(true);
+      setEnableMarketSplit(false);
       setMarketSplit({});
+      setEnableExtraStart(false);
+      setExtraStartFactor(1);
       setTagsToAdd([]);
       setTagsToRemove([]);
     }
@@ -222,12 +228,20 @@ function BulkSpecEditorModal({
 
   // Check if any changes are enabled
   const hasMarketChanges = enableMarketSplit && Object.keys(marketSplit).length > 0;
+  const hasSeedFactorChanges = enableExtraStart;
   const hasTagChanges = tagsToAdd.length > 0 || tagsToRemove.length > 0;
-  const hasChanges = hasMarketChanges || hasTagChanges;
+  const hasChanges = hasMarketChanges || hasSeedFactorChanges || hasTagChanges;
 
   const handleSave = () => {
+    const changes: Partial<PlantingSpec> = {};
     if (hasMarketChanges) {
-      onSave({ defaultMarketSplit: marketSplit });
+      changes.defaultMarketSplit = marketSplit;
+    }
+    if (enableExtraStart) {
+      changes.extraStartFactor = extraStartFactor;
+    }
+    if (Object.keys(changes).length > 0) {
+      onSave(changes);
     }
     if (hasTagChanges) {
       onTagChanges?.(tagsToAdd, tagsToRemove);
@@ -287,6 +301,27 @@ function BulkSpecEditorModal({
                   <span className="font-medium">{marketSplitTotal}%</span>
                   {!isMarketSplitValid && <span title="Split doesn't total 100% - will be treated as ratio">⚠</span>}
                 </div>
+              </div>
+            </FieldSection>
+
+            {/* ---- Seed Factors Section ---- */}
+            <FieldSection
+              title="Extra Start Factor"
+              enabled={enableExtraStart}
+              onToggle={setEnableExtraStart}
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={extraStartFactor}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    if (!isNaN(v)) setExtraStartFactor(v);
+                  }}
+                  className="w-20 px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-right"
+                />
+                <span className="text-sm text-gray-500">Start extra cells, cull the weak (transplant). 1.3 = 30% extra.</span>
               </div>
             </FieldSection>
 
@@ -612,6 +647,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
     totalYieldDisplay?: string;
     defaultSeedSourceDisplay?: string;
     tagsDisplay?: string;
+    plantingMethodDisplay?: string;
   };
 
   // Build set of specIds that are in use (have plantings)
@@ -675,6 +711,7 @@ export default function SpecExplorer({ allHeaders }: SpecExplorerProps) {
         productsDisplay,
         defaultSeedSourceDisplay,
         tagsDisplay: crop.tags?.join(', ') || undefined,
+        plantingMethodDisplay: calculatePlantingMethod(crop as PlantingSpec),
       };
     });
   }, [baseCrops, products, specsInUse, varieties, seedMixes]);
@@ -3109,6 +3146,59 @@ function InlineSeedSourceSelect({
   );
 }
 
+// NumberEditableCell - tracks raw string to preserve decimal point during typing
+function NumberEditableCell({
+  inputRef,
+  value,
+  onChange,
+  onKeyDown,
+  onFocus,
+  onBlur,
+  baseClass,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  value: unknown;
+  onChange: (value: unknown) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  baseClass: string;
+}) {
+  const [rawStr, setRawStr] = useState<string | null>(null);
+
+  // Display raw string while actively typing, otherwise show the stored value
+  const displayValue = rawStr !== null ? rawStr : (value != null ? String(value) : '');
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      inputMode="decimal"
+      value={displayValue}
+      onChange={(e) => {
+        const str = e.target.value;
+        setRawStr(str);
+        if (str === '') {
+          onChange(undefined);
+        } else {
+          const num = parseFloat(str);
+          if (!isNaN(num)) {
+            onChange(num);
+          }
+        }
+      }}
+      onKeyDown={onKeyDown}
+      onFocus={onFocus}
+      onBlur={() => {
+        setRawStr(null);
+        onBlur?.();
+      }}
+      className={`${baseClass} w-16`}
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+}
+
 // EditableCell component for inline editing
 function EditableCell({
   value,
@@ -3131,11 +3221,15 @@ function EditableCell({
   }`;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === 'ArrowDown') {
       e.preventDefault();
-      // Move to next row
       if (inputRef.current) {
         moveFocusVerticalDirect(inputRef.current, 'down');
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (inputRef.current) {
+        moveFocusVerticalDirect(inputRef.current, 'up');
       }
     }
   };
@@ -3155,16 +3249,14 @@ function EditableCell({
 
   if (config.type === 'number') {
     return (
-      <input
-        ref={inputRef}
-        type="number"
-        value={value != null ? String(value) : ''}
-        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)}
+      <NumberEditableCell
+        inputRef={inputRef}
+        value={value}
+        onChange={onChange}
         onKeyDown={handleKeyDown}
         onFocus={onFocus}
         onBlur={onBlur}
-        className={`${baseClass} w-16`}
-        onClick={(e) => e.stopPropagation()}
+        baseClass={baseClass}
       />
     );
   }

@@ -79,10 +79,8 @@ PLANTING (per-plan instance)          PRODUCT (processing info) ◄──┘
 | `numberOfHarvests` | number | Total harvests |
 | `daysBetweenHarvest` | number | Days between harvests |
 | `harvestBufferDays` | number | Buffer after last harvest (default 7) |
-| `seedsPerBed` | number | Seeds needed per bed |
 | `seedsPerPlanting` | number | Seeds per cell/hole |
-| `safetyFactor` | number | Extra cells started (1.1 = 10% extra) |
-| `seedingFactor` | number | Multi-seeding per cell (usually 1, sometimes 2) |
+| `extraStartFactor` | number | Insurance multiplier for seed ordering (1.3 = 30% extra) |
 | `yieldFormula` | string | e.g., `plantingsPerBed * 0.5 * harvests` |
 | `yieldPerHarvest` | number | **LEGACY** - use yieldFormula instead |
 

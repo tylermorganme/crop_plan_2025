@@ -9,8 +9,6 @@
       "deprecated": true,
       "rows": 3,
       "spacing": 9,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-01",
@@ -26,7 +24,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Alexanders - Mature X | Field DS Ow"
+      "name": "Alexanders - Mature X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_e8f1434d",
@@ -41,10 +40,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 2340,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -64,7 +60,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Amaranth - Mature Leaf 3X | Field DS Su"
+      "name": "Amaranth - Mature Leaf 3X | Field DS Su",
+      "extraStartFactor": 2.6
     },
     {
       "id": "crop_2f8a988c",
@@ -79,10 +76,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -108,7 +102,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Amaranth - Mature Stem 2X | Field TP "
+      "name": "Amaranth - Mature Stem 2X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_fdc62dd1",
@@ -121,10 +116,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 9,
-      "seedsPerBed": 346.66666666666663,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 7,
       "harvestBufferDays": 7,
@@ -150,7 +142,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Anise Hysopp - Mature Stem 2X | Field TP Su"
+      "name": "Anise Hysopp - Mature Stem 2X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_29a973f9",
@@ -161,10 +154,7 @@
       "deprecated": true,
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
@@ -182,7 +172,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Artichoke - Mature Flower 3X | Field DS "
+      "name": "Artichoke - Mature Flower 3X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_2fd7e6d1",
@@ -197,10 +188,7 @@
       "rowCover": "None",
       "rows": 6,
       "spacing": 0.25,
-      "seedsPerBed": 18720,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 2.1,
       "harvestBufferDays": 7,
@@ -220,7 +208,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Arugula - Baby Leaf 1X | Field DS Sp"
+      "name": "Arugula - Baby Leaf 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4871569f",
@@ -235,10 +224,7 @@
       "rowCover": "None",
       "rows": 6,
       "spacing": 1.5,
-      "seedsPerBed": 3120,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -258,7 +244,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Arugula - Baby Leaf 1X | Field DS SpSuFa"
+      "name": "Arugula - Baby Leaf 1X | Field DS SpSuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_8f58946e",
@@ -273,10 +260,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 1040,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 3,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -296,7 +280,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Arugula - Mature Leaf 3X | Field DS Fa"
+      "name": "Arugula - Mature Leaf 3X | Field DS Fa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_fbf3e21f",
@@ -311,10 +296,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 1040,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -340,7 +322,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Arugula - Mature Leaf 3X | Greenhouse TP Wi"
+      "name": "Arugula - Mature Leaf 3X | Greenhouse TP Wi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_9d9cf8a1",
@@ -351,10 +334,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 346.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -380,7 +360,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Asian Greens - Mature Head 1X | Field TP "
+      "name": "Asian Greens - Mature Head 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_203447ea",
@@ -391,10 +372,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 0.5,
-      "seedsPerBed": 6240,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -414,7 +392,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Asian Greens - Young Leaf 1X | Field DS "
+      "name": "Asian Greens - Young Leaf 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_17b53e63",
@@ -426,10 +405,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 330,
       "seedsPerPlanting": 1.5,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 35,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -455,7 +431,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Asian Greens (Mixed) - Loose Leaf 1.5X | Field TP Ow"
+      "name": "Asian Greens (Mixed) - Loose Leaf 1.5X | Field TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_888ed40f",
@@ -468,10 +445,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 5,
       "harvestBufferDays": 7,
@@ -491,7 +465,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Atriplex - Mature Stem 1X | Field DS SpSu"
+      "name": "Atriplex - Mature Stem 1X | Field DS SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_dcaf4fa9",
@@ -504,10 +479,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -533,7 +505,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Atriplex - Mature Stem 1X | Field TP SpSu"
+      "name": "Atriplex - Mature Stem 1X | Field TP SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_8acbde47",
@@ -548,10 +521,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 6,
-      "seedsPerBed": 1300,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 9,
       "harvestBufferDays": 7,
@@ -571,7 +541,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Bachellor's Button - Mature Stem 2X | Field DS "
+      "name": "Bachellor's Button - Mature Stem 2X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_d65948e6",
@@ -585,10 +556,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -614,7 +582,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Basil (Interplant) - Mature Leaf 1X | Tunnel TP SpSuOw"
+      "name": "Basil (Interplant) - Mature Leaf 1X | Tunnel TP SpSuOw",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_aacaa31a",
@@ -628,10 +597,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 12,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -657,7 +623,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Basil (Italian) - Mature Leaf 1X | Tunnel TP SpSuOw"
+      "name": "Basil (Italian) - Mature Leaf 1X | Tunnel TP SpSuOw",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_775f8e97",
@@ -671,10 +638,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -700,7 +664,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Basil (Purple Basil) - Mature Stem 1X | Field TP "
+      "name": "Basil (Purple Basil) - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_68fe2d95",
@@ -746,10 +711,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
@@ -775,7 +737,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Basil (Tulsi) - Mature Leaf 1X | Field TP "
+      "name": "Basil (Tulsi) - Mature Leaf 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0a6fd892",
@@ -789,10 +752,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
@@ -818,7 +778,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Basil (Tulsi) - Mature Stem 1X | Field TP "
+      "name": "Basil (Tulsi) - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_75e39574",
@@ -832,10 +793,7 @@
       "rowCover": "Early",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -861,7 +819,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Bean (Bush) - Young Pod 1X | Field TP SpSu"
+      "name": "Bean (Bush) - Young Pod 1X | Field TP SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_ff0bd136",
@@ -874,10 +833,7 @@
       "rowCover": "Early",
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 300,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 3,
       "numberOfHarvests": 13,
       "harvestBufferDays": 7,
@@ -918,10 +874,7 @@
       "rowCover": "Early",
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -947,7 +900,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Bean (Ruby Moon Beans) - Flowering Tendril 1X | Field TP "
+      "name": "Bean (Ruby Moon Beans) - Flowering Tendril 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_b5bae14f",
@@ -962,10 +916,7 @@
       "rowCover": "Early",
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -991,7 +942,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Bean (Runner Bean) - Flowering Tendril 1X | Field TP "
+      "name": "Bean (Runner Bean) - Flowering Tendril 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_8048d763",
@@ -1006,10 +958,7 @@
       "rowCover": "Early",
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 300,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -1044,10 +993,7 @@
       "rowCover": "Early",
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -1073,7 +1019,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Bean (Winged) - Flowering Tendril 1X | Field TP "
+      "name": "Bean (Winged) - Flowering Tendril 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_1e2370c7",
@@ -1084,10 +1031,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1113,7 +1057,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Beet - Baby Root 1X | Field TP Sp"
+      "name": "Beet - Baby Root 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_c0976d40",
@@ -1124,10 +1069,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 1,
-      "seedsPerBed": 2340,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1147,7 +1089,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Beet - Mature Root 1X | Field DS Sp"
+      "name": "Beet - Mature Root 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_7a457780",
@@ -1159,10 +1102,7 @@
       "rowCover": "Late",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1188,7 +1128,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Beet - Mature Root 1X | Field TP Sp"
+      "name": "Beet - Mature Root 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0a37fd9a",
@@ -1200,10 +1141,7 @@
       "rowCover": "Late",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1229,7 +1167,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Beet - Mature Root 1X | Field TP SuFa"
+      "name": "Beet - Mature Root 1X | Field TP SuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_fd6058ff",
@@ -1242,10 +1181,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 495.00000000000006,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -1271,7 +1207,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Beet - Mature Root 3X | Field TP Sp"
+      "name": "Beet - Mature Root 3X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_0c6bd7b0",
@@ -1284,10 +1221,7 @@
       "rowCover": "Late",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 495.00000000000006,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -1313,7 +1247,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Beet - Mature Root 3X | Field TP SuFa"
+      "name": "Beet - Mature Root 3X | Field TP SuFa",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_0e5c7933",
@@ -1326,10 +1261,7 @@
       "rowCover": "Late",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 495.00000000000006,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -1355,7 +1287,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Beet - Mature Root 3X | Tunnel TP Ow"
+      "name": "Beet - Mature Root 3X | Tunnel TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_41b79704",
@@ -1366,10 +1299,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 346.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1395,7 +1325,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Bok Choy - Mature Head 1X | Field TP SpFaWiOw"
+      "name": "Bok Choy - Mature Head 1X | Field TP SpFaWiOw",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0c7a3677",
@@ -1409,10 +1340,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -1432,7 +1360,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Borage (1r) - Edible Bloom 1X | Field DS "
+      "name": "Borage (1r) - Edible Bloom 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_d6bb688d",
@@ -1446,10 +1375,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -1469,7 +1395,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Borage (1r) - Mature Stem 1X | Field DS "
+      "name": "Borage (1r) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_df87f1f4",
@@ -1484,10 +1411,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -1507,7 +1431,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Borage (2r) - Edible Bloom 1X | Field DS "
+      "name": "Borage (2r) - Edible Bloom 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_6d57e330",
@@ -1522,10 +1447,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -1545,7 +1467,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Borage (2r) - Mature Stem 1X | Field DS "
+      "name": "Borage (2r) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0692f601",
@@ -1556,10 +1479,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 86.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1579,7 +1499,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Broccoli - Mature Head 1X | Field DS SpFaWiOw"
+      "name": "Broccoli - Mature Head 1X | Field DS SpFaWiOw",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_f742baa0",
@@ -1592,10 +1513,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1621,7 +1539,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Broccoli (Sprouting) - Loose Florets 1X | Field TP SuFa"
+      "name": "Broccoli (Sprouting) - Loose Florets 1X | Field TP SuFa",
+      "extraStartFactor": 2.6
     },
     {
       "id": "crop_e269c885",
@@ -1632,10 +1551,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 24,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 16,
       "harvestBufferDays": 7,
@@ -1669,7 +1585,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Brussel Sprouts (Early) - Mature Sprouts 1X | Field TP Wi"
+      "name": "Brussel Sprouts (Early) - Mature Sprouts 1X | Field TP Wi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_90c5073d",
@@ -1680,10 +1597,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 24,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 16,
       "harvestBufferDays": 7,
@@ -1717,7 +1631,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Brussel Sprouts (Late) - Mature Sprouts 1X | Field TP Wi"
+      "name": "Brussel Sprouts (Late) - Mature Sprouts 1X | Field TP Wi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_9933a70b",
@@ -1729,10 +1644,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 1,
-      "seedsPerBed": 3120,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 30,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -1752,7 +1664,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Buckwheat (Floral) - Flowering Stem 1X | Field DS Su"
+      "name": "Buckwheat (Floral) - Flowering Stem 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_126c379e",
@@ -1765,10 +1678,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
@@ -1788,7 +1698,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Bupleurum - Mature Stem 1X | Field DS Sp"
+      "name": "Bupleurum - Mature Stem 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_71c46b45",
@@ -1803,10 +1714,7 @@
       "rowCover": "AMAP",
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -1832,7 +1740,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Butterfly Flowers - Flowering Tendril 1X | Field TP "
+      "name": "Butterfly Flowers - Flowering Tendril 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_e7155dd2",
@@ -1845,10 +1754,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 146.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1878,7 +1784,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cabbage - Large Head 1X | Field TP Fa"
+      "name": "Cabbage - Large Head 1X | Field TP Fa",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_35c37126",
@@ -1891,10 +1798,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 15,
-      "seedsPerBed": 176,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1924,7 +1828,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Chinese) - Large Head 1X | Field TP Wi"
+      "name": "Cabbage (Chinese) - Large Head 1X | Field TP Wi",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_4f35f1e9",
@@ -1937,10 +1842,7 @@
       "rowCover": "AMAP",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 330,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -1970,7 +1872,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Chinese) - Small Head 1X | Field TP Fa"
+      "name": "Cabbage (Chinese) - Small Head 1X | Field TP Fa",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_ac61f708",
@@ -1982,10 +1885,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 440.00000000000006,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -2015,7 +1915,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Fast Early 9\") - Large Head 1X | Field TP Sp"
+      "name": "Cabbage (Fast Early 9\") - Large Head 1X | Field TP Sp",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_ac95ab62",
@@ -2027,10 +1928,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 440.00000000000006,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -2060,7 +1958,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Fast Early) - Large Head 1X | Field TP Su"
+      "name": "Cabbage (Fast Early) - Large Head 1X | Field TP Su",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_429f5082",
@@ -2072,10 +1971,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 220.00000000000003,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -2105,7 +2001,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Fast Mid 12\") - Large Head 1X | Field TP Su"
+      "name": "Cabbage (Fast Mid 12\") - Large Head 1X | Field TP Su",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_833d8498",
@@ -2117,10 +2014,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 440.00000000000006,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -2150,7 +2044,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Fast Mid 9\") - Large Head 1X | Field TP Sp"
+      "name": "Cabbage (Fast Mid 9\") - Large Head 1X | Field TP Sp",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_3d4705c0",
@@ -2163,10 +2058,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 146.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2196,7 +2088,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cabbage (Large) - Large Head 1X | Field TP Ow"
+      "name": "Cabbage (Large) - Large Head 1X | Field TP Ow",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_cb0e4e7f",
@@ -2209,10 +2102,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 146.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 28,
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
@@ -2242,7 +2132,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cabbage (Large) - Mature Leaf 1X | Field TP Ow"
+      "name": "Cabbage (Large) - Mature Leaf 1X | Field TP Ow",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_ef67ebae",
@@ -2254,10 +2145,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 15,
-      "seedsPerBed": 176,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -2287,7 +2175,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cabbage (Late) - Large Head 1X | Field TP Su"
+      "name": "Cabbage (Late) - Large Head 1X | Field TP Su",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_23c11660",
@@ -2300,10 +2189,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 146.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -2333,7 +2219,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Lg) - Large Head 1X | Field TP Wi"
+      "name": "Cabbage (Lg) - Large Head 1X | Field TP Wi",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_19230b3e",
@@ -2346,10 +2233,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 24,
-      "seedsPerBed": 110.00000000000001,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -2379,7 +2263,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Megaton) - Large Head 1X | Field TP Fa"
+      "name": "Cabbage (Megaton) - Large Head 1X | Field TP Fa",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_f7dc67c4",
@@ -2391,10 +2276,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 146.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -2424,7 +2306,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cabbage (Savoy) - Large Head 1X | Field TP Ow"
+      "name": "Cabbage (Savoy) - Large Head 1X | Field TP Ow",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_b1dcfd2f",
@@ -2437,10 +2320,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 220.00000000000003,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -2470,7 +2350,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cabbage (Sm) - Small Head 1X | Field TP Wi"
+      "name": "Cabbage (Sm) - Small Head 1X | Field TP Wi",
+      "extraStartFactor": 2.2
     },
     {
       "id": "crop_c451f3c3",
@@ -2484,10 +2365,7 @@
       "rowCover": "AMAP",
       "rows": 4,
       "spacing": 0.5,
-      "seedsPerBed": 6240,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2507,7 +2385,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Carrot (Early) - Mature Root 1X | Field DS Sp"
+      "name": "Carrot (Early) - Mature Root 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_faadfb53",
@@ -2521,10 +2400,7 @@
       "rowCover": "AMAP",
       "rows": 4,
       "spacing": 0.5,
-      "seedsPerBed": 6240,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2544,7 +2420,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Carrot (Early) - Mature Root 1X | Field DS Su"
+      "name": "Carrot (Early) - Mature Root 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_27d29219",
@@ -2558,10 +2435,7 @@
       "rowCover": "AMAP",
       "rows": 4,
       "spacing": 0.5,
-      "seedsPerBed": 6240,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2581,7 +2455,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi"
+      "name": "Carrot (Maincrop) - Storage Root 1X | Field DS FaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4156a541",
@@ -2592,10 +2467,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 0.5,
-      "seedsPerBed": 6240,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2615,7 +2487,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Carrot (Oxheart) - Mature Root 1X | Field DS SpSuFa"
+      "name": "Carrot (Oxheart) - Mature Root 1X | Field DS SpSuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_aeb0f0b9",
@@ -2628,10 +2501,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 16,
-      "seedsPerBed": 292.5,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -2657,7 +2527,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Catnip - Mature Stem 3X | Field TP Su"
+      "name": "Catnip - Mature Stem 3X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_cfb64b69",
@@ -2670,10 +2541,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 21,
-      "seedsPerBed": 85.71428571428571,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1,
-      "seedingFactor": 1.5,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2703,7 +2571,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cauliflower - Mature Head 1X | Field TP Fa"
+      "name": "Cauliflower - Mature Head 1X | Field TP Fa",
+      "extraStartFactor": 1.5
     },
     {
       "id": "crop_ee5c5a5d",
@@ -2715,10 +2584,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 21,
-      "seedsPerBed": 85.71428571428571,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1,
-      "seedingFactor": 1.5,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2748,7 +2614,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cauliflower - Mature Head 1X | Field TP Ow"
+      "name": "Cauliflower - Mature Head 1X | Field TP Ow",
+      "extraStartFactor": 1.5
     },
     {
       "id": "crop_1c6688f1",
@@ -2761,10 +2628,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 21,
-      "seedsPerBed": 85.71428571428571,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1,
-      "seedingFactor": 1.5,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2794,7 +2658,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cauliflower - Mature Head 1X | Field TP Su"
+      "name": "Cauliflower - Mature Head 1X | Field TP Su",
+      "extraStartFactor": 1.5
     },
     {
       "id": "crop_42f9072e",
@@ -2807,10 +2672,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 21,
-      "seedsPerBed": 85.71428571428571,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1,
-      "seedingFactor": 1.5,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2840,7 +2702,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cauliflower (Green-Stem) - Mature Head 1X | Field TP Su"
+      "name": "Cauliflower (Green-Stem) - Mature Head 1X | Field TP Su",
+      "extraStartFactor": 1.5
     },
     {
       "id": "crop_624125e4",
@@ -2853,10 +2716,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 21,
       "harvestBufferDays": 7,
@@ -2886,7 +2746,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Celery - Loose Rib 1X | Field TP SpSu"
+      "name": "Celery - Loose Rib 1X | Field TP SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_920f8d08",
@@ -2897,10 +2758,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2920,7 +2778,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Celery Root - Mature Root 1X | Field DS SpSuFaWi"
+      "name": "Celery Root - Mature Root 1X | Field DS SpSuFaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_e91dd2a6",
@@ -2931,10 +2790,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 12,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -2954,7 +2810,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Celery Root - Mini Root 1X | Field DS SpSuFaWi"
+      "name": "Celery Root - Mini Root 1X | Field DS SpSuFaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_5038f9e6",
@@ -2967,10 +2824,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -2990,7 +2844,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Celosia - Mature Stem 1X | Field DS Sp"
+      "name": "Celosia - Mature Stem 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_38443995",
@@ -3003,10 +2858,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -3032,7 +2884,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Celosia - Mature Stem 1X | Field TP Sp"
+      "name": "Celosia - Mature Stem 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_278e708f",
@@ -3045,10 +2898,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 11,
       "harvestBufferDays": 7,
@@ -3074,7 +2924,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Chervil - Mature Stem 2X | Field TP Su"
+      "name": "Chervil - Mature Stem 2X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_849c08bd",
@@ -3085,10 +2936,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 75,
@@ -3106,7 +2954,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Chicory - Chicon 1X | Field DS Ow"
+      "name": "Chicory - Chicon 1X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_c04913d2",
@@ -3117,10 +2966,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 100,
@@ -3138,7 +2984,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Chicory - Mature Head 1X | Field DS Ow"
+      "name": "Chicory - Mature Head 1X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_005e61a3",
@@ -3152,10 +2999,7 @@
       "rowCover": "AMAP",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Head",
       "targetFieldDate": "07-13",
@@ -3177,7 +3021,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Chijimisai - Mature Head 2X | Field TP Ow"
+      "name": "Chijimisai - Mature Head 2X | Field TP Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4a0bc5b2",
@@ -3190,10 +3035,7 @@
       "rowCover": "AMAP",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -3219,7 +3061,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Choi Sum - Mature Head 1X | Field TP "
+      "name": "Choi Sum - Mature Head 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_95aae4db",
@@ -3232,10 +3075,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 1,
-      "seedsPerBed": 6240,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -3261,7 +3101,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Choi Sum - Mature Head 4X | Field TP "
+      "name": "Choi Sum - Mature Head 4X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_edf48783",
@@ -3275,10 +3116,7 @@
       "rowCover": "AMAP",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -3298,7 +3136,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Chrysanthemum - Mature Stem 1X | Field DS "
+      "name": "Chrysanthemum - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_fdafc443",
@@ -3312,10 +3151,7 @@
       "rowCover": "AMAP",
       "rows": 3,
       "spacing": 0.8,
-      "seedsPerBed": 2925,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -3335,7 +3171,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Chrysanthemum Greens - Mature Leaf 1X | Field DS Ow"
+      "name": "Chrysanthemum Greens - Mature Leaf 1X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_cf764ebe",
@@ -3349,10 +3186,7 @@
       "rowCover": "AMAP",
       "rows": 3,
       "spacing": 0.8,
-      "seedsPerBed": 2925,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -3372,7 +3206,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Chrysanthemum Greens - Mature Leaf 1X | Tunnel DS Ow"
+      "name": "Chrysanthemum Greens - Mature Leaf 1X | Tunnel DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_19b1d727",
@@ -3385,10 +3220,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 6,
-      "seedsPerBed": 1650.0000000000002,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3408,7 +3240,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cilantro - Loose Leaf 3X | Field DS FaWi"
+      "name": "Cilantro - Loose Leaf 3X | Field DS FaWi",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_cbbe306a",
@@ -3421,10 +3254,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 6,
-      "seedsPerBed": 1650.0000000000002,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3444,7 +3274,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cilantro - Loose Leaf 3X | Field DS Sp"
+      "name": "Cilantro - Loose Leaf 3X | Field DS Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_dd7aec12",
@@ -3457,10 +3288,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 6,
-      "seedsPerBed": 1650.0000000000002,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3486,7 +3314,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cilantro - Loose Leaf 3X | Field TP FaWi"
+      "name": "Cilantro - Loose Leaf 3X | Field TP FaWi",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_ec659a58",
@@ -3499,10 +3328,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 6,
-      "seedsPerBed": 1650.0000000000002,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3528,7 +3354,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cilantro - Loose Leaf 3X | Field TP Sp"
+      "name": "Cilantro - Loose Leaf 3X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_e409ef3d",
@@ -3541,10 +3368,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 6,
-      "seedsPerBed": 1650.0000000000002,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3570,7 +3394,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Cilantro - Loose Leaf 3X | Field TP Su"
+      "name": "Cilantro - Loose Leaf 3X | Field TP Su",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_e4adc992",
@@ -3581,10 +3406,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 48,
-      "seedsPerBed": 16.25,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -3600,7 +3422,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Clematis - Cut Flower 1X | Field DS SpSuFaWi"
+      "name": "Clematis - Cut Flower 1X | Field DS SpSuFaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_367e5da4",
@@ -3610,8 +3433,6 @@
       "dtm": 0,
       "deprecated": false,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-01",
@@ -3627,7 +3448,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Collard Greens - Loose Leaf 1X | Field DS "
+      "name": "Collard Greens - Loose Leaf 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_345ad6f6",
@@ -3636,15 +3458,14 @@
       "growingStructure": "field",
       "dtm": 0,
       "deprecated": false,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "targetFieldDate": "04-01",
       "defaultMarketSplit": {
         "market-direct": 100
       },
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Collard Greens - Mature Leaf X | Field DS Ow"
+      "name": "Collard Greens - Mature Leaf X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a470b277",
@@ -3657,10 +3478,7 @@
       "rowCover": "None",
       "rows": 6,
       "spacing": 36,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3686,7 +3504,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Corn  (Squash Interplant) - Mature Cob 1X | Field TP "
+      "name": "Corn  (Squash Interplant) - Mature Cob 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_2ad48cd5",
@@ -3700,10 +3519,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3729,7 +3545,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Corn  (Sweet Early) - Mature Cob 1X | Field TP "
+      "name": "Corn  (Sweet Early) - Mature Cob 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_611acc26",
@@ -3743,10 +3560,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3766,7 +3580,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Corn  (Sweet Early) - Mature Cob 2X | Field DS "
+      "name": "Corn  (Sweet Early) - Mature Cob 2X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_7f3c5ffc",
@@ -3779,10 +3594,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 4,
-      "seedsPerBed": 2475,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3802,7 +3614,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Corn Salad - Mature Head 3X | Field DS Fa"
+      "name": "Corn Salad - Mature Head 3X | Field DS Fa",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_0cf475c5",
@@ -3815,10 +3628,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 4,
-      "seedsPerBed": 2475,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 45,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -3838,7 +3648,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Corn Salad - Mature Head 3X | Field DS Ow"
+      "name": "Corn Salad - Mature Head 3X | Field DS Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_22ba437f",
@@ -3852,10 +3663,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 4,
-      "seedsPerBed": 2475,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3881,7 +3689,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Corn Salad - Mature Head 3X | Field TP Fa"
+      "name": "Corn Salad - Mature Head 3X | Field TP Fa",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_c81bf5f4",
@@ -3894,10 +3703,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 4,
-      "seedsPerBed": 2475,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 45,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -3923,7 +3729,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Corn Salad - Mature Head 3X | Field TP Ow"
+      "name": "Corn Salad - Mature Head 3X | Field TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_6dc2dcec",
@@ -3937,10 +3744,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 4,
-      "seedsPerBed": 2475,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -3966,7 +3770,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Corn Salad - Mature Head 3X | Field TP Sp"
+      "name": "Corn Salad - Mature Head 3X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_f4dd8901",
@@ -3979,10 +3784,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 4,
-      "seedsPerBed": 2475,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -4008,7 +3810,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Corn Salad (Golden) - Mature Head 3X | Field TP Su"
+      "name": "Corn Salad (Golden) - Mature Head 3X | Field TP Su",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_1c8451fb",
@@ -4054,10 +3857,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 585,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -4077,7 +3877,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Cosmos - Cut Flower 3X | Field DS "
+      "name": "Cosmos - Cut Flower 3X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0772b898",
@@ -4088,17 +3889,15 @@
       "deprecated": false,
       "rows": 12,
       "spacing": 0.2,
-      "seedsPerBed": 46800,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "targetFieldDate": "04-01",
       "defaultMarketSplit": {
         "market-direct": 100
       },
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Cover Mix - Mature Stem 1X | Field DS Ow"
+      "name": "Cover Mix - Mature Stem 1X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_88758b20",
@@ -4111,10 +3910,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 4,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -4134,7 +3930,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Cress (Ornamental) - Mature Stems 1X | Field DS SpFa"
+      "name": "Cress (Ornamental) - Mature Stems 1X | Field DS SpFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_9cb46c6c",
@@ -4147,10 +3944,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 4,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -4176,7 +3970,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cress (Ornamental) - Mature Stems 1X | Field TP SpFa"
+      "name": "Cress (Ornamental) - Mature Stems 1X | Field TP SpFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_856e3cd7",
@@ -4188,10 +3983,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 50,
       "harvestBufferDays": 7,
@@ -4217,7 +4009,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cucumber (Asian Long) - Large Fruit 1X | Greenhouse TP "
+      "name": "Cucumber (Asian Long) - Large Fruit 1X | Greenhouse TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_bcd445f9",
@@ -4231,10 +4024,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 36,
       "harvestBufferDays": 7,
@@ -4260,7 +4050,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cucumber (Asian Long) - Ripe Fruit 1X | Field TP "
+      "name": "Cucumber (Asian Long) - Ripe Fruit 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_053c537d",
@@ -4274,10 +4065,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 36,
       "harvestBufferDays": 7,
@@ -4303,7 +4091,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cucumber (Lebanese) - Ripe Fruit 1X | Field TP "
+      "name": "Cucumber (Lebanese) - Ripe Fruit 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_52c27fbe",
@@ -4314,10 +4103,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 50,
       "harvestBufferDays": 7,
@@ -4343,7 +4129,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cucumber (Lebanese) - Small Fruit 1X | Greenhouse TP "
+      "name": "Cucumber (Lebanese) - Small Fruit 1X | Greenhouse TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_00de35b5",
@@ -4354,10 +4141,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 50,
       "harvestBufferDays": 7,
@@ -4383,7 +4167,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cucumber (Slicer) - Large Fruit 1X | Greenhouse TP "
+      "name": "Cucumber (Slicer) - Large Fruit 1X | Greenhouse TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_c691809b",
@@ -4397,10 +4182,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 36,
       "harvestBufferDays": 7,
@@ -4426,7 +4208,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Cucumber (Slicer) - Ripe Fruit 1X | Field TP "
+      "name": "Cucumber (Slicer) - Ripe Fruit 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_fb81fb70",
@@ -4437,10 +4220,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -4456,7 +4236,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Dahlia - Cut Flower 1X | Field DS "
+      "name": "Dahlia - Cut Flower 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_69161e95",
@@ -4468,10 +4249,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -4491,7 +4269,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Dahlia (Mix) - Mature Stem 1X | Field DS "
+      "name": "Dahlia (Mix) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_f179420f",
@@ -4505,10 +4284,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 17,
       "harvestBufferDays": 7,
@@ -4530,7 +4306,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Dahlia (Tuber) - Mature Stem 1X | Field DS "
+      "name": "Dahlia (Tuber) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_beca8c64",
@@ -4544,10 +4321,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -4573,7 +4347,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Dianthus - Mature Stem 1X | Field TP "
+      "name": "Dianthus - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_f8ea5053",
@@ -4586,10 +4361,7 @@
       "rowCover": "None",
       "rows": 5,
       "spacing": 6,
-      "seedsPerBed": 2200,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -4609,7 +4381,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Dill - Mature Leaf 4X | Field DS "
+      "name": "Dill - Mature Leaf 4X | Field DS ",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_fe011fda",
@@ -4622,10 +4395,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 3,
-      "seedsPerBed": 3520.0000000000005,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -4651,7 +4421,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Dill - Mature Leaf 4X | Field TP Sp"
+      "name": "Dill - Mature Leaf 4X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_a1a5d360",
@@ -4664,10 +4435,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 3,
-      "seedsPerBed": 3520.0000000000005,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -4693,7 +4461,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Dill - Mature Leaf 4X | Field TP Su"
+      "name": "Dill - Mature Leaf 4X | Field TP Su",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_9eb7df6a",
@@ -4707,10 +4476,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 1560,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -4730,7 +4496,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Dill (White dill) - Mature Stem 3X | Field DS "
+      "name": "Dill (White dill) - Mature Stem 3X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a960785c",
@@ -4744,10 +4511,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 1560,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -4773,7 +4537,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Dill (White dill) - Mature Stem 3X | Field TP "
+      "name": "Dill (White dill) - Mature Stem 3X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_637618ba",
@@ -4787,10 +4552,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -4816,7 +4578,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Dropmore - Mature Stem 1X | Field TP "
+      "name": "Dropmore - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_8ba50ad9",
@@ -4864,10 +4627,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 4,
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
@@ -4901,7 +4661,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Eggplant - Ripe Fruit 1X | Greenhouse TP "
+      "name": "Eggplant - Ripe Fruit 1X | Greenhouse TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_e268f921",
@@ -4914,10 +4675,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 9,
       "harvestBufferDays": 7,
@@ -4943,7 +4701,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Epazote - Mature Stem 3X | Field TP Su"
+      "name": "Epazote - Mature Stem 3X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_d91a525d",
@@ -4956,10 +4715,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -4985,7 +4741,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Everlasting - Mature Stem 1X | Field TP Sp"
+      "name": "Everlasting - Mature Stem 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_900b4e6f",
@@ -4997,10 +4754,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 9,
-      "seedsPerBed": 173.33333333333331,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -5020,7 +4774,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Fava Bean - Mature Pod 1X | Field DS Sp"
+      "name": "Fava Bean - Mature Pod 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_27017241",
@@ -5032,10 +4787,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 9,
-      "seedsPerBed": 266.66666666666663,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -5067,10 +4819,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
@@ -5088,7 +4837,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Fennel - Mature Bulb 1X | Field DS Sp"
+      "name": "Fennel - Mature Bulb 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4c67787b",
@@ -5100,10 +4850,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
@@ -5127,7 +4874,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Fennel - Mature Bulb 1X | Field TP Fa"
+      "name": "Fennel - Mature Bulb 1X | Field TP Fa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_df3a15ec",
@@ -5141,10 +4889,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -5170,7 +4915,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Fennel - Mini Bulb 1X | Field TP Fa"
+      "name": "Fennel - Mini Bulb 1X | Field TP Fa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_af24bec8",
@@ -5184,10 +4930,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -5213,7 +4956,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Fennel - Mini Bulb 1X | Field TP Sp"
+      "name": "Fennel - Mini Bulb 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_1c8d5d3b",
@@ -5226,10 +4970,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 3,
-      "seedsPerBed": 1040,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -5249,21 +4990,19 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Flax - Flowering Stalks 1X | Field DS "
+      "name": "Flax - Flowering Stalks 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_5e57ca0b",
-      "crop": "Fris\u00e9e",
-      "searchText": "fris\u00e9e - baby leaf 1x | field ds  fris\u00e9e baby leaf",
+      "crop": "Frisée",
+      "searchText": "frisée - baby leaf 1x | field ds  frisée baby leaf",
       "growingStructure": "field",
       "dtm": 50,
       "deprecated": false,
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 16,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -5275,7 +5014,7 @@
       },
       "productYields": [
         {
-          "productId": "fris\u00e9e|baby leaf|lb",
+          "productId": "frisée|baby leaf|lb",
           "dtm": 50,
           "numberOfHarvests": 4,
           "daysBetweenHarvest": 16,
@@ -5283,21 +5022,19 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Fris\u00e9e - Baby Leaf 1X | Field DS "
+      "name": "Frisée - Baby Leaf 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_9ee6d6a0",
-      "crop": "Fris\u00e9e",
-      "searchText": "fris\u00e9e - mature head 1x | field ds  fris\u00e9e mature head",
+      "crop": "Frisée",
+      "searchText": "frisée - mature head 1x | field ds  frisée mature head",
       "growingStructure": "field",
       "dtm": 57,
       "deprecated": false,
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
       "yieldUnit": "Head",
@@ -5307,14 +5044,15 @@
       },
       "productYields": [
         {
-          "productId": "fris\u00e9e|mature head|head",
+          "productId": "frisée|mature head|head",
           "dtm": 57,
           "numberOfHarvests": 0,
           "harvestBufferDays": 7
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Fris\u00e9e - Mature Head 1X | Field DS "
+      "name": "Frisée - Mature Head 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_8c049a25",
@@ -5327,10 +5065,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 2,
-      "seedsPerBed": 900,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 128.57142857142858,
@@ -5361,10 +5096,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 300,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -5397,10 +5129,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 300,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -5431,10 +5160,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 4,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
@@ -5450,7 +5176,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Ginger - Young Root 1X | Field DS Sp"
+      "name": "Ginger - Young Root 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_f96cba76",
@@ -5459,8 +5186,6 @@
       "growingStructure": "field",
       "dtm": 0,
       "deprecated": false,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "lb",
       "targetFieldDate": "04-01",
@@ -5476,7 +5201,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Ginger (Moiga) - Young Root X | Field DS "
+      "name": "Ginger (Moiga) - Young Root X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4522811a",
@@ -5487,10 +5213,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 30,
-      "seedsPerBed": 26,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -5524,7 +5247,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Gooseberry (Cape) - Mature Berry 1X | Field TP "
+      "name": "Gooseberry (Cape) - Mature Berry 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_29307180",
@@ -5537,10 +5261,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -5566,7 +5287,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Grass (Frosted Explosion) - Mature Stalks 1X | Field TP "
+      "name": "Grass (Frosted Explosion) - Mature Stalks 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_947bae5b",
@@ -5580,10 +5302,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 7,
       "harvestBufferDays": 7,
@@ -5617,7 +5336,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Ground Cherry - Mature Fruit 1X | Field TP "
+      "name": "Ground Cherry - Mature Fruit 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_d1da8e5a",
@@ -5630,10 +5350,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 36,
-      "seedsPerBed": 21.666666666666664,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
@@ -5659,7 +5376,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Hibiscus (Mahagony Splendor) - Mature Stem 1X | Field TP SuFa"
+      "name": "Hibiscus (Mahagony Splendor) - Mature Stem 1X | Field TP SuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_29003ea8",
@@ -5670,10 +5388,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 36,
-      "seedsPerBed": 21.666666666666664,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -5689,7 +5404,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Hops Vine with Flowers - Flowering Vine 1X | Field DS "
+      "name": "Hops Vine with Flowers - Flowering Vine 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_6158135f",
@@ -5700,10 +5416,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
@@ -5719,7 +5432,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Huauzontle - Mature Stem 1X | Field DS "
+      "name": "Huauzontle - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_181d3ed9",
@@ -5730,10 +5444,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -5749,7 +5460,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Hyacinth Bean Vine - Flowering Tendril 1X | Field DS "
+      "name": "Hyacinth Bean Vine - Flowering Tendril 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_abcd12a4",
@@ -5760,10 +5472,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 60,
-      "seedsPerBed": 13,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -5779,7 +5488,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Hydrangea (Annabelle) - Mature Stem 1X | Field DS "
+      "name": "Hydrangea (Annabelle) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_b9dc9a6d",
@@ -5790,10 +5500,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 60,
-      "seedsPerBed": 13,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -5809,7 +5516,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Hydrangea (Pee Gee) - Mature Stem 1X | Field DS "
+      "name": "Hydrangea (Pee Gee) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_b61327e1",
@@ -5820,10 +5528,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 60,
-      "seedsPerBed": 13,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -5839,7 +5544,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Hydrangea (Quick Fire) - Mature Stem 1X | Field DS "
+      "name": "Hydrangea (Quick Fire) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_aa3b858f",
@@ -5850,10 +5556,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 12,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
@@ -5869,7 +5572,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Jelly Melon - Ripe Fruit 1X | Field DS "
+      "name": "Jelly Melon - Ripe Fruit 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_fbb9499c",
@@ -5882,10 +5586,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 15,
-      "seedsPerBed": 104,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -5915,7 +5616,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Kaibroc - Loose Florets 1X | Field TP Wi"
+      "name": "Kaibroc - Loose Florets 1X | Field TP Wi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4cd80a74",
@@ -5926,10 +5628,7 @@
       "deprecated": false,
       "rows": 10,
       "spacing": 1.5,
-      "seedsPerBed": 5200,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
@@ -5945,7 +5644,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Kale - Baby Leaf 1X | Field DS Su"
+      "name": "Kale - Baby Leaf 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_319b6fea",
@@ -5958,10 +5658,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 146.66666666666666,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -5987,7 +5684,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Kale - Mature Leaf 2X | Field TP Fa"
+      "name": "Kale - Mature Leaf 2X | Field TP Fa",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_3a7aaa6f",
@@ -6000,10 +5698,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 146.66666666666666,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -6029,7 +5724,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Kale - Mature Leaf 2X | Field TP Ow"
+      "name": "Kale - Mature Leaf 2X | Field TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_133a91b9",
@@ -6042,10 +5738,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 146.66666666666666,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -6071,7 +5764,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Kale - Mature Leaf 2X | Field TP Sp"
+      "name": "Kale - Mature Leaf 2X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_ff901fc0",
@@ -6084,10 +5778,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6113,7 +5804,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Kohlrabi (Lg) - Storage Bulb 1X | Field TP Fa"
+      "name": "Kohlrabi (Lg) - Storage Bulb 1X | Field TP Fa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_949779a2",
@@ -6126,10 +5818,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 4,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6155,7 +5844,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Fa"
+      "name": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Fa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4c388fea",
@@ -6167,10 +5857,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 4,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6196,7 +5883,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Sp"
+      "name": "Kohlrabi (Sm) - Storage Bulb 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_89c75f89",
@@ -6207,10 +5895,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 330,
       "seedsPerPlanting": 1.5,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 35,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -6236,7 +5921,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Komatsuna - Loose Leaf 1.5X | Field TP Ow"
+      "name": "Komatsuna - Loose Leaf 1.5X | Field TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_77c16fc1",
@@ -6247,10 +5933,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 330,
       "seedsPerPlanting": 1.5,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 35,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -6276,7 +5959,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Komatsuna - Loose Leaf 1.5X | Tunnel TP Ow"
+      "name": "Komatsuna - Loose Leaf 1.5X | Tunnel TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_3c0bcc20",
@@ -6287,10 +5971,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 330,
       "seedsPerPlanting": 1.5,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6316,7 +5997,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Komatsuna - Mature Head 1.5X | Field TP Wi"
+      "name": "Komatsuna - Mature Head 1.5X | Field TP Wi",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_45c3021a",
@@ -6330,10 +6012,7 @@
       "rowCover": "AMAP",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 880.0000000000001,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6359,7 +6038,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Komatsuna - Mature Leaf 2X | Field TP Su"
+      "name": "Komatsuna - Mature Leaf 2X | Field TP Su",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_79f4e6f0",
@@ -6373,10 +6053,7 @@
       "rowCover": "AMAP",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 1760.0000000000002,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6396,7 +6073,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Komatsuna - Mature Leaf 4X | Field DS Su"
+      "name": "Komatsuna - Mature Leaf 4X | Field DS Su",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_d6794120",
@@ -6407,10 +6085,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 85.71428571428571,
@@ -6428,7 +6103,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Leek - Mature Stalk 1X | Field DS FaWi"
+      "name": "Leek - Mature Stalk 1X | Field DS FaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4efc578a",
@@ -6439,10 +6115,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 300,
@@ -6460,7 +6133,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Leek - Mature Stalk 1X | Field DS Ow"
+      "name": "Leek - Mature Stalk 1X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_7ad35b7e",
@@ -6471,10 +6145,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 85.71428571428571,
@@ -6492,7 +6163,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Leek - Mature Stalk 1X | Field DS Su"
+      "name": "Leek - Mature Stalk 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_762b96e1",
@@ -6505,10 +6177,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 1733.333333333333,
       "seedsPerPlanting": 5,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -6528,7 +6197,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Leek - Mature Stalk 5X | Field DS FaWi"
+      "name": "Leek - Mature Stalk 5X | Field DS FaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_d1dfa781",
@@ -6541,10 +6211,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 1300,
       "seedsPerPlanting": 5,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -6570,7 +6237,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Leek - Mature Stalk 5X | Field TP Ow"
+      "name": "Leek - Mature Stalk 5X | Field TP Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_1e504a11",
@@ -6581,10 +6249,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 1733.333333333333,
       "seedsPerPlanting": 5,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -6610,7 +6275,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Leek - Mature Stalk 5X | Field TP Su"
+      "name": "Leek - Mature Stalk 5X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_aa54c66e",
@@ -6623,10 +6289,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -6652,7 +6315,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lemon Balm - Mature Stem 1X | Field TP Su"
+      "name": "Lemon Balm - Mature Stem 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_70ec8a30",
@@ -6666,10 +6330,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 5,
       "harvestBufferDays": 7,
@@ -6695,7 +6356,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lemongrass - Mature Stalks 1X | Field TP SpSu"
+      "name": "Lemongrass - Mature Stalks 1X | Field TP SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4694dbae",
@@ -6704,8 +6366,6 @@
       "growingStructure": "field",
       "dtm": 0,
       "deprecated": false,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
@@ -6721,7 +6381,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Lettuce - Baby Leaf X | Field DS Ow"
+      "name": "Lettuce - Baby Leaf X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_25dc2a4f",
@@ -6732,10 +6393,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
@@ -6753,7 +6411,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce - Overwinter Head 1X | Field DS Ow"
+      "name": "Lettuce - Overwinter Head 1X | Field DS Ow",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_3648a7da",
@@ -6766,10 +6425,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 450.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6795,7 +6451,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (4x9) - Mature Head 1X | Field TP Sp"
+      "name": "Lettuce (4x9) - Mature Head 1X | Field TP Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_80596a0e",
@@ -6808,10 +6465,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 450.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6837,7 +6491,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa"
+      "name": "Lettuce (4x9) - Mature Head 1X | Field TP SuFa",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_864fe126",
@@ -6850,10 +6505,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 450.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6879,7 +6531,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (4x9) - Mature Head 1X | Tunnel TP Sp"
+      "name": "Lettuce (4x9) - Mature Head 1X | Tunnel TP Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_48d103bd",
@@ -6890,10 +6543,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 676,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
@@ -6911,7 +6561,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (6\") - Mini Head 1X | Field DS Sp"
+      "name": "Lettuce (6\") - Mini Head 1X | Field DS Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_aea87fdd",
@@ -6922,10 +6573,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 676,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 400,
@@ -6943,7 +6591,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (6\") - Mini Head 1X | Field DS SuFa"
+      "name": "Lettuce (6\") - Mini Head 1X | Field DS SuFa",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_6e4a5448",
@@ -6955,10 +6604,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -6984,7 +6630,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Lettuce (6\") - Mini Head 1X | Field TP Ow"
+      "name": "Lettuce (6\") - Mini Head 1X | Field TP Ow",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_605d07e7",
@@ -6997,10 +6644,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 676,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -7026,7 +6670,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (6\") - Mini Head 1X | Field TP Sp"
+      "name": "Lettuce (6\") - Mini Head 1X | Field TP Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_7fd9e91b",
@@ -7039,10 +6684,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 676,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -7068,7 +6710,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (6\") - Mini Head 1X | Field TP SuFa"
+      "name": "Lettuce (6\") - Mini Head 1X | Field TP SuFa",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_3037f906",
@@ -7081,10 +6724,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 676,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -7110,7 +6750,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (6\") - Mini Head 1X | Tunnel TP Sp"
+      "name": "Lettuce (6\") - Mini Head 1X | Tunnel TP Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_ed17fbe2",
@@ -7123,10 +6764,7 @@
       "rowCover": "Late",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 676,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -7152,7 +6790,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Lettuce (6\") - Mini Head 1X | Tunnel TP Wi"
+      "name": "Lettuce (6\") - Mini Head 1X | Tunnel TP Wi",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_97aad4a8",
@@ -7163,10 +6802,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
@@ -7184,7 +6820,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (9\") - Mature Head 1X | Field DS Sp"
+      "name": "Lettuce (9\") - Mature Head 1X | Field DS Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_c829d145",
@@ -7195,10 +6832,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 200,
@@ -7216,7 +6850,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (9\") - Mature Head 1X | Field DS SuFa"
+      "name": "Lettuce (9\") - Mature Head 1X | Field DS SuFa",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_d352b3f9",
@@ -7228,10 +6863,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -7257,7 +6889,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Lettuce (9\") - Mature Head 1X | Field TP Ow"
+      "name": "Lettuce (9\") - Mature Head 1X | Field TP Ow",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_5d90133d",
@@ -7270,10 +6903,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -7299,7 +6929,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (9\") - Mature Head 1X | Field TP Sp"
+      "name": "Lettuce (9\") - Mature Head 1X | Field TP Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_c255a0c7",
@@ -7312,10 +6943,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -7341,7 +6969,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (9\") - Mature Head 1X | Field TP SuFa"
+      "name": "Lettuce (9\") - Mature Head 1X | Field TP SuFa",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_e570f088",
@@ -7353,10 +6982,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -7382,7 +7008,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Lettuce (9\") - Mature Head 1X | Tunnel TP Sp"
+      "name": "Lettuce (9\") - Mature Head 1X | Tunnel TP Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_edbd939f",
@@ -7395,10 +7022,7 @@
       "rowCover": "Late",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 338,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -7424,7 +7048,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Lettuce (9\") - Mature Head 1X | Tunnel TP Wi"
+      "name": "Lettuce (9\") - Mature Head 1X | Tunnel TP Wi",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_c1479609",
@@ -7435,10 +7060,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 450.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -7464,7 +7086,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (Salanova) - Loose Leaf 1X | Field TP Sp"
+      "name": "Lettuce (Salanova) - Loose Leaf 1X | Field TP Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_dd406948",
@@ -7475,10 +7098,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 450.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -7504,7 +7124,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa"
+      "name": "Lettuce (Salanova) - Loose Leaf 1X | Field TP SuFa",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_21457d98",
@@ -7515,10 +7136,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 450.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1.3,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 5,
       "harvestBufferDays": 7,
@@ -7544,7 +7162,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lettuce (Salanova) - Loose Leaf 1X | Tunnel TP Sp"
+      "name": "Lettuce (Salanova) - Loose Leaf 1X | Tunnel TP Sp",
+      "extraStartFactor": 1.69
     },
     {
       "id": "crop_ac75484e",
@@ -7555,10 +7174,7 @@
       "deprecated": true,
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -7574,7 +7190,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lilies (Double Pollen Free) - Mature Stalk 1X | Field DS "
+      "name": "Lilies (Double Pollen Free) - Mature Stalk 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_559d8f27",
@@ -7588,10 +7205,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
@@ -7621,7 +7235,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Lovage - Mature Leaf 1X | Field TP SpFa"
+      "name": "Lovage - Mature Leaf 1X | Field TP SpFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_f81c25b5",
@@ -7666,10 +7281,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 2,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -7689,7 +7301,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Magenta Spreen - Flowering Stalks 1X |  DS Sp"
+      "name": "Magenta Spreen - Flowering Stalks 1X |  DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_ae24b9c1",
@@ -7701,10 +7314,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 2,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -7730,7 +7340,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Magenta Spreen - Flowering Stalks 1X |  TP Sp"
+      "name": "Magenta Spreen - Flowering Stalks 1X |  TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_acf569b8",
@@ -7742,10 +7353,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 2,
-      "seedsPerBed": 1560,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -7765,7 +7373,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Magenta Spreen - Young Stem 1X |  DS Sp"
+      "name": "Magenta Spreen - Young Stem 1X |  DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_7532d6c4",
@@ -7776,10 +7385,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -7799,7 +7405,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Malabar Spinach - Mature Leaf 1X | Field DS "
+      "name": "Malabar Spinach - Mature Leaf 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_5f4ec2fb",
@@ -7811,10 +7418,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -7840,7 +7444,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Malabar Spinach - Mature Leaf 1X | Tunnel TP "
+      "name": "Malabar Spinach - Mature Leaf 1X | Tunnel TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_412ab12e",
@@ -7855,10 +7460,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 6,
-      "seedsPerBed": 110.00000000000001,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -7884,7 +7486,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Malabar Spinach - Young Buds 1X | Field TP "
+      "name": "Malabar Spinach - Young Buds 1X | Field TP ",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_1cf329ab",
@@ -7898,10 +7501,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 86.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 5,
       "harvestBufferDays": 7,
@@ -7921,7 +7521,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Marigolds (African) - Mature Stem 1X | Field DS "
+      "name": "Marigolds (African) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_90ed092c",
@@ -7935,10 +7536,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 86.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -7964,7 +7562,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Marigolds (African) - Mature Stem 1X | Field TP "
+      "name": "Marigolds (African) - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_ab459ad8",
@@ -7978,10 +7577,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -8001,7 +7597,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Marigolds (French) - Mature Stem 1X | Field DS "
+      "name": "Marigolds (French) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a2dd97d6",
@@ -8015,10 +7612,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 13,
       "harvestBufferDays": 7,
@@ -8044,7 +7638,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Marigolds (French) - Mature Stem 1X | Field TP "
+      "name": "Marigolds (French) - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_9b7b2595",
@@ -8058,10 +7653,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -8081,7 +7673,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Marigolds (Gem) - Mature Stem 1X | Field DS "
+      "name": "Marigolds (Gem) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a7a75396",
@@ -8095,10 +7688,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 13,
       "harvestBufferDays": 7,
@@ -8124,7 +7714,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Marigolds (Gem) - Mature Stem 1X | Field TP "
+      "name": "Marigolds (Gem) - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_20a446d5",
@@ -8137,10 +7728,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 7,
       "harvestBufferDays": 7,
@@ -8166,7 +7754,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Marjoram - Mature Stem 2X | Field TP Su"
+      "name": "Marjoram - Mature Stem 2X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_dabe2b63",
@@ -8181,10 +7770,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 32.5,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -8210,7 +7796,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Melon - Ripe Fruit 1X | Field TP "
+      "name": "Melon - Ripe Fruit 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0dd18a19",
@@ -8221,10 +7808,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 30,
-      "seedsPerBed": 26,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -8250,7 +7834,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Melon (Watermelon Small) - Ripe Fruit 1X | Field TP "
+      "name": "Melon (Watermelon Small) - Ripe Fruit 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_3e371957",
@@ -8259,8 +7844,6 @@
       "growingStructure": "field",
       "dtm": 17,
       "deprecated": false,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Ounce",
       "targetFieldDate": "04-01",
@@ -8276,7 +7859,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Microgreens - Micro Leaf X | Field DS "
+      "name": "Microgreens - Micro Leaf X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a4c3cdc5",
@@ -8289,10 +7873,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -8322,7 +7903,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Milkweed - Mature Stem 1X | Field TP Sp"
+      "name": "Milkweed - Mature Stem 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_3f445dfc",
@@ -8335,10 +7917,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 173.33333333333331,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-27",
@@ -8360,7 +7939,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Mint - Mature Sprigs 4X | Pot TP "
+      "name": "Mint - Mature Sprigs 4X | Pot TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_029e3d3f",
@@ -8371,10 +7951,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 60,
-      "seedsPerBed": 13,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -8390,7 +7967,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Mock Orange - Mature Branch 1X | Field DS "
+      "name": "Mock Orange - Mature Branch 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_cd325435",
@@ -8401,10 +7979,7 @@
       "deprecated": false,
       "rows": 10,
       "spacing": 1.5,
-      "seedsPerBed": 5200,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
@@ -8420,7 +7995,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Mustard Greens - Baby Leaf 1X | Field DS Su"
+      "name": "Mustard Greens - Baby Leaf 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_dddae7be",
@@ -8434,10 +8010,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -8463,7 +8036,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Nausturtium - Mature Stem 2X | Field TP "
+      "name": "Nausturtium - Mature Stem 2X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_e09614bc",
@@ -8474,8 +8048,6 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 6,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -8491,7 +8063,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Nigella - Mature Stalk X | Field DS Sp"
+      "name": "Nigella - Mature Stalk X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_389d7a2e",
@@ -8505,10 +8078,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 5,
       "harvestBufferDays": 7,
@@ -8528,7 +8098,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Nigella - Mature Stem 1X | Field DS Sp"
+      "name": "Nigella - Mature Stem 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_c8190e31",
@@ -8542,10 +8113,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -8571,7 +8139,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Nigella - Mature Stem 1X | Tunnel TP Ow"
+      "name": "Nigella - Mature Stem 1X | Tunnel TP Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_314aac79",
@@ -8584,10 +8153,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 990.0000000000001,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -8607,7 +8173,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Onion - Mature Bulb 6X | Field DS Ow"
+      "name": "Onion - Mature Bulb 6X | Field DS Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_542122f4",
@@ -8620,10 +8187,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 990.0000000000001,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -8649,7 +8213,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Onion - Mature Bulb 6X | Field TP Ow"
+      "name": "Onion - Mature Bulb 6X | Field TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_365c21f9",
@@ -8661,10 +8226,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 990.0000000000001,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -8690,7 +8252,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Onion - Mature Bulb 6X | Field TP SpSu"
+      "name": "Onion - Mature Bulb 6X | Field TP SpSu",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_b7c5c4b0",
@@ -8703,10 +8266,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 1650.0000000000002,
       "seedsPerPlanting": 10,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -8732,7 +8292,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Onion (Salad Early) - Young Bulb 10X | Field TP Sp"
+      "name": "Onion (Salad Early) - Young Bulb 10X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_b9a7054e",
@@ -8745,10 +8306,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 1650.0000000000002,
       "seedsPerPlanting": 10,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -8774,7 +8332,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Onion (Salad Late) - Young Bulb 10X | Field TP Sp"
+      "name": "Onion (Salad Late) - Young Bulb 10X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_364076dd",
@@ -8787,10 +8346,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 7,
       "harvestBufferDays": 7,
@@ -8816,7 +8372,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Oregano - Mature Stem 2X | Field TP Su"
+      "name": "Oregano - Mature Stem 2X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_b7614245",
@@ -8830,10 +8387,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 20,
       "harvestBufferDays": 7,
@@ -8859,7 +8413,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Pansy and Violas - Mature Stem 1X | Field TP Sp"
+      "name": "Pansy and Violas - Mature Stem 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_be4da1d5",
@@ -8873,10 +8428,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 20,
       "harvestBufferDays": 7,
@@ -8902,7 +8454,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Pansy and Violas - Mature Stem 1X | Tunnel TP Ow"
+      "name": "Pansy and Violas - Mature Stem 1X | Tunnel TP Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0fef4c1f",
@@ -8949,10 +8502,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 9,
       "harvestBufferDays": 7,
@@ -8978,7 +8528,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Parsley - Mature Leaf 3X | Field TP Sp"
+      "name": "Parsley - Mature Leaf 3X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_b77714d5",
@@ -8992,10 +8543,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 15,
       "harvestBufferDays": 7,
@@ -9021,7 +8569,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Parsley - Mature Leaf 3X | Field TP Su"
+      "name": "Parsley - Mature Leaf 3X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_f5f0b0e7",
@@ -9034,10 +8583,7 @@
       "rowCover": "Late",
       "rows": 12,
       "spacing": 1,
-      "seedsPerBed": 9360,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -9057,7 +8603,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Parsnip (12r) - Mature Root 1X | Field DS Fa"
+      "name": "Parsnip (12r) - Mature Root 1X | Field DS Fa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_8c7390dc",
@@ -9070,10 +8617,7 @@
       "rowCover": "Late",
       "rows": 4,
       "spacing": 0.5,
-      "seedsPerBed": 6240,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -9093,7 +8637,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Parsnip (4r) - Mature Root 1X | Field DS Fa"
+      "name": "Parsnip (4r) - Mature Root 1X | Field DS Fa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_fbf39c56",
@@ -9105,10 +8650,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 1,
-      "seedsPerBed": 3120,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -9128,7 +8670,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Pea Tendril - Young Shoots 1X | Field DS Sp"
+      "name": "Pea Tendril - Young Shoots 1X | Field DS Sp",
+      "extraStartFactor": 2.6
     },
     {
       "id": "crop_67266a07",
@@ -9142,10 +8685,7 @@
       "rowCover": "Young",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -9171,7 +8711,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Pea Tendril - Young Shoots 3X | Field TP "
+      "name": "Pea Tendril - Young Shoots 3X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_3e6e3ac5",
@@ -9185,10 +8726,7 @@
       "rowCover": "Young",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 660,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -9214,7 +8752,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Pea Tendril - Young Shoots 3X | Greenhouse TP "
+      "name": "Pea Tendril - Young Shoots 3X | Greenhouse TP ",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_83ada80b",
@@ -9225,10 +8764,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 1,
-      "seedsPerBed": 9360,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -9248,7 +8784,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Peas (Snap) - Young Pod 3X | Field DS SpSu"
+      "name": "Peas (Snap) - Young Pod 3X | Field DS SpSu",
+      "extraStartFactor": 2.6
     },
     {
       "id": "crop_c091b4e4",
@@ -9259,10 +8796,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 9,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -9288,7 +8822,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Peas (Snap) - Young Pod 3X | Field TP SpSu"
+      "name": "Peas (Snap) - Young Pod 3X | Field TP SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_ff1a3d02",
@@ -9299,10 +8834,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 1,
-      "seedsPerBed": 4680,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -9322,7 +8854,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Peas (Snow) - Young Pod 3X | Field DS SpSu"
+      "name": "Peas (Snow) - Young Pod 3X | Field DS SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_93c264ed",
@@ -9333,10 +8866,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 36,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 2,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -9356,7 +8886,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Peonies - Mature Stalk 1X | Field DS "
+      "name": "Peonies - Mature Stalk 1X | Field DS ",
+      "extraStartFactor": 2.6
     },
     {
       "id": "crop_5ba4d3d6",
@@ -9370,10 +8901,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -9403,7 +8931,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Pepper (Bell) - Ripe Fruit Large 1X | Field TP "
+      "name": "Pepper (Bell) - Ripe Fruit Large 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_f84ecbe6",
@@ -9415,10 +8944,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 18,
       "harvestBufferDays": 7,
@@ -9448,7 +8974,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Pepper (Bell) - Ripe Fruit Large 1X | Greenhouse TP "
+      "name": "Pepper (Bell) - Ripe Fruit Large 1X | Greenhouse TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_87651c07",
@@ -9462,10 +8989,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -9495,7 +9019,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP "
+      "name": "Pepper (Hot) - Ripe Fruit Small 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_35a0860c",
@@ -9507,10 +9032,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 18,
       "harvestBufferDays": 7,
@@ -9540,7 +9062,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Pepper (Hot) - Ripe Fruit Small 1X | Greenhouse TP "
+      "name": "Pepper (Hot) - Ripe Fruit Small 1X | Greenhouse TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_fd075ad9",
@@ -9554,10 +9077,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 21,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -9583,7 +9103,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Petunia - Mature Stem 1X | Field TP "
+      "name": "Petunia - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_10341419",
@@ -9596,10 +9117,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 86.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -9619,7 +9137,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Potato (Early) - Mature Root 1X | Field DS "
+      "name": "Potato (Early) - Mature Root 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a0562191",
@@ -9631,10 +9150,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 24,
-      "seedsPerBed": 65,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -9654,7 +9170,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Potato (Main Crop) - Storage Root 1X | Field DS "
+      "name": "Potato (Main Crop) - Storage Root 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_9962524c",
@@ -9667,10 +9184,7 @@
       "rowCover": "Early",
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 86.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -9690,7 +9204,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Potato (Mid Season) - Mature Root 1X | Field DS "
+      "name": "Potato (Mid Season) - Mature Root 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_12ccfaee",
@@ -9704,10 +9219,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 520,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
@@ -9727,7 +9239,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Queen Anne's Lace - Mature Stem 1X | Field DS "
+      "name": "Queen Anne's Lace - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_3384d5b6",
@@ -9740,10 +9253,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -9769,7 +9279,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Radicchio (110 Day) - Forced Head 1X | Field TP Su"
+      "name": "Radicchio (110 Day) - Forced Head 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_b1823d58",
@@ -9782,10 +9293,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -9811,7 +9319,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Radicchio (90 Day) - Forced Head 1X | Field TP Su"
+      "name": "Radicchio (90 Day) - Forced Head 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_9a1a1bfe",
@@ -9826,10 +9335,7 @@
       "rowCover": "AMAP",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 2600,
       "seedsPerPlanting": 5,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -9855,7 +9361,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Radish - Mature Root 5X | Field TP SpFaWi"
+      "name": "Radish - Mature Root 5X | Field TP SpFaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_c07d321b",
@@ -9870,10 +9377,7 @@
       "rowCover": "AMAP",
       "rows": 10,
       "spacing": 2,
-      "seedsPerBed": 3900,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -9893,7 +9397,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Radish (10r) - Mature Root 1X | Field DS Sp"
+      "name": "Radish (10r) - Mature Root 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a9c25ba8",
@@ -9908,10 +9413,7 @@
       "rowCover": "AMAP",
       "rows": 6,
       "spacing": 1,
-      "seedsPerBed": 4680,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -9931,7 +9433,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Radish (6r) - Mature Root 1X | Field DS Sp"
+      "name": "Radish (6r) - Mature Root 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_5dc36c40",
@@ -9946,10 +9449,7 @@
       "rowCover": "AMAP",
       "rows": 6,
       "spacing": 1,
-      "seedsPerBed": 4680,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -9969,7 +9469,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Radish (6r) - Mature Root 1X | Field DS Su"
+      "name": "Radish (6r) - Mature Root 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a8dd9bdd",
@@ -9984,10 +9485,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10013,7 +9511,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Radish (Cluster) - Storage Root 3X | Field TP FaWi"
+      "name": "Radish (Cluster) - Storage Root 3X | Field TP FaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_85c57582",
@@ -10028,10 +9527,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 4,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10051,7 +9547,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Radish (Daikon) - Storage Root 1X | Field DS FaWi"
+      "name": "Radish (Daikon) - Storage Root 1X | Field DS FaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_61815b8c",
@@ -10066,10 +9563,7 @@
       "rowCover": "AMAP",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10095,7 +9589,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Radish (Daikon) - Storage Root 1X | Field TP FaWi"
+      "name": "Radish (Daikon) - Storage Root 1X | Field TP FaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_83b2e500",
@@ -10107,10 +9602,7 @@
       "deprecated": false,
       "rows": 6,
       "spacing": 3,
-      "seedsPerBed": 1560,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10130,7 +9622,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Radish (Munchen Bier) - Storage Root 1X | Field DS "
+      "name": "Radish (Munchen Bier) - Storage Root 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_e62185fe",
@@ -10141,8 +9634,6 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 6,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -10158,7 +9649,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Ranunculus - Mature Stalk X | Field DS "
+      "name": "Ranunculus - Mature Stalk X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_1a953809",
@@ -10172,10 +9664,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 2,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 3,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -10195,7 +9684,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Raspberry (Black Primocane) - Black Berry 1X | Field DS Su"
+      "name": "Raspberry (Black Primocane) - Black Berry 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_d8fe71c4",
@@ -10209,10 +9699,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 2,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 3,
       "numberOfHarvests": 21,
       "harvestBufferDays": 7,
@@ -10232,7 +9719,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Raspberry (Red Fall Bearing) - Red Berry 1X | Field DS Su"
+      "name": "Raspberry (Red Fall Bearing) - Red Berry 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_af6eb525",
@@ -10246,10 +9734,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 2,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 3,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -10269,7 +9754,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Raspberry (Red June Bearing) - Red Berry 1X | Field DS Su"
+      "name": "Raspberry (Red June Bearing) - Red Berry 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_1b55d234",
@@ -10284,10 +9770,7 @@
       "rowCover": "AMAP",
       "rows": 1,
       "spacing": 9,
-      "seedsPerBed": 86.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 3,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -10313,7 +9796,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Rat Tail Radish - Mature Pod 1X | Field TP SpSuFa"
+      "name": "Rat Tail Radish - Mature Pod 1X | Field TP SpSuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_415f92f0",
@@ -10324,10 +9808,7 @@
       "deprecated": true,
       "rows": 1,
       "spacing": 60,
-      "seedsPerBed": 13,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -10343,7 +9824,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Rose (Golden Celebration) - Mature Stem 1X | Field DS "
+      "name": "Rose (Golden Celebration) - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_caffc567",
@@ -10356,10 +9838,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -10385,7 +9864,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Roselle - Mature Leaf 1X | Field TP Su"
+      "name": "Roselle - Mature Leaf 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0d378e6d",
@@ -10398,10 +9878,7 @@
       "deprecated": false,
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "07-25",
@@ -10423,7 +9900,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Rosemary - Mature Sprigs 6X | Pot TP "
+      "name": "Rosemary - Mature Sprigs 6X | Pot TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_191cbb0c",
@@ -10437,10 +9915,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
@@ -10466,7 +9941,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Rubeckia (Annual) - Mature Stem 1X | Field TP "
+      "name": "Rubeckia (Annual) - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_c09b59c7",
@@ -10512,10 +9988,7 @@
       "rowCover": "AMAP",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10541,7 +10014,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Rutabaga - Mature Root 2X | Field TP Fa"
+      "name": "Rutabaga - Mature Root 2X | Field TP Fa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_3d1a8e66",
@@ -10554,10 +10028,7 @@
       "rowCover": "AMAP",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10583,7 +10054,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Rutabaga - Mature Root 2X | Field TP Ow"
+      "name": "Rutabaga - Mature Root 2X | Field TP Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_e0b650d4",
@@ -10596,10 +10068,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 400,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "05-31",
@@ -10635,10 +10104,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -10658,7 +10124,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Salsola (Agretti) - Mature Leaf 1X | Field DS "
+      "name": "Salsola (Agretti) - Mature Leaf 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_16461004",
@@ -10672,10 +10139,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -10695,7 +10159,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Salsola (Saltwort) - Mature Leaf 1X | Field DS "
+      "name": "Salsola (Saltwort) - Mature Leaf 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_ecebb74b",
@@ -10709,10 +10174,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -10738,7 +10200,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Salsola (Saltwort) - Mature Leaf 1X | Field TP "
+      "name": "Salsola (Saltwort) - Mature Leaf 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0afddf57",
@@ -10751,10 +10214,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -10774,7 +10234,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Scabiosa - Mature Stem 1X | Field DS Sp"
+      "name": "Scabiosa - Mature Stem 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_2b814b4a",
@@ -10788,10 +10249,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 2640,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10811,7 +10269,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Scallion - Mature Stalk 6X | Field DS Fa"
+      "name": "Scallion - Mature Stalk 6X | Field DS Fa",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_2141dffb",
@@ -10825,10 +10284,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 2640,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10848,7 +10304,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Scallion - Mature Stalk 6X | Field DS Ow"
+      "name": "Scallion - Mature Stalk 6X | Field DS Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_617f210e",
@@ -10862,10 +10319,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 2640,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10885,7 +10339,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Scallion - Mature Stalk 6X | Field DS Sp"
+      "name": "Scallion - Mature Stalk 6X | Field DS Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_89bfab2c",
@@ -10899,10 +10354,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 2640,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10928,7 +10380,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Scallion - Mature Stalk 6X | Field TP Fa"
+      "name": "Scallion - Mature Stalk 6X | Field TP Fa",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_b5ba5626",
@@ -10942,10 +10395,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 2640,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -10971,7 +10421,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Scallion - Mature Stalk 6X | Field TP Ow"
+      "name": "Scallion - Mature Stalk 6X | Field TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_86bad289",
@@ -10985,10 +10436,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 6,
-      "seedsPerBed": 2640,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -11014,7 +10462,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Scallion - Mature Stalk 6X | Field TP Sp"
+      "name": "Scallion - Mature Stalk 6X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_2f13886c",
@@ -11028,10 +10477,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 1980.0000000000002,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -11057,7 +10503,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Scallion (Interplant) - Mature Stalk 6X | Field TP Sp"
+      "name": "Scallion (Interplant) - Mature Stalk 6X | Field TP Sp",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_1605a6ef",
@@ -11071,10 +10518,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 660,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -11100,7 +10544,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Shallots - Mature Bulb 4X | Field TP Ow"
+      "name": "Shallots - Mature Bulb 4X | Field TP Ow",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_92402892",
@@ -11112,10 +10557,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 660,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -11141,7 +10583,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Shallots - Mature Bulb 4X | Field TP SpSu"
+      "name": "Shallots - Mature Bulb 4X | Field TP SpSu",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_fbabad4b",
@@ -11155,10 +10598,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
       "yieldPerHarvest": 25,
@@ -11176,7 +10616,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Shallots (French Grey) - Mature Bulb 1X | Field DS Ow"
+      "name": "Shallots (French Grey) - Mature Bulb 1X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_2fe93f65",
@@ -11188,10 +10629,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 16,
       "harvestBufferDays": 7,
@@ -11211,7 +10649,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Shiso - Loose Leaf 3X | Field DS SpSu"
+      "name": "Shiso - Loose Leaf 3X | Field DS SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_61306aec",
@@ -11225,10 +10664,7 @@
       "rowCover": "None",
       "rows": 6,
       "spacing": 6,
-      "seedsPerBed": 780,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -11254,7 +10690,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Snapdragons - Mature Stem 1X | Field TP "
+      "name": "Snapdragons - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_05cd7b84",
@@ -11268,10 +10705,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 6,
-      "seedsPerBed": 390,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 7,
       "harvestBufferDays": 7,
@@ -11297,7 +10731,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Snapdragons - Mature Stem 1X | Tunnel TP Ow"
+      "name": "Snapdragons - Mature Stem 1X | Tunnel TP Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_34c8fdd7",
@@ -11308,10 +10743,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 585,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 32,
       "harvestBufferDays": 7,
@@ -11331,7 +10763,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Sorrel - Mature Leaf 3X | Field DS "
+      "name": "Sorrel - Mature Leaf 3X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_07929499",
@@ -11343,10 +10776,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 585,
       "seedsPerPlanting": 3,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 32,
       "harvestBufferDays": 7,
@@ -11372,7 +10802,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Sorrel - Mature Leaf 3X | Field TP "
+      "name": "Sorrel - Mature Leaf 3X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_d1f732bf",
@@ -11383,8 +10814,6 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 36,
       "harvestBufferDays": 7,
@@ -11404,7 +10833,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Sorrel - Mature Leaf X | Field DS Ow"
+      "name": "Sorrel - Mature Leaf X | Field DS Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4c9e0ff3",
@@ -11415,8 +10845,6 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 36,
       "harvestBufferDays": 7,
@@ -11442,7 +10870,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Sorrel - Mature Leaf X | Field TP Ow"
+      "name": "Sorrel - Mature Leaf X | Field TP Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_ad0c6c2f",
@@ -11453,10 +10882,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 2.5,
-      "seedsPerBed": 1248,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -11476,7 +10902,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Spinach - Baby Leaf 1X | Field DS "
+      "name": "Spinach - Baby Leaf 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_8ca5828a",
@@ -11489,10 +10916,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 1,
-      "seedsPerBed": 2340,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 190,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -11512,7 +10936,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Spinach - Mature Leaf 1X | Field DS FaOw"
+      "name": "Spinach - Mature Leaf 1X | Field DS FaOw",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_ba2d38e3",
@@ -11525,10 +10950,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 190,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -11554,7 +10976,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Spinach (3r) - Mature Leaf 1X | Field TP FaOw"
+      "name": "Spinach (3r) - Mature Leaf 1X | Field TP FaOw",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0ef640e9",
@@ -11567,10 +10990,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 9,
-      "seedsPerBed": 346.66666666666663,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 190,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -11596,7 +11016,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Spinach (4r) - Mature Leaf 1X | Field TP FaOw"
+      "name": "Spinach (4r) - Mature Leaf 1X | Field TP FaOw",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_6995527a",
@@ -11609,10 +11030,7 @@
       "rowCover": "None",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 3,
       "harvestBufferDays": 7,
@@ -11638,7 +11056,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Spinach - Mature Leaf 1X | Field TP Sp"
+      "name": "Spinach - Mature Leaf 1X | Field TP Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_ac1e9978",
@@ -11651,10 +11070,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 36,
-      "seedsPerBed": 21.666666666666664,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -11680,7 +11096,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Squash (Butternut) - Storage 1X | Field TP "
+      "name": "Squash (Butternut) - Storage 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_5784f53e",
@@ -11693,10 +11110,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 36,
-      "seedsPerBed": 21.666666666666664,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -11722,7 +11136,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Squash (Delicata) - Storage 1X | Field TP "
+      "name": "Squash (Delicata) - Storage 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_2861479e",
@@ -11735,10 +11150,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 36,
-      "seedsPerBed": 21.666666666666664,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 1,
       "harvestBufferDays": 7,
@@ -11764,7 +11176,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Squash (Kuri) - Storage 1X | Field TP "
+      "name": "Squash (Kuri) - Storage 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_336fec30",
@@ -11778,10 +11191,7 @@
       "rowCover": "Young",
       "rows": 5,
       "spacing": 6,
-      "seedsPerBed": 650,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -11807,7 +11217,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Stock (Antique Pink) - Mature Stem 1X | Field TP "
+      "name": "Stock (Antique Pink) - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_583aed67",
@@ -11819,10 +11230,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 110.00000000000001,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 3,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -11842,7 +11250,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Strawberry (Annual) - Ripe Fruit 1X | Field DS Su"
+      "name": "Strawberry (Annual) - Ripe Fruit 1X | Field DS Su",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_06fac013",
@@ -11854,10 +11263,7 @@
       "rowCover": "AMAP",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 110.00000000000001,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 3,
       "numberOfHarvests": 10,
       "harvestBufferDays": 7,
@@ -11877,7 +11283,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Strawberry (Perrenial) - Ripe Fruit 1X | Field DS Su"
+      "name": "Strawberry (Perrenial) - Ripe Fruit 1X | Field DS Su",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_27240b9a",
@@ -11888,10 +11295,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Lb",
       "targetFieldDate": "04-01",
@@ -11907,7 +11311,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Strawberry Spinach - Mature Leaf 1X | Field DS SpSuFa"
+      "name": "Strawberry Spinach - Mature Leaf 1X | Field DS SpSuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a49d7468",
@@ -11920,10 +11325,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
@@ -11949,7 +11351,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Strawflower"
+      "name": "Strawflower",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_6469dbe5",
@@ -11963,17 +11366,15 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 0.5,
-      "seedsPerBed": 6240,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "targetFieldDate": "06-10",
       "defaultMarketSplit": {
         "market-direct": 100
       },
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Sudangrass - None 1X | Field DS Su"
+      "name": "Sudangrass - None 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4ad4d515",
@@ -11986,10 +11387,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 32.5,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 45,
       "harvestBufferDays": 7,
@@ -12009,7 +11407,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Summer Squash (Long Season) - Ripe Fruit 1X | Field DS Su"
+      "name": "Summer Squash (Long Season) - Ripe Fruit 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0e22e42f",
@@ -12022,10 +11421,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 32.5,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 45,
       "harvestBufferDays": 7,
@@ -12051,7 +11447,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Summer Squash (Long Season) - Ripe Fruit 1X | Field TP Su"
+      "name": "Summer Squash (Long Season) - Ripe Fruit 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_0eef9228",
@@ -12064,10 +11461,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 32.5,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 1,
       "numberOfHarvests": 42,
       "harvestBufferDays": 7,
@@ -12087,7 +11481,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Summer Squash (Short Season) - Ripe Fruit 1X | Field DS Su"
+      "name": "Summer Squash (Short Season) - Ripe Fruit 1X | Field DS Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_9f8f7436",
@@ -12100,10 +11495,7 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 32.5,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 2,
       "numberOfHarvests": 21,
       "harvestBufferDays": 7,
@@ -12129,7 +11521,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Summer Squash (Short Season) - Ripe Fruit 1X | Field TP Su"
+      "name": "Summer Squash (Short Season) - Ripe Fruit 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a61d23ea",
@@ -12142,10 +11535,7 @@
       "rowCover": "None",
       "rows": 4,
       "spacing": 12,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -12165,7 +11555,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Sunchoke - Mature Root 1X | Field DS SuFa"
+      "name": "Sunchoke - Mature Root 1X | Field DS SuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_472285fe",
@@ -12176,10 +11567,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 6,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Stem",
       "targetFieldDate": "04-01",
@@ -12195,7 +11583,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Sunflower - Mature Stem 1X | Field DS SpSuFa"
+      "name": "Sunflower - Mature Stem 1X | Field DS SpSuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_166c0f30",
@@ -12207,10 +11596,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 4,
       "harvestBufferDays": 7,
@@ -12230,7 +11616,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Sunflower - Mature Stem 2X | Field DS "
+      "name": "Sunflower - Mature Stem 2X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_7c825dd9",
@@ -12244,10 +11631,7 @@
       "rowCover": "None",
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 260,
       "seedsPerPlanting": 2,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 6,
       "harvestBufferDays": 7,
@@ -12267,7 +11651,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Sunflower (Anarchy Mix) - Mature Stem 2X | Field DS "
+      "name": "Sunflower (Anarchy Mix) - Mature Stem 2X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4dd40aa1",
@@ -12278,10 +11663,7 @@
       "deprecated": false,
       "rows": 6,
       "spacing": 4,
-      "seedsPerBed": 1170,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -12301,7 +11683,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Sunflower (Procut) - Mature Stem 1X | Field DS SpSuFa"
+      "name": "Sunflower (Procut) - Mature Stem 1X | Field DS SpSuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_d68b6177",
@@ -12313,10 +11696,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 86.66666666666666,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 33,
       "numberOfHarvests": 7,
       "harvestBufferDays": 7,
@@ -12342,7 +11722,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Swiss Chard - Mature Leaf 1X | Field TP Ow"
+      "name": "Swiss Chard - Mature Leaf 1X | Field TP Ow",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_31605773",
@@ -12354,10 +11735,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 18,
-      "seedsPerBed": 73.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.1,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 4,
       "numberOfHarvests": 21,
       "harvestBufferDays": 7,
@@ -12383,7 +11761,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Swiss Chard - Mature Leaf 1X | Field TP SpSuFa"
+      "name": "Swiss Chard - Mature Leaf 1X | Field TP SpSuFa",
+      "extraStartFactor": 1.1
     },
     {
       "id": "crop_4ec3dc3b",
@@ -12396,10 +11775,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -12425,7 +11801,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Talinum - Mature Stem 1X | Field TP SpSu"
+      "name": "Talinum - Mature Stem 1X | Field TP SpSu",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_f3344111",
@@ -12438,8 +11815,6 @@
       "rowCover": "None",
       "rows": 1,
       "spacing": 1200,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "None",
       "targetFieldDate": "01-31",
@@ -12455,7 +11830,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Tarp - Clear Ground 0X | Field DS SpSuFaWi"
+      "name": "Tarp - Clear Ground 0X | Field DS SpSuFaWi",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_8247b3d6",
@@ -12468,10 +11844,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 9,
-      "seedsPerBed": 693.3333333333333,
       "seedsPerPlanting": 4,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "Bunch",
       "targetFieldDate": "04-07",
@@ -12493,7 +11866,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Thyme - Mature Sprigs 4X | Pot TP "
+      "name": "Thyme - Mature Sprigs 4X | Pot TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_cb5197c4",
@@ -12508,10 +11882,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 9,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -12545,7 +11916,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Tomatillo - Ripe Fruit 1X | Field TP "
+      "name": "Tomatillo - Ripe Fruit 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_059618f8",
@@ -12559,10 +11931,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 32.5,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 9,
       "harvestBufferDays": 7,
@@ -12596,7 +11965,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su"
+      "name": "Tomato (Beefsteak Det) - Ripe Fruit Large 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_1d3959a3",
@@ -12610,10 +11980,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 9,
       "harvestBufferDays": 7,
@@ -12647,7 +12014,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Field TP Su"
+      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_30fa2c6c",
@@ -12661,10 +12029,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
@@ -12698,7 +12063,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Greenhouse TP Su"
+      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Greenhouse TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_c98eafbb",
@@ -12712,10 +12078,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
@@ -12749,7 +12112,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Large Tunnel TP Su"
+      "name": "Tomato (Beefsteak) - Ripe Fruit Large 1X | Large Tunnel TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_c8c3a1a9",
@@ -12763,10 +12127,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 32.5,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -12800,7 +12161,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su"
+      "name": "Tomato (Cherry Det) - Ripe Fruit Small 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a3749274",
@@ -12814,10 +12176,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 14,
       "harvestBufferDays": 7,
@@ -12851,7 +12210,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Tomato (Cherry) - Ripe Fruit Small 1X | Field TP Su"
+      "name": "Tomato (Cherry) - Ripe Fruit Small 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_a4c3ea11",
@@ -12865,10 +12225,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 16,
       "harvestBufferDays": 7,
@@ -12902,7 +12259,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Tomato (Cherry) - Ripe Fruit Small 1X | Greenhouse TP Su"
+      "name": "Tomato (Cherry) - Ripe Fruit Small 1X | Greenhouse TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4d6259cc",
@@ -12916,10 +12274,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 24,
-      "seedsPerBed": 32.5,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 9,
       "harvestBufferDays": 7,
@@ -12953,7 +12308,8 @@
         }
       ],
       "dtmBasis": "tp-from-planting-to-harvest",
-      "name": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su"
+      "name": "Tomato (Medium Det) - Ripe Fruit Medium 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_32c0b597",
@@ -12967,10 +12323,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 9,
       "harvestBufferDays": 7,
@@ -13004,7 +12357,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Tomato (Medium) - Ripe Fruit Medium 1X | Field TP Su"
+      "name": "Tomato (Medium) - Ripe Fruit Medium 1X | Field TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_422207d1",
@@ -13018,10 +12372,7 @@
       "rowCover": "Young",
       "rows": 1,
       "spacing": 18,
-      "seedsPerBed": 43.33333333333333,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 12,
       "harvestBufferDays": 7,
@@ -13055,7 +12406,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Tomato (Medium) - Ripe Fruit Medium 1X | Greenhouse TP Su"
+      "name": "Tomato (Medium) - Ripe Fruit Medium 1X | Greenhouse TP Su",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_96e55192",
@@ -13068,10 +12420,7 @@
       "rowCover": "AMAP",
       "rows": 3,
       "spacing": 9,
-      "seedsPerBed": 1560,
       "seedsPerPlanting": 6,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -13097,7 +12446,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Turnip (Storage) - Mature Root 6X | Field TP "
+      "name": "Turnip (Storage) - Mature Root 6X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_55143b3d",
@@ -13108,10 +12458,7 @@
       "deprecated": false,
       "rows": 6,
       "spacing": 1.5,
-      "seedsPerBed": 3120,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -13131,7 +12478,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS "
+      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_e15f2f9c",
@@ -13143,10 +12491,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 1.5,
-      "seedsPerBed": 2080,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -13166,7 +12511,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp"
+      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS Sp",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_cd9cbb1c",
@@ -13178,10 +12524,7 @@
       "deprecated": false,
       "rows": 4,
       "spacing": 1.5,
-      "seedsPerBed": 2080,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 14,
       "numberOfHarvests": 2,
       "harvestBufferDays": 7,
@@ -13201,7 +12544,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa"
+      "name": "Turnip (Tokyo) - Mature Root 1X | Field DS SuFa",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_5293744b",
@@ -13212,10 +12556,7 @@
       "deprecated": true,
       "rows": 1,
       "spacing": 48,
-      "seedsPerBed": 16.25,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "harvestBufferDays": 7,
       "yieldUnit": "stem",
       "targetFieldDate": "04-01",
@@ -13231,7 +12572,8 @@
         }
       ],
       "dtmBasis": "tp-from-seeding-to-harvest",
-      "name": "Wisteria - Mature Stem 1X | Field DS "
+      "name": "Wisteria - Mature Stem 1X | Field DS ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_4fd4eaee",
@@ -13244,10 +12586,7 @@
       "deprecated": false,
       "rows": 2,
       "spacing": 12,
-      "seedsPerBed": 130,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 10,
       "numberOfHarvests": 8,
       "harvestBufferDays": 7,
@@ -13273,7 +12612,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Yarrow - Mature Stem 1X | Field TP "
+      "name": "Yarrow - Mature Stem 1X | Field TP ",
+      "extraStartFactor": 1.3
     },
     {
       "id": "crop_73a11e12",
@@ -13286,10 +12626,7 @@
       "deprecated": false,
       "rows": 3,
       "spacing": 12,
-      "seedsPerBed": 195,
       "seedsPerPlanting": 1,
-      "safetyFactor": 1.3,
-      "seedingFactor": 1,
       "daysBetweenHarvest": 7,
       "numberOfHarvests": 7,
       "harvestBufferDays": 7,
@@ -13309,7 +12646,8 @@
         }
       ],
       "dtmBasis": "ds-from-germination-to-harvest",
-      "name": "Zinnia - Mature Stem 1X | Field DS Su"
+      "name": "Zinnia - Mature Stem 1X | Field DS Su",
+      "extraStartFactor": 1.3
     }
   ]
 }

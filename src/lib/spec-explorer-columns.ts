@@ -62,6 +62,7 @@ export type CropWithRevenue = PlantingSpec & {
   productsDisplay?: string;
   defaultSeedSourceDisplay?: string;
   tagsDisplay?: string;
+  plantingMethodDisplay?: string;
 };
 
 // =============================================================================
@@ -183,6 +184,13 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     sourceType: getSourceType('dtmBasis'),
     sortable: true,
   },
+  plantingMethodDisplay: {
+    displayName: 'Method',
+    defaultWidth: 100,
+    defaultVisible: true,
+    sourceType: 'calculated',
+    sortable: true,
+  },
 
   // Timing fields
   daysToGermination: {
@@ -215,6 +223,23 @@ export const COLUMN_SCHEMA: Record<string, ColumnMeta> = {
     defaultVisible: false,
     edit: { type: 'number' },
     sourceType: getSourceType('spacing'),
+    sortable: true,
+  },
+  seedsPerPlanting: {
+    displayName: 'Seeds/Plant',
+    defaultWidth: 90,
+    defaultVisible: false,
+    edit: { type: 'number' },
+    sourceType: getSourceType('seedsPerPlanting'),
+    sortable: true,
+  },
+  extraStartFactor: {
+    displayName: 'Extra Start ×',
+    defaultWidth: 105,
+    defaultVisible: false,
+    edit: { type: 'number' },
+    format: (v) => v ? `${v}×` : '–',
+    sourceType: getSourceType('extraStartFactor'),
     sortable: true,
   },
   irrigation: {
